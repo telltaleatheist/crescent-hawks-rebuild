@@ -1,0 +1,57 @@
+# The original program
+
+The reference is the DOS release, version 1.03 ("(C) 1988 Infocom, Inc.",
+"Computer program by Westwood Associates"). The program asks for a display
+on startup: CGA or 64K EGA, Tandy 1000, 256K EGA/VGA, or MCGA. All four
+drivers are in the one executable.
+
+## Files
+
+| File | Size | SHA-256 |
+|---|---|---|
+| `BTECH.EXE` (as shipped, EXEPACK-packed) | 152,429 | `15a1712682cf1fe50ca9e6a68a4b31d3bef7912401915edf7bb6242be193562a` |
+| `BTECH.EXE` unpacked by `tools/unexepack.py` | 260,528 | `056b40670a95c4a4e56f7dda405dc0e2f3c98fcb530ed72f476d374051abd16d` |
+| `$VERIFY.EXE` | 16,281 | `b410e7135dc48523452dfd14f2288a1374f9d26f6774337a554190811e1a856d` |
+
+Our copy's `BTECH.EXE` is dated 1998, while every other file is from 1988.
+It may have been modified after release. That is not yet checked. Until it
+is, treat any difference from the 1988 logic, such as the code-key check, as
+open.
+
+The data files are 26 `.BLD` (buildings and their scripts), 15 `.MTP`
+(maps), 22 `.ANM` (animations), 5 `.ICN` and 7 `.CMP` (graphics),
+`WWOODBT.SIF` and `DEMOFILE`. Each format gets its own document as it is
+worked out.
+
+## Unpacking
+
+The shipped executable is compressed with Microsoft EXEPACK, an option of
+Microsoft's own linker, so a disassembler sees only the unpacking stub. To
+get the program the addresses in this repository refer to, run:
+
+    python3 tools/unexepack.py BTECH.EXE BTECH.unpacked.exe
+
+and check the result against the SHA-256 above. The unpacked file has 3,292
+relocations, and its entry point is Microsoft C's startup code. Addresses
+are `segment:offset` as Ghidra shows them, with the program loaded at
+segment 0x1000 (Ghidra's default for DOS).
+
+## Shape
+
+The program is Microsoft C, 1988 (medium or large model: far calls between
+segments). It has 25 segments:
+
+| Segments | Size | What |
+|---|---|---|
+| 1000–284b (`CODE_0`–`CODE_16`) | about 100 KB | the game |
+| 287f (`CODE_17`) | 16 KB | Microsoft C run-time library (holds the entry point) |
+| 2c6c, 37e8, 3856, 3858, 385b, 3892 | about 130 KB | far data and tables |
+| 46db | 29 KB | DGROUP (the near data, stack and heap; it starts with the library's copyright text) |
+
+Ghidra finds 354 functions: 144 in the run-time library and about 210 in the
+game. A count of the C function prologue (`push bp; mov bp,sp`) agrees. The
+functions are large, about 500 bytes each on average. Functions reached only
+through pointers may still be missing, so expect the count to grow somewhat.
+For scale, MechWarrior 3 has about 3,850 game functions.
+
+The function map is `docs/functions.md`.

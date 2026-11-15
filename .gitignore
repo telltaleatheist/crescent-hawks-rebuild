@@ -1,0 +1,16 @@
+# The original game's files are never committed (docs/rules.md, rule 1).
+/original/
+/game/
+# Unpacked executables, analysis output and builds.
+/build/
+/build-*/
+/analysis-output/
+*.EXE
+*.exe
+*.COM
+*.com
+# Editors and OS
+.DS_Store
+.vscode/
+.idea/
+__pycache__/
