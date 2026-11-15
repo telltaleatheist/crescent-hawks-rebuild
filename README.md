@@ -39,6 +39,18 @@ sdl3`).
 environment variable, then in the folder given when it was built. For now it
 shows the title screen.
 
+## Credits and licence
+
+- **BattleTech: The Crescent Hawk's Inception** was written by Westwood
+  Associates and published by Infocom in 1988. All the game's content is
+  theirs and comes from your own copy.
+- The rebuild is by Owen Morgan, under the [MIT licence](LICENSE). The
+  licence covers our source code only, never the game. The original program
+  is studied with Ghidra and [REA](https://github.com/morluto/rea), and the
+  file formats are cross-checked against
+  [CrescentHawksTools](https://github.com/Elthial/CrescentHawksTools).
+- It runs on [SDL3](https://www.libsdl.org/).
+
 ## Layout
 
 - `src/game/` — the game logic, in plain C++ with no graphics library types.
