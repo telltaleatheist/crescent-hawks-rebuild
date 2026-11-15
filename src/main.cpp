@@ -4,6 +4,8 @@
 //
 //   chr [--game-dir DIR] [--map N] [--screenshot FILE.bmp]
 //
+// --screenshot renders one frame to the file without opening a window.
+//
 // The game folder is --game-dir, else the CHR_GAME_DIR environment variable,
 // else the folder set when the program was built.
 
@@ -93,13 +95,23 @@ int main(int argc, char** argv) {
     Options options;
     if (!parse(argc, argv, options)) return 2;
 
+    // A screenshot run never shows a window: it renders with SDL's dummy
+    // video driver and the software renderer (unless SDL_VIDEO_DRIVER or
+    // SDL_RENDER_DRIVER names others) into a hidden window, so it is safe to
+    // run while the screen is being shared.
+    const bool headless = !options.screenshot.empty();
+    if (headless && !std::getenv("SDL_VIDEO_DRIVER"))
+        SDL_SetHint(SDL_HINT_VIDEO_DRIVER, "dummy");
+    if (headless && !std::getenv("SDL_RENDER_DRIVER"))
+        SDL_SetHint(SDL_HINT_RENDER_DRIVER, "software");
     if (!SDL_Init(SDL_INIT_VIDEO)) {
         std::fprintf(stderr, "chr: SDL_Init: %s\n", SDL_GetError());
         return 1;
     }
     SDL_Window* window = nullptr;
     SDL_Renderer* sdl_renderer = nullptr;
-    if (!SDL_CreateWindowAndRenderer("Crescent Hawks Rebuild", 960, 600, SDL_WINDOW_RESIZABLE,
+    const SDL_WindowFlags window_flags = headless ? SDL_WINDOW_HIDDEN : SDL_WINDOW_RESIZABLE;
+    if (!SDL_CreateWindowAndRenderer("Crescent Hawks Rebuild", 960, 600, window_flags,
                                      &window, &sdl_renderer)) {
         std::fprintf(stderr, "chr: can't open a window: %s\n", SDL_GetError());
         SDL_Quit();
