@@ -1,7 +1,8 @@
 // chr: the rebuild's program. For now it opens a window and shows the title
-// screen, decoded from the player's own BTTITLE.CMP through the asset provider.
+// screen, decoded from the player's own BTTITLE.CMP through the asset
+// provider, or with --map N the part of map N the player first sees.
 //
-//   chr [--game-dir DIR] [--screenshot FILE.bmp]
+//   chr [--game-dir DIR] [--map N] [--screenshot FILE.bmp]
 //
 // The game folder is --game-dir, else the CHR_GAME_DIR environment variable,
 // else the folder set when the program was built.
@@ -13,7 +14,11 @@
 
 #include <SDL3/SDL.h>
 
+#include "formats/game_files.h"
+#include "formats/mtp.h"
 #include "game/asset_id.h"
+#include "game/map_view.h"
+#include "platform/map_layer.h"
 #include "platform/original_assets.h"
 #include "platform/renderer.h"
 
@@ -22,6 +27,7 @@ namespace {
 struct Options {
     std::filesystem::path game_dir;
     std::string screenshot;  // write one frame here and quit
+    int map = 0;             // 0: the title screen
 };
 
 bool parse(int argc, char** argv, Options& options) {
@@ -33,10 +39,16 @@ bool parse(int argc, char** argv, Options& options) {
         const std::string arg = argv[i];
         if (arg == "--game-dir" && i + 1 < argc) {
             options.game_dir = argv[++i];
+        } else if (arg == "--map" && i + 1 < argc) {
+            options.map = std::atoi(argv[++i]);
+            if (options.map < 1 || options.map > 15) {
+                std::fprintf(stderr, "chr: --map takes 1 to 15\n");
+                return false;
+            }
         } else if (arg == "--screenshot" && i + 1 < argc) {
             options.screenshot = argv[++i];
         } else {
-            std::fprintf(stderr, "usage: chr [--game-dir DIR] [--screenshot FILE.bmp]\n");
+            std::fprintf(stderr, "usage: chr [--game-dir DIR] [--map N] [--screenshot FILE.bmp]\n");
             return false;
         }
     }
@@ -49,6 +61,30 @@ bool save_screenshot(SDL_Renderer* renderer, const std::string& path) {
     const bool ok = SDL_SaveBMP(shot, path.c_str());
     SDL_DestroySurface(shot);
     return ok;
+}
+
+// The view of map `number` at its starting position: the new-game start
+// for map 1; for the others (reached from elsewhere in the game, not yet
+// rebuilt) the map's middle.
+bool load_map_view(const std::filesystem::path& game_dir, int number, chr::game::MapView& view) {
+    const std::string name = "MAP" + std::to_string(number) + ".MTP";
+    try {
+        const auto path = chr::formats::find_game_file(game_dir, name);
+        if (!path) {
+            std::fprintf(stderr, "chr: %s not found in %s\n", name.c_str(), game_dir.string().c_str());
+            return false;
+        }
+        const auto map = chr::formats::decode_mtp(chr::formats::read_file(*path));
+        chr::formats::MapPosition position = chr::game::new_game_position();
+        if (number != 1)
+            position = {std::uint16_t(map.block_x * 16 + map.width),
+                        std::uint16_t(map.block_y * 16 + map.height)};
+        view = chr::game::view_of(map, chr::game::tile_sheet_for_map(number), position);
+        return true;
+    } catch (const std::exception& e) {
+        std::fprintf(stderr, "chr: %s: %s\n", name.c_str(), e.what());
+        return false;
+    }
 }
 
 }  // namespace
@@ -71,7 +107,9 @@ int main(int argc, char** argv) {
     }
 
     int status = 0;
-    {
+    chr::game::MapView map_view;
+    if (options.map != 0 && !load_map_view(options.game_dir, options.map, map_view)) status = 1;
+    if (status == 0) {
         chr::platform::OriginalAssets assets(options.game_dir);
         chr::platform::Renderer renderer(sdl_renderer, assets);
         const auto& title = chr::assets::kTitleScreen;
@@ -86,7 +124,12 @@ int main(int argc, char** argv) {
                     running = false;
             }
             renderer.begin_frame();
-            if (!renderer.draw(title, 0, 0) && !reported) {
+            bool drawn = true;
+            if (options.map != 0)
+                drawn = chr::platform::draw_map(renderer, map_view);
+            else
+                drawn = renderer.draw(title, 0, 0);
+            if (!drawn && !reported) {
                 std::fprintf(stderr, "chr: %s\n", assets.last_error().c_str());
                 reported = true;
                 status = 1;

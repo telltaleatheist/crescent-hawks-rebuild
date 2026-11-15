@@ -13,6 +13,9 @@ colours, run-length compressed:
 | `BTSTATS.CMP` | columns | the statistics screen |
 | `ENDMECH.CMP` | columns | the ending |
 
+The five `.ICN` tile sheets use the same container. Only the meaning of the
+unpacked bytes differs (see [icn.md](icn.md)).
+
 (The uses come from the code that names each file: the start-up routine
 1527:0044 and the title routine 1000:46a7. The sheets are cut by 273d:070a,
 which is not read yet.)

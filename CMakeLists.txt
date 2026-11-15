@@ -20,26 +20,32 @@ endif()
 
 # The game logic. Plain C++: no SDL, no renderer types, never touches pixels.
 # It speaks in game terms and asset IDs (the goal of a later visual makeover as a mod).
-add_library(chrgame STATIC
-  src/game/asset_id.cpp
-)
-target_include_directories(chrgame PUBLIC src)
-
 # Readers for the original's files, documented in docs/formats/. Standard C++ only.
 add_library(chrformats STATIC
   src/formats/cmp.cpp
   src/formats/game_files.cpp
+  src/formats/icn.cpp
+  src/formats/mtp.cpp
   src/formats/palette.cpp
 )
 target_include_directories(chrformats PUBLIC src)
+
+# (The game logic reads the map data through chrformats.)
+add_library(chrgame STATIC
+  src/game/asset_id.cpp
+  src/game/map_view.cpp
+)
+target_include_directories(chrgame PUBLIC src)
+target_link_libraries(chrgame PUBLIC chrformats)
 
 enable_testing()
 
 add_executable(chrtests
   tests/test_main.cpp
   tests/test_cmp.cpp
+  tests/test_maps.cpp
 )
-target_link_libraries(chrtests PRIVATE chrformats chrgame)
+target_link_libraries(chrtests PRIVATE chrgame)
 target_compile_definitions(chrtests PRIVATE CHR_DEFAULT_GAME_DIR="${CHR_GAME_DIR}")
 add_test(NAME chrtests COMMAND chrtests)
 
@@ -47,14 +53,15 @@ add_test(NAME chrtests COMMAND chrtests)
 find_package(SDL3 CONFIG QUIET)
 if(SDL3_FOUND)
   add_library(chrplatform STATIC
+    src/platform/map_layer.cpp
     src/platform/original_assets.cpp
     src/platform/renderer.cpp
   )
   target_include_directories(chrplatform PUBLIC src)
-  target_link_libraries(chrplatform PUBLIC chrgame chrformats SDL3::SDL3)
+  target_link_libraries(chrplatform PUBLIC chrgame SDL3::SDL3)
 
   add_executable(chr src/main.cpp)
-  target_link_libraries(chr PRIVATE chrplatform chrformats chrgame SDL3::SDL3)
+  target_link_libraries(chr PRIVATE chrplatform)
   target_compile_definitions(chr PRIVATE CHR_DEFAULT_GAME_DIR="${CHR_GAME_DIR}")
   if(WIN32)
     # SDL3.dll beside chr.exe.

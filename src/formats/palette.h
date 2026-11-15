@@ -19,8 +19,9 @@ using Palette16 = std::array<Rgb, 16>;
 // register value: the standard IRGB colours (bit 4 is the bright bit).
 Rgb ega_200_line_colour(std::uint8_t register_value);
 
-// The palette the program sets for the Infocom and title screens on the
-// 256K EGA/VGA display (choice 3).
-Palette16 title_palette_ega();
+// The palette the program sets on the 256K EGA/VGA display (choice 3) for the
+// Infocom and title screens, and puts back after screens with their own
+// colours (15ab:1afe), so the map is drawn with it too.
+Palette16 standard_palette_ega();
 
 }  // namespace chr::formats

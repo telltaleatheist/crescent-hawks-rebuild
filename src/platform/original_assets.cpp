@@ -5,6 +5,7 @@
 
 #include "formats/cmp.h"
 #include "formats/game_files.h"
+#include "formats/icn.h"
 #include "formats/palette.h"
 
 namespace chr::platform {
@@ -37,6 +38,16 @@ Image from_colour_numbers(const std::vector<std::uint8_t>& numbers, int width, i
 
 OriginalAssets::OriginalAssets(std::filesystem::path game_dir) : game_dir_(std::move(game_dir)) {}
 
+const formats::TileSheet* OriginalAssets::sheet(const std::string& file) {
+    if (auto it = sheets_.find(file); it != sheets_.end()) return &it->second;
+    const auto path = formats::find_game_file(game_dir_, file);
+    if (!path) {
+        last_error_ = file + " not found in " + game_dir_.string();
+        return nullptr;
+    }
+    return &sheets_.emplace(file, formats::decode_icn(formats::read_file(*path))).first->second;
+}
+
 std::optional<Image> OriginalAssets::image(const AssetId& id) {
     last_error_.clear();
     try {
@@ -51,11 +62,18 @@ std::optional<Image> OriginalAssets::image(const AssetId& id) {
                 return std::nullopt;
             }
             const auto picture = formats::decode_cmp(formats::read_file(*path));
-            // The 256K EGA/VGA palette the program sets for its title screens.
-            // Later the palette becomes part of what the game asks for (each
-            // screen sets its own), not a fixed choice here.
+            // The standard 256K EGA/VGA palette. Later the palette becomes part
+            // of what the game asks for (some screens set their own), not a
+            // fixed choice here.
             return from_colour_numbers(picture.pixels(), formats::kCmpWidth, formats::kCmpHeight,
-                                       formats::title_palette_ega());
+                                       formats::standard_palette_ega());
+        }
+        if (has_extension(id.file, ".ICN")) {
+            const auto* tiles = sheet(id.file);
+            if (!tiles) return std::nullopt;
+            const auto pixels = tiles->tile(id.index);
+            return from_colour_numbers({pixels.begin(), pixels.end()}, formats::kTileSize,
+                                       formats::kTileSize, formats::standard_palette_ega());
         }
         last_error_ = to_string(id) + ": no reader for this file type yet";
     } catch (const std::exception& e) {
