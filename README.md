@@ -37,7 +37,8 @@ sdl3`).
 
 `chr` looks for the game in `--game-dir DIR`, then in the `CHR_GAME_DIR`
 environment variable, then in the folder given when it was built. For now it
-shows the title screen.
+shows the title screen, or with `--map N` the part of map N you first see
+(map 1 is the town a new game starts in).
 
 ## Layout
 

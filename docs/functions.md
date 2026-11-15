@@ -29,7 +29,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 1000:19f3 | 0x119f3 | `FUN_1000_19f3` | 32 |  | - |
 | 1000:1a13 | 0x11a13 | `FUN_1000_1a13` | 234 |  | - |
 | 1000:1afd | 0x11afd | `FUN_1000_1afd` | 277 |  | - |
-| 1000:1c12 | 0x11c12 | `FUN_1000_1c12` | 1405 |  | - |
+| 1000:1c12 | 0x11c12 | `FUN_1000_1c12` | 1405 | Can the party step by (dx, dy)? Blocks on tile >= DS:0150; offers to enter a place at an entrance | read |
 | 1000:218f | 0x1218f | `FUN_1000_218f` | 398 |  | - |
 | 1000:231d | 0x1231d | `FUN_1000_231d` | 238 |  | - |
 | 1000:240b | 0x1240b | `FUN_1000_240b` | 183 |  | - |
@@ -45,8 +45,8 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 1000:2a7e | 0x12a7e | `FUN_1000_2a7e` | 21 |  | - |
 | 1000:2a93 | 0x12a93 | `FUN_1000_2a93` | 445 |  | - |
 | 1000:2c50 | 0x12c50 | `FUN_1000_2c50` | 344 |  | - |
-| 1000:2da8 | 0x12da8 | `FUN_1000_2da8` | 1123 |  | - |
-| 1000:320b | 0x1320b | `FUN_1000_320b` | 168 |  | - |
+| 1000:2da8 | 0x12da8 | `FUN_1000_2da8` | 1123 | Load MAP<n>.MTP into the block store and an area grid (DESTRUCT.ICN for map 11) | rebuilt |
+| 1000:320b | 0x1320b | `FUN_1000_320b` | 168 | Load ANIMATE.ICN, then BTTLTECH.ICN | read |
 | 1000:32b3 | 0x132b3 | `FUN_1000_32b3` | 800 |  | - |
 | 1000:35d3 | 0x135d3 | `FUN_1000_35d3` | 442 |  | - |
 | 1000:378d | 0x1378d | `FUN_1000_378d` | 1091 |  | - |
@@ -54,7 +54,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 1000:3d40 | 0x13d40 | `FUN_1000_3d40` | 622 |  | - |
 | 1000:3fae | 0x13fae | `FUN_1000_3fae` | 1556 |  | - |
 | 1000:45c2 | 0x145c2 | `FUN_1000_45c2` | 95 |  | - |
-| 1000:4621 | 0x14621 | `FUN_1000_4621` | 134 |  | - |
+| 1000:4621 | 0x14621 | `FUN_1000_4621` | 134 | Load BTTLTECH.ICN as the map tile sheet | rebuilt |
 | 1000:46a7 | 0x146a7 | `FUN_1000_46a7` | 198 | Show the title screen (BTTITLE.CMP, with its palette) | read |
 | 1000:476d | 0x1476d | `FUN_1000_476d` | 330 |  | - |
 | 1000:48b7 | 0x148b7 | `FUN_1000_48b7` | 495 |  | - |
@@ -63,7 +63,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 1000:4bc1 | 0x14bc1 | `FUN_1000_4bc1` | 235 |  | - |
 | 1000:4cac | 0x14cac | `FUN_1000_4cac` | 171 |  | - |
 | 1000:4d57 | 0x14d57 | `FUN_1000_4d57` | 112 |  | - |
-| 1000:4dc7 | 0x14dc7 | `FUN_1000_4dc7` | 769 |  | - |
+| 1000:4dc7 | 0x14dc7 | `FUN_1000_4dc7` | 769 | New game: reset the party, load map 1 into area 4, set the start position | read |
 | 1000:50c8 | 0x150c8 | `FUN_1000_50c8` | 434 |  | - |
 
 ## CODE_1: segment 1527, 2,104 bytes
@@ -89,7 +89,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 15ab:174c | 0x171fc | `FUN_15ab_174c` | 268 |  | - |
 | 15ab:1858 | 0x17308 | `FUN_15ab_1858` | 144 |  | - |
 | 15ab:18e8 | 0x17398 | `FUN_15ab_18e8` | 534 |  | - |
-| 15ab:1afe | 0x175ae | `FUN_15ab_1afe` | 2074 |  | - |
+| 15ab:1afe | 0x175ae | `FUN_15ab_1afe` | 2074 | Character stats screen (cycles its own palette, then restores 37e8:0000) | read |
 
 ## CODE_3: segment 17dc, 7,610 bytes
 
@@ -128,7 +128,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 
 | Address | Linear | Ghidra name | Span | Label | Status |
 |---|---|---|---|---|---|
-| 1b5d:0004 | 0x1b5d4 | `FUN_1b5d_0004` | 485 |  | - |
+| 1b5d:0004 | 0x1b5d4 | `FUN_1b5d_0004` | 485 | Load map 14 with STARLEAG.ICN (from its calls) | read |
 | 1b5d:01e9 | 0x1b7b9 | `FUN_1b5d_01e9` | 159 |  | - |
 | 1b5d:0288 | 0x1b858 | `FUN_1b5d_0288` | 32 |  | - |
 | 1b5d:02a8 | 0x1b878 | `FUN_1b5d_02a8` | 42 |  | - |
@@ -200,7 +200,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 
 | Address | Linear | Ghidra name | Span | Label | Status |
 |---|---|---|---|---|---|
-| 203b:000a | 0x203ba | `FUN_203b_000a` | 5240 |  | - |
+| 203b:000a | 0x203ba | `FUN_203b_000a` | 5240 | Loads map 11 (from its call to 1000:2da8; rest not read) | - |
 | 203b:1482 | 0x21832 | `FUN_203b_1482` | 65 |  | - |
 | 203b:14c3 | 0x21873 | `FUN_203b_14c3` | 689 |  | - |
 | 203b:1774 | 0x21b24 | `FUN_203b_1774` | 455 |  | - |
@@ -319,7 +319,7 @@ read each one before taking it as such.
 | 287f:0067 | 0x28857 | `FUN_287f_0067` | 22 |  | replaced |
 | 287f:007d | 0x2886d | `FUN_287f_007d` | 44 |  | replaced |
 | 287f:00a9 | 0x28899 | `FUN_287f_00a9` | 40 |  | replaced |
-| 287f:00d1 | 0x288c1 | `FUN_287f_00d1` | 123 |  | replaced |
+| 287f:00d1 | 0x288c1 | `FUN_287f_00d1` | 123 | CGA: choose the colour-reduction table for the next picture (from its arguments) | replaced |
 | 287f:014c | 0x2893c | `FUN_287f_014c` | 23 |  | replaced |
 | 287f:0163 | 0x28953 | `FUN_287f_0163` | 116 | CGA: reduce a 16-colour picture to 4 colours through two row tables | replaced |
 | 287f:01d7 | 0x289c7 | `FUN_287f_01d7` | 60 |  | replaced |
@@ -350,28 +350,28 @@ read each one before taking it as such.
 | 287f:0df8 | 0x295e8 | `FUN_287f_0df8` | 502 |  | replaced |
 | 287f:0fee | 0x297de | `FUN_287f_0fee` | 96 | MCGA: set the 16 DAC colours from 12-bit table words | replaced |
 | 287f:104e | 0x2983e | `FUN_287f_104e` | 365 |  | replaced |
-| 287f:11bb | 0x299ab | `FUN_287f_11bb` | 255 |  | replaced |
+| 287f:11bb | 0x299ab | `FUN_287f_11bb` | 255 | Build one area's block grid: fixed blocks as given, terrain by neighbour mask | read |
 | 287f:12ba | 0x29aaa | `FUN_287f_12ba` | 31 |  | replaced |
 | 287f:12d9 | 0x29ac9 | `FUN_287f_12d9` | 25 |  | replaced |
 | 287f:12f2 | 0x29ae2 | `FUN_287f_12f2` | 17 |  | replaced |
 | 287f:1303 | 0x29af3 | `FUN_287f_1303` | 17 |  | replaced |
-| 287f:1314 | 0x29b04 | `FUN_287f_1314` | 197 |  | replaced |
-| 287f:13d9 | 0x29bc9 | `FUN_287f_13d9` | 435 |  | replaced |
+| 287f:1314 | 0x29b04 | `FUN_287f_1314` | 197 | Set the view position and fetch the 3x3 blocks around it into the cell window | rebuilt |
+| 287f:13d9 | 0x29bc9 | `FUN_287f_13d9` | 435 | Copy one block into the cell window (remap terrain tiles, mirror, or copy as is) | rebuilt |
 | 287f:158c | 0x29d7c | `FUN_287f_158c` | 175 |  | replaced |
 | 287f:163b | 0x29e2b | `FUN_287f_163b` | 168 |  | replaced |
 | 287f:16e3 | 0x29ed3 | `FUN_287f_16e3` | 226 |  | replaced |
 | 287f:17c5 | 0x29fb5 | `FUN_287f_17c5` | 193 |  | replaced |
-| 287f:1886 | 0x2a076 | `FUN_287f_1886` | 82 |  | replaced |
+| 287f:1886 | 0x2a076 | `FUN_287f_1886` | 82 | Build the block grids for all nine areas (calls 11bb nine times) | read |
 | 287f:18d8 | 0x2a0c8 | `FUN_287f_18d8` | 23 |  | replaced |
-| 287f:18ef | 0x2a0df | `FUN_287f_18ef` | 441 |  | replaced |
-| 287f:1aa8 | 0x2a298 | `FUN_287f_1aa8` | 38 |  | replaced |
-| 287f:1ace | 0x2a2be | `FUN_287f_1ace` | 38 |  | replaced |
-| 287f:1af4 | 0x2a2e4 | `FUN_287f_1af4` | 38 |  | replaced |
-| 287f:1b1a | 0x2a30a | `FUN_287f_1b1a` | 87 |  | replaced |
-| 287f:1b71 | 0x2a361 | `FUN_287f_1b71` | 35 |  | replaced |
-| 287f:1b94 | 0x2a384 | `FUN_287f_1b94` | 75 |  | replaced |
+| 287f:18ef | 0x2a0df | `FUN_287f_18ef` | 441 | Draw the map view: 13x12 tiles plus half tiles at the edges | rebuilt |
+| 287f:1aa8 | 0x2a298 | `FUN_287f_1aa8` | 38 | Draw a half-width tile (by display) | replaced |
+| 287f:1ace | 0x2a2be | `FUN_287f_1ace` | 38 | Draw a half-height tile (by display) | replaced |
+| 287f:1af4 | 0x2a2e4 | `FUN_287f_1af4` | 38 | Draw a whole tile: offset = tile number x 128 into the sheet (by display) | replaced |
+| 287f:1b1a | 0x2a30a | `FUN_287f_1b1a` | 87 | Copy a 16x16 tile into the screen buffer (CGA, Tandy, MCGA) | rebuilt |
+| 287f:1b71 | 0x2a361 | `FUN_287f_1b71` | 35 | Draw a whole tile on EGA (from its caller) | replaced |
+| 287f:1b94 | 0x2a384 | `FUN_287f_1b94` | 75 | Copy a half-height tile into the screen buffer (from its caller) | replaced |
 | 287f:1bdf | 0x2a3cf | `FUN_287f_1bdf` | 29 |  | replaced |
-| 287f:1bfc | 0x2a3ec | `FUN_287f_1bfc` | 135 |  | replaced |
+| 287f:1bfc | 0x2a3ec | `FUN_287f_1bfc` | 135 | Copy a half-width tile into the screen buffer: right half when DS:a450 is 0 | replaced |
 | 287f:1c83 | 0x2a473 | `FUN_287f_1c83` | 53 |  | replaced |
 | 287f:1cb8 | 0x2a4a8 | `FUN_287f_1cb8` | 130 |  | replaced |
 | 287f:1d3a | 0x2a52a | `FUN_287f_1d3a` | 82 |  | replaced |

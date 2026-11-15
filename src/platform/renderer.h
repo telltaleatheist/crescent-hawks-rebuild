@@ -26,6 +26,9 @@ public:
     // Draws the picture for `id` with its top-left corner at (x, y) in
     // 320x200 screen units. Returns false if no provider has it.
     bool draw(const AssetId& id, int x, int y);
+    // Limits drawing to a rectangle of the 320x200 screen; clear_clip() lifts it.
+    void clip(int x, int y, int width, int height);
+    void clear_clip();
     void end_frame();
 
 private:

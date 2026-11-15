@@ -42,6 +42,13 @@ bool Renderer::draw(const AssetId& id, int x, int y) {
     return SDL_RenderTexture(sdl_, texture, nullptr, &dest);
 }
 
+void Renderer::clip(int x, int y, int width, int height) {
+    const SDL_Rect rect{x, y, width, height};
+    SDL_SetRenderClipRect(sdl_, &rect);
+}
+
+void Renderer::clear_clip() { SDL_SetRenderClipRect(sdl_, nullptr); }
+
 void Renderer::end_frame() { SDL_RenderPresent(sdl_); }
 
 }  // namespace chr::platform

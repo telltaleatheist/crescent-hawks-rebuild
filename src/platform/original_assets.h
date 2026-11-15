@@ -2,8 +2,10 @@
 #pragma once
 
 #include <filesystem>
+#include <map>
 #include <string>
 
+#include "formats/icn.h"
 #include "platform/asset_provider.h"
 
 namespace chr::platform {
@@ -17,7 +19,10 @@ public:
     const std::string& last_error() const { return last_error_; }
 
 private:
+    const formats::TileSheet* sheet(const std::string& file);
+
     std::filesystem::path game_dir_;
+    std::map<std::string, formats::TileSheet> sheets_;  // decoded once per file
     std::string last_error_;
 };
 
