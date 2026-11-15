@@ -44,7 +44,7 @@ segments). It has 25 segments:
 | Segments | Size | What |
 |---|---|---|
 | 1000–284b (`CODE_0`–`CODE_16`) | about 100 KB | the game |
-| 287f (`CODE_17`) | 16 KB | Microsoft C run-time library (holds the entry point) |
+| 287f (`CODE_17`) | 16 KB | Microsoft C run-time library (holds the entry point), plus the game's own assembly routines for the display drivers and picture unpacking |
 | 2c6c, 37e8, 3856, 3858, 385b, 3892 | about 130 KB | far data and tables |
 | 46db | 29 KB | DGROUP (the near data, stack and heap; it starts with the library's copyright text) |
 
