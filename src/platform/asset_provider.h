@@ -1,0 +1,34 @@
+// The asset-provider seam (the goal of a later visual makeover as a mod). The renderer asks a provider
+// for the picture behind an asset ID and never reads the original's formats
+// itself. The default provider (original_assets.h) decodes the player's own
+// files; a later mod provider can answer any ID with new art at any
+// resolution. No SDL types here, so a provider can be written without them.
+#pragma once
+
+#include <cstdint>
+#include <optional>
+#include <vector>
+
+#include "game/asset_id.h"
+
+namespace chr::platform {
+
+struct Image {
+    int width = 0;   // in the image's own pixels
+    int height = 0;
+    // The size it covers on the original's 320x200 screen. For the original
+    // art this equals width x height; a 4x mod image of the same picture has
+    // the same logical size and four times the pixels.
+    int logical_width = 0;
+    int logical_height = 0;
+    std::vector<std::uint8_t> rgba;  // width * height * 4 bytes, row-major, R G B A
+};
+
+class AssetProvider {
+public:
+    virtual ~AssetProvider() = default;
+    // The picture for `id`, or nothing if this provider doesn't have it.
+    virtual std::optional<Image> image(const AssetId& id) = 0;
+};
+
+}  // namespace chr::platform

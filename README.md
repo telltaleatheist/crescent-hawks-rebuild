@@ -25,7 +25,26 @@ original's files and none of its code. It is not affiliated with or endorsed
 by the holders of any rights in Infocom, Westwood or BattleTech. The full
 rules are in [docs/rules.md](docs/rules.md).
 
+## Building
+
+You need CMake 3.20 or later, a C++20 compiler and SDL3 (macOS: `brew install
+sdl3`).
+
+    cmake -S . -B build -DCHR_GAME_DIR=/path/to/your/game
+    cmake --build build
+    ctest --test-dir build
+    build/chr
+
+`chr` looks for the game in `--game-dir DIR`, then in the `CHR_GAME_DIR`
+environment variable, then in the folder given when it was built. For now it
+shows the title screen.
+
 ## Layout
+
+- `src/game/` — the game logic, in plain C++ with no graphics library types.
+- `src/formats/` — readers for the original's files.
+- `src/platform/` — the SDL3 window and renderer, and the asset provider
+  that turns the game's picture IDs into images.
 
 - `docs/` — how the original works, in our own words, and the project rules.
 - `tools/` — the tools we use to study the original. They work on your own

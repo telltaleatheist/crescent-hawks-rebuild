@@ -55,7 +55,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 1000:3fae | 0x13fae | `FUN_1000_3fae` | 1556 |  | - |
 | 1000:45c2 | 0x145c2 | `FUN_1000_45c2` | 95 |  | - |
 | 1000:4621 | 0x14621 | `FUN_1000_4621` | 134 |  | - |
-| 1000:46a7 | 0x146a7 | `FUN_1000_46a7` | 198 |  | - |
+| 1000:46a7 | 0x146a7 | `FUN_1000_46a7` | 198 | Show the title screen (BTTITLE.CMP, with its palette) | read |
 | 1000:476d | 0x1476d | `FUN_1000_476d` | 330 |  | - |
 | 1000:48b7 | 0x148b7 | `FUN_1000_48b7` | 495 |  | - |
 | 1000:4aa6 | 0x14aa6 | `FUN_1000_4aa6` | 14 |  | - |
@@ -71,7 +71,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | Address | Linear | Ghidra name | Span | Label | Status |
 |---|---|---|---|---|---|
 | 1527:000a | 0x1527a | `FUN_1527_000a` | 58 |  | - |
-| 1527:0044 | 0x152b4 | `FUN_1527_0044` | 2046 |  | - |
+| 1527:0044 | 0x152b4 | `FUN_1527_0044` | 2046 | Start-up: ask for the display, show INFOCOM.CMP then the title, cut the tile sheets | read |
 
 ## CODE_2: segment 15ab, 8,982 bytes
 
@@ -258,16 +258,16 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 273d:0006 | 0x273d6 | `FUN_273d_0006` | 41 |  | - |
 | 273d:002f | 0x273ff | `FUN_273d_002f` | 36 |  | - |
 | 273d:0053 | 0x27423 | `FUN_273d_0053` | 51 |  | - |
-| 273d:0086 | 0x27456 | `FUN_273d_0086` | 79 |  | - |
+| 273d:0086 | 0x27456 | `FUN_273d_0086` | 79 | Copy a picture buffer to the screen (by display) | replaced |
 | 273d:00d5 | 0x274a5 | `FUN_273d_00d5` | 294 |  | - |
 | 273d:01fb | 0x275cb | `FUN_273d_01fb` | 94 |  | - |
 | 273d:0259 | 0x27629 | `FUN_273d_0259` | 195 |  | - |
 | 273d:031c | 0x276ec | `FUN_273d_031c` | 207 |  | - |
 | 273d:03eb | 0x277bb | `FUN_273d_03eb` | 178 |  | - |
-| 273d:049d | 0x2786d | `FUN_273d_049d` | 136 |  | - |
-| 273d:0525 | 0x278f5 | `FUN_273d_0525` | 151 |  | - |
+| 273d:049d | 0x2786d | `FUN_273d_049d` | 136 | Unpack a loaded .CMP by its type byte (CGA: reduce to 4 colours) | rebuilt |
+| 273d:0525 | 0x278f5 | `FUN_273d_0525` | 151 | Set the 16-colour palette for the chosen display | rebuilt |
 | 273d:05bc | 0x2798c | `FUN_273d_05bc` | 127 |  | - |
-| 273d:063b | 0x27a0b | `FUN_273d_063b` | 136 |  | - |
+| 273d:063b | 0x27a0b | `FUN_273d_063b` | 136 | Load a .CMP: 2-byte length, then the body (asks for the disk on failure) | rebuilt |
 | 273d:06c3 | 0x27a93 | `FUN_273d_06c3` | 71 |  | - |
 | 273d:070a | 0x27ada | `FUN_273d_070a` | 266 |  | - |
 | 273d:0814 | 0x27be4 | `FUN_273d_0814` | 86 |  | - |
@@ -306,6 +306,11 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 
 ## CODE_17: segment 287f, 16,068 bytes (Microsoft C run-time library; entry point here)
 
+This segment also holds the program's own assembly graphics routines, linked in beside the
+run-time library: the .CMP unpackers (22f8, 2368) and the display drivers' copy and palette
+code (0163, 022a, 0260, 0fee, 200e, 245c). So a `replaced` here is not proof of library code:
+read each one before taking it as such.
+
 | Address | Linear | Ghidra name | Span | Label | Status |
 |---|---|---|---|---|---|
 | 287f:001c | 0x2880c | `FUN_287f_001c` | 20 |  | replaced |
@@ -316,11 +321,11 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 287f:00a9 | 0x28899 | `FUN_287f_00a9` | 40 |  | replaced |
 | 287f:00d1 | 0x288c1 | `FUN_287f_00d1` | 123 |  | replaced |
 | 287f:014c | 0x2893c | `FUN_287f_014c` | 23 |  | replaced |
-| 287f:0163 | 0x28953 | `FUN_287f_0163` | 116 |  | replaced |
+| 287f:0163 | 0x28953 | `FUN_287f_0163` | 116 | CGA: reduce a 16-colour picture to 4 colours through two row tables | replaced |
 | 287f:01d7 | 0x289c7 | `FUN_287f_01d7` | 60 |  | replaced |
 | 287f:0213 | 0x28a03 | `FUN_287f_0213` | 23 |  | replaced |
-| 287f:022a | 0x28a1a | `FUN_287f_022a` | 54 |  | replaced |
-| 287f:0260 | 0x28a50 | `FUN_287f_0260` | 179 |  | replaced |
+| 287f:022a | 0x28a1a | `FUN_287f_022a` | 54 | EGA: set one attribute palette register | replaced |
+| 287f:0260 | 0x28a50 | `FUN_287f_0260` | 179 | EGA: write a packed picture into the four planes at A800 | replaced |
 | 287f:0313 | 0x28b03 | `FUN_287f_0313` | 100 |  | replaced |
 | 287f:0377 | 0x28b67 | `FUN_287f_0377` | 507 |  | replaced |
 | 287f:0572 | 0x28d62 | `FUN_287f_0572` | 77 |  | replaced |
@@ -343,7 +348,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 287f:0d07 | 0x294f7 | `FUN_287f_0d07` | 114 |  | replaced |
 | 287f:0d79 | 0x29569 | `FUN_287f_0d79` | 127 |  | replaced |
 | 287f:0df8 | 0x295e8 | `FUN_287f_0df8` | 502 |  | replaced |
-| 287f:0fee | 0x297de | `FUN_287f_0fee` | 96 |  | replaced |
+| 287f:0fee | 0x297de | `FUN_287f_0fee` | 96 | MCGA: set the 16 DAC colours from 12-bit table words | replaced |
 | 287f:104e | 0x2983e | `FUN_287f_104e` | 365 |  | replaced |
 | 287f:11bb | 0x299ab | `FUN_287f_11bb` | 255 |  | replaced |
 | 287f:12ba | 0x29aaa | `FUN_287f_12ba` | 31 |  | replaced |
@@ -381,16 +386,16 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 287f:1f9c | 0x2a78c | `FUN_287f_1f9c` | 17 |  | replaced |
 | 287f:1fad | 0x2a79d | `FUN_287f_1fad` | 17 |  | replaced |
 | 287f:1fbe | 0x2a7ae | `FUN_287f_1fbe` | 80 |  | replaced |
-| 287f:200e | 0x2a7fe | `FUN_287f_200e` | 281 |  | replaced |
+| 287f:200e | 0x2a7fe | `FUN_287f_200e` | 281 | Copy a packed picture to CGA, Tandy or MCGA screen memory | replaced |
 | 287f:2127 | 0x2a917 | `FUN_287f_2127` | 129 |  | replaced |
 | 287f:21a8 | 0x2a998 | `FUN_287f_21a8` | 97 |  | replaced |
 | 287f:2209 | 0x2a9f9 | `FUN_287f_2209` | 72 |  | replaced |
 | 287f:2251 | 0x2aa41 | `FUN_287f_2251` | 84 |  | replaced |
 | 287f:22a5 | 0x2aa95 | `FUN_287f_22a5` | 83 |  | replaced |
-| 287f:22f8 | 0x2aae8 | `FUN_287f_22f8` | 112 |  | replaced |
-| 287f:2368 | 0x2ab58 | `FUN_287f_2368` | 132 |  | replaced |
+| 287f:22f8 | 0x2aae8 | `FUN_287f_22f8` | 112 | Unpack .CMP runs in row order | rebuilt |
+| 287f:2368 | 0x2ab58 | `FUN_287f_2368` | 132 | Unpack .CMP runs in column order | rebuilt |
 | 287f:23ec | 0x2abdc | `FUN_287f_23ec` | 112 |  | replaced |
-| 287f:245c | 0x2ac4c | `FUN_287f_245c` | 123 |  | replaced |
+| 287f:245c | 0x2ac4c | `FUN_287f_245c` | 123 | EGA: copy the A800 page to the screen at A000 (from its call site) | replaced |
 | 287f:24d7 | 0x2acc7 | `FUN_287f_24d7` | 645 |  | replaced |
 | 287f:275c | 0x2af4c | `FUN_287f_275c` | 332 |  | replaced |
 | 287f:28a8 | 0x2b098 | `FUN_287f_28a8` | 67 |  | replaced |

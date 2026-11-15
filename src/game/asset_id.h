@@ -1,0 +1,30 @@
+// Asset IDs: how the game logic names a graphic without knowing what it looks
+// like. An ID is the original's file name plus an index into that file (a
+// picture, a tile or a frame). The renderer turns an ID into pixels through an
+// asset provider (src/platform/asset_provider.h). The default provider decodes
+// the player's original files; a mod provider may replace any ID with new art.
+#pragma once
+
+#include <compare>
+#include <cstdint>
+#include <string>
+
+namespace chr {
+
+struct AssetId {
+    std::string file;     // the original's file name, upper case, e.g. "BTTITLE.CMP"
+    std::uint16_t index = 0;  // which image in the file; a .CMP holds one, index 0
+
+    auto operator<=>(const AssetId&) const = default;
+};
+
+// "BTTITLE.CMP#0": for logs, error messages and mod manifests.
+std::string to_string(const AssetId& id);
+
+// The full-screen pictures the program shows (each a .CMP).
+namespace assets {
+inline const AssetId kInfocomLogo{"INFOCOM.CMP", 0};
+inline const AssetId kTitleScreen{"BTTITLE.CMP", 0};
+}  // namespace assets
+
+}  // namespace chr
