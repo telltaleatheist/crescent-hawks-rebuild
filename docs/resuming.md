@@ -59,10 +59,15 @@ rewrite of the rules, only of their signatures.
 ## Saved games
 
 With (1), a save is taken only at a stop where no coroutine frame holds game state: the town's
-main loop waiting for its next key (where the original saves is still to be read; this
-assumes it is a town command). Everything there
+main loop waiting for its next key (open question 1). Everything there
 lives in `Town` members, so a save writes those, and a load builds a `Town` from it. No frame
 is restored. With (2), any stop could be saved, but only the town's matches the original.
 
 The replay stays as a test: a run resumed stop by stop must match one played from the start
 with the same keys, event for event and state for state.
+
+## Open questions
+
+1. Where the original saves a game: this note assumes from a town command, at the main loop's
+   top, with nothing of a fight or a place under way. To be read from the save path before the
+   coroutines are built.
