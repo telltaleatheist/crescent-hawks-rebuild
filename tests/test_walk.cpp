@@ -119,7 +119,7 @@ struct Map1 {
 };
 
 bool play_map1(const std::string& script, std::unique_ptr<Town>& town, Map1& m,
-               const TextProvider* overrides = nullptr) {
+               const TextProvider* overrides = nullptr, bool start_up = false) {
     const auto dir = chrtest::game_dir();
     if (dir.empty()) {
         chrtest::skip("no game folder (set CHR_GAME_DIR)");
@@ -135,13 +135,50 @@ bool play_map1(const std::string& script, std::unique_ptr<Town>& town, Map1& m,
     if (overrides) layers.insert(layers.begin(), overrides);
     m.texts = std::make_unique<LayeredText>(layers);
     town = std::make_unique<Town>(m.map, 1, new_game_position(), *m.texts);
-    town->draw_panel();
+    if (start_up) town->start_up();
+    else town->draw_panel();
     ScriptKeys keys(parse_key_script(script));
     town->run(keys);
     return true;
 }
 
 }  // namespace
+
+TEST(start_up_screens_and_questions) {
+    auto play = [](const std::string& script, std::unique_ptr<Town>& town, Map1& m) {
+        return play_map1(script, town, m, nullptr, true);
+    };
+    std::unique_ptr<Town> town;
+    Map1 m;
+    // The Infocom screen goes after 700 frames, or at a key.
+    if (!play("idle:699", town, m)) return;
+    CHECK(town->full_screen() == assets::kInfocomLogo && town->start_up_open());
+    Map1 m2;
+    play("idle:300 idle:400", town, m2);
+    CHECK(town->full_screen() == assets::kTitleScreen);
+    Map1 m3;
+    play("enter", town, m3);
+    CHECK(town->full_screen() == assets::kTitleScreen);
+    // The title waits for a key, however long; then the first-time question.
+    Map1 m4;
+    play("enter idle:5000 enter", town, m4);
+    CHECK(!town->full_screen() && town->start_up_open());
+    // Yes: the town.
+    Map1 m5;
+    play("enter enter enter", town, m5);
+    CHECK(!town->start_up_open() && town->log().back() == "new game");
+    // No, then no again: a new game too. No, then yes: loading is not
+    // rebuilt, so a new game starts all the same.
+    Map1 m6;
+    play("enter enter n", town, m6);
+    CHECK(town->start_up_open());
+    Map1 m7;
+    play("enter enter n n", town, m7);
+    CHECK(!town->start_up_open() && town->log().back() == "new game");
+    Map1 m8;
+    play("enter enter n y", town, m8);
+    CHECK(town->log().size() >= 2 && town->log()[town->log().size() - 2].rfind("load a saved game", 0) == 0);
+}
 
 TEST(map1_wall_south_of_the_start) {
     std::unique_ptr<Town> town;

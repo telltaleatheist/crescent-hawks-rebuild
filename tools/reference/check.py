@@ -33,11 +33,11 @@ import state  # noqa: E402
 
 SKIP = 77
 
-# The original's keys to reach each screen. The start-up asks for the
-# graphics adapter (3: 256K EGA/VGA) and the disk drives (3: hard disk), then
-# waits on a note, the Infocom screen and the title, then asks "Is this your
-# first time playing BattleTech?" (Enter: yes) and starts the town.
-START = "3 3 enter enter enter enter"
+# The original's keys before the first case. The start-up asks in text mode
+# for the graphics adapter (3: 256K EGA/VGA) and the disk drives (3: hard
+# disk), then waits on a note about saved games. The rebuild leaves those to
+# the platform; its start-up begins with the Infocom screen (the first case).
+START = "3 3 enter"
 
 # Every case runs on from the one before it, in one run of the original.
 # "keys" are the original's keys and idle steps since the previous case
@@ -48,10 +48,34 @@ WHOLE_MAP = (104, 0, 216, 200)
 
 CASES = [
     {
+        # The start-up (docs/startup.md): the Infocom screen, up until a key
+        # or 700 frames. No game state yet.
+        "name": "start_infocom",
+        "keys": "",
+        "state": False,
+        "match": {"the screen": (0, 0, 320, 200)},
+    },
+    {
+        # The title, while its tune plays, until a key.
+        "name": "start_title",
+        "keys": "enter",
+        "state": False,
+        "match": {"the screen": (0, 0, 320, 200)},
+    },
+    {
+        # A new game's panel, the notice and "Is this your first time
+        # playing BattleTech?" in window 6, Yes picked.
+        "name": "start_first_time",
+        "keys": "enter",
+        "state": False,
+        "match": {"the panel": WHOLE_PANEL, "the window": WHOLE_MAP},
+    },
+    {
         # The first pass of the main loop is a game tick: 15 C-Bills (20 to
         # 35), the animated tiles on frame 1.
         "name": "town_start",
-        "keys": "",
+        "keys": "enter",
+        "starts_town": True,
         "match": {"the panel": WHOLE_PANEL, "the map": WHOLE_MAP},
     },
     {
@@ -201,13 +225,18 @@ def expand(keys):
 
 def chr_script(cases, upto):
     """The chr script for the case at index `upto`: every item so far."""
-    items = ["idle:%d" % FIRST_PASSES]
+    items = []
+    in_town = False
     for case in cases[:upto + 1]:
         for k in expand(case["keys"]):
             items.append(k)
-            if not k.startswith("idle:"):
+            if case.get("starts_town"):
+                # The answer to the first-time question: the town begins.
+                items.append("idle:%d" % FIRST_PASSES)
+                in_town = True
+            elif in_town and not k.startswith("idle:"):
                 items.append("idle:%d" % PASSES_AFTER_KEY)
-    return " ".join(items)
+    return " ".join(items) or "idle:1"
 
 
 def original_script(cases):
@@ -249,7 +278,7 @@ def main():
     for i, case in enumerate(cases):
         name = case["name"]
         shot = os.path.join(a.work, name + ".bmp")
-        out = subprocess.run([a.chr, "--game-dir", a.game_dir, "--data-dir", a.data_dir, "--map", "1",
+        out = subprocess.run([a.chr, "--game-dir", a.game_dir, "--data-dir", a.data_dir,
                               "--script", chr_script(cases, i), "--screenshot", shot, "--state"],
                              check=True, env=env, stdout=subprocess.PIPE, text=True).stdout
         ours_state = [line for line in out.splitlines() if line.startswith("state ")]
@@ -265,6 +294,8 @@ def main():
             n = len(compare.compare_rect(ref, ours, rect))
             print(f"  {'ok  ' if n == 0 else 'FAIL'} {label}: {n} pixels differ")
             ok = ok and n == 0
+        if not case.get("state", True):
+            ref_state = ours_state = []
         differ = [f"original: {r}\n         chr: {c}" for r, c in zip(ref_state, ours_state) if r != c]
         if len(ref_state) != len(ours_state):
             differ.append("different number of state lines")

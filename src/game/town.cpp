@@ -231,6 +231,10 @@ void Town::draw_cbills() {
 }
 
 void Town::run(ScriptKeys& input) {
+    if (stage_ != Stage::Town && !run_start_up(input)) {
+        start_up_open_ = true;
+        return;
+    }
     while (!stopped()) {
         const auto item = input.next_item();
         if (!item) break;

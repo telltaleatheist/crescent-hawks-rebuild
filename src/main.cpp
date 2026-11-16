@@ -1,7 +1,7 @@
-// chr: the rebuild's program. For now it opens a window and shows the title
-// screen, decoded from the player's own BTTITLE.CMP through the asset
-// provider, or with --map N map N with the panel, walking with the arrow
-// keys and Home/PgUp/End/PgDn.
+// chr: the rebuild's program. It starts as the original does (the Infocom
+// screen, the title, "Is this your first time playing?") and goes on to the
+// new game's town, walking with the arrow keys and Home/PgUp/End/PgDn. With
+// --map N it skips the start-up and begins on map N.
 //
 //   chr [--game-dir DIR] [--data-dir DIR] [--import] [--map N] [--script KEYS]
 //       [--text FILE] [--screenshot FILE.bmp]
@@ -12,7 +12,7 @@
 // --import (which imports again and quits). --text FILE layers a text file
 // of the same form (formats/import.h) over the imported one, e.g. a
 // translation.
-// --script plays a key sequence on the map first ("up*5 y", "idle:40", see
+// --script plays a key sequence first ("up*5 y", "idle:40", see
 // game/town.h) and prints what each key did. --screenshot renders one frame
 // to the file without opening a window. In a window the town runs at the
 // original's pace, one main-loop pass per display frame of a VGA card
@@ -56,7 +56,7 @@ struct Options {
     std::filesystem::path data_dir;  // the imported text and font
     bool import = false;
     bool state = false;      // print the game state after the script
-    int map = 0;             // 0: the title screen
+    int map = 0;             // 0: the start-up, then map 1
 };
 
 bool parse(int argc, char** argv, Options& options) {
@@ -223,7 +223,11 @@ int main(int argc, char** argv) {
     chr::formats::MtpMap map;
     chr::formats::MapPosition start;
     std::deque<chr::game::ScriptItem> keys;  // every key and idle stretch so far, the script's first
-    if (options.map != 0 && !load_map(options.game_dir, options.map, map, start)) status = 1;
+    // Without --map the program starts up as the original does, and the new
+    // game begins on map 1.
+    const bool start_up = options.map == 0;
+    if (start_up) options.map = 1;
+    if (!load_map(options.game_dir, options.map, map, start)) status = 1;
     chr::game::TextTable overrides;
     if (status == 0 && !options.text_file.empty()) {
         try {
@@ -265,7 +269,8 @@ int main(int argc, char** argv) {
             try {
                 town = std::make_unique<chr::game::Town>(map, options.map, start, texts);
                 town->set_game_dir(options.game_dir);
-                town->draw_panel();
+                if (start_up) town->start_up();
+                else town->draw_panel();
                 chr::game::ScriptKeys source(keys);
                 town->run(source);
                 return true;
@@ -282,6 +287,7 @@ int main(int argc, char** argv) {
                 for (const auto& line : town->log()) std::printf("%s\n", line.c_str());
                 if (town->question_open()) std::printf("(waiting for an answer)\n");
                 if (town->place_open()) std::printf("(waiting in a place)\n");
+                if (town->start_up_open()) std::printf("(waiting in the start-up)\n");
             }
             if (options.state) print_state(*town);
         }
@@ -298,7 +304,7 @@ int main(int argc, char** argv) {
                 if (event.key.key == SDLK_ESCAPE) running = false;
                 if (const int k = key_code(event.key.key); k != 0 && town) {
                     keys.push_back({k, 0});
-                    if (town->question_open() || town->place_open()) {
+                    if (town->question_open() || town->place_open() || town->start_up_open()) {
                         replay();
                     } else {
                         chr::game::ScriptKeys none({});
@@ -309,15 +315,24 @@ int main(int argc, char** argv) {
             const Uint64 now = SDL_GetTicksNS();
             const int frames = clock.advance(double(now - last) / 1e9);
             last = now;
-            if (town && frames > 0 && !town->question_open() && !town->place_open() &&
+            if (town && frames > 0 && town->start_up_open() && town->full_screen() == chr::assets::kInfocomLogo &&
                 options.screenshot.empty()) {
+                // The Infocom screen goes by itself after a while: time is
+                // input there too.
+                if (!keys.empty() && keys.back().idle > 0) keys.back().idle += frames;
+                else keys.push_back({0, frames});
+                replay();
+            } else if (town && frames > 0 && !town->question_open() && !town->place_open() &&
+                       !town->start_up_open() && options.screenshot.empty()) {
                 for (int i = 0; i < frames; ++i) town->idle_pass();
                 if (!keys.empty() && keys.back().idle > 0) keys.back().idle += frames;
                 else keys.push_back({0, frames});
             }
             renderer.begin_frame();
             bool drawn = true;
-            if (town) {
+            if (const auto screen = town ? town->full_screen() : std::nullopt) {
+                drawn = renderer.draw(*screen, 0, 0);
+            } else if (town) {
                 const auto view = town->view();
                 drawn = chr::platform::draw_map(renderer, view);
                 drawn = chr::platform::draw_figures(renderer, view, town->figures()) && drawn;

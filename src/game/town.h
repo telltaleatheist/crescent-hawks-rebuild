@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "formats/menus.h"
+#include "game/asset_id.h"
 #include "formats/mtp.h"
 #include "game/figures.h"
 #include "game/flags.h"
@@ -96,6 +97,17 @@ public:
     Town(const formats::MtpMap& map, int map_number, formats::MapPosition start,
          const TextProvider& texts);
 
+    // Begins with the program's start-up (game/startup.cpp): the Infocom
+    // screen, the title and the first-time question, before the town. Call
+    // before run().
+    void start_up();
+    // A full-screen picture shown instead of the town (the Infocom screen,
+    // the title), while the start-up shows one.
+    std::optional<AssetId> full_screen() const;
+    // The keys ran out during the start-up, which waits for one (or, on the
+    // Infocom screen, for time to pass too).
+    bool start_up_open() const { return start_up_open_; }
+
     // BTECH.EXE 1000:4cac (Ghidra FUN_1000_4cac)
     // The left panel: the party box (window 3) with the characters and
     // C-Bills, and the box above it (window 4).
@@ -148,7 +160,14 @@ private:
     class Question;
     // Nothing more happens: a question or a place waits for keys that ran
     // out, or the walk stopped at a place it can't run.
-    bool stopped() const { return question_open_ || place_open_ || (entered_place_ && !game_dir_); }
+    bool stopped() const {
+        return question_open_ || place_open_ || start_up_open_ || (entered_place_ && !game_dir_);
+    }
+    // The start-up's screens, in order (game/startup.cpp).
+    enum class Stage { Infocom, Title, Question, Town };
+    // Runs the start-up from the keys; false if they ran out.
+    bool run_start_up(ScriptKeys& input);
+    void new_game_screen();
     void turn(int key, KeySource& keys);
     // BTECH.EXE 1000:020a..050d (the main loop's game tick)
     void game_tick();
@@ -198,6 +217,9 @@ private:
     std::optional<int> entered_place_;
     bool place_open_ = false;
     Flags flags_ = new_game_flags();
+    Stage stage_ = Stage::Town;
+    int infocom_frames_ = 0;  // frames the Infocom screen has been up
+    bool start_up_open_ = false;
     // The menu table (385b:0092): the items count changes at run time (talk
     // sets menu 20's), and each menu remembers its last item (+6).
     std::array<formats::MenuRecord, formats::kMenus.size()> menus_ = formats::kMenus;

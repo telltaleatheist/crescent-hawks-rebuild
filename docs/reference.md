@@ -67,12 +67,17 @@ townspeople's records) must be identical too. `--full` (ctest `reference_compare
 ## The start-up, as captured
 
 1. Text mode: "Which graphics adapter do you have?" (3: 256K EGA/VGA), then "How many disk
-   drives?" (3: hard disk), then a note about where saved games go; a key goes on.
-2. The Infocom/Westwood screen, then the title; a key each.
-3. The panel and window 6 with the copyright text and "Is this your first time playing
-   BattleTech?" (`1000:50c8`). Yes goes to the town; No asks "You can load a previously saved
-   game, or start a new game. Do you want to load an old game?".
+   drives?" (3: hard disk), then a note about where saved games go; a key goes on. The rebuild
+   leaves these to the platform (docs/startup.md).
+2. The Infocom/Westwood screen, then the title; a key each. Rig cases `start_infocom`,
+   `start_title`.
+3. The panel and window 6 with the notice and "Is this your first time playing BattleTech?"
+   (`1000:50c8`). Rig case `start_first_time`. Yes goes to the town; No asks whether to load a
+   saved game.
 4. The town, map 1, at the start position.
+
+The rig drives `chr` through the same start-up (no `--map`), so every case after it runs on from
+the rebuilt start-up.
 
 ## Findings
 

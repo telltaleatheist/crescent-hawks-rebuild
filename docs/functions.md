@@ -47,7 +47,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 1000:2c50 | 0x12c50 | `FUN_1000_2c50` | 344 | Space: the command menu | read |
 | 1000:2da8 | 0x12da8 | `FUN_1000_2da8` | 1123 | Loads MAP<n>.MTP; blocking tile; for a new game places the 8 townspeople (8 random numbers) | read |
 | 1000:320b | 0x1320b | `FUN_1000_320b` | 168 | Loads ANIMATE.ICN into the animation buffer | read |
-| 1000:32b3 | 0x132b3 | `FUN_1000_32b3` | 800 |  | - |
+| 1000:32b3 | 0x132b3 | `FUN_1000_32b3` | 800 | Loads a saved game: picks a slot (menu 0x28) and reads it | - |
 | 1000:35d3 | 0x135d3 | `FUN_1000_35d3` | 442 |  | - |
 | 1000:378d | 0x1378d | `FUN_1000_378d` | 1091 |  | - |
 | 1000:3bd0 | 0x13bd0 | `FUN_1000_3bd0` | 368 |  | - |
@@ -55,8 +55,8 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 1000:3fae | 0x13fae | `FUN_1000_3fae` | 1556 |  | - |
 | 1000:45c2 | 0x145c2 | `FUN_1000_45c2` | 95 |  | - |
 | 1000:4621 | 0x14621 | `FUN_1000_4621` | 134 | Load BTTLTECH.ICN as the map tile sheet | rebuilt |
-| 1000:46a7 | 0x146a7 | `FUN_1000_46a7` | 198 | Show the title screen (BTTITLE.CMP, with its palette) | read |
-| 1000:476d | 0x1476d | `FUN_1000_476d` | 330 |  | - |
+| 1000:46a7 | 0x146a7 | `FUN_1000_46a7` | 198 | Shows the title screen (BTTITLE.CMP, with its palette) (docs/startup.md) | rebuilt |
+| 1000:476d | 0x1476d | `FUN_1000_476d` | 330 | Plays the title's tune (WWOODBT.SIF) until a key or its end (docs/startup.md) | read |
 | 1000:48b7 | 0x148b7 | `FUN_1000_48b7` | 495 | Shows place picture O<n>.ANM in the picture box, or not, by chance (docs/formats/anm.md) | rebuilt |
 | 1000:4aa6 | 0x14aa6 | `FUN_1000_4aa6` | 14 | Panel: a character's name and three bars (columns 9-11), the first with a red part | rebuilt |
 | 1000:4ab4 | 0x14ab4 | `FUN_1000_4ab4` | 269 |  | - |
@@ -64,14 +64,14 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 1000:4cac | 0x14cac | `FUN_1000_4cac` | 171 | The left panel: party box (window 3, frame style 3, 'BDC' heading, up to 4 names) and the box above (window 4, style 4) | rebuilt |
 | 1000:4d57 | 0x14d57 | `FUN_1000_4d57` | 112 |  | - |
 | 1000:4dc7 | 0x14dc7 | `FUN_1000_4dc7` | 769 | New game: reset the party, load map 1 into area 4, set the start position | read |
-| 1000:50c8 | 0x150c8 | `FUN_1000_50c8` | 434 | Start-up: fills a 256-byte table with random numbers (DGROUP(5400):09fb); first-time question | read |
+| 1000:50c8 | 0x150c8 | `FUN_1000_50c8` | 434 | Start-up: 256 random numbers into DGROUP(5400):09fb; the title; the notice and first-time question; the demo if no key (docs/startup.md) | rebuilt |
 
 ## CODE_1: segment 1527, 2,104 bytes
 
 | Address | Linear | Ghidra name | Span | Label | Status |
 |---|---|---|---|---|---|
 | 1527:000a | 0x1527a | `FUN_1527_000a` | 58 |  | - |
-| 1527:0044 | 0x152b4 | `FUN_1527_0044` | 2046 | Start-up: cuts MECHSHAP.CMP into the sprite table | rebuilt |
+| 1527:0044 | 0x152b4 | `FUN_1527_0044` | 2046 | Start-up: cuts MECHSHAP.CMP into the sprite table; shows the Infocom screen (docs/startup.md) | rebuilt |
 
 ## CODE_2: segment 15ab, 8,982 bytes
 

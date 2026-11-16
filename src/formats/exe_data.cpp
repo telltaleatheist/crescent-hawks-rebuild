@@ -67,6 +67,14 @@ constexpr std::array kDos103 = {
     ExeSpan{ExeSpan::Kind::Text, "course.maxed", 0x46db, 0x4948, 81},
     ExeSpan{ExeSpan::Kind::Text, "course.no_money", 0x46db, 0x4999, 58},
     ExeSpan{ExeSpan::Kind::Text, "course.no_money_end", 0x46db, 0x4f7e, 34},
+    // The start-up (1000:50c8): the copyright notice and the first-time
+    // question, then, after "No", the question about a saved game.
+    ExeSpan{ExeSpan::Kind::Text, "intro.notice.0", 0x46db, 0x0b0e, 62},
+    ExeSpan{ExeSpan::Kind::Text, "intro.notice.1", 0x46db, 0x0b4c, 68},
+    ExeSpan{ExeSpan::Kind::Text, "intro.notice.2", 0x46db, 0x0b90, 82},
+    ExeSpan{ExeSpan::Kind::Text, "intro.notice.3", 0x46db, 0x0be2, 43},
+    ExeSpan{ExeSpan::Kind::Text, "intro.first_time", 0x46db, 0x0c0d, 44},
+    ExeSpan{ExeSpan::Kind::Text, "intro.load_old_game", 0x46db, 0x0c39, 95},
     // Talking to the townspeople inside (17dc:17b9); the reasons are by
     // place (pointers at DGROUP:4e32).
     ExeSpan{ExeSpan::Kind::Text, "talk.nobody", 0x46db, 0x16de, 48},

@@ -105,7 +105,7 @@ the frame's picture.
 `287f:0bc0` keeps 3 bytes at DS:4fc0 (s0, s1, s2). Each call: s2 shifts left taking bit 1 of
 s0, s1 shifts left taking s2's old top bit; t = (s0 >> 2) - s0 - (1 - s1's old top bit) in 8
 bits; s0 shifts right taking t's low bit at the top; the result is s0 XOR s1. The image starts
-04 03 02; `1000:522c` sets 25 13 90 at start-up. `1000:a9de` seeds it from DS:d456 x 0x187 in a
+04 03 02; `1000:522c` sets 25 13 90, but only before the demo plays (docs/startup.md). `1000:a9de` seeds it from DS:d456 x 0x187 in a
 wait loop not traced yet. Rebuilt in `src/game/random.cpp`.
 
 ## The panel
