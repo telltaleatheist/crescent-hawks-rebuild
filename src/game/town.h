@@ -17,7 +17,9 @@
 #include "game/asset_id.h"
 #include "formats/mtp.h"
 #include "formats/rules.h"
+#include "game/combat.h"
 #include "game/fight.h"
+#include "game/fixes.h"
 #include "game/training_quiz.h"
 #include "game/figures.h"
 #include "game/flags.h"
@@ -37,6 +39,10 @@ public:
     virtual ~KeySource() = default;
     // The next key, or nothing when there are no more (a script has ended).
     virtual std::optional<int> next() = 0;
+    // A "is a key waiting?" check that does not wait (273d:002f): true
+    // with a key, which is taken; false when none is waiting. Nothing when
+    // the keys have run out.
+    virtual std::optional<bool> poll() = 0;
 };
 
 // One step of a script: a key, or `idle` passes of the main loop with no key
@@ -58,6 +64,8 @@ public:
     // The next key: a question's blocking read skips idle items (no time
     // passes for the game while it waits there).
     std::optional<int> next() override;
+    // An idle item is one pass with no key waiting; a key is waiting.
+    std::optional<bool> poll() override;
 
 private:
     std::deque<ScriptItem> items_;
@@ -173,7 +181,12 @@ public:
     // the selected unit), drawn last.
     const std::vector<XorBox>& boxes() const { return boxes_; }
     const FightFigures& fight_figures() const { return figs_; }
+    const FigureAnimation& figure_animation() const { return animation_; }
     const std::array<formats::MechRecord, 8>& mechs() const { return mechs_; }
+    const CombatState& combat() const { return combat_; }
+    const MapMarks& marks() const { return marks_; }
+    // The original's bugs: kept by default, each fixable (game/fixes.h).
+    void set_fixes(const Fixes& fixes) { fixes_ = fixes; }
     // The fight went on past what is rebuilt (the orders, the rounds).
     bool fight_unfinished() const { return fight_unfinished_; }
 
@@ -226,6 +239,10 @@ private:
     void place_mission(int mechs, int people);
     bool fight(int kind, KeySource& keys);
     bool orders_menu(KeySource& keys);
+    // 203b:056b..1037 with the computer fighting for the party: the rounds
+    // until one side is beaten, then the fight's ending.
+    bool fight_rounds(int kind, KeySource& keys);
+    Combat combat_rules();
     // game/training_quiz.cpp: the quiz's scene (--show-quiz).
     bool show_quiz(KeySource& keys);
     static constexpr int kQuizMenu = 0x25;
@@ -288,6 +305,9 @@ private:
     // F:c614: the sixteen character records.
     std::array<CharacterRecord, 16> characters_ = new_game_characters();
     FightFigures figs_;
+    CombatState combat_;
+    MapMarks marks_;
+    Fixes fixes_;
     int messages_ = 2;       // DG:2e38: combat messages (0 none, 1 brief, 2 verbose)
     bool graphics_ = true;   // DG:2e3a: see combat graphics
     bool computer_ = false;  // F:009e: the computer fights for you

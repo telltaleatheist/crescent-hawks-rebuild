@@ -1,7 +1,7 @@
 # Combat
 
-How a fight starts, how it runs and what it leaves behind, as read from BTECH.EXE. Nothing here
-is rebuilt yet. The records it works on are in [formats/mech.md](formats/mech.md) (the 'Mech
+How a fight starts, how it runs and what it leaves behind, as read from BTECH.EXE. What is
+rebuilt is said in 1.2.1 and 1.2.2. The records it works on are in [formats/mech.md](formats/mech.md) (the 'Mech
 record and the tables in the EXE) and [formats/characters.md](formats/characters.md) (the
 character record and the per-figure arrays).
 
@@ -115,6 +115,25 @@ works the box out from the colour numbers of the tiles and figures under it
 Not rebuilt yet on this stretch: `0d49`'s enemy people (its second count) and `0e4b`'s people
 (figures 4-11 and 16-23), which mission 2 never has. Past the orders menu the fight stops
 (`Town::fight_unfinished`).
+
+### 1.2.2 Mission 2 fought by the computer (rebuilt)
+
+With "Should the computer fight?" answered Yes, combat messages None and combat graphics No, the
+whole fight runs from random draws alone: the planner (section 4), the rounds (section 3) and
+the end tests (2.8), up to "You should return to base now." (2.12). Rebuilt in
+`src/game/combat.cpp` (the rules) and `Town::fight_rounds` (the loop), and matched on the
+original by the rig's `mission` sequence (docs/reference.md): the state after rounds 4 to 8 and
+at the end, every figure's place, heading, facing and frame, the orders, targets, paths, heat
+and map marks, and both 'Mech records byte for byte. In it the party's Locust shoots the enemy
+Locust (which has no weapons, no ammunition and no hips, so it creeps 1 half-cell a round)
+until it is destroyed.
+
+The townspeople's headings are figures 16-23's headings (one table, F:3920), so a fight starts
+from and leaves behind the walkers' headings.
+
+Not rebuilt yet: what the round shows (combat messages above None, combat graphics), the
+player's orders, the Arena's spectator, the double agent, and what follows the fight (2.13 is
+done; 2.15 is not).
 
 ### 1.3 The mission driver `17dc:0629(mode)`
 
@@ -488,7 +507,8 @@ kill takes effect at once: later shots at a dead figure are cancelled.
 ### 3.2 Movement points
 
 **A 'Mech** (`203b:22bc(m, type)`, FUN_203b_22bc; type 0 walk, 1 run, 2 jump, -1 none = walk):
-1. MP = walking MP (byte 0x31). Jump: MP = jumping MP (byte 0x32) and go to step 5.
+1. MP = walking MP (byte 0x31). Jump: MP = jumping MP (byte 0x32) and go to step 6 (no leg or
+   heat penalty).
 2. Hips: bit 3 of the two leg nibbles (bytes 0x24 and 0x25). Neither: MP = 1, skip step 3. One:
    MP = half the walking MP rounded up.
 3. Actuators: for each of bits 2, 1, 0 (then left, right), a missing bit costs 1 MP. If MP is now
@@ -651,6 +671,8 @@ Target figure 0-3 or 12-15 ('Mech m = t or t - 8).
    building behind, a guess).
 6. **Damage** while D > 0 and the 'Mech is not destroyed:
    - The Inferno (weapon 0x0b): no damage; the 'Mech burns for 3 rounds (F:d576 + m = 3, 3.15).
+     It goes on through the step below with D = 0, so the location still gets its critical
+     check.
    - D not more than the location's value v: v -= D. A location that is internal structure
      (0x1c-0x23) gets a critical check (3.12). Head or centre torso structure now 0: the 'Mech is
      destroyed (`1d43:0a35`), and if it is figure 0 in a fight of kinds 1-3, every path is
@@ -670,8 +692,8 @@ Target figure 0-3 or 12-15 ('Mech m = t or t - 8).
 ### 3.12 Critical hits
 
 `1e31:11ab(m, L)` (FUN_1e31_11ab), for every internal location damaged:
-1. 2d6: below 8, 1 critical; 8-9, 1; 10-11, 2; 12, 3 (bug 3). "Critical!" (DG:315e) and
-   F:4586 = 1.
+1. 2d6: below 8, 1 critical; 8-9, 1; 10-11, 2; 12, 3 (bug 3). With combat messages on only:
+   "Critical!" (DG:315e) and F:4586 = 1 (so the picture after the shot needs messages too).
 2. If the location's structure is now 0: every item in its slots is destroyed, and an arm or leg
    loses all its actuators. No more draws.
 3. Otherwise, until that many criticals have landed (a pick that finds nothing draws again):
@@ -735,7 +757,9 @@ building, 0x80 / 0x81 a wreck (two sprite sets). The ring is probably the map ob
      - intact heat sink items (0x22)
      + the weapon heat of this round (F:0092 + m).
    Heat += h. Burning (F:d576): + 6 and one round fewer. Standing in water (terrain byte set and
-   the tile below 0x10, a guess): - 4. Clamped to 0-30. F:0092 = 0.
+   the tile below 0x10, a guess): - 4. At least 0. The cap at 30 tests party record a (the loop
+   index), not the record just heated, so an enemy 'Mech's heat has no cap (bug 35). F:0092 = 0,
+   even for a record that does not exist.
 3. Characters whose record is empty (dead): the figure position ffff (not for character 0);
    enemy people's sprite base fe; character 0's figure keeps sprite base 0x96.
 
@@ -867,6 +891,7 @@ mistake; "quirk" means it may be intended.
 | 32 | The scan list never ends if no figure in it is active; a direction of -1 reads before the direction names. | `15ab:1467` | `fix_scan_list` |
 | 33 | Jason's 'Mech destroyed in a mission stops all movement only when the damage ended exactly in the head or centre torso, not when it overflowed. | `22e8:000c` | `fix_stop_on_loss` |
 | 34 | Only ten ammunition bytes: an 11th weapon would use the walking MP byte as its ammunition. No template has more than nine weapons. | `1e31:10a2`, `22e8:000c` | none |
+| 35 | The end of the round caps heat at 30 for party record a only, whichever record it heated: an enemy 'Mech's heat climbs past 30 (and its MP stays 0 only at exactly 30, 3.2). | `1e31:0c63` | `fix_enemy_heat_cap` |
 
 The switches are `game/fixes.h`. Each is off by default, except where the original reads or
 writes memory the rebuild does not hold, or never returns: bugs 2, 17, 18, 21, 23, 26 and 32
@@ -932,7 +957,10 @@ sequence compares the scene with the original's, over the whole screen and the s
 
 1. `17dc:1c9b` sets the eight characters' 'Mech slot bytes to 3 (meaning unknown).
 2. F:32ae (terrain: to-hit, the course count, water cooling) and F:3750 (the tile under a figure):
-   exact meanings and who sets them.
+   exact meanings. They (and F:45ce, F:4554) are written only by the figure drawers `1000:051b`
+   and `1000:0e4b`, and cleared at a fight's start. With combat graphics off nothing draws the
+   figures during the rounds, so in such a fight they keep their start values (0 for kinds
+   1-3).
 3. The nine bytes P:07a4..07ac whose bit 0x80 blocks salvage.
 4. The location rows: d = 0 gives the rear column, but three directions give the left-side column
    and two the front. Either our reading of the facing (F:396c) or of the direction (`287f:0971`,

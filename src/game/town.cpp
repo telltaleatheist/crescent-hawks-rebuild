@@ -25,6 +25,18 @@ std::optional<int> ScriptKeys::next() {
     return item->key;
 }
 
+std::optional<bool> ScriptKeys::poll() {
+    if (items_.empty()) return std::nullopt;
+    auto& item = items_.front();
+    if (item.idle > 0) {
+        if (--item.idle == 0) items_.pop_front();
+        return false;
+    }
+    if (item.is_set()) throw std::invalid_argument("a set: item where the game asks for a key");
+    items_.pop_front();
+    return true;
+}
+
 std::deque<ScriptItem> parse_key_script(const std::string& script) {
     std::deque<ScriptItem> keys;
     std::string token;

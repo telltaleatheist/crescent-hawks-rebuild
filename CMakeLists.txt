@@ -56,6 +56,7 @@ add_library(chrgame STATIC
   src/game/text_provider.cpp
   src/game/town.cpp
   src/game/townspeople.cpp
+  src/game/combat.cpp
   src/game/fight.cpp
   src/game/training_quiz.cpp
 )

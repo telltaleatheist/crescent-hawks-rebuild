@@ -163,7 +163,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 |---|---|---|---|---|---|
 | 1d43:0004 | 0x1d434 | `FUN_1d43_0004` | 1991 | The Use Weapons screen | read |
 | 1d43:07cb | 0x1dbfb | `FUN_1d43_07cb` | 618 | The target picker | read |
-| 1d43:0a35 | 0x1de65 | `FUN_1d43_0a35` | 573 | A 'Mech destroyed: targets cleared, the party crew ejects | read |
+| 1d43:0a35 | 0x1de65 | `FUN_1d43_0a35` | 573 | A 'Mech destroyed: targets cleared, the party crew ejects | rebuilt in part |
 | 1d43:0c72 | 0x1e0a2 | `FUN_1d43_0c72` | 108 |  | - |
 | 1d43:0cde | 0x1e10e | `FUN_1d43_0cde` | 520 |  | - |
 
@@ -174,17 +174,17 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 1e31:0006 | 0x1e316 | `FUN_1e31_0006` | 734 | A figure's step toward a target: turn one eighth, try 8 directions (wander pattern flips every 30), free cell and no figure there | rebuilt |
 | 1e31:02e4 | 0x1e5f4 | `FUN_1e31_02e4` | 75 |  | - |
 | 1e31:032f | 0x1e63f | `FUN_1e31_032f` | 124 |  | - |
-| 1e31:03ab | 0x1e6bb | `FUN_1e31_03ab` | 2058 | The computer's orders for a unit: target, waypoint, weapons (docs/combat.md) | read |
-| 1e31:0bb5 | 0x1eec5 | `FUN_1e31_0bb5` | 174 | Distance from the party position: min + max/2 | read |
-| 1e31:0c63 | 0x1ef73 | `FUN_1e31_0c63` | 705 | End of a combat round: heat, fired marks cleared, the dead removed | read |
+| 1e31:03ab | 0x1e6bb | `FUN_1e31_03ab` | 2058 | The computer's orders for a unit: target, waypoint, weapons (docs/combat.md) | rebuilt |
+| 1e31:0bb5 | 0x1eec5 | `FUN_1e31_0bb5` | 174 | Distance from the party position: min + max/2 | rebuilt |
+| 1e31:0c63 | 0x1ef73 | `FUN_1e31_0c63` | 705 | End of a combat round: heat, fired marks cleared, the dead removed | rebuilt |
 | 1e31:0f24 | 0x1f234 | `FUN_1e31_0f24` | 307 |  | - |
 | 1e31:1057 | 0x1f367 | `FUN_1e31_1057` | 75 |  | - |
 | 1e31:10a2 | 0x1f3b2 | `FUN_1e31_10a2` | 128 |  | - |
-| 1e31:1122 | 0x1f432 | `FUN_1e31_1122` | 137 | Damage transfer to the next location inward | read |
-| 1e31:11ab | 0x1f4bb | `FUN_1e31_11ab` | 1103 | Critical hits in a location | read |
+| 1e31:1122 | 0x1f432 | `FUN_1e31_1122` | 137 | Damage transfer to the next location inward | rebuilt |
+| 1e31:11ab | 0x1f4bb | `FUN_1e31_11ab` | 1103 | Critical hits in a location | rebuilt |
 | 1e31:15fa | 0x1f90a | `FUN_1e31_15fa` | 68 |  | - |
 | 1e31:163e | 0x1f94e | `FUN_1e31_163e` | 109 |  | - |
-| 1e31:16ab | 0x1f9bb | `FUN_1e31_16ab` | 1177 | Is a place taken? Party characters, townspeople, 'Mechs (3 half-cells); 'Mechs also crush (not rebuilt) | read |
+| 1e31:16ab | 0x1f9bb | `FUN_1e31_16ab` | 1177 | Is a place taken? Party characters, townspeople, 'Mechs (3 half-cells); 'Mechs also crush (not rebuilt) | rebuilt |
 | 1e31:1b44 | 0x1fe54 | `FUN_1e31_1b44` | 75 |  | - |
 | 1e31:1b8f | 0x1fe9f | `FUN_1e31_1b8f` | 111 |  | - |
 | 1e31:1bfe | 0x1ff0e | `FUN_1e31_1bfe` | 429 |  | - |
@@ -204,11 +204,11 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 203b:1482 | 0x21832 | `FUN_203b_1482` | 65 |  | - |
 | 203b:14c3 | 0x21873 | `FUN_203b_14c3` | 689 | The player's orders menu for each unit; 1 = flee | read |
 | 203b:1774 | 0x21b24 | `FUN_203b_1774` | 455 |  | - |
-| 203b:193b | 0x21ceb | `FUN_203b_193b` | 740 | A figure's path from its orders, and its movement cost | read |
+| 203b:193b | 0x21ceb | `FUN_203b_193b` | 740 | A figure's path from its orders, and its movement cost | rebuilt |
 | 203b:1c1f | 0x21fcf | `FUN_203b_1c1f` | 1554 |  | - |
 | 203b:2231 | 0x225e1 | `FUN_203b_2231` | 139 |  | - |
-| 203b:22bc | 0x2266c | `FUN_203b_22bc` | 440 | A 'Mech's movement points (walk/run/jump, damage, heat) | read |
-| 203b:2474 | 0x22824 | `FUN_203b_2474` | 124 | A person's movement points | read |
+| 203b:22bc | 0x2266c | `FUN_203b_22bc` | 440 | A 'Mech's movement points (walk/run/jump, damage, heat) | rebuilt |
+| 203b:2474 | 0x22824 | `FUN_203b_2474` | 124 | A person's movement points | rebuilt |
 | 203b:24f0 | 0x228a0 | `FUN_203b_24f0` | 102 |  | - |
 | 203b:2556 | 0x22906 | `FUN_203b_2556` | 59 |  | - |
 | 203b:2591 | 0x22941 | `FUN_203b_2591` | 428 |  | - |
@@ -222,8 +222,8 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 
 | Address | Linear | Ghidra name | Span | Label | Status |
 |---|---|---|---|---|---|
-| 22e8:000c | 0x22e8c | `FUN_22e8_000c` | 4795 | One combat round: 12 phases of moving and firing; to-hit, location, damage (docs/combat.md) | read |
-| 22e8:12c7 | 0x24147 | `FUN_22e8_12c7` | 2943 | A shot's animation and sound; kills, wrecks, the leader's death | read |
+| 22e8:000c | 0x22e8c | `FUN_22e8_000c` | 4795 | One combat round: 12 phases of moving and firing; to-hit, location, damage (docs/combat.md) | rebuilt |
+| 22e8:12c7 | 0x24147 | `FUN_22e8_12c7` | 2943 | A shot's animation and sound; kills, wrecks, the leader's death | rebuilt in part |
 | 22e8:1e46 | 0x24cc6 | `FUN_22e8_1e46` | 110 |  | - |
 
 ## CODE_12: segment 24d3, 6,191 bytes

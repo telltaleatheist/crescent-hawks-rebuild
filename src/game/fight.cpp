@@ -238,9 +238,19 @@ void Town::place_mission(int mechs, int people) {
 // mission) up to its first orders menu: the party's 'Mechs placed around
 // the party, then three questions in the party box.
 bool Town::fight(int kind, KeySource& keys) {
-    (void)kind;
     const formats::MapPosition at = position_;
-    for (int f = 0; f < 8; ++f) figs_.computer[std::size_t(f)] = false;
+    // 2.1: every figure's path ends at once, no targets, no orders; the
+    // 'Mechs cool; the computer moves no party figure.
+    for (int f = 0; f < CombatState::kFigures; ++f) {
+        combat_.paths[std::size_t(f)].fill(2);
+        combat_.targets[std::size_t(f)].fill(0xff);
+        combat_.orders[std::size_t(f)].fill(0xff);
+    }
+    combat_.heat.fill(0);
+    combat_.burning.fill(0);
+    for (int f = 0; f < 12; ++f) figs_.computer[std::size_t(f)] = false;
+    // Figures 16-23 share the townspeople's headings (F:3920 + 16 + i).
+    for (int i = 0; i < 8; ++i) figs_.heading[std::size_t(16 + i)] = people_.walkers()[std::size_t(i)].heading;
     // Each 'Mech of records 0-3 at the k-th 'Mech place (the walk-in's).
     int k = 0;
     for (int m = 0; m < 4; ++m) {
@@ -286,11 +296,7 @@ bool Town::fight(int kind, KeySource& keys) {
         return false;
     }
     graphics_ = *graphics;
-    if (computer_) {
-        log_.push_back("the computer fights: not rebuilt");
-        fight_unfinished_ = true;
-        return false;
-    }
+    if (computer_) return fight_rounds(kind, keys);
     // The round (203b:056b): units without a place drop out.
     for (int f = 0; f < 12; ++f)
         if (figs_.active[std::size_t(f)] != 0 && (figs_.x[std::size_t(f)] == 0xffff || figs_.y[std::size_t(f)] == 0xffff))
@@ -351,6 +357,117 @@ bool Town::orders_menu(KeySource& keys) {
     const auto order = menu(3, keys);
     if (!order) return false;
     log_.push_back("order " + std::to_string(*order) + ": not rebuilt");
+    fight_unfinished_ = true;
+    return false;
+}
+
+Combat Town::combat_rules() {
+    Combat::Hooks hooks;
+    hooks.print = [this](const std::string& id) { print_id(id); };
+    hooks.clear_box = [this] {
+        text_.select_window(4);
+        text_.clear_window();
+    };
+    hooks.log = [this](const std::string& line) {
+        if (log_.empty() || log_.back() != line) log_.push_back(line);
+    };
+    return Combat(map_, blocking_tile(map_number_), position_, figs_, animation_, mechs_, characters_, flags_,
+                  random_, combat_, marks_, *rules_, tables_, fixes_, messages_, graphics_, std::move(hooks));
+}
+
+// BTECH.EXE 203b:056b..1481, the rounds with the computer in control
+// (docs/combat.md 2.5, 2.8, 2.12, 2.13).
+bool Town::fight_rounds(int kind, KeySource& keys) {
+    if (messages_ != 0 || graphics_) {
+        // What the round shows is not rebuilt yet: only the fight with no
+        // messages and no graphics runs.
+        log_.push_back("a fight with combat messages or graphics: not rebuilt");
+        fight_unfinished_ = true;
+        return false;
+    }
+    Combat combat = combat_rules();
+    bool over = false;
+    while (!over) {
+        const formats::MapPosition start = position_;
+        combat_.person_ran = false;
+        // 203b:1482(0): the computer plans the party.
+        combat.plan_side(0);
+        if (combat_.person_ran) {
+            // A party person met a 'Mech: with no party 'Mech left, the
+            // party may run (r & 3).
+            bool no_mech = true;
+            for (int m = 0; m < 4; ++m)
+                if (mechs_[std::size_t(m)][0] != 0xff) no_mech = false;
+            if (no_mech && (random_.next() & 3) != 0) over = true;
+        }
+        if (!over) {
+            position_ = start;
+            combat_.enemy_people_ran = false;
+            combat.plan_side(12);
+            position_ = start;
+            combat.round(kind > 0);
+            if (combat_.fight_on && flags_[0x27] != 0) log_.push_back("the double agent: not rebuilt");
+            // 2.8: the end tests.
+            bool exit_zone = false;
+            if (flags_[0x23] != 0 && figs_.active[0] != 0 && figs_.x[0] > 0x0900 && figs_.x[0] < 0x0a07)
+                exit_zone = true;
+            over = true;
+            for (int f = 12; f < 24; ++f) {
+                if (figs_.x[std::size_t(f)] == 0xffff || figs_.y[std::size_t(f)] == 0xffff)
+                    figs_.active[std::size_t(f)] = 0;
+                if (figs_.active[std::size_t(f)] != 0) over = false;
+            }
+            if (!over && combat_.enemy_people_ran && kind == 0) log_.push_back("enemy people running: not rebuilt");
+            if (kind == 1 && figs_.active[0] == 0) over = true;
+            if (!exit_zone && kind == 2 && figs_.active[0] == 0 && flags_[0x23] == 0) over = true;
+            if (exit_zone) over = true;
+            if (!combat_.fight_on) over = true;
+        }
+        // With the computer in control a waiting key hands the party back
+        // to the player (273d:002f, no demo playing), and is thrown away.
+        const auto waiting = keys.poll();
+        if (!waiting) {
+            place_open_ = true;  // the keys ran out between rounds
+            return false;
+        }
+        if (*waiting) {
+            computer_ = false;
+            if (!over) {
+                log_.push_back("the player takes over the fight: not rebuilt");
+                fight_unfinished_ = true;
+                return false;
+            }
+        }
+    }
+
+    // After the loop (203b:1040): window 3 is cleared.
+    text_.select_window(3);
+    text_.clear_window();
+    if (kind == 1 && combat_.fight_on) {
+        // 24d3:17c6 / 17ea and a key.
+        open_message_box();
+        print_id("fight.return_to_base");
+        if (!read_key(keys)) {
+            place_open_ = true;
+            return false;
+        }
+    } else if (kind != 1) {
+        log_.push_back("the ending of a fight of kind " + std::to_string(kind) + ": not rebuilt");
+        fight_unfinished_ = true;
+        return false;
+    }
+    // 2.13: the townspeople are put back; F:396c of figures 0-7 cleared;
+    // the townspeople's frame 0x10.
+    std::array<std::int8_t, 8> headings{};
+    for (int i = 0; i < 8; ++i) headings[std::size_t(i)] = figs_.heading[std::size_t(16 + i)];
+    people_.back_from_fight(headings);
+    for (int i = 0; i < 8; ++i) {
+        figs_.x[std::size_t(16 + i)] = people_.walkers()[std::size_t(i)].at.x;
+        figs_.y[std::size_t(16 + i)] = people_.walkers()[std::size_t(i)].at.y;
+        animation_.set_direction(i, -1);
+        animation_.set_frame(16 + i, 0x10);
+    }
+    log_.push_back("the fight is over: what follows it is not rebuilt");
     fight_unfinished_ = true;
     return false;
 }

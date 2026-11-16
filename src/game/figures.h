@@ -55,6 +55,8 @@ public:
     // Sets a frame and the direction last walked (F:396c) directly.
     void set_frame(int f, int frame) { frame_[std::size_t(f)] = frame; }
     void set_direction(int f, int direction) { direction_[std::size_t(f)] = direction; }
+    // The direction figure f last walked (F:396c), -1 for none.
+    int direction(int f) const { return direction_[std::size_t(f)]; }
     // The 'Mechs' script for a direction (0x270 + 8d).
     static constexpr int mech_script(int direction) { return 0x270 + 8 * direction; }
 
