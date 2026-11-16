@@ -58,6 +58,12 @@ public:
     std::vector<Figure> figures(const formats::MtpMap& map, formats::MapPosition party,
                                 const FigureAnimation& animation) const;
 
+    // BTECH.EXE 17dc:0d49, its first part: before a fight each person's
+    // place is kept in its record (F:d390 + 0x1a i, +0/+2) and its figure
+    // emptied (x and y ffff), so nobody is drawn or moves until the town
+    // comes back.
+    void leave_for_fight();
+
     const std::array<Walker, 8>& walkers() const { return walkers_; }
     std::array<Walker, 8>& walkers() { return walkers_; }
 
@@ -79,6 +85,7 @@ private:
     void step(int i, const formats::MtpMap& map, formats::MapPosition party, const PartyPlaces& party_places);
 
     std::array<Walker, 8> walkers_{};
+    std::array<formats::MapPosition, 8> kept_{};  // F:d390/d392 + 0x1a i, during a fight
     int blocking_ = 0x55;  // DGROUP:0150
     // BTECH.EXE 1e31:0006's wander pattern: every 30 steps (DGROUP:315a)
     // the order of the directions tried after the first flips (315c).

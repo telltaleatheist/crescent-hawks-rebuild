@@ -59,6 +59,8 @@ int FigureAnimation::step(int f) {
     }
 }
 
+void FigureAnimation::start_script(int f, int address) { pos_[std::size_t(f)] = address - kScriptBase; }
+
 void FigureAnimation::walk(int f, int direction) {
     if (direction_[f] != direction) pos_[f] = character_script(direction) - kScriptBase;
     frame_[f] = step(f);

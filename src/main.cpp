@@ -276,12 +276,20 @@ int main(int argc, char** argv) {
             std::fprintf(stderr, "chr: %s\n", e.what());
             status = 1;
         }
+        // The rule tables, for a fight (missing in an old data folder: the
+        // fight then stops where it would begin).
+        std::optional<chr::formats::Rules> rules;
+        try {
+            rules = chr::formats::read_rules(options.data_dir);
+        } catch (const std::exception&) {
+        }
         const chr::game::MapText map_text(map, options.map);
         const chr::game::LayeredText texts({&overrides, &imported, &map_text});
         auto replay = [&]() -> bool {
             try {
                 town = std::make_unique<chr::game::Town>(map, options.map, start, texts);
                 town->set_game_dir(options.game_dir);
+                if (rules) town->set_rules(&*rules);
                 if (start_up) town->start_up();
                 else town->draw_panel();
                 for (const auto& [f, v] : options.set_flags) town->set_flag_when_town_starts(f, v);
@@ -352,6 +360,8 @@ int main(int argc, char** argv) {
                 drawn = chr::platform::draw_figures(renderer, view, town->figures()) && drawn;
                 drawn = chr::platform::draw_text(renderer, town->text(), palette) && drawn;
                 chr::platform::draw_bars(renderer, town->bars(), palette);
+                for (const auto& box : town->boxes())
+                    drawn = chr::platform::draw_xor_box(renderer, view, town->figures(), box, palette) && drawn;
                 // A place's picture, in the upper left box (inside window 4).
                 if (const auto picture = town->picture())
                     drawn = renderer.draw({"O" + std::to_string(picture->number) + ".ANM", 0xffff}, 8, 8) && drawn;

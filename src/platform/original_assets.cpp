@@ -36,6 +36,8 @@ Image from_colour_numbers(const std::vector<std::uint8_t>& numbers, int width, i
         image.rgba[4 * i + 2] = c.b;
         image.rgba[4 * i + 3] = 0xff;
     }
+    image.numbers.resize(numbers.size());
+    for (std::size_t i = 0; i < numbers.size(); ++i) image.numbers[i] = numbers[i] & 0x0f;
     return image;
 }
 
@@ -123,7 +125,10 @@ std::optional<Image> OriginalAssets::image(const AssetId& id) {
                     numbers.push_back(all[std::size_t((rect->y + y) * formats::kCmpWidth + rect->x + x)]);
             auto image = from_colour_numbers(numbers, rect->width, rect->height, formats::standard_palette_ega());
             for (std::size_t i = 0; i < numbers.size(); ++i)
-                if ((numbers[i] & 0x0f) == 0) image.rgba[4 * i + 3] = 0;
+                if ((numbers[i] & 0x0f) == 0) {
+                    image.rgba[4 * i + 3] = 0;
+                    image.numbers[i] = 0xff;
+                }
             return image;
         }
         const auto path = formats::find_game_file(game_dir_, id.file);

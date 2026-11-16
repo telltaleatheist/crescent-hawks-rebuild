@@ -107,7 +107,8 @@ the poked case stays as a quick one.
 
 `check.py` has several sequences, each one run of the original from a new game: `town` (the
 cases above) and `training` (training mission 2: the walk to the training center, its greeting,
-the briefing and the 'Mech menu; it pokes flags 00 and 13, standing in for passing missions 0-1
+the briefing, the 'Mech menu, the Locust's walk-in under the first of the fight's three questions,
+the other two, and the orders menu with its box on the Locust; it pokes flags 00 and 13, standing in for passing missions 0-1
 and resting in the Barracks). A key written `orig:KEY` goes to the original only: the training
 center's quiz, which the rebuild does not show (docs/combat.md), takes a key and three menu
 answers there.

@@ -55,6 +55,7 @@ add_library(chrgame STATIC
   src/game/text_provider.cpp
   src/game/town.cpp
   src/game/townspeople.cpp
+  src/game/fight.cpp
   src/game/training_quiz.cpp
 )
 target_include_directories(chrgame PUBLIC src)
@@ -66,6 +67,7 @@ add_executable(chrtests
   tests/test_main.cpp
   tests/test_bld.cpp
   tests/test_anm.cpp
+  tests/test_fight.cpp
   tests/test_quiz.cpp
   tests/test_rules.cpp
   tests/test_cmp.cpp

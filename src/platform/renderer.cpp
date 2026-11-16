@@ -1,5 +1,8 @@
 #include "platform/renderer.h"
 
+#include <algorithm>
+#include <vector>
+
 namespace chr::platform {
 
 Renderer::Renderer(SDL_Renderer* sdl, AssetProvider& assets) : sdl_(sdl), assets_(assets) {
@@ -84,6 +87,62 @@ std::optional<std::pair<int, int>> Renderer::logical_size(const AssetId& id) {
     if (!texture_for(id)) return std::nullopt;
     const Entry& entry = cache_.at(id);
     return std::pair{int(entry.logical_width), int(entry.logical_height)};
+}
+
+bool Renderer::xor_colours(int x, int y, int width, int height, int colour, const formats::Palette16& palette) {
+    // The output may be scaled: read the rectangle at the output's size and
+    // take one pixel per screen unit.
+    SDL_FRect shown{};
+    if (!SDL_GetRenderLogicalPresentationRect(sdl_, &shown) || shown.w <= 0) return false;
+    const float scale = shown.w / float(kScreenWidth);
+    SDL_SetRenderLogicalPresentation(sdl_, 0, 0, SDL_LOGICAL_PRESENTATION_DISABLED);
+    const SDL_Rect area{int(shown.x + x * scale), int(shown.y + y * scale), int(width * scale), int(height * scale)};
+    SDL_Surface* read = SDL_RenderReadPixels(sdl_, &area);
+    SDL_SetRenderLogicalPresentation(sdl_, kScreenWidth, kScreenHeight, SDL_LOGICAL_PRESENTATION_INTEGER_SCALE);
+    if (!read) return false;
+    SDL_Surface* rgba = SDL_ConvertSurface(read, SDL_PIXELFORMAT_RGBA32);
+    SDL_DestroySurface(read);
+    if (!rgba) return false;
+    std::vector<std::uint8_t> out(std::size_t(width * height * 4));
+    for (int py = 0; py < height; ++py)
+        for (int px = 0; px < width; ++px) {
+            const int sx = std::min(rgba->w - 1, int(px * scale)), sy = std::min(rgba->h - 1, int(py * scale));
+            const auto* p = static_cast<const std::uint8_t*>(rgba->pixels) + sy * rgba->pitch + sx * 4;
+            formats::Rgb c{p[0], p[1], p[2]};
+            for (int i = 0; i < 16; ++i)
+                if (palette[std::size_t(i)] == c) {
+                    c = palette[std::size_t(i ^ (colour & 15))];
+                    break;
+                }
+            auto* q = &out[std::size_t((py * width + px) * 4)];
+            q[0] = c.r, q[1] = c.g, q[2] = c.b, q[3] = 255;
+        }
+    SDL_DestroySurface(rgba);
+    SDL_Texture* t = SDL_CreateTexture(sdl_, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STATIC, width, height);
+    if (!t) return false;
+    SDL_SetTextureScaleMode(t, SDL_SCALEMODE_NEAREST);
+    SDL_UpdateTexture(t, nullptr, out.data(), width * 4);
+    const SDL_FRect dst{float(x), float(y), float(width), float(height)};
+    SDL_RenderTexture(sdl_, t, nullptr, &dst);
+    SDL_DestroyTexture(t);
+    return true;
+}
+
+const Image* Renderer::source(const AssetId& id) {
+    if (auto it = sources_.find(id); it != sources_.end()) return it->second ? &*it->second : nullptr;
+    auto& slot = sources_[id];
+    slot = assets_.image(id);
+    return slot ? &*slot : nullptr;
+}
+
+void Renderer::draw_rgba(int x, int y, int width, int height, const std::vector<std::uint8_t>& rgba) {
+    SDL_Texture* t = SDL_CreateTexture(sdl_, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STATIC, width, height);
+    if (!t) return;
+    SDL_SetTextureScaleMode(t, SDL_SCALEMODE_NEAREST);
+    SDL_UpdateTexture(t, nullptr, rgba.data(), width * 4);
+    const SDL_FRect dst{float(x), float(y), float(width), float(height)};
+    SDL_RenderTexture(sdl_, t, nullptr, &dst);
+    SDL_DestroyTexture(t);
 }
 
 void Renderer::end_frame() { SDL_RenderPresent(sdl_); }

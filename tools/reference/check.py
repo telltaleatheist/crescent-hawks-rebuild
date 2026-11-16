@@ -241,6 +241,32 @@ TRAINING_CASES = [dict(case, name="training_" + case["name"]) for case in CASES[
         "keys": "enter",
         "match": {"the panel": WHOLE_PANEL, "the map": WHOLE_MAP},
     },
+    {
+        # The Locust: special 1 walks it in, the mission places the target,
+        # and the fight asks whether the computer should fight (No first).
+        "name": "training_computer_question",
+        "keys": "enter",
+        "match": {"the panel": WHOLE_PANEL, "the map": WHOLE_MAP},
+    },
+    {
+        # No: the combat messages menu, on Verbose.
+        "name": "training_messages",
+        "keys": "enter",
+        "match": {"the panel": WHOLE_PANEL, "the map": WHOLE_MAP},
+    },
+    {
+        # Verbose: "See combat graphics", on Yes.
+        "name": "training_graphics",
+        "keys": "enter",
+        "match": {"the panel": WHOLE_PANEL, "the map": WHOLE_MAP},
+    },
+    {
+        # Yes: the orders menu for Jason's Locust, the view on it with the
+        # box, the bar on Begin Fight.
+        "name": "training_orders",
+        "keys": "enter",
+        "match": {"the panel": WHOLE_PANEL, "the map": WHOLE_MAP},
+    },
 ]
 
 # Each sequence is one run of the original: (name, quick cases, --full cases).

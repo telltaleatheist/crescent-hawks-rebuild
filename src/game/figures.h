@@ -42,6 +42,19 @@ public:
     // takes the next frame (1000:24c2 does this for the townspeople).
     void walk(int f, int direction);
 
+    // Puts figure `f` at the start of the script at `address` (the constant
+    // segment's offset, 0x270-0x2ef: DGROUP:01f6 + 4f), as special 1 and
+    // 17dc:0d49 do for the 'Mechs.
+    void start_script(int f, int address);
+    // Runs figure `f`'s script to its next frame and makes it the frame
+    // (F:409a), as 1000:1732's callers do.
+    void advance(int f) { frame_[std::size_t(f)] = step(f); }
+    // Sets a frame and the direction last walked (F:396c) directly.
+    void set_frame(int f, int frame) { frame_[std::size_t(f)] = frame; }
+    void set_direction(int f, int direction) { direction_[std::size_t(f)] = direction; }
+    // The 'Mechs' script for a direction (0x270 + 8d).
+    static constexpr int mech_script(int direction) { return 0x270 + 8 * direction; }
+
     // The frame offset of character `member` (0-7): added to its sprite base.
     int character_frame(int member) const { return frame_[4 + member]; }
     // The frame offset of figure `f`.

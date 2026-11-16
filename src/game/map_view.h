@@ -3,6 +3,7 @@
 // turns each visible cell's tile ID into a picture.
 #pragma once
 
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -36,5 +37,18 @@ formats::MapPosition new_game_position();
 
 MapView view_of(const formats::MtpMap& map, const std::string& tile_sheet,
                 formats::MapPosition position);
+
+// The original's cell window (P:07ad): 287f:1314 copies the 3x3 blocks
+// around the party's block into 24x24 cells, row after row. Figures read
+// the tile under them from it by index, not from the map, so a place
+// beyond its side edge reads a cell of the next or the previous row
+// (docs/townspeople.md).
+inline constexpr int kWindowCells = 24;
+// P:09ed (set by 287f:18ef): the index of the view's top-left cell.
+int view_corner_index(formats::MapPosition party);
+// The tile at `index` of the window around `party`: -1 for a cell off the
+// map, nothing for an index outside the window (memory the rebuild does
+// not hold).
+std::optional<int> window_cell(const formats::MtpMap& map, formats::MapPosition party, int index);
 
 }  // namespace chr::game

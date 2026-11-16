@@ -85,6 +85,33 @@ TRAINING.BLD uses specials 1, 2 and 3 (docs/scripts.md, "Specials").
   whose code is 0x7c or 0x7d (with or without bit 7) from the 64-entry mark ring (3.13): the
   fires left on the training field, a guess.
 
+### 1.2.1 Mission 2 from the 'Mech choice to the orders menu (rebuilt)
+
+Rebuilt in `src/game/fight.cpp` and matched on the original by the rig's training cases
+(docs/reference.md), screen and state, for the Locust:
+
+- Special 1 makes one draw (in `1000:48b7`, picture 0 always shows) and walks the 'Mech in: four
+  half-cells from x 0x0c3c, at each one a walking frame (the 'Mech script for east: 6, 7, 4, 5)
+  and six frames, each with the tile animation's next step, the view, the figures (`1000:051b`)
+  and the map columns 13-39 copied to the screen, which erases the text there. A fifth frame (6)
+  is taken and not drawn. `051b` draws the k-th 'Mech two half-cells above the party (DG:3a26 /
+  3a2a; the 24x24 sprite's foot is two half-cells below its top) and records it as figure k.
+- `0d49(1, 0)` (1.4) makes two draws: the start x (then replaced by 0x0c72) and the start y of
+  the enemy, figure 12, 50 half-cells east, out of view. Flag 03 at most 4 (no failed tries) adds
+  none. The townspeople's figures become ffff.
+- `203b:000a(1)` places figure 0 two half-cells above the party (its active count goes to 2) and
+  asks the three questions in window 3 over the walk-in's last frame (the view is not drawn
+  again): No first, Verbose (menu record 3 from row 2), Yes. The party box's bars are gone.
+- `203b:14c3`: "Jason's" / the 'Mech's name in window 4 (`15ab:18e8`), the party's position
+  moved onto figure 0, the view and the fight's figures (`1000:0e4b`: 'Mechs sorted by their
+  screen row) drawn, a 3x3-cell box XORed with 15 over the unit on the shown screen, and the
+  orders menu (DG:3a6f, menu record 3, ten items) with the bar on Begin Fight.
+
+The box XORs colour numbers, not colours: the game's palette shows numbers 0 and 1 both as black,
+and the 'Mech sprites' outline is number 1, so it turns 14 where a black 0 turns 15. The renderer
+works the box out from the colour numbers of the tiles and figures under it
+(`platform::draw_xor_box`).
+
 ### 1.3 The mission driver `17dc:0629(mode)`
 
 FUN_17dc_0629. A jump table at cs:086f by mode. All modes share a walking loop like the town's
@@ -97,9 +124,9 @@ results step at 0bf2. The callers: special 1 (modes 0-7 from flag 00), ARENA.BLD
 | 0 | A walking course. P:200a is saved and cleared. Each step counts 1, plus (F:32ae of figure 0) >> 3 when that is set (heavier terrain counts more, a guess). The course ends when the party reaches x >= 0x0c78 and y >= 0xc07c (text DG:14a1, a key). | reached, and the count (less 50 if the 'Mech is a Locust) below 215. P:200a is restored. |
 | 1 | A marked spot. One r & 7 picks a spot from DG:1632 / DG:163a; that map cell in P:101d is saved and set to tile 0x50. With a Locust a message (DG:1434) comes first. The walk ends on the cell just below the spot (text DG:14ef with a Locust, else DG:152a, and the cell is put back). | the 'Mech is not a Locust (it has no jump jets: a guess). Either way Piloting (character 0 byte 8) + 1 if below 3. |
 | 2 | Target practice. One enemy 'Mech (`0d49(1, 0)`), then its record 4 is disarmed: both actuator bytes 0x24 / 0x25, all ten ammunition bytes 0x27-0x30 and both MP bytes 0x31 / 0x32 set to 0. It cannot move, kick or fire. Fight kind 1. | as below |
-| 3 | 3-6 enemy 'Mechs (`0d49(r & 3 + 3, 0)`), fight kind 1. See bug 29. | as below |
+| 3 | 3-6 enemy people (`0d49(0, (r & 3) + 3)`: the random count is pushed first, so it is the second argument), fight kind 1. | as below |
 | 4-7 | 1-4 enemy 'Mechs (`0d49(mode - 3, 0)`), fight kind 1, with F:0090 = 1 (no "computer fights for you" question, no Computer order). Mode 6: one r, the raid if r & 1. Mode 7: always the raid. In the raid F:3772 = 1 and the 16 cells P:101d + 0ff0..0fff are set to tile 0x40 (a gap in a wall: a guess). F:0090 = 0 afterwards. | as below |
-| 8 | The Arena: `0d49(0, 0x81)` (no enemy 'Mechs from the loop, one enemy person, figure 4 active), fight kind 2. | not set by this mode |
+| 8 | The Arena: `0d49(0x81, 0)` (one enemy 'Mech through the bit-0x80 branch of 1.4, figure 0 active), fight kind 2. Not followed further. | not set by this mode |
 | 9 | Jason alone on foot (`19b8:152f` first hides characters 1-7 and the four 'Mechs, saving their first bytes at F:3fe9 + p and F:d452 + m, and puts the party at (0x0d10, 0x7024)). F:398e = 1. Every key is a step; on every 80th step `0d49(0, 0x88)` (eight enemy people) and fight kind 3. The mode ends when DG:014a is 0 after a fight. On y = 0x702d, at x = 0x0d14 + 4i (i < 4), texts DG:155d, 159a, 15d4 the first time and a call to `19b8:16b2`. | not set by this mode |
 
 The results step (all modes): flag 01 (F:d30d) = 0 first.
@@ -128,8 +155,7 @@ FUN_17dc_0d49. `a` is the number of enemy 'Mechs, `b` the number of enemy people
    if r & 1, x = 0x0a28 + (r & 3); y = 0x806f + (r & 3). The 'Mech type comes from the
    encounter table DG:13e2 at index 2d6 - 2 (or (r & 3) + 3 when F:e48e is set), with the
    sprite base DG:140e at the same index (formats/mech.md). With F:e48e set, a = 2 if any of
-   F:d452..d455 is ff. **None of the five calls of `0d49` passes bit 0x80 in a**, so this
-   branch is never reached in DOS 1.03 (open question 1).
+   F:d452..d455 is ff. Only the Arena (mode 8, `0d49(0x81, 0)`) takes this branch.
    Otherwise: x = 0x0c65 + (r & 7), y = 0xc059 + (r & 7) (the training field); b with bit 0x80:
    (0x0d10, 0x7024); flag 00 = 2: x = 0x0c72. The template is LOCUST (27e8:02f0).
 5. a = a & 0x7f; in the raid (F:3772) a = 4. For each i below a:
@@ -265,7 +291,9 @@ where everyone moves and fires in slot order (section 3).
 ### 2.6 The player's orders
 
 `203b:14c3` (FUN_203b_14c3) shows the first active party figure and a menu (window 3). The bar
-starts on Begin Fight the first time.
+starts on Begin Fight every time the menu is entered (a local of 14c3), so every round. Under demo
+playback or key recording (F:3938, F:458c) `2656:0b5e` starts every menu on its first item
+instead.
 
 | 'Mech (figures 0-3) | person (4-11) | what |
 |---|---|---|
@@ -825,7 +853,7 @@ mistake; "quirk" means it may be intended.
 | 26 | The wreck search includes figures 4-11 (killed party people), which index the wrong records, and never ends if no flag is set. | `15ab:04f9` | `fix_wreck_search` |
 | 27 | Loot reads character s + 12 (off the table, into 'Mech 0) to decide whether weapons were found; a dead party member alone gives the pocket text and 2 C-Bills. Probable. | `15ab:094b` | `fix_loot_index` |
 | 28 | Encounter soldiers' armour points are 2d6 + 2d6 whatever the type (also with none). Quirk. | `15ab:0d3d` | none |
-| 29 | Mode 3 can ask for 5 or 6 enemy 'Mechs; `0d49` has no limit, so records 8-9 (past the table) and figures 16-17 (people's slots) are used. Effect in play not checked. | `17dc:0629`, `17dc:0d49` | `fix_mission_count` |
+| 29 | Withdrawn: mode 3 asks for 3-6 enemy people, not 'Mechs (`0d49(0, (r & 3) + 3)`, 1.3), and the people are capped at character record 16. The switch is unused. | `17dc:0629` | `fix_mission_count` |
 | 30 | The difficulty's destroyed slots are picked from 0x34-0x53 only: the first left-arm slot, the second centre-torso slot and the head slot are never hit. Quirk. | `17dc:0d49` | none |
 | 31 | Reloading the areas around the party does not wrap columns: column 0's left neighbour is column 15 of the row above. | `203b:2835` | `fix_area_wrap` |
 | 32 | The scan list never ends if no figure in it is active; a direction of -1 reads before the direction names. | `15ab:1467` | `fix_scan_list` |
@@ -875,9 +903,8 @@ them out on the rebuild's side.
 
 ## 8. Open questions
 
-1. How the Arena's enemy 'Mechs are made. `0d49`'s F:e48e code and the encounter table DG:13e2 sit
-   in the branch for bit 0x80 of its first argument, which none of its five calls passes. Mode 8
-   asks for no 'Mechs. `17dc:1c9b` sets the eight characters' 'Mech slot bytes to 3 (meaning
+1. How the Arena's enemy 'Mech is made: mode 8 takes `0d49`'s branch for bit 0x80 of its first
+   argument (the F:e48e code and the encounter table DG:13e2); not followed further. `17dc:1c9b` sets the eight characters' 'Mech slot bytes to 3 (meaning
    unknown).
 2. F:32ae (terrain: to-hit, the course count, water cooling) and F:3750 (the tile under a figure):
    exact meanings and who sets them.

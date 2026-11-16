@@ -1,5 +1,7 @@
 #include "game/townspeople.h"
 
+#include "game/map_view.h"
+
 #include "game/movement.h"
 #include "game/world.h"
 
@@ -69,16 +71,9 @@ int window_tile(const formats::MtpMap& map, MapPosition party, MapPosition next,
     int index = floor_half(rel_y) * 24 + floor_half(rel_x - 13);
     if ((rel_x & 1) == 0 && (party.x & 1) != 0) ++index;
     if ((rel_y & 1) != 0 && (party.y & 1) != 0) index += 24;
-    // P:09ed: where the view's corner cell is in the window.
-    index += (((party.half_cell_y() >> 1) & 7) + 2) * 24 + ((party.half_cell_x() >> 1) & 7) + 2;
-    outside = index < 0 || index >= 24 * 24;
-    if (outside) return tile_at(map, next);
-    const int cx = ((party.half_cell_x() >> 4) - 1) * formats::kBlockCells + index % 24 -
-                   map.block_x * formats::kBlockCells;
-    const int cy = ((party.half_cell_y() >> 4) - 1) * formats::kBlockCells + index / 24 -
-                   map.block_y * formats::kBlockCells;
-    if (cx < 0 || cy < 0 || cx >= map.width || cy >= map.height) return -1;
-    return map.cell(cx, cy);
+    const auto cell = window_cell(map, party, view_corner_index(party) + index);
+    outside = !cell;
+    return cell ? *cell : tile_at(map, next);
 }
 
 int direction_toward(MapPosition from, MapPosition to) {
@@ -196,6 +191,13 @@ void Townspeople::step(int i, const formats::MtpMap& map, MapPosition party, con
         w.at = next;
         w.heading = std::int8_t(d);
         return;
+    }
+}
+
+void Townspeople::leave_for_fight() {
+    for (std::size_t i = 0; i < walkers_.size(); ++i) {
+        kept_[i] = walkers_[i].at;
+        walkers_[i].at = {0xffff, 0xffff};
     }
 }
 

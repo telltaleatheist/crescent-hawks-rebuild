@@ -50,4 +50,18 @@ MapView view_of(const formats::MtpMap& map, const std::string& tile_sheet,
     return view;
 }
 
+int view_corner_index(formats::MapPosition party) {
+    return (((party.half_cell_y() >> 1) & 7) + 2) * kWindowCells + ((party.half_cell_x() >> 1) & 7) + 2;
+}
+
+std::optional<int> window_cell(const formats::MtpMap& map, formats::MapPosition party, int index) {
+    if (index < 0 || index >= kWindowCells * kWindowCells) return std::nullopt;
+    const int cx = ((party.half_cell_x() >> 4) - 1) * formats::kBlockCells + index % kWindowCells -
+                   map.block_x * formats::kBlockCells;
+    const int cy = ((party.half_cell_y() >> 4) - 1) * formats::kBlockCells + index / kWindowCells -
+                   map.block_y * formats::kBlockCells;
+    if (cx < 0 || cy < 0 || cx >= map.width || cy >= map.height) return -1;
+    return map.cell(cx, cy);
+}
+
 }  // namespace chr::game

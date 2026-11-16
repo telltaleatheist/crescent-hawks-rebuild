@@ -13,6 +13,8 @@ inline constexpr int kFlagCount = 0x64;
 using Flags = std::array<std::uint8_t, kFlagCount>;
 
 namespace flag {
+inline constexpr int kTrainingMech = 0x02;     // d30e: the 'Mech chosen at the training center
+inline constexpr int kTries = 0x03;            // d30f: failed tries at the training mission
 inline constexpr int kOutdoors = 0x04;        // d310
 inline constexpr int kCourse = 0x08;          // d314: the course chosen (special 05)
 inline constexpr int kEnrolled = 0x09;        // d315: special 05's answer

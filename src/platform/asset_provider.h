@@ -22,6 +22,11 @@ struct Image {
     int logical_width = 0;
     int logical_height = 0;
     std::vector<std::uint8_t> rgba;  // width * height * 4 bytes, row-major, R G B A
+    // The original's colour number of each pixel (0xff: see-through), when
+    // the picture is the original's own art. Empty for new art. The
+    // original sometimes works on colour numbers, not on what they show
+    // (two numbers can show the same black): the orders screen's XOR box.
+    std::vector<std::uint8_t> numbers;
 };
 
 class AssetProvider {

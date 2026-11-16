@@ -123,6 +123,11 @@ void Town::record_party_places() {
 }
 
 MapView Town::view() const {
+    if (frozen_) return frozen_->view;
+    return live_view();
+}
+
+MapView Town::live_view() const {
     auto view = view_of(map_, tile_sheet_, position_);
     if (tiles_animate(map_number_))
         for (auto& cell : view.cells)
@@ -131,6 +136,7 @@ MapView Town::view() const {
 }
 
 std::vector<Figure> Town::figures() const {
+    if (frozen_) return frozen_->figures;
     auto all = party_figures(map_, position_, party_, animation_);
     const auto people = people_.figures(map_, position_, animation_);
     all.insert(all.end(), people.begin(), people.end());
@@ -143,6 +149,7 @@ std::vector<Figure> Town::figures() const {
 // of byte 15 (at least 1), is drawn as a warning.
 std::vector<StatBar> Town::bars() const {
     std::vector<StatBar> bars;
+    if (!party_box_shown_) return bars;  // the party box was cleared (a fight's questions)
     int line = 0;
     for (int i = 0; i < 8 && line < 4; ++i) {
         if (!party_.present[i]) continue;
@@ -157,6 +164,7 @@ std::vector<StatBar> Town::bars() const {
 }
 
 void Town::draw_panel(bool clear) {
+    party_box_shown_ = true;
     text_.fill(0, 0, 13, kTextRows, 0);  // the panel starts black
     text_.select_window(3);
     text_.frame(3);

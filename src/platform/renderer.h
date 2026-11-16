@@ -7,9 +7,11 @@
 #include <map>
 #include <optional>
 #include <utility>
+#include <vector>
 
 #include <SDL3/SDL.h>
 
+#include "formats/palette.h"
 #include "game/asset_id.h"
 #include "platform/asset_provider.h"
 
@@ -35,6 +37,16 @@ public:
     // The same, with every pixel's colour multiplied by (r, g, b): a white
     // glyph drawn this way comes out in that colour.
     bool draw_tinted(const AssetId& id, int x, int y, std::uint8_t r, std::uint8_t g, std::uint8_t b);
+    // XORs `colour` into the palette index of every pixel drawn so far in a
+    // rectangle (320x200 screen units), going by what each pixel shows: the
+    // fallback for new art (map_layer's draw_xor_box works on the original's
+    // colour numbers). A colour shown by two numbers takes the first, and a
+    // colour not in `palette` is left as it is.
+    bool xor_colours(int x, int y, int width, int height, int colour, const formats::Palette16& palette);
+    // The provider's picture for `id` (kept after the first call), or null.
+    const Image* source(const AssetId& id);
+    // Draws `rgba` (width x height pixels) over a rectangle of the screen.
+    void draw_rgba(int x, int y, int width, int height, const std::vector<std::uint8_t>& rgba);
     // A solid rectangle, in 320x200 screen units.
     void fill(int x, int y, int width, int height, std::uint8_t r, std::uint8_t g, std::uint8_t b);
     // Limits drawing to a rectangle of the 320x200 screen; clear_clip() lifts it.
@@ -54,6 +66,7 @@ private:
         float logical_width = 0, logical_height = 0;
     };
     std::map<AssetId, Entry> cache_;
+    std::map<AssetId, std::optional<Image>> sources_;
 };
 
 }  // namespace chr::platform

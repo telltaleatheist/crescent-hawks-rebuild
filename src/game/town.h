@@ -16,6 +16,8 @@
 #include "formats/menus.h"
 #include "game/asset_id.h"
 #include "formats/mtp.h"
+#include "formats/rules.h"
+#include "game/fight.h"
 #include "game/figures.h"
 #include "game/flags.h"
 #include "game/map_view.h"
@@ -131,7 +133,8 @@ public:
     void idle_pass();
 
     formats::MapPosition position() const { return position_; }
-    // The map as it shows now, animated tiles in their current frame.
+    // The map as it shows now, animated tiles in their current frame (or as
+    // last drawn, while the program draws nothing new: the fight's questions).
     MapView view() const;
     // The figures on the map, in drawing order: the party, then the
     // townspeople out walking.
@@ -165,12 +168,24 @@ public:
     const std::array<int, formats::kMenus.size()>& menu_last() const { return menu_last_; }
     const std::array<PanelStats, 8>& stats() const { return stats_; }
 
+    // The rule tables (the 'Mech templates and the combat tables): a fight
+    // needs them. Without them a fight stops where it would begin.
+    void set_rules(const formats::Rules* rules) { rules_ = rules; }
+    // Boxes XORed onto the screen over the map (the orders screen's mark on
+    // the selected unit), drawn last.
+    const std::vector<XorBox>& boxes() const { return boxes_; }
+    const FightFigures& fight_figures() const { return figs_; }
+    const std::array<formats::MechRecord, 8>& mechs() const { return mechs_; }
+    // The fight went on past what is rebuilt (the orders, the rounds).
+    bool fight_unfinished() const { return fight_unfinished_; }
+
 private:
     class Question;
     // Nothing more happens: a question or a place waits for keys that ran
     // out, or the walk stopped at a place it can't run.
     bool stopped() const {
-        return question_open_ || place_open_ || start_up_open_ || (entered_place_ && !game_dir_);
+        return question_open_ || place_open_ || start_up_open_ || fight_unfinished_ ||
+               (entered_place_ && !game_dir_);
     }
     // The start-up's screens, in order (game/startup.cpp).
     enum class Stage { Infocom, Title, Question, Town };
@@ -181,6 +196,8 @@ private:
     // BTECH.EXE 1000:020a..050d (the main loop's game tick)
     void game_tick();
     void record_party_places();
+    // The map at the party's position now.
+    MapView live_view() const;
     // BTECH.EXE 1e31:1fdf (Ghidra FUN_1e31_1fdf)
     // "C-Bills:" and the amount, in the party box.
     void draw_cbills();
@@ -200,6 +217,25 @@ private:
     std::optional<int> read_key(KeySource& keys);
     void print_id(const std::string& id);
     void count_members();
+
+    // A fight (game/fight.cpp, docs/combat.md). Each returns false if the
+    // keys ran out while it waited for one, or the fight went on past what
+    // is rebuilt.
+    bool walk_in(KeySource& keys);
+    bool run_mission(int mode, KeySource& keys);
+    void place_mission(int mechs, int people);
+    bool fight(int kind, KeySource& keys);
+    bool orders_menu(KeySource& keys);
+    std::vector<Figure> walk_in_figures();
+    std::vector<Figure> fight_figures_drawn() const;
+    void print_unit_heading(int fig);
+    bool on_foot(int character) const;
+    // The screen as it was last drawn, while the program draws nothing new
+    // over the map (the questions before a fight).
+    struct Frozen {
+        MapView view;
+        std::vector<Figure> figures;
+    };
 
     const formats::MtpMap& map_;
     int map_number_;
@@ -237,6 +273,31 @@ private:
     std::optional<PlacePicture> picture_;
     int place_number_ = 0;  // F:4584: the entrance last entered
     std::optional<std::filesystem::path> game_dir_;
+
+    // The fight's state (game/fight.h).
+    const formats::Rules* rules_ = nullptr;
+    // F:c724 + 0x7d i: no 'Mech in any record at a new game (byte 0 ff).
+    std::array<formats::MechRecord, 8> mechs_ = [] {
+        std::array<formats::MechRecord, 8> m{};
+        for (auto& r : m) r[0] = 0xff;
+        return m;
+    }();
+    // F:c614: Jason (name 0) on foot; records 1-7 empty, 8-15 name 0.
+    std::array<CharacterPlace, 16> characters_ = [] {
+        std::array<CharacterPlace, 16> c{};
+        c[0] = {0, 8};
+        for (int i = 1; i < 8; ++i) c[std::size_t(i)] = {0xff, 0};
+        for (int i = 8; i < 16; ++i) c[std::size_t(i)] = {0, 0};
+        return c;
+    }();
+    FightFigures figs_;
+    int messages_ = 2;       // DG:2e38: combat messages (0 none, 1 brief, 2 verbose)
+    bool graphics_ = true;   // DG:2e3a: see combat graphics
+    bool computer_ = false;  // F:009e: the computer fights for you
+    std::optional<Frozen> frozen_;
+    std::vector<XorBox> boxes_;
+    bool party_box_shown_ = true;
+    bool fight_unfinished_ = false;
 };
 
 }  // namespace chr::game

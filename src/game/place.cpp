@@ -267,6 +267,8 @@ std::optional<int> Town::menu(int m, KeySource& keys) {
 // BTECH.EXE 24d3:0004 (Ghidra FUN_24d3_0004), the cases the Citadel uses.
 bool Town::special(int n, KeySource& keys) {
     switch (n) {
+    case 1:
+        return walk_in(keys);  // game/fight.cpp
     case 4:
         // 24d3:0231: the three courses' prices, 125 x Jason's skill + 75,
         // right-aligned to column 39 on rows 5-7, light green.
