@@ -7,6 +7,7 @@
 
 #include <array>
 #include <cstdint>
+#include <optional>
 
 #include "formats/mtp.h"
 #include "game/fixes.h"
@@ -51,6 +52,17 @@ public:
     // The 3x3 blocks around the block holding `position`, from the grids:
     // map blocks from `map`, terrain blocks from the templates.
     Window window(formats::MapPosition position, const formats::MtpMap& map) const;
+    // The window around `position` with the map last placed, built once
+    // for each block the position is in.
+    const Window& window(formats::MapPosition position) const;
+    // Cell `index` of that window. Before it, as in the original's memory,
+    // the nine block values (P:07a4), the grids (P:0564) and the masks
+    // (P:0324); nothing past it or before those (memory the rebuild does
+    // not hold).
+    std::optional<int> window_cell(formats::MapPosition position, int index) const;
+    // The cell (x, y) of the position's area (either may be outside 0..63:
+    // a neighbouring area's) if the window around `position` holds it.
+    std::optional<int> cell(formats::MapPosition position, int x, int y) const;
 
     // P:0564: the grids, 64 entries each, row by row.
     const std::array<std::uint8_t, kGrids * kGridBlocks>& grids() const { return grids_; }
@@ -79,6 +91,9 @@ private:
     std::array<std::uint8_t, 256> noise_{};
     std::array<std::uint8_t, kGrids * kGridBlocks> grids_{};
     std::array<std::uint8_t, kGrids * kGridBlocks> masks_{};
+    const formats::MtpMap* map_ = nullptr;
+    mutable std::optional<Window> built_;
+    mutable int built_column_ = -1, built_row_ = -1;
 };
 
 }  // namespace chr::game

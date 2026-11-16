@@ -26,15 +26,10 @@ formats::MapPosition new_game_position() { return {0x0c45, 0xc019}; }
 // the y half-cell is odd, else the bottom (top half). Either way the view
 // starts 12 half-cells before the position. 287f:1314 and 287f:13d9 first
 // copy the 3x3 blocks around the position into a 24x24-cell window.
-MapView view_of(const formats::MtpMap& map, const std::string& tile_sheet,
-                formats::MapPosition position) {
+MapView view_of(const Terrain& terrain, const std::string& tile_sheet, formats::MapPosition position) {
     MapView view;
     view.origin_half_x = position.half_cell_x() - kViewLead;
     view.origin_half_y = position.half_cell_y() - kViewLead;
-
-    // Cells this map covers, in area cells (the map sits at block_x, block_y).
-    const int map_left = map.block_x * formats::kBlockCells;
-    const int map_top = map.block_y * formats::kBlockCells;
 
     auto floor_half = [](int h) { return h >= 0 ? h / 2 : -((1 - h) / 2); };
     const int first_x = floor_half(view.origin_half_x);
@@ -42,26 +37,14 @@ MapView view_of(const formats::MtpMap& map, const std::string& tile_sheet,
     const int first_y = floor_half(view.origin_half_y);
     const int last_y = floor_half(view.origin_half_y + kViewHalfCellsHigh - 1);
 
-    for (int y = std::max(first_y, map_top); y <= std::min(last_y, map_top + map.height - 1); ++y)
-        for (int x = std::max(first_x, map_left); x <= std::min(last_x, map_left + map.width - 1);
-             ++x)
-            view.cells.push_back(
-                {x, y, AssetId{tile_sheet, map.cell(x - map_left, y - map_top)}});
+    for (int y = first_y; y <= last_y; ++y)
+        for (int x = first_x; x <= last_x; ++x)
+            if (const auto tile = terrain.cell(position, x, y)) view.cells.push_back({x, y, AssetId{tile_sheet, std::uint16_t(*tile)}});
     return view;
 }
 
 int view_corner_index(formats::MapPosition party) {
     return (((party.half_cell_y() >> 1) & 7) + 2) * kWindowCells + ((party.half_cell_x() >> 1) & 7) + 2;
-}
-
-std::optional<int> window_cell(const formats::MtpMap& map, formats::MapPosition party, int index) {
-    if (index < 0 || index >= kWindowCells * kWindowCells) return std::nullopt;
-    const int cx = ((party.half_cell_x() >> 4) - 1) * formats::kBlockCells + index % kWindowCells -
-                   map.block_x * formats::kBlockCells;
-    const int cy = ((party.half_cell_y() >> 4) - 1) * formats::kBlockCells + index / kWindowCells -
-                   map.block_y * formats::kBlockCells;
-    if (cx < 0 || cy < 0 || cx >= map.width || cy >= map.height) return -1;
-    return map.cell(cx, cy);
 }
 
 }  // namespace chr::game

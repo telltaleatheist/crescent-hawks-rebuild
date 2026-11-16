@@ -4,6 +4,7 @@
 #include "formats/game_files.h"
 #include "formats/icn.h"
 #include "formats/mtp.h"
+#include "formats/tables.h"
 #include "game/map_view.h"
 #include "test.h"
 
@@ -55,13 +56,19 @@ TEST(mtp_wrong_size_is_an_error) {
 
 TEST(view_origin_and_extent) {
     const auto map = decode_mtp(make_mtp());
+    const Tables tables;
+    const game::Fixes fixes;
+    game::Terrain terrain(tables, fixes);
+    terrain.place_map(map, 4);
+    terrain.link_blocks();
     // Half-cell (13, 12): the view starts at half-cell (1, 0), i.e. half-way
-    // into cell 0, and is 27 half-cells across: cells 0..13, clipped to the map.
-    const auto view = game::view_of(map, "BTTLTECH.ICN", MapPosition{13, 12});
+    // into cell 0, and is 27 half-cells across and 25 down: cells 0..13 and
+    // 0..12, those past the map's edge from the terrain.
+    const auto view = game::view_of(terrain, "BTTLTECH.ICN", MapPosition{13, 12});
     CHECK(view.origin_half_x == 1 && view.origin_half_y == 0);
-    CHECK(view.cells.size() == std::size_t(14 * 8));
-    CHECK(view.cells.front().tile == (AssetId{"BTTLTECH.ICN", 0}));
-    CHECK(view.cells.back().cell_x == 13 && view.cells.back().cell_y == 7);
+    CHECK(view.cells.size() == std::size_t(14 * 13));
+    CHECK(view.cells.front().tile == (AssetId{"BTTLTECH.ICN", map.cell(0, 0)}));
+    CHECK(view.cells.back().cell_x == 13 && view.cells.back().cell_y == 12);
 }
 
 TEST(new_game_starts_by_the_citadel) {

@@ -15,6 +15,7 @@
 #include "formats/tables.h"
 #include "game/fight.h"
 #include "game/figures.h"
+#include "game/terrain.h"
 #include "game/fixes.h"
 #include "game/flags.h"
 #include "game/random.h"
@@ -134,7 +135,7 @@ public:
         std::function<void(const std::string&)> log;
     };
 
-    Combat(const formats::MtpMap& map, int blocking, formats::MapPosition& party, FightFigures& figs,
+    Combat(const Terrain& terrain, int blocking, formats::MapPosition& party, FightFigures& figs,
            FigureAnimation& animation, std::array<formats::MechRecord, 8>& mechs,
            std::array<CharacterRecord, 16>& characters, Flags& flags, Random& random, CombatState& state,
            MapMarks& marks, const formats::Rules& rules, const formats::Tables& tables, const Fixes& fixes,
@@ -243,7 +244,7 @@ private:
     std::string name_id(int c) const;
     void note(const std::string& line) const;
 
-    const formats::MtpMap& map_;
+    const Terrain& terrain_;
     int blocking_;  // DG:0150
     formats::MapPosition& party_;
     FightFigures& figs_;

@@ -460,10 +460,8 @@ WEAPON_CASES = [dict(case, compare=False) for case in ORDERS_CASES[:12]] + [
 ]
 WEAPON_FULL_CASES = [
     # The first weapon: "Choose a target", the picker on the enemy Locust.
-    # The view's last column is past the map file's east edge, which the
-    # rebuild does not fill yet (docs/combat.md 1.2.2), so it is left out.
-    {"name": "weapons_picker", "keys": "enter",
-     "match": {"the panel": WHOLE_PANEL, "the map but its last column": (104, 0, 208, 200)}, "fight": True},
+    # The view's last column is past the map file's east edge: terrain.
+    {"name": "weapons_picker", "keys": "enter", "match": SCREEN, "fight": True},
     # Fire: back to the list, the weapon's target and range band shown.
     {"name": "weapons_targeted", "keys": "enter", "match": SCREEN, "fight": True},
     # Done (up from the first item wraps to it): the orders menu.
@@ -478,8 +476,7 @@ WEAPON_FULL_CASES = [
 KICK_CASES = [dict(case, compare=False) for case in ORDERS_CASES[:12]] + [
     # "Choose the 'Mech to kick", the picker on the enemy Locust.
     # Its last map column is past the map file's edge, as in weapons_picker.
-    {"name": "kick_picker", "keys": "up*5 enter",
-     "match": {"the panel": WHOLE_PANEL, "the map but its last column": (104, 0, 208, 200)}, "fight": True},
+    {"name": "kick_picker", "keys": "up*5 enter", "match": SCREEN, "fight": True},
 ]
 KICK_FULL_CASES = [
     # Target here: back to the orders menu, its bar on Kick.
@@ -513,8 +510,7 @@ SCAN_FULL_CASES = [
     {"name": "scan_friends_done", "keys": "down*2 enter", "match": SCREEN, "fight": True},
     # Enemies: the enemy Locust, its direction, the view on it. The view's
     # last column is past the map file's edge, as in weapons_picker.
-    {"name": "scan_enemies", "keys": "enter down enter",
-     "match": {"the panel": WHOLE_PANEL, "the map but its last column": (104, 0, 208, 200)}, "fight": True},
+    {"name": "scan_enemies", "keys": "enter down enter", "match": SCREEN, "fight": True},
     {"name": "scan_enemies_done", "keys": "down*2 enter", "match": SCREEN, "fight": True},
     # Cancel.
     {"name": "scan_cancel", "keys": "enter down*2 enter", "match": SCREEN, "fight": True},
@@ -527,12 +523,13 @@ SCAN_FULL_CASES = [
 PEOPLE_CASES = [dict(case, name=case["name"].replace("training_", "people_")) for case in TRAINING_CASES]
 PEOPLE_CASES[4] = dict(PEOPLE_CASES[4], keys=PEOPLE_CASES[4]["keys"].replace("flag:00=02", "flag:00=03"))
 PEOPLE_CASES = [dict(case, compare=False) for case in PEOPLE_CASES[:5]] + PEOPLE_CASES[5:]
-# Round 6 is left out: a soldier's line of sight leaves the cell window,
-# where the original reads the area grids before it (docs/combat.md 1.2.1)
-# and the rebuild does not hold them yet.
+# From round 6 the soldiers' lines of sight read memory before the cell
+# window, the area grids (docs/combat.md 1.2.1). The fight goes on: they
+# keep to the area's south edge, and none falls in 40 rounds (all 40
+# match); 20 are kept here.
 PEOPLE_FULL_CASES = [
     {"name": "people_round_%d" % n, "keys": "enter", "match": SCREEN, "fight": True}
-    for n in range(1, 6)
+    for n in range(1, 21)
 ]
 
 # The computer hands the fight back (a key at the round's poll) and the

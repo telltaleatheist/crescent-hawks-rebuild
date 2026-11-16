@@ -118,8 +118,13 @@ the cells past a map's edge are terrain.
 
 The rebuild's `Terrain::window` is checked against the original's memory: every rig case builds
 the window where the original last built its own (P:02cf, 02d1) and compares the nine values and
-the 576 cells (`check.py`, `window.py`). It does not yet build it at the original's moments;
-the view, line of sight and figures still read the map (below).
+the 576 cells (`check.py`, `window.py`). Everything that reads the window in the original reads
+it in the rebuild: the map view, the party's and the 'Mechs' water cells, the townspeople's steps
+and the fight's paths, lines of sight and figure cells (`window_cell`, `Terrain::cell`). The
+rebuild builds it for the place it is asked about, once per block, rather than at the original's
+moments; the original builds it at every place those readers use (combat.md 1.2.1). Indices
+before the window read the block values, the grids and the masks, as in the original's memory
+(combat.md, "An index outside the window").
 
 13d9 also works out a second value from the block's place, `((row + column) << 2) & 0x10`, and
 loads it, but never uses it.
@@ -129,9 +134,8 @@ The step check (1000:1c12) reads P:07a4: a block of type 0 whose four neighbours
 
 ## Not rebuilt yet
 
-- The window in use: the map view, the figures' cells and the fight's line of sight still read
-  the map, with the cells past its edge drawn empty and blocking (map_view.cpp).
-
+- The step check (1000:1c12, `movement.cpp`) still reads the map file, and a step off it leaves
+  the map (the outdoors are not rebuilt); its deep-water test on P:07a4 waits for them too.
 - The steps across an area's edge outdoors. The position steps (287f:158c up, 287f:17c5 right and
   the others; `world.h` rebuilds their position part) also move the grids over by a row or a
   column there, make the new row or column (287f:18d8 and 0bfb for its three grids) and rebuild

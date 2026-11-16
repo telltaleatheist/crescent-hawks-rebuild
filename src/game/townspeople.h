@@ -10,6 +10,7 @@
 
 #include "formats/mtp.h"
 #include "formats/tables.h"
+#include "game/terrain.h"
 #include "game/figures.h"
 #include "game/random.h"
 
@@ -32,9 +33,10 @@ using PartyPlaces = std::array<formats::MapPosition, 8>;
 
 // BTECH.EXE 1e31:023c..02a6: the tile a figure stepping to `next` is
 // checked against: a cell of the original's 24x24-cell window around the
-// party (townspeople.cpp). `outside` is set when the index falls outside the
-// window, where the rebuild reads the real cell. -1 off the map.
-int window_tile(const formats::MtpMap& map, formats::MapPosition party, formats::MapPosition next,
+// party (townspeople.cpp). `outside` is set when the index falls past the
+// memory the rebuild holds around the window, where it reads the real cell
+// (-1 off the map).
+int window_tile(const formats::MtpMap& map, const Terrain& terrain, formats::MapPosition party, formats::MapPosition next,
                 bool& outside);
 
 class Townspeople {
@@ -56,7 +58,7 @@ public:
     // random 0-31 rounds and picks the entrance after. `near` gets whether
     // each one is within that square (F:42f6 + i, the bytes the fight's
     // drawer later uses for figures 0-7).
-    void move(const formats::MtpMap& map, formats::MapPosition party, const PartyPlaces& party_places,
+    void move(const formats::MtpMap& map, const Terrain& terrain, formats::MapPosition party, const PartyPlaces& party_places,
               FigureAnimation& animation, Random& random, std::span<bool, 8> near);
 
     // BTECH.EXE 1000:051b (Ghidra FUN_1000_051b), the townspeople's part.
@@ -97,7 +99,7 @@ public:
     bool outside_window = false;
 
 private:
-    void step(int i, const formats::MtpMap& map, formats::MapPosition party, const PartyPlaces& party_places);
+    void step(int i, const formats::MtpMap& map, const Terrain& terrain, formats::MapPosition party, const PartyPlaces& party_places);
 
     const formats::Tables* tables_ = nullptr;
     std::array<Walker, 8> walkers_{};

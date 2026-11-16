@@ -14,3 +14,5 @@
 .vscode/
 .idea/
 __pycache__/
+# clangd's index
+.cache/

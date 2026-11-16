@@ -83,9 +83,10 @@ A direction is taken if:
     Rows are 24 cells, so a person past the window's right or left edge (a person "near" the
     party can be up to about 25 half-cells to the side) is checked against a cell of the next or
     the previous row. Found on the original: a person going south-east by the training center
-    with the party far west was stopped by such a cell and went south. An index outside the
-    window would read the memory around it; the rebuild reads the real cell there and logs it
-    (not met on any path tested); and
+    with the party far west was stopped by such a cell and went south. An index before the
+    window reads the memory there, the block values, the area grids and the masks, and the
+    rebuild reads the same (docs/wilderness.md); past the window's end it reads the real cell and
+    logs it (not met on any path tested); and
 - no other figure stands exactly there (`1e31:16ab`): a character of the party where it was
   last drawn (the end of `1000:051b` records them), or another person. A 'Mech blocks three
   half-cells of its row; there are none in town. If the place taken is the target itself,

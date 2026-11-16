@@ -96,12 +96,12 @@ void MapMarks::add(int code, std::uint16_t x, std::uint16_t y) {
     if (++next > kCount - 1) next = 0;
 }
 
-Combat::Combat(const formats::MtpMap& map, int blocking, MapPosition& party, FightFigures& figs,
+Combat::Combat(const Terrain& terrain, int blocking, MapPosition& party, FightFigures& figs,
                FigureAnimation& animation, std::array<formats::MechRecord, 8>& mechs,
                std::array<CharacterRecord, 16>& characters, Flags& flags, Random& random, CombatState& state,
                MapMarks& marks, const formats::Rules& rules, const formats::Tables& tables, const Fixes& fixes,
                int messages, bool graphics, Hooks hooks)
-    : map_(map), blocking_(blocking), party_(party), figs_(figs), animation_(animation), mechs_(mechs),
+    : terrain_(terrain), blocking_(blocking), party_(party), figs_(figs), animation_(animation), mechs_(mechs),
       characters_(characters), flags_(flags), random_(random), s_(state), marks_(marks), rules_(rules),
       tables_(tables), fixes_(fixes), messages_(messages), graphics_(graphics), hooks_(std::move(hooks)) {}
 
@@ -115,13 +115,13 @@ const formats::WeaponRecord& Combat::weapon_record(int w) const {
 }
 
 int Combat::window(int index) const {
-    const auto cell = window_cell(map_, party_, view_corner_index(party_) + index);
+    const auto cell = window_cell(terrain_, party_, view_corner_index(party_) + index);
     if (!cell) {
-        // Past the 24x24 window the original reads other memory.
-        note("a cell outside the window: blocked");
+        // Memory the rebuild does not hold (docs/wilderness.md).
+        note("a cell past the window's memory: blocked");
         return 0xff;
     }
-    return *cell < 0 ? 0xff : *cell;
+    return *cell;
 }
 
 void Combat::print(const std::vector<std::string>& ids) const {

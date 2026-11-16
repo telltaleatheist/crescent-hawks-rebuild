@@ -40,9 +40,10 @@ int tile_at(const formats::MtpMap& map, MapPosition p) {
 // The tile a person would step onto, read from the 24x24-cell window
 // around the party (P:07ad, filled by 287f:1314) at the view's corner cell
 // P:09ed plus the place relative to the view (1000:2689); docs/townspeople.md.
-// Past the window itself the original reads other memory; the rebuild reads
-// the real cell and sets `outside`.
-int window_tile(const formats::MtpMap& map, MapPosition party, MapPosition next, bool& outside) {
+// Before the window it reads the memory there as the original does
+// (Terrain::window_cell); past what the rebuild holds it reads the real cell
+// and sets `outside`.
+int window_tile(const formats::MtpMap& map, const Terrain& terrain, MapPosition party, MapPosition next, bool& outside) {
     int rel_x = wrap16(next.x - party.x);
     if (rel_x < -0x80) rel_x += 0x80;
     if (rel_x > 0x80) rel_x -= 0x80;
@@ -55,7 +56,7 @@ int window_tile(const formats::MtpMap& map, MapPosition party, MapPosition next,
     int index = floor_half(rel_y) * 24 + floor_half(rel_x - 13);
     if ((rel_x & 1) == 0 && (party.x & 1) != 0) ++index;
     if ((rel_y & 1) != 0 && (party.y & 1) != 0) index += 24;
-    const auto cell = window_cell(map, party, view_corner_index(party) + index);
+    const auto cell = window_cell(terrain, party, view_corner_index(party) + index);
     outside = !cell;
     return cell ? *cell : tile_at(map, next);
 }
@@ -102,7 +103,7 @@ Townspeople Townspeople::place(const formats::MtpMap& map, int map_number, Rando
     return t;
 }
 
-void Townspeople::move(const formats::MtpMap& map, MapPosition party, const PartyPlaces& party_places,
+void Townspeople::move(const formats::MtpMap& map, const Terrain& terrain, MapPosition party, const PartyPlaces& party_places,
                        FigureAnimation& animation, Random& random, std::span<bool, 8> near) {
     for (int i = 0; i < 8; ++i) {
         auto& w = walkers_[std::size_t(i)];
@@ -122,7 +123,7 @@ void Townspeople::move(const formats::MtpMap& map, MapPosition party, const Part
         if (!(w.at.x > left && w.at.x < right && w.at.y > top && w.at.y < bottom)) continue;
         near[std::size_t(i)] = true;
 
-        step(i, map, party, party_places);
+        step(i, map, terrain, party, party_places);
         animation.walk(f, w.heading);
         if (w.at == w.target) {
             // In through the door: out again after (random & 31) rounds.
@@ -144,7 +145,7 @@ void Townspeople::move(const formats::MtpMap& map, MapPosition party, const Part
 // DGROUP:0150, read through the cell window: window_tile) and that no other
 // figure stands on. Stays put if at the
 // target already or if every way is shut.
-void Townspeople::step(int i, const formats::MtpMap& map, MapPosition party, const PartyPlaces& party_places) {
+void Townspeople::step(int i, const formats::MtpMap& map, const Terrain& terrain, MapPosition party, const PartyPlaces& party_places) {
     auto& w = walkers_[std::size_t(i)];
     if (--wobble_count_ == 0) {
         wobble_count_ = 30;
@@ -161,7 +162,7 @@ void Townspeople::step(int i, const formats::MtpMap& map, MapPosition party, con
         if (dx != 0) next.x = step_x(next.x, dx);
         if (dy != 0) next.y = step_y(next.y, dy);
         bool outside = false;
-        const int tile = window_tile(map, party, next, outside);
+        const int tile = window_tile(map, terrain, party, next, outside);
         if (outside) outside_window = true;
         if (tile < 0 || tile >= blocking_) continue;
         // BTECH.EXE 1e31:16ab (Ghidra FUN_1e31_16ab): a character of the

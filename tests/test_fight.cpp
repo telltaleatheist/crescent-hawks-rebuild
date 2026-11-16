@@ -34,7 +34,8 @@ struct Bench {
     MapMarks marks;
     chr::formats::Rules rules;
     Fixes fixes;
-    Combat combat{map, 0x55, party, figs, animation, mechs, characters, flags, random, state, marks,
+    Terrain terrain{tables, fixes};
+    Combat combat{terrain, 0x55, party, figs, animation, mechs, characters, flags, random, state, marks,
                   rules, tables, fixes, 0, false, {}};
 };
 

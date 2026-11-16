@@ -87,13 +87,12 @@ void FigureAnimation::key(int k) {
     }
 }
 
-std::vector<Figure> party_figures(const formats::MtpMap& map, formats::MapPosition position,
+std::vector<Figure> party_figures(const Terrain& terrain, formats::MapPosition position,
                                   const Party& party, const FigureAnimation& animation,
                                   const formats::Tables& tables) {
     std::vector<Figure> figures;
     const int hx = position.half_cell_x(), hy = position.half_cell_y();
     const int parity = (position.y & 1) * 2 + (position.x & 1);
-    const int map_left = map.block_x * formats::kBlockCells, map_top = map.block_y * formats::kBlockCells;
     int k = 0;
     for (int member = 0; member < 8; ++member) {
         if (!party.present[member]) continue;
@@ -105,9 +104,8 @@ std::vector<Figure> party_figures(const formats::MtpMap& map, formats::MapPositi
         f.half_y = hy + tables.formation_y[std::size_t(k)];
         // DGROUP:02fe/030e/031e pick the cell under it in the 24x24-cell
         // window at 2c6c:07ad: the one holding that half-cell.
-        const int cx = (f.half_x >> 1) - map_left, cy = (f.half_y >> 1) - map_top;
-        if (cx >= 0 && cy >= 0 && cx < map.width && cy < map.height) {
-            const int tile = map.cell(cx, cy);
+        if (const auto cell = terrain.cell(position, f.half_x >> 1, f.half_y >> 1)) {
+            const int tile = *cell;
             // DGROUP:0332 (imported: party_water): the water quarter bits.
             if (tile < 0xf6 && (tile & tables.party_water[std::size_t(k)][std::size_t(parity)]) != 0 && (tile & 0xf0) < 0x30)
                 f.sink = (tile & 0xf0) == 0x20 ? 4 : 2;

@@ -178,7 +178,7 @@ MapView Town::view() const {
 }
 
 MapView Town::live_view() const {
-    auto view = view_of(map_, tile_sheet_, position_);
+    auto view = view_of(terrain_, tile_sheet_, position_);
     if (tiles_animate(map_number_))
         for (auto& cell : view.cells)
             if (const auto frame = animated_tile(std::uint8_t(cell.tile.index), phase_, tables_)) cell.tile = *frame;
@@ -187,7 +187,7 @@ MapView Town::live_view() const {
 
 std::vector<Figure> Town::figures() const {
     if (frozen_) return frozen_->figures;
-    auto all = party_figures(map_, position_, party_, animation_, tables_);
+    auto all = party_figures(terrain_, position_, party_, animation_, tables_);
     const auto people = people_.figures(map_, position_, animation_);
     all.insert(all.end(), people.begin(), people.end());
     return all;
@@ -387,7 +387,7 @@ void Town::game_tick() {
     // Every third tick the townspeople move (1000:24c2).
     if (third_++ == 2) {
         third_ = 0;
-        people_.move(map_, position_, party_places_, animation_, random_, std::span(combat_.on_screen).first<8>());
+        people_.move(map_, terrain_, position_, party_places_, animation_, random_, std::span(combat_.on_screen).first<8>());
         if (people_.outside_window) {
             people_.outside_window = false;
             log_.push_back("a person's step looked outside the cell window: read the map instead");

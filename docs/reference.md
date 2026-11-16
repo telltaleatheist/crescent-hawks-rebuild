@@ -157,12 +157,11 @@ Flee. `moves` gives the player's move orders and fights on them (docs/combat.md 
 `waypoints` (long only) gives thirteen walk orders on the unit's own cell, so the thirteenth goes
 into figure 1's orders (bug 17), then a round. `weapons` opens Use Weapons, gives the first
 weapon the enemy through the target picker and fights four rounds (the picker's view reaches
-past the map file's east edge, so its last column is not compared: docs/combat.md 1.2.2).
-`kick` orders a kick at the enemy through the picker (its last map column is left out for the
-same reason) and fights three rounds; the long run then takes the left hip away (a record poke
+past the map file's east edge, into the terrain: docs/wilderness.md).
+`kick` orders a kick at the enemy through the picker (its view reaches the terrain too) and fights three rounds; the long run then takes the left hip away (a record poke
 standing in for a critical hit): Kick cannot, and the round drops the kick still ordered. `scan` opens Scan Unit: Friends (Next comes back to the unit), Done, Enemies (the enemy Locust
-and its direction; the last map column left out), Done, Cancel, and a round. `people` is mission 3 (flag 00 = 3): three to six enemy people, the orders menu and five rounds
-(long), compared with the walker lines showing figures 16-23 during the fight, as the original's
+and its direction, the view reaching the terrain), Done, Cancel, and a round. `people` is mission 3 (flag 00 = 3): three to six enemy people, the orders menu and 20 rounds
+(long; from round 6 the soldiers' lines of sight read the area grids before the cell window), compared with the walker lines showing figures 16-23 during the fight, as the original's
 shared memory does. `handover` (long
 only) lets the computer fight six rounds, hands the fight back with a key at
 the round's poll, and flees and fails. The training

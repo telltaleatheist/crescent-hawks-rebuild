@@ -10,6 +10,7 @@
 
 #include "formats/mtp.h"
 #include "formats/tables.h"
+#include "game/terrain.h"
 #include "game/asset_id.h"
 #include "game/movement.h"
 
@@ -101,7 +102,7 @@ struct Figure {
 // animation frame. In shallow water a figure sinks 2 rows, in deeper water
 // 4. (The map's objects, the townspeople and the 'Mechs come before and
 // after it: docs/town_loop.md.)
-std::vector<Figure> party_figures(const formats::MtpMap& map, formats::MapPosition position,
+std::vector<Figure> party_figures(const Terrain& terrain, formats::MapPosition position,
                                   const Party& party, const FigureAnimation& animation,
                                   const formats::Tables& tables);
 

@@ -113,8 +113,9 @@ works the box out from the colour numbers of the tiles and figures under it
 (`platform::draw_xor_box`).
 
 Mission 3 (mode 3) is rebuilt: (r & 3) + 3 enemy people (`0d49`'s second count, 1.4 step 6),
-then the same fight as mode 2. The `people` sequence compares it to the orders menu and five
-rounds; round 6 needs the area grids (1.2.1). The orders menu itself is in 2.6.
+then the same fight as mode 2. The `people` sequence compares it to the orders menu and 20
+rounds; from round 6 the soldiers' lines of sight read the area grids (1.2.1). The orders menu
+itself is in 2.6.
 
 ### 1.2.2 Mission 2 fought by the computer (rebuilt)
 
@@ -161,32 +162,26 @@ corner index (P:09ed) are not moved with the party position: `1000:17bb` walks P
 there with the step routines `287f:158c` etc., which change only the area grids, at an area
 edge. The line of sight reloads both at the shooter itself (`287f:1314`, then `287f:1df8`, which
 sets P:09ed..09f1, at `1e31:1c24`), and the planner calls it for the figure it plans before it
-simulates the path, so both read the window around that figure. The rebuild reads the same
-cells from the map (`window_cell`); a dump of the window in the original after round 4 (the
-last line of sight then: figure 0's) holds exactly those cells. Row wrapping (an index past a
-row's end reads the next row) is the original's and is kept.
+simulates the path, so both read the window around that figure. The rebuild builds the same
+window from the terrain (docs/wilderness.md: `Terrain::window`, read through `window_cell`), so the
+cells past the map file's edge are the terrain blocks the original shows there. Row wrapping (an
+index past a row's end reads the next row) is the original's and is kept.
 
-**Where the rebuild stands in for memory it does not hold.** Both are logged; neither came up
-in mission 2. The first came up in mission 3 (the `people` sequence, round 6).
+**An index outside the window.** Below 0 the original reads the P: bytes before the buffer: the
+nine block values (P:07a4..07ac), then the nine area grids (P:0564..07a3), then the masks
+(P:0324..0563). The rebuild holds all three and reads them in the same order, so an index down to
+-0x489 gives the original's byte. On the town maps the grids hold the neighbouring areas' terrain
+types (0x00-0x30), all below DG:0150, so a line of sight goes on through them. Mission 3 meets it
+from round 6: a soldier's line of sight to Jason's 'Mech reads indices -22 and -21 (P:0797,
+P:0798, grid 8's entries) and the soldier sees and fires; the `people` sequence checks 20 rounds
+(40 were checked once). The masks differ from the original's only at the outer edges of the 3 x 3
+grids (wilderness.md), which no line of sight has reached. From 576 on the original reads the
+corner words P:09ed..09f2 and the bytes after them; the rebuild does not hold those, counts the
+cell as blocking and logs it. A path (12 half-cells at most) cannot leave the window; a line of
+sight at long range can (the figure is 8-15 cells from the window's edges).
 
-- *An index outside the window (below 0 or from 576 on).* The original reads the P: bytes next
-  to the buffer: before it the nine area-grid entries of the loaded blocks (P:07a4..07ac) and
-  other data, after it the corner words P:09ed..09f2 and other data. Before P:07a4 lie the nine
-  area grids themselves (P:0564..07a3, 64 entries each, mtp.md), so an index down to -0x249
-  reads area-grid entries: on the town maps the neighbouring areas' terrain types (0x00, 0x10,
-  0x20, 0x30), all below DG:0150, so the original's line of sight goes on through them. In
-  mission 3, round 6, a soldier's line of sight to Jason's 'Mech reads indices -22 and -21
-  (P:0797, P:0798: 00 and 10 in every capture from the town's start on); the original's soldier
-  sees and fires, the rebuild's does not. These are not map cells, and the rebuild does not hold
-  the area grids yet. It counts such a cell as blocking, so a path
-  stops there and a line of sight ends unseen. Blocking also ends the line of sight's loop, which
-  in the original only ends when it reaches the target or a cell at or above DG:0150. A path
-  (12 half-cells at most) cannot leave the window; a line of sight at long range can (the figure
-  is 8-15 cells from the window's edges).
-- *A cell inside the window but outside the map file.* The original's window holds whatever the
-  area grids give there: a fixed block of a neighbouring map or a terrain block built by
-  `287f:11bb` (not read). The rebuild has no cells for those and counts them as blocking. The
-  town maps fill their area, so this needs a fight at an area edge.
+**Where the rebuild stands in for memory it does not hold.** Logged when met.
+
 - *A 'Mech with no pilot fires (pilot byte ff).* The round reads the shooter's skill from
   character 255 (the byte is not sign-extended: F:c614 + 0x11 x 255 + 4 + skill, F:d707 on),
   past the 16 records. The rebuild uses skill 0. Enemy records copy their pilot byte from the

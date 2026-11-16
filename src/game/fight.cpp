@@ -44,7 +44,7 @@ bool Town::on_foot(int character) const {
 std::vector<Figure> Town::walk_in_figures() {
     Party walking = party_;
     for (int i = 0; i < 8; ++i) walking.present[std::size_t(i)] = walking.present[std::size_t(i)] && on_foot(i);
-    auto all = party_figures(map_, position_, walking, animation_, tables_);
+    auto all = party_figures(terrain_, position_, walking, animation_, tables_);
     const auto people = people_.figures(map_, position_, animation_);
     all.insert(all.end(), people.begin(), people.end());
     const bool odd_x = position_.x & 1, odd_y = position_.y & 1;
@@ -58,7 +58,7 @@ std::vector<Figure> Town::walk_in_figures() {
         const int index = view_corner_index(position_) + tables_.mech_cell[std::size_t(k)] +
                           (odd_x ? tables_.mech_cell_odd_x[std::size_t(k)] : 0) + (odd_y ? tables_.mech_cell_odd_y[std::size_t(k)] : 0);
         const int quarters = tables_.mech_water[std::size_t(k)] ^ (odd_y ? 5 : 0);
-        f.sink = mech_sink(window_cell(map_, position_, index).value_or(-1), quarters);
+        f.sink = mech_sink(window_cell(terrain_, position_, index).value_or(-1), quarters);
         all.push_back(f);
         figs_.x[std::size_t(k)] = move_x(position_.x, tables_.mech_formation_x[std::size_t(k)]);
         figs_.y[std::size_t(k)] = move_y(position_.y, tables_.mech_formation_y[std::size_t(k)]);
@@ -78,7 +78,7 @@ std::vector<Figure> Town::fight_figures_drawn() {
     auto& c = combat_;
     const std::uint16_t px = position_.x, py = position_.y;
     const int corner = view_corner_index(position_);
-    const auto cell = [&](int index) { return window_cell(map_, position_, index).value_or(-1); };
+    const auto cell = [&](int index) { return window_cell(terrain_, position_, index).value_or(-1); };
     const bool level = flags_[0x3a] == 0;  // F:d346
     c.on_screen.fill(false);
     std::vector<Figure> out;
@@ -1142,7 +1142,7 @@ Combat Town::combat_rules() {
     hooks.log = [this](const std::string& line) {
         if (log_.empty() || log_.back() != line) log_.push_back(line);
     };
-    return Combat(map_, blocking_tile(map_number_), position_, figs_, animation_, mechs_, characters_, flags_,
+    return Combat(terrain_, blocking_tile(map_number_), position_, figs_, animation_, mechs_, characters_, flags_,
                   random_, combat_, marks_, *rules_, tables_, fixes_, messages_, graphics_, std::move(hooks));
 }
 

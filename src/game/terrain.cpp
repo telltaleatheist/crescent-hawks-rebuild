@@ -139,6 +139,7 @@ std::array<std::uint8_t, Terrain::kGridBlocks> Terrain::area_types(int nw, int n
 }
 
 void Terrain::generate(int area) {
+    built_.reset();
     // Grid k is area + 16 (k / 3 - 1) + (k % 3 - 1), its corners the heights
     // of it, the next area east, south and south-east; no wrapping at the
     // world's edges.
@@ -151,6 +152,8 @@ void Terrain::generate(int area) {
 }
 
 void Terrain::place_map(const formats::MtpMap& map, int grid) {
+    built_.reset();
+    map_ = &map;
     int n = kFirstMapBlock;
     for (int r = 0; r < map.height / formats::kBlockCells; ++r)
         for (int c = 0; c < map.width / formats::kBlockCells; ++c)
@@ -158,6 +161,7 @@ void Terrain::place_map(const formats::MtpMap& map, int grid) {
 }
 
 void Terrain::link_blocks() {
+    built_.reset();
     // The grids sit side by side as the 24x24 blocks around the party's area.
     const auto entry = [&](int bx, int by) -> int {
         if (bx < 0 || by < 0 || bx >= 24 || by >= 24) return -1;
@@ -233,6 +237,35 @@ Terrain::Window Terrain::window(formats::MapPosition position, const formats::Mt
             w.blocks[std::size_t(3 * r + c)] =
                 copy_block(column + c - 1, row + r - 1, map, &w.cells[std::size_t(8 * r * kWindowCells + 8 * c)]);
     return w;
+}
+
+const Terrain::Window& Terrain::window(formats::MapPosition position) const {
+    static const formats::MtpMap kNoMap{};
+    const int column = (position.x & 0xff) >> 4, row = (position.y & 0xff) >> 4;
+    if (!built_ || column != built_column_ || row != built_row_) {
+        built_ = window(position, map_ ? *map_ : kNoMap);
+        built_column_ = column;
+        built_row_ = row;
+    }
+    return *built_;
+}
+
+std::optional<int> Terrain::window_cell(formats::MapPosition position, int index) const {
+    constexpr int kCells = kWindowCells * kWindowCells, kBlocks = 9, kEntries = kGrids * kGridBlocks;
+    if (index >= kCells) return std::nullopt;
+    if (index >= 0) return window(position).cells[std::size_t(index)];
+    if (index >= -kBlocks) return window(position).blocks[std::size_t(kBlocks + index)];
+    index += kBlocks;
+    if (index >= -kEntries) return grids_[std::size_t(kEntries + index)];
+    index += kEntries;
+    if (index >= -kEntries) return masks_[std::size_t(kEntries + index)];
+    return std::nullopt;
+}
+
+std::optional<int> Terrain::cell(formats::MapPosition position, int x, int y) const {
+    const int left = (((position.x & 0xff) >> 4) - 1) * 8, top = (((position.y & 0xff) >> 4) - 1) * 8;
+    if (x < left || y < top || x >= left + kWindowCells || y >= top + kWindowCells) return std::nullopt;
+    return window(position).cells[std::size_t((y - top) * kWindowCells + x - left)];
 }
 
 }  // namespace chr::game

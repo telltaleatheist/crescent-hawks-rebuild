@@ -433,12 +433,17 @@ TEST(window_tile_wraps_to_the_next_row) {
     map.height = 32;
     map.blocks.assign(32 * 32, 0);
     map.blocks[(1 * 4 + 0) * 64 + 4 * 8 + 0] = 0x55;  // cell (0, 12): block (0, 1), row 4
+    const Tables tables;
+    const Fixes fixes;
+    Terrain terrain(tables, fixes);
+    terrain.place_map(map, 4);
+    terrain.link_blocks();
     bool outside = true;
-    CHECK(window_tile(map, {0x0c16, 0xc016}, {0x0c2f, 0xc016}, outside) == 0x55);
+    CHECK(window_tile(map, terrain, {0x0c16, 0xc016}, {0x0c2f, 0xc016}, outside) == 0x55);
     CHECK(!outside);
     CHECK(map.cell(24, 11) == 0);
     // Inside the window it is the cell itself.
-    CHECK(window_tile(map, {0x0c16, 0xc016}, {0x0c17, 0xc019}, outside) == map.cell(12, 12));
+    CHECK(window_tile(map, terrain, {0x0c16, 0xc016}, {0x0c17, 0xc019}, outside) == map.cell(12, 12));
     CHECK(!outside);
 }
 
