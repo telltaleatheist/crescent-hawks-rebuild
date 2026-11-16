@@ -1307,8 +1307,14 @@ bool Town::fight_rounds(int kind, KeySource& keys) {
         fight_unfinished_ = true;
         return false;
     }
-    // 2.13: the townspeople are put back; F:396c of figures 0-7 cleared;
-    // the townspeople's frame 0x10.
+    fight_ends();
+    return true;
+}
+
+// BTECH.EXE 203b:141a..1473, every fight's end (docs/combat.md 2.13): the
+// townspeople are put back; F:396c of figures 0-7 cleared; the
+// townspeople's frame 0x10.
+void Town::fight_ends() {
     std::array<std::int8_t, 8> headings{};
     for (int i = 0; i < 8; ++i) headings[std::size_t(i)] = figs_.heading[std::size_t(16 + i)];
     people_.back_from_fight(headings);
@@ -1321,7 +1327,6 @@ bool Town::fight_rounds(int kind, KeySource& keys) {
         animation_.set_direction(i, -1);
         animation_.set_frame(16 + i, 0x10);
     }
-    return true;
 }
 
 }  // namespace chr::game

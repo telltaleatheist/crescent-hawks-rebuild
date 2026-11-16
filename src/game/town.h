@@ -308,6 +308,9 @@ private:
     void set_map_cell(std::size_t index, int tile, bool rebuild = true);
     void place_mission(int mechs, int people);
     bool fight(int kind, KeySource& keys);
+    void fight_ends();
+    void random_encounter();
+    bool place_encounter();
     // The orders menu: 0 Begin Fight, 1 Flee; nothing when the keys ran
     // out or an order is chosen that the rebuild stops at.
     std::optional<int> orders_menu(Combat& combat, KeySource& keys);

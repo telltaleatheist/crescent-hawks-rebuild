@@ -453,8 +453,13 @@ void Town::game_tick() {
             position_.y < 0xb000)
             log_.push_back("timer 37 ran out in the region: 1d43:0c72 not rebuilt");
     }
+    // Outdoors, a draw with none of flag 24's bits starts a random
+    // encounter (docs/combat.md 1.1), unless F:d346.
     const std::uint8_t r = random_.next();
-    (void)r;  // outdoors, (r & F:d330) == 0 starts a fight (docs/town_loop.md)
+    if (outdoors() && (r & flags_[0x24]) == 0 && flags_[0x3a] == 0) {
+        random_encounter();
+        if (stopped()) return;
+    }
     // BTECH.EXE 1000:02b6..02ed: flags 1d, 14, 15 and 16 count down to 0.
     for (const int f : {0x1d, 0x14, 0x15, 0x16}) count_down(f);
     if (money_tick(money_, flags_, outdoors(), random_, tables_)) draw_cbills();

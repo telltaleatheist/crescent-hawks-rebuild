@@ -105,6 +105,11 @@ struct CombatState {
 
 class Combat {
 public:
+    // BTECH.EXE 203b:28db (Ghidra FUN_203b_28db), its walk
+    // Whether the party's place reaches `to` in at most 30 steps of
+    // 1e31:0006 (mode 0x80: no figure blocks, figure 0's heading turns),
+    // the view followed as the steps go.
+    bool reaches(formats::MapPosition to);
     // What a fight shows (and only shows). print: the texts of the IDs
     // joined into one string and printed into the current window
     // (2656:03f5; pieces the original copies into its buffer DG:0012 come

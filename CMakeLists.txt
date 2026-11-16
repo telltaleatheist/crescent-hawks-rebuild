@@ -60,6 +60,7 @@ add_library(chrgame STATIC
   src/game/townspeople.cpp
   src/game/combat.cpp
   src/game/fight.cpp
+  src/game/encounter.cpp
   src/game/training_quiz.cpp
 )
 target_include_directories(chrgame PUBLIC src)

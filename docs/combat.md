@@ -343,14 +343,30 @@ The party is placed from the saved position each time.
      exists, one more r picks the template DG:2df8[r mod 3] (LOCUST, WASP, STINGER) and the
      sprite base (0 for the Locust, else 0x92). So there are never more enemy 'Mechs than party
      'Mechs. The armour cut and the destroyed slots of `0d49` are not applied.
-   - Placing: a cursor steps right from the start cell, wrapping to the next row after 16 steps.
-     A person needs a cell whose tile is above 0x0f and below DG:0150 (the blocking tile); a
-     'Mech needs that cell and its neighbour. Someone whose cell is outside the view is dropped
-     (record emptied). After each 'Mech the cursor moves 3 on. No draws.
-2. If any enemy figure is active, `203b:28db` asks whether Jason can reach the first one: from
-   figure 4 (or Jason's 'Mech), up to 30 half-cell steps of the greedy stepper `1e31:0006`,
-   ignoring other figures and terrain cost. No: no fight.
-3. With no enemy present or none reachable: no fight; the view goes back (2.12).
+   - Placing: first the window is built at the party (`287f:1314`, `1df8`). A cursor steps right
+     from the start cell; each step counts, and when the count passes 16 it goes back to 0, the
+     cursor to the start column and one row down (so a row is 17 cells). A person needs a cell
+     of the window whose tile is above 0x0f and below DG:0150 (the blocking tile), at an index
+     of 0 or more; the cursor moves on until it finds one, and one more after placing. A 'Mech
+     needs that cell and the one beside it (right when the cursor's x and the party's x have
+     the same parity, else left), as in the step check. The cursor moves one on (without the
+     row test) before the 'Mechs, and 3 on after each 'Mech, going back to the row start when
+     the count passes 8. The cell found becomes a position: party + cursor - (0x1a, 0x0c),
+     and a low byte past 0x7f is carried into the next area (or back from it). Someone whose cell is outside the window's 24 x 24 cells is dropped:
+     record emptied (byte 0 = ff), figure inactive, x = y = ffff. A person placed gets frame
+     0x10, a 'Mech frame 0. No draws.
+2. If any enemy figure is active, `203b:28db` asks whether Jason can reach the first one (the
+   lowest active figure of 12-23): the view moves to figure 4 (or to Jason's 'Mech, the figure
+   his byte 0x0c names) and the window is built there; then a point walks from there with up
+   to 30 steps (F:3770) of `1e31:0006` in mode 0x80. In that mode no figure blocks, the
+   stepper tests two cells as for a 'Mech, and it turns figure 0's heading as it goes. A point
+   that starts at the target counts as not reached. Afterwards (`203b:2aa3`) the view walks
+   back to the place it left and the window is built there again. No: no fight.
+3. With no enemy present or none reachable: no fight; the view goes back (2.12), and the
+   townspeople come back (2.13). That much is rebuilt (`Town::random_encounter`,
+   `Town::place_encounter`, `Combat::reaches`), checked by the rig on a walk out of the town
+   after the raid with four encounters out of reach. A fight that does take place is not
+   rebuilt yet.
 4. "Attacking force:" (DG:3402), the number of enemy 'Mechs with " 'Mech" / "s" if more than
    one and " and", then always the number of enemy people placed with " human" and "s" unless
    it is 1 (so "0 humans").

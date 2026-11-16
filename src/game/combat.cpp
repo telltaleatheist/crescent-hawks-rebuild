@@ -434,6 +434,19 @@ void Combat::step_toward(int f, std::uint16_t tx, std::uint16_t ty, int rel_x, i
     }
 }
 
+bool Combat::reaches(MapPosition to) {
+    walker_ = party_;
+    int rel_x = 0x1a, rel_y = 0x0c;
+    if (walker_ == to) return false;  // 203b:2dad: already there counts as no
+    for (int count = 30; count > 0; --count) {  // F:3770
+        step_toward(0x80, to.x, to.y, rel_x, rel_y);
+        rel_x += step_dx_;
+        rel_y += step_dy_;
+        if (walker_ == to) return true;
+    }
+    return false;
+}
+
 void Combat::simulate_path(int f) {
     auto& path = s_.paths[std::size_t(f)];
     path.fill(2);

@@ -84,7 +84,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 15ab:0b95 | 0x16645 | `FUN_15ab_0b95` | 250 |  | - |
 | 15ab:0c8f | 0x1673f | `FUN_15ab_0c8f` | 131 |  | - |
 | 15ab:0d12 | 0x167c2 | `FUN_15ab_0d12` | 43 |  | - |
-| 15ab:0d3d | 0x167ed | `FUN_15ab_0d3d` | 1834 | Sets up a random encounter: soldiers and 'Mechs, placed 10-17 cells away | read |
+| 15ab:0d3d | 0x167ed | `FUN_15ab_0d3d` | 1834 | Sets up a random encounter: soldiers and 'Mechs, placed 10-17 cells away | rebuilt |
 | 15ab:1467 | 0x16f17 | `FUN_15ab_1467` | 741 | The scan list: each figure of a side in turn, Next / Detail / Done | rebuilt in part (no people, no Detail) |
 | 15ab:174c | 0x171fc | `FUN_15ab_174c` | 268 |  | - |
 | 15ab:1858 | 0x17308 | `FUN_15ab_1858` | 144 |  | - |
@@ -215,8 +215,8 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 203b:273d | 0x22aed | `FUN_203b_273d` | 140 |  | - |
 | 203b:27c9 | 0x22b79 | `FUN_203b_27c9` | 108 |  | - |
 | 203b:2835 | 0x22be5 | `FUN_203b_2835` | 166 |  | - |
-| 203b:28db | 0x22c8b | `FUN_203b_28db` | 456 |  | - |
-| 203b:2aa3 | 0x22e53 | `FUN_203b_2aa3` | 57 |  | - |
+| 203b:28db | 0x22c8b | `FUN_203b_28db` | 456 | Can Jason reach the first enemy: 30 steps of 1e31:0006 in mode 0x80 (docs/combat.md 2.3) | rebuilt |
+| 203b:2aa3 | 0x22e53 | `FUN_203b_2aa3` | 57 | The view walked back to a place (1000:17bb) and the window built there | rebuilt |
 
 ## CODE_11: segment 22e8, 7,848 bytes
 

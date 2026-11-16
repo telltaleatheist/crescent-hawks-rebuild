@@ -799,6 +799,14 @@ CHAIN_CASES = [dict(case, compare=False) for case in SPOT_CASES] + [
     # the Chameleon down and the town comes back.
 ] + [{"name": "chain_raid_key_%d" % n, "keys": "enter*5", "match": SCREEN, "fight": True} for n in range(10, 46, 5)] + [
     {"name": "chain_raid_key_%d" % n, "keys": "enter", "match": SCREEN, "fight": True} for n in range(46, 58)] + [
+    # Out of the town to the north: the town is map 11 now (outdoors,
+    # flag 04), and past its top edge lies area 0xbc, all terrain. Random
+    # encounters come up on the way (flag 24 is 0x3f), none in reach.
+    {"name": "chain_out_1", "keys": "up*46 pgup up home up*3 left down home down home down home down home", "match": SCREEN},
+    {"name": "chain_out_2", "keys": "home up left home up*5 left home up*5 left down home down home down home down home down home down home down home down home down home down home down home down home down home down home down home down pgdn right*12", "match": SCREEN},
+    {"name": "chain_out_3", "keys": "right*2 down*2 home down home down home down home down home down home down home down home down home down home down home down home down home down home down pgdn right*13 pgdn*2 down home*2 down home down home down home down home down home", "match": SCREEN},
+    {"name": "chain_out_4", "keys": "down home down home down home down home down home down home down home down home*3 down home down home down home down home down home down home down home*2 up left down pgdn*2 left home down end down home*2 up*11 pgup*5", "match": SCREEN},
+    {"name": "chain_out_area", "keys": "up*10", "match": SCREEN},
 ]
 
 # The long unpoked run: its own tier (`--campaign`, ctest label campaign).

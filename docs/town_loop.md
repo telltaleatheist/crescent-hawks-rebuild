@@ -35,8 +35,9 @@ In order (`1000:020a`..`050d`):
 
 1. Timers that count down when set (below, "Timers"): flags 29 and 37.
 2. A random number (`287f:0bc0`), always. Outdoors (F:d310 set), if it has none of the bits of
-   F:d330 and F:d346 is clear, a fight starts (`203b:000a`). Not rebuilt yet; the draw is,
-   so the sequence stays in step. Then flags 1d, 14, 15 and 16 count down.
+   F:d330 and F:d346 is clear, a random encounter starts (`203b:000a`, docs/combat.md 1.1).
+   Rebuilt up to its "no fight" ending (`Town::random_encounter`); a fight that takes place
+   stops the rebuild with a log line. Then flags 1d, 14, 15 and 16 count down.
 3. The money step, every 256th tick (F:d323, flag 17, counts down; it starts at 0, so the first tick
    runs it). Below.
 4. The countdown is set to 10.
