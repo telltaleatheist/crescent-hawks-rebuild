@@ -14,8 +14,8 @@ void ScriptKeys::apply_pokes() {
     while (!items_.empty() && items_.front().is_poke()) {
         const auto item = items_.front();
         items_.pop_front();
-        if (!poke_) throw std::invalid_argument("a mech: item with nothing to poke");
-        poke_(item.poke_record, item.poke_byte, item.poke_value);
+        if (!poke_) throw std::invalid_argument("a mech: or char: item with nothing to poke");
+        poke_(item.poke_character, item.poke_record, item.poke_byte, item.poke_value);
     }
 }
 
@@ -85,7 +85,11 @@ std::deque<ScriptItem> parse_key_script(const std::string& script) {
             keys.push_back({0, 0, f, v});
             return;
         }
-        if (t.rfind("mech:", 0) == 0) {
+        const bool character = t.rfind("char:", 0) == 0;
+        if (t.rfind("mech:", 0) == 0 || character) {
+            // mech: the eight 'Mech records, bytes below 0x7d; char: the 16
+            // character records, bytes below 0x11. Data only, nothing else.
+            const int records = character ? 16 : 8, size = character ? 0x11 : 0x7d;
             int r = -1, b = -1, v = -1;
             const auto colon = t.find(':', 5), eq = t.find('=');
             try {
@@ -96,9 +100,10 @@ std::deque<ScriptItem> parse_key_script(const std::string& script) {
                 }
             } catch (const std::exception&) {
             }
-            if (r < 0 || r >= 8 || b < 0 || b >= 0x7d || v < 0 || v > 0xff)
-                throw std::invalid_argument("bad record poke \"" + t + "\" (use mech:R:BB=VV, hex)");
+            if (r < 0 || r >= records || b < 0 || b >= size || v < 0 || v > 0xff)
+                throw std::invalid_argument("bad record poke \"" + t + "\" (use mech:R:BB=VV or char:R:BB=VV, hex)");
             ScriptItem item;
+            item.poke_character = character;
             item.poke_record = r;
             item.poke_byte = b;
             item.poke_value = v;
@@ -598,20 +603,16 @@ void Town::turn(int k, KeySource& keys) {
     }
 }
 
-// BTECH.EXE 1000:218f, its map loads after a move into the next area: for
-// each of the three new grids (P:09f3), the map of its area, if any, is
-// loaded into it (1000:2da8, 287f:1da8), from the area-to-map table
-// (37e8:0030, imported as tables.area_maps). The loads are not rebuilt yet
-// (docs/wilderness.md): none of the areas next to the town's has a map,
-// and a step that would need one is logged.
-void Town::queue_map_loads(const std::array<int, 3>& grids, int area) {
-    for (const int k : grids) {
-        const int a = (area - 0x11 + 16 * (k / 3) + k % 3) & 0xff;
-        if (tables_.area_maps[std::size_t(a)] != 0) {
-            char line[64];
-            std::snprintf(line, sizeof line, "area %02x into grid %d: its map load is not rebuilt", a, k);
-            log_.push_back(line);
-        }
+// BTECH.EXE 1000:218f, after each axis's move: each queued grid whose area
+// has a map in the area-to-map table (37e8:0030, imported as
+// tables.area_maps) gets it (1000:2da8, 287f:1da8); the entry is emptied
+// either way.
+void Town::run_map_loads() {
+    for (std::size_t i = 0; i < 3; ++i) {
+        if (terrain_.queued_grids[i] == 0xff) continue;
+        const int map = tables_.area_maps[terrain_.queued_areas[i]];
+        if (map != 0) load_town_map(map, terrain_.queued_grids[i]);
+        terrain_.queued_grids[i] = 0xff;
     }
 }
 
@@ -641,9 +642,11 @@ std::optional<StepResult> Town::step_party(Step step, KeySource& keys) {
     // over (287f:158c and the others) before the other axis.
     const auto area_of = [](std::uint16_t x, std::uint16_t y) { return ((y >> 8) & 0xf0) | ((x >> 8) & 0x0f); };
     if ((r.position.y ^ position_.y) & 0xff00)
-        queue_map_loads(terrain_.step_area(0, step.dy, area_of(position_.x, r.position.y)), area_of(position_.x, r.position.y));
+        terrain_.step_area(0, step.dy, area_of(position_.x, r.position.y));
+    run_map_loads();
     if ((r.position.x ^ position_.x) & 0xff00)
-        queue_map_loads(terrain_.step_area(step.dx, 0, area_of(r.position.x, r.position.y)), area_of(r.position.x, r.position.y));
+        terrain_.step_area(step.dx, 0, area_of(r.position.x, r.position.y));
+    run_map_loads();
     position_ = r.position;
     char where[32];
     std::snprintf(where, sizeof where, " at %04x,%04x", position_.x, position_.y);
@@ -660,6 +663,7 @@ std::optional<StepResult> Town::step_party(Step step, KeySource& keys) {
     }
     log_.push_back(line + where);
     build_window();  // 287f:1314 at the end of 1000:218f
+    terrain_.corner_words_set = true;  // 287f:1df8
     return r;
 }
 

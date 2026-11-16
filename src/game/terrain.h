@@ -104,9 +104,20 @@ public:
     }
     // Cell `index` of that window. Before it, as in the original's memory,
     // the nine block values (P:07a4), the grids (P:0564) and the masks
-    // (P:0324); nothing past it or before those (memory the rebuild does
-    // not hold).
+    // (P:0324); after it the corner words (P:09ed..09f2, as 287f:1df8 sets
+    // them for `position`), the map-load queue (P:09f3), the noise cursor
+    // (P:09f9), the noise table, the heights and the block store up to the
+    // map's last block. Nothing before or past those (memory the rebuild
+    // does not hold).
     std::optional<int> window_cell(formats::MapPosition position, int index) const;
+    // P:09f3..09f8: the grids the last area step queued for a map load (ff:
+    // none, or done) and their areas. 0 at a new game, so the first step
+    // looks at area 0, which has no map.
+    std::array<std::uint8_t, 3> queued_grids{};
+    std::array<std::uint8_t, 3> queued_areas{};
+    // P:09ef and P:09f1 are 0 until the first 287f:1df8 (the map drawer,
+    // 287f:18ef, sets only P:09ed).
+    bool corner_words_set = false;
     // The cell (x, y) of the position's area (either may be outside 0..63:
     // a neighbouring area's) if the window around `position` holds it.
     std::optional<int> cell(formats::MapPosition position, int x, int y) const;
@@ -142,6 +153,8 @@ private:
     std::array<std::uint8_t, kGrids * kGridBlocks> grids_{};
     std::array<std::uint8_t, kGrids * kGridBlocks> masks_{};
     const formats::MtpMap* map_ = nullptr;
+    // P:09f9: where the generator's noise index was left (287f:0bfb).
+    mutable std::uint16_t noise_cursor_ = 0;
     mutable std::optional<Window> built_;
     mutable int built_column_ = -1, built_row_ = -1;
     mutable std::optional<Window> held_;

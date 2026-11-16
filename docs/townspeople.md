@@ -22,7 +22,9 @@ the figures' (DGROUP:01f6, 396c, 409a; docs/town_loop.md).
 
 ## Placing them (1000:2da8)
 
-When a map is loaded for a new game (DGROUP:014c clear), person i draws a random number r:
+Every map load does this unless DGROUP:014c is set (only the area viewer, 1000:3d40, sets it): the
+new game's, a mission's, the raid's, and a load into another grid as the party nears an area with
+a map (docs/wilderness.md). Person i draws a random number r:
 its target and position are entrance `shuffle[r & 7]` (the .MTP's 8 bytes at 0x215), its last
 entrance r & 7, and it is inside for 1 round. Its frame is 0x10 and its script direction none.
 On maps above 10 nobody is out.

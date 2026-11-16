@@ -102,14 +102,15 @@ bool Town::random_encounter(KeySource& keys) {
     if (any) {
         // 203b:28db: from Jason's figure (his 'Mech's when he is in one).
         const int jason = characters_[0][character::kMech] == character::kOnFoot ? 4 : characters_[0][character::kMech];
-        const MapPosition from{figs_.x[std::size_t(jason)], figs_.y[std::size_t(jason)]};
-        if (from != position_) {
-            log_.push_back("an encounter's reach check from away from the party: not rebuilt");
-            fight_unfinished_ = true;
-            return false;
-        }
+        // The position walks there and the window is built there (1000:17bb,
+        // 287f:1314, 1df8); afterwards it walks back and the window is built
+        // again (203b:2e53).
+        walk_position({figs_.x[std::size_t(jason)], figs_.y[std::size_t(jason)]});
+        build_window();
         Combat combat = combat_rules();
         reached = combat.reaches(first);
+        walk_position(at);
+        build_window();
     }
     if (!reached) {
         // 2.12: no fight; the view goes back to the entry position (203b:2aa3).
@@ -213,9 +214,7 @@ void Town::reload_areas() {
         const int a = area - 0x11 + 16 * (k / 3) + k % 3;
         if (a < 0 || a >= 0x100 || tables_.area_maps[std::size_t(a)] == 0) continue;
         if (terrain_.grids()[std::size_t(k * Terrain::kGridBlocks)] == 0x90) continue;
-        char line[64];
-        std::snprintf(line, sizeof line, "area %02x into grid %d again: its map load is not rebuilt", a, k);
-        log_.push_back(line);
+        load_town_map(tables_.area_maps[std::size_t(a)], k);
     }
     terrain_.link_blocks();
 }
@@ -283,6 +282,7 @@ bool Town::loot(KeySource& keys) {
 // placing looks past what the rebuild holds.
 bool Town::place_encounter() {
     build_window();  // 287f:1314, 1df8 at the party
+    terrain_.corner_words_set = true;
     int dx = (random_.next() & 7) + 10;
     if (random_.next() & 1) dx = -dx;
     int dy = (random_.next() & 7) + 10;

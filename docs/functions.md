@@ -45,7 +45,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 1000:2a7e | 0x12a7e | `FUN_1000_2a7e` | 21 |  | - |
 | 1000:2a93 | 0x12a93 | `FUN_1000_2a93` | 445 | Draws the map's marks in view (the 64-place ring, docs/combat.md 3.13), toggling a fire's sprite 0x7c/0x7d each drawing | rebuilt |
 | 1000:2c50 | 0x12c50 | `FUN_1000_2c50` | 344 | Space: the command menu | read |
-| 1000:2da8 | 0x12da8 | `FUN_1000_2da8` | 1123 | Loads MAP<n>.MTP into a grid (its blocks 0x90 on, docs/wilderness.md); blocking tile; for a new game places the 8 townspeople (8 random numbers) | rebuilt (the new game; the raid's `2da8(4, 11)`) |
+| 1000:2da8 | 0x12da8 | `FUN_1000_2da8` | 1123 | Loads MAP<n>.MTP into a grid (its blocks 0x90 on, docs/wilderness.md); blocking tile; places the 8 townspeople (8 random numbers) unless DG:014c | rebuilt |
 | 1000:320b | 0x1320b | `FUN_1000_320b` | 168 | Loads ANIMATE.ICN into the animation buffer | read |
 | 1000:32b3 | 0x132b3 | `FUN_1000_32b3` | 800 | Loads a saved game: picks a slot (menu 0x28) and reads it | - |
 | 1000:35d3 | 0x135d3 | `FUN_1000_35d3` | 442 |  | - |
@@ -378,7 +378,7 @@ read each one before taking it as such.
 | 287f:1d8c | 0x2a57c | `FUN_287f_1d8c` | 28 |  | replaced |
 | 287f:1da8 | 0x2a598 | `FUN_287f_1da8` | 19 | Far call of 1886: rebuild the masks (after a map load) | rebuilt |
 | 287f:1dbb | 0x2a5ab | `FUN_287f_1dbb` | 61 |  | replaced |
-| 287f:1df8 | 0x2a5e8 | `FUN_287f_1df8` | 63 |  | replaced |
+| 287f:1df8 | 0x2a5e8 | `FUN_287f_1df8` | 63 | The view's corner words P:09ed..09f1 from the party position | replaced |
 | 287f:1e37 | 0x2a627 | `FUN_287f_1e37` | 151 | Blits a picture to the screen | replaced |
 | 287f:1ece | 0x2a6be | `FUN_287f_1ece` | 54 | Saves the window's 576 cells to a far buffer, or copies them back (docs/combat.md 2.11) | rebuilt (`Terrain::save_cells`, `restore_cells`) |
 | 287f:1f04 | 0x2a6f4 | `FUN_287f_1f04` | 77 |  | replaced |

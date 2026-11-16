@@ -887,6 +887,23 @@ def mech_poke(token):
     return "@poke:F:%04x=%02x" % (RECORDS_AT + 0x7d * r + b, v)
 
 
+CHARACTERS_AT = 0xC614  # F:c614, the 16 character records of 0x11 bytes
+
+
+def char_poke(token):
+    """The original's poke for a char:R:BB=VV token: one byte inside the 16
+    character records, nothing else."""
+    try:
+        record, _, rest = token[len("char:"):].partition(":")
+        byte, _, value = rest.partition("=")
+        r, b, v = int(record, 16), int(byte, 16), int(value, 16)
+    except ValueError:
+        raise ValueError(f"bad record poke {token!r}: use char:R:BB=VV (hex)")
+    if not (0 <= r < 16 and 0 <= b < 0x11 and 0 <= v <= 0xff):
+        raise ValueError(f"refused record poke {token!r}: record 0-f, byte below 11, value one byte")
+    return "@poke:F:%04x=%02x" % (CHARACTERS_AT + 0x11 * r + b, v)
+
+
 def original_token(k):
     """A case's key as the original's script has it: flag: is a poke, and
     orig: marks input that only the original asks for (the training quiz,
@@ -895,6 +912,8 @@ def original_token(k):
         return flag_poke(k)
     if k.startswith("mech:"):
         return mech_poke(k)
+    if k.startswith("char:"):
+        return char_poke(k)
     if k.startswith("orig:"):
         return k[len("orig:"):]
     if k.startswith("arm:"):
@@ -925,7 +944,7 @@ def chr_script(cases, upto):
             if k.startswith("flag:"):
                 items.append("set:" + k[len("flag:"):])
                 continue
-            if k.startswith("mech:"):
+            if k.startswith(("mech:", "char:")):
                 items.append(k)  # applied as the next key is read; no passes of its own
                 continue
             items.append(k)

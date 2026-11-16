@@ -130,6 +130,7 @@ std::array<std::uint8_t, Terrain::kGridBlocks> Terrain::area_types(int nw, int n
     const std::uint8_t index = edge(last, kSide * last + last, kSide);
     Noise noise{noise_, index};
     subdivide_inside(h, noise, fixes_.fix_terrain_noise);
+    noise_cursor_ = noise.index;
     // The type is the height's top four bits; the ninth row and column
     // belong to the neighbours.
     std::array<std::uint8_t, kGridBlocks> types{};
@@ -182,6 +183,10 @@ std::array<int, 3> Terrain::step_area(int dx, int dy, int area) {
     }
     for (const int k : fresh) make_grid(k, area);
     link_blocks();
+    for (std::size_t i = 0; i < 3; ++i) {
+        queued_grids[i] = std::uint8_t(fresh[i]);
+        queued_areas[i] = std::uint8_t(area - 0x11 + 16 * (fresh[i] / 3) + fresh[i] % 3);
+    }
     return fresh;
 }
 
@@ -286,7 +291,36 @@ const Terrain::Window& Terrain::window(formats::MapPosition position) const {
 
 std::optional<int> Terrain::window_cell(formats::MapPosition position, int index) const {
     constexpr int kCells = kWindowCells * kWindowCells, kBlocks = 9, kEntries = kGrids * kGridBlocks;
-    if (index >= kCells) return std::nullopt;
+    if (index >= kCells) {
+        // From P:09ed on. 287f:1df8's corner: column ((x & 0xff) >> 1 & 7)
+        // + 2, row likewise from y, times 24 (the window's row length).
+        int at = index - kCells;
+        const int column = (((position.x & 0xff) >> 1) & 7) + 2;
+        const int row = ((((position.y & 0xff) >> 1) & 7) + 2) * kWindowCells;
+        const std::array<int, 3> words{column + row, corner_words_set ? column : 0, corner_words_set ? row : 0};
+        if (at < 6) return (words[std::size_t(at / 2)] >> (8 * (at & 1))) & 0xff;
+        at -= 6;
+        if (at < 3) return queued_grids[std::size_t(at)];
+        at -= 3;
+        if (at < 3) return queued_areas[std::size_t(at)];
+        at -= 3;
+        if (at < 2) return (noise_cursor_ >> (8 * at)) & 0xff;
+        at -= 2;
+        // P:09fb: the noise table, then 16 bytes of 0, the heights (P:0b0b),
+        // 18 bytes of 0 (height() reads them the same way).
+        if (at < 256) return noise_[std::size_t(at)];
+        at -= 256;
+        if (at < 16) return 0;
+        at -= 16;
+        if (at < 256 + 18) return height(at);
+        at -= 256 + 18;
+        // P:0c1d: the block store, 64 bytes a block: the 16 templates, then
+        // the map's blocks (P:101d).
+        if (at < 16 * 64) return tables_.terrain_templates[std::size_t(at)];
+        at -= 16 * 64;
+        if (map_ && std::size_t(at) < map_->blocks.size()) return map_->blocks[std::size_t(at)];
+        return std::nullopt;
+    }
     if (index >= 0) return window(position).cells[std::size_t(index)];
     if (index >= -kBlocks) return window(position).blocks[std::size_t(kBlocks + index)];
     index += kBlocks;

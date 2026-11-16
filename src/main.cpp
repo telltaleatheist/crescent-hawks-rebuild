@@ -157,6 +157,12 @@ void print_window(const chr::game::Town& town, chr::formats::MapPosition at) {
             std::printf("%02x", window.cells[std::size_t(r * Terrain::kWindowCells + c)]);
     }
     std::printf("\n");
+    // P:09f3..0c1c, what follows the window's corner words up to the block
+    // store (window.py).
+    std::printf("window %04x %04x after ", at.x, at.y);
+    for (int i = 0x09f3 - 0x09ed; i < 0x0c1d - 0x09ed; ++i)
+        std::printf("%02x", unsigned(town.terrain().window_cell(at, Terrain::kWindowCells * Terrain::kWindowCells + i).value_or(0)));
+    std::printf("\n");
 }
 
 void print_state(const chr::game::Town& town) {
@@ -426,7 +432,10 @@ int main(int argc, char** argv) {
                 else town->draw_panel();
                 for (const auto& [f, v] : options.set_flags) town->set_flag_when_town_starts(f, v);
                 chr::game::ScriptKeys source(keys);
-                source.set_poke([&](int r, int b, int v) { town->poke_mech(r, b, v); });
+                source.set_poke([&](bool character, int r, int b, int v) {
+                    if (character) town->poke_character(r, b, v);
+                    else town->poke_mech(r, b, v);
+                });
                 town->run(source);
                 return true;
             } catch (const std::exception& e) {

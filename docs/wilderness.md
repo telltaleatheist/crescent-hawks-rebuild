@@ -15,8 +15,13 @@ The program keeps the nine areas around the party's, in the asm display library'
 | 0564 | 9 x 64 | the nine *grids*: one entry per block, row by row; grid k is the area 16 (k / 3 - 1) + (k % 3 - 1) from the party's, so grid 4 is the party's own |
 | 07a4 | 9 | the window's nine blocks, mask OR entry (287f:13d9's result) |
 | 07ad | 24 x 24 | the *cell window*: the 3 x 3 blocks around the party's block, one tile number per cell |
+| 09ed | 6 | the corner words: the view's corner index, its column, its row x 24 (`287f:1df8`; the map drawer `287f:18ef` sets only the first) |
+| 09f3 | 6 | the map-load queue: three grids (ff: none), then their areas (below) |
+| 09f9 | 2 | the noise cursor: where the generator's noise index was left |
 | 09fb | 256 | the noise table |
+| 0afb | 16 | 0 |
 | 0b0b | 256 | the world's heights, one per area, row by row (`tables.world_heights`) |
+| 0c0b | 18 | 0 |
 | 0c1d | 64 x 64 | the block store: 16 terrain templates (`tables.terrain_templates`), then the loaded map's blocks (1000:2da8 reads its cells to 0x101d) |
 
 A grid entry below 0x80 is a terrain type (0x00, 0x10, 0x20, 0x30 or 0x40); 0x80 and up name a
@@ -77,6 +82,14 @@ by `height / 8` of them. The rest of the grid keeps its terrain. It then rebuild
 (`287f:1da8`, the far call of 1886). The new game (1000:4dc7) runs `104e(0xcc)`,
 `2da8(4, 1)` and `1da8`.
 
+There is one block store and one set of map tables, whatever the grid. A load into any grid
+reads the map's cells into P:101d, numbered from 0x90 as always, and its header's tables over the
+last map's: the entrances, the places, the blocking tile (DG:0150), the tile sheet. So every grid's
+map entries now show the map loaded last, and the town the party stands in takes the new map's
+places and townspeople. Unless DG:014c is set (only the area viewer, 1000:3d40, sets it), the load
+also places the eight townspeople again with eight random numbers, at the new map's entrances
+(none out on maps above 10; docs/townspeople.md). Rebuilt (`Town::load_town_map`).
+
 Each area's map comes from a 256-entry table (at the segment in DG:53d0, offset 0x30 + area;
 flags change two entries first, 1000:3419-3435: area 0xcc map 11, area 0x34 map 12). A
 load into all nine areas (1000:3469, 1000:3edc) loads each grid's map in turn. None of the areas
@@ -120,13 +133,22 @@ the cells past a map's edge are terrain.
 The rebuild's `Terrain::window` is checked against the original's memory: every rig case takes
 the window where the original last built its own (P:02cf, 02d1), the one chr holds if it was
 built there (`chr --window`), and compares the nine values and the 576 cells (`check.py`,
-`window.py`). Everything that reads the window in the original reads
+`window.py`), and the memory after the window from P:09f3 to the block store (the queue, the
+noise cursor, the noise table and the heights). Everything that reads the window in the original reads
 it in the rebuild: the map view, the party's and the 'Mechs' water cells, the townspeople's steps
 and the fight's paths, lines of sight and figure cells (`window_cell`, `Terrain::cell`). The
 rebuild builds it for the place it is asked about, once per block, rather than at the original's
 moments; the original builds it at every place those readers use (combat.md 1.2.1). Indices
 before the window read the block values, the grids and the masks, as in the original's memory
 (combat.md, "An index outside the window").
+
+A reader that indexes past the window's 576 cells reads on into the memory after it, in the
+order of the table at the top: the corner words, the queue, the noise cursor, the noise table, 16
+zero bytes, the heights, 18 zero bytes and the block store (the templates, then the map's
+blocks). The rebuild gives the same bytes (`Terrain::window_cell`). The corner index is the one
+for the window's place; P:09ef and 09f1 are 0 until the party's first step, then the ones for the
+window's place. In the original they are wherever `1df8` last ran, which is not always there, so
+the rig leaves those two words out.
 
 13d9 also works out a second value from the block's place, `((row + column) << 2) & 0x10`, and
 loads it, but never uses it.
@@ -155,6 +177,12 @@ P:09f6..09f8 their areas. The rebuild gives a step into the next area exactly th
 of making all nine around the new area (`Terrain::step_area`, the unit test
 `area_step_matches_a_fresh_area`).
 
+After each axis's move, 1000:218f works through the queue: each grid not ff whose area has a
+map in the table (the copy in memory, which the save-game load changes) gets it (`2da8`, `1da8`),
+and the entry becomes ff either way. A new game starts with the queue 0, 0, 0, so the first step
+looks at area 0, which has no map. Rebuilt (`Terrain::queued_grids`, `Town::run_map_loads`); the
+rig compares the queue in every case (below).
+
 A step into the next area doesn't touch the cell window (P:07ad) or its block values: they stay
 as the last `1314` built them, in whatever grid was 4 then, until the next `1314`. A fight's
 walk to a figure in the next area and back (`1000:17bb`, docs/combat.md 2.12) shows it: the
@@ -162,14 +190,11 @@ window last built there, with the town's map blocks, is still in memory once the
 moved back. The rebuild holds the window across the step (`Terrain::hold_window`).
 
 `1000:17bb` doesn't work through the queue; it is left for the next `218f`, whose loop takes
-the entries that are not ff. Whether a queue a fight leaves behind ever loads a map has not been
-seen: no area next to the ones walked so far has one.
+the entries that are not ff, so a fight's walks can leave a map load for the party's next step.
+Rebuilt that way; not met yet, since no area next to the ones walked so far has a map.
 
 ## Not rebuilt yet
 
-- The queued map loads (P:09f3) after a step into the next area: the rebuild works out which of
-  the three new grids' areas have a map (`tables.area_maps`) and logs it. None of the areas next
-  to the town's has one.
 - The nine-map load (1000:3469, 1000:3edc), the two entries the save-game load changes,
   1000:42c8, and 24d3:12db's `104e(0x89)`.
 

@@ -182,8 +182,8 @@ from round 6: a soldier's line of sight to Jason's 'Mech reads indices -22 and -
 P:0798, grid 8's entries) and the soldier sees and fires; the `people` sequence checks 20 rounds
 (40 were checked once). The masks differ from the original's only at the outer edges of the 3 x 3
 grids (wilderness.md), which no line of sight has reached. From 576 on the original reads the
-corner words P:09ed..09f2 and the bytes after them; the rebuild does not hold those, counts the
-cell as blocking and logs it. A path (12 half-cells at most) cannot leave the window; a line of
+corner words P:09ed..09f2 and the bytes after them (docs/wilderness.md, "The window"); the rebuild
+gives them up to the map's last block, and past that counts the cell as blocking and logs it. A path (12 half-cells at most) cannot leave the window; a line of
 sight at long range can (the figure is 8-15 cells from the window's edges).
 
 **Where the rebuild stands in for memory it does not hold.** Logged when met.
@@ -352,7 +352,9 @@ The party is placed from the saved position each time.
      the same parity, else left), as in the step check. The cursor moves one on (without the
      row test) before the 'Mechs, and 3 on after each 'Mech, going back to the row start when
      the count passes 8. The cell found becomes a position: party + cursor - (0x1a, 0x0c),
-     and a low byte past 0x7f is carried into the next area (or back from it). Someone whose cell is outside the window's 24 x 24 cells is dropped:
+     and a low byte past 0x7f is carried into the next area (or back from it). The search can run
+     past the window's last cell into the memory after it (docs/wilderness.md), until a byte there
+     passes the test. Someone whose cell is outside the window's 24 x 24 cells is dropped:
      record emptied (byte 0 = ff), figure inactive, x = y = ffff. A person placed gets frame
      0x10, a 'Mech frame 0. No draws.
 2. If any enemy figure is active, `203b:28db` asks whether Jason can reach the first one (the

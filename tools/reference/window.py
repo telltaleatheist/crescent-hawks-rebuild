@@ -25,6 +25,11 @@ def original_window(path):
     lines = ["window %04x %04x blocks %s" % (at[0], at[1], m.read(p, 0x07a4, 9).hex())]
     for r in range(24):
         lines.append("window %04x %04x row %2d %s" % (at[0], at[1], r, m.read(p, 0x07ad + 24 * r, 24).hex()))
+    # What follows the window and its corner words up to the block store
+    # (docs/wilderness.md): the map-load queue, the noise cursor, the noise
+    # table and the heights. The corner words are left out: P:09ef and 09f1
+    # are wherever 287f:1df8 last ran, which the rebuild does not follow.
+    lines.append("window %04x %04x after %s" % (at[0], at[1], m.read(p, 0x09f3, 0x0c1d - 0x09f3).hex()))
     return at, lines
 
 

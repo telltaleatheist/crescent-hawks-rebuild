@@ -59,7 +59,8 @@ struct ScriptItem {
     int idle = 0;       // > 0: idle passes instead of a key
     int set_flag = -1;  // >= 0: a test aid, set this flag to set_value instead
     int set_value = 0;
-    int poke_record = -1;  // >= 0: a test aid, write poke_value to byte poke_byte of this 'Mech record
+    int poke_record = -1;  // >= 0: a test aid, write poke_value to byte poke_byte of this record
+    bool poke_character = false;  // a character record (char:), else a 'Mech record (mech:)
     int poke_byte = 0;
     int poke_value = 0;
     bool is_set() const { return set_flag >= 0; }
@@ -79,12 +80,12 @@ public:
     std::optional<bool> poll() override;
     std::optional<int> waiting_key() override;
     // Where mech: items go: they are applied as the next key or pass is taken.
-    void set_poke(std::function<void(int record, int byte, int value)> poke) { poke_ = std::move(poke); }
+    void set_poke(std::function<void(bool character, int record, int byte, int value)> poke) { poke_ = std::move(poke); }
 
 private:
     void apply_pokes();
     std::deque<ScriptItem> items_;
-    std::function<void(int, int, int)> poke_;
+    std::function<void(bool, int, int, int)> poke_;
 };
 
 // Parses a key script: names separated by spaces or commas, each with an
@@ -213,6 +214,11 @@ public:
         mechs_[std::size_t(record)][std::size_t(byte)] = std::uint8_t(value);
         log_.push_back("test aid: 'Mech record " + std::to_string(record) + " byte " + std::to_string(byte) + " set");
     }
+    // A test aid: one byte of a character record (the script's char: items).
+    void poke_character(int record, int byte, int value) {
+        characters_[std::size_t(record)][std::size_t(byte)] = std::uint8_t(value);
+        log_.push_back("test aid: character record " + std::to_string(record) + " byte " + std::to_string(byte) + " set");
+    }
     const CombatState& combat() const { return combat_; }
     const MapMarks& marks() const { return marks_; }
     // DGROUP:57fe and 5802: the townspeople move by these.
@@ -301,7 +307,7 @@ private:
     void mission_draw();
     void draw_marks();
     void party_to_jason();
-    bool load_town_map(int number);
+    bool load_town_map(int number, int grid = 4);
     bool raid_lines(bool over, KeySource& keys);
     int raid_line_ = 0;  // [bp-8] of 203b:000a: the raid's story lines shown
     bool mission_step_done(MissionWalk& w, KeySource& keys);
@@ -350,7 +356,7 @@ private:
     bool show_quiz(KeySource& keys);
     static constexpr int kQuizMenu = 0x25;
     void build_window();
-    void queue_map_loads(const std::array<int, 3>& grids, int area);
+    void run_map_loads();
     std::optional<StepResult> step_party(Step step, KeySource& keys);
     MechParty active_mechs() const;
     // Which of 'Mech records 0-3 exist (byte 0 not ff).

@@ -178,11 +178,12 @@ void Town::mission_draw() {
     frozen_ = Frozen{live_view(), figures};
 }
 
-// BTECH.EXE 1000:2da8 (Ghidra FUN_1000_2da8) into grid 4, and 287f:1da8
-// Map `number` takes the town's place: its blocks in the middle grid, its
-// tiles (map 11 has its own sheet), its blocking tile and its townspeople,
+// BTECH.EXE 1000:2da8 (Ghidra FUN_1000_2da8), then 287f:1da8
+// Map `number` into `grid`: its blocks numbered from 0x90 in the one block
+// store, so every grid's map entries now show this map; its tiles (map 11
+// has its own sheet), its blocking tile, its entrances and its townspeople,
 // placed again with eight random numbers (none out on maps above 10).
-bool Town::load_town_map(int number) {
+bool Town::load_town_map(int number, int grid) {
     const std::string name = "MAP" + std::to_string(number) + ".MTP";
     const auto path = game_dir_ ? formats::find_game_file(*game_dir_, name) : std::nullopt;
     if (!path) {
@@ -194,10 +195,11 @@ bool Town::load_town_map(int number) {
     tile_sheet_ = tile_sheet_for_map(number);
     flags_[flag::kTileEvents] = number == 14 ? 1 : 0;
     terrain_.hold_window();
-    terrain_.place_map(map_, 4);
+    terrain_.place_map(map_, grid);
     terrain_.link_blocks();
-    if (townspeople_away_) {
-        people_.place_during_fight(map_, number, random_);
+    if (!townspeople_away_) people_ = Townspeople::place(map_, number, random_, tables_);
+    else people_.place_during_fight(map_, number, random_);
+    {
         for (int i = 0; i < 8; ++i) {
             const auto& w = people_.walkers()[std::size_t(i)];
             const auto at = number > 10 ? formats::MapPosition{0, 0} : w.target;
@@ -206,10 +208,8 @@ bool Town::load_town_map(int number) {
             animation_.set_direction(16 + i, -1);
             animation_.set_frame(16 + i, 0x10);
         }
-    } else {
-        log_.push_back("a map load in town: not rebuilt");
     }
-    log_.push_back("map " + std::to_string(number) + " loaded");
+    log_.push_back("map " + std::to_string(number) + " loaded into grid " + std::to_string(grid));
     return true;
 }
 
