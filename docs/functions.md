@@ -45,7 +45,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 1000:2a7e | 0x12a7e | `FUN_1000_2a7e` | 21 |  | - |
 | 1000:2a93 | 0x12a93 | `FUN_1000_2a93` | 445 | Draws the map objects (up to 64), toggling sprites 0x7c/0x7d | read |
 | 1000:2c50 | 0x12c50 | `FUN_1000_2c50` | 344 | Space: the command menu | read |
-| 1000:2da8 | 0x12da8 | `FUN_1000_2da8` | 1123 | Loads MAP<n>.MTP; blocking tile; for a new game places the 8 townspeople (8 random numbers) | read |
+| 1000:2da8 | 0x12da8 | `FUN_1000_2da8` | 1123 | Loads MAP<n>.MTP into a grid (its blocks 0x90 on, docs/wilderness.md); blocking tile; for a new game places the 8 townspeople (8 random numbers) | read |
 | 1000:320b | 0x1320b | `FUN_1000_320b` | 168 | Loads ANIMATE.ICN into the animation buffer | read |
 | 1000:32b3 | 0x132b3 | `FUN_1000_32b3` | 800 | Loads a saved game: picks a slot (menu 0x28) and reads it | - |
 | 1000:35d3 | 0x135d3 | `FUN_1000_35d3` | 442 |  | - |
@@ -344,13 +344,13 @@ read each one before taking it as such.
 | 287f:0b8a | 0x2937a | `FUN_287f_0b8a` | 29 | BIOS int 16h function 0: wait for a key; character, or minus the scan code | replaced |
 | 287f:0ba7 | 0x29397 | `FUN_287f_0ba7` | 25 |  | replaced |
 | 287f:0bc0 | 0x293b0 | `FUN_287f_0bc0` | 59 | Random number: 3-byte shift register at DG:4fc0 | rebuilt |
-| 287f:0bfb | 0x293eb | `FUN_287f_0bfb` | 268 |  | replaced |
-| 287f:0d07 | 0x294f7 | `FUN_287f_0d07` | 114 |  | replaced |
-| 287f:0d79 | 0x29569 | `FUN_287f_0d79` | 127 |  | replaced |
-| 287f:0df8 | 0x295e8 | `FUN_287f_0df8` | 502 |  | replaced |
+| 287f:0bfb | 0x293eb | `FUN_287f_0bfb` | 268 | One area's 8x8 terrain types from its corner heights: midpoint displacement on a 9x9 lattice (docs/wilderness.md) | rebuilt |
+| 287f:0d07 | 0x294f7 | `FUN_287f_0d07` | 114 | Midpoint displacement along a lattice row | rebuilt |
+| 287f:0d79 | 0x29569 | `FUN_287f_0d79` | 127 | Midpoint displacement down a lattice column | rebuilt |
+| 287f:0df8 | 0x295e8 | `FUN_287f_0df8` | 502 | Midpoint displacement inside the lattice: centres, then sides (bug 37) | rebuilt |
 | 287f:0fee | 0x297de | `FUN_287f_0fee` | 96 | MCGA: set the 16 DAC colours from 12-bit table words | replaced |
-| 287f:104e | 0x2983e | `FUN_287f_104e` | 365 |  | replaced |
-| 287f:11bb | 0x299ab | `FUN_287f_11bb` | 255 | Build one area's block grid: fixed blocks as given, terrain by neighbour mask | read |
+| 287f:104e | 0x2983e | `FUN_287f_104e` | 365 | The nine area grids around an area, from the world heights; then the masks (docs/wilderness.md) | rebuilt |
+| 287f:11bb | 0x299ab | `FUN_287f_11bb` | 255 | One grid's neighbour masks (map blocks: their store number) | rebuilt |
 | 287f:12ba | 0x29aaa | `FUN_287f_12ba` | 31 |  | replaced |
 | 287f:12d9 | 0x29ac9 | `FUN_287f_12d9` | 25 |  | replaced |
 | 287f:12f2 | 0x29ae2 | `FUN_287f_12f2` | 17 |  | replaced |
@@ -361,8 +361,8 @@ read each one before taking it as such.
 | 287f:163b | 0x29e2b | `FUN_287f_163b` | 168 | Position one half-cell down; into the area below at the edge | rebuilt |
 | 287f:16e3 | 0x29ed3 | `FUN_287f_16e3` | 226 | Position one half-cell left; into the area to the left at the edge | rebuilt |
 | 287f:17c5 | 0x29fb5 | `FUN_287f_17c5` | 193 | Position one half-cell right; into the area to the right at the edge | rebuilt |
-| 287f:1886 | 0x2a076 | `FUN_287f_1886` | 82 | Build the block grids for all nine areas (calls 11bb nine times) | read |
-| 287f:18d8 | 0x2a0c8 | `FUN_287f_18d8` | 23 |  | replaced |
+| 287f:1886 | 0x2a076 | `FUN_287f_1886` | 82 | The nine grids' masks (11bb for each) | rebuilt |
+| 287f:18d8 | 0x2a0c8 | `FUN_287f_18d8` | 23 | An area's four corner heights into the lattice | rebuilt |
 | 287f:18ef | 0x2a0df | `FUN_287f_18ef` | 441 | Draw the map view: 13x12 tiles plus half tiles at the edges | rebuilt |
 | 287f:1aa8 | 0x2a298 | `FUN_287f_1aa8` | 38 | Draw a half-width tile (by display) | replaced |
 | 287f:1ace | 0x2a2be | `FUN_287f_1ace` | 38 | Draw a half-height tile (by display) | replaced |
@@ -376,7 +376,7 @@ read each one before taking it as such.
 | 287f:1cb8 | 0x2a4a8 | `FUN_287f_1cb8` | 130 |  | replaced |
 | 287f:1d3a | 0x2a52a | `FUN_287f_1d3a` | 82 |  | replaced |
 | 287f:1d8c | 0x2a57c | `FUN_287f_1d8c` | 28 |  | replaced |
-| 287f:1da8 | 0x2a598 | `FUN_287f_1da8` | 19 |  | replaced |
+| 287f:1da8 | 0x2a598 | `FUN_287f_1da8` | 19 | Far call of 1886: rebuild the masks (after a map load) | rebuilt |
 | 287f:1dbb | 0x2a5ab | `FUN_287f_1dbb` | 61 |  | replaced |
 | 287f:1df8 | 0x2a5e8 | `FUN_287f_1df8` | 63 |  | replaced |
 | 287f:1e37 | 0x2a627 | `FUN_287f_1e37` | 151 | Blits a picture to the screen | replaced |

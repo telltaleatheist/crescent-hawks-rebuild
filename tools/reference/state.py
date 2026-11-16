@@ -39,6 +39,10 @@ def original_state(path, fight=False):
         lines.append("state mech %d %s" % (k, m.read(far, 0xc724 + 0x7d * k, 0x7d).hex()))
     menus = m.word(m.ds, 0x56de)                                            # the menu table, 385b:0092
     lines.append("state menus " + " ".join("%d" % m.word(menus, 0x98 + 16 * i) for i in range(41)))
+    p = m.word(m.ds, 0x562a)                                                # 2c6c, the display library's data
+    lines.append("state noise " + m.read(p, 0x09fb, 256).hex())           # the generator's noise table
+    for k in range(9):                                                      # the nine area grids (docs/wilderness.md)
+        lines.append("state grid %d %s" % (k, m.read(p, 0x0564 + 64 * k, 64).hex()))
     if fight:
         lines += fight_state(m, far)
     return lines

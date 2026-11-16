@@ -64,6 +64,11 @@ word); anything else is refused, and the game asks for a new import.
 | `line_steps` | DG:41dc | 32 bytes | by octant (1e31:1ea2): the straight step's x and y, then the diagonal step's |
 | `person_quarters` | DG:0372 | 4 words | by parity, the tile bits of a person's cell (1000:0e4b) |
 | `path_arrows` | DG:3b06 | 12 bytes | by (dy + 1) x 4 + dx + 1, the glyph of a step of the path the orders screen shows (203b:1774) |
+| `world_heights` | 2c6c:0b0b | 256 bytes | one height per area of the 16 x 16 world, row by row (287f:104e; docs/wilderness.md) |
+| `terrain_templates` | 2c6c:0c1d | 1024 bytes | 16 blocks of 8 x 8, the block store's first 16: a terrain block's tiles by its neighbour mask (287f:13d9) |
+| `plain_block` | 2c6c:209d | 64 bytes | the one block every type-0x10 terrain block shows |
+| `mirror_east_west` | 2c6c:211d | 32 bytes | a template byte (or a mask) with its east and west swapped, for a mirrored block |
+| `mirror_north_south` | 2c6c:213d | 32 bytes | the same with north and south |
 | `path_quarters` | DG:3b12 | 4 bytes | by the half-cell's parity, the tile bits that make a path step cost more (203b:193b) |
 | `leg_actuator_bit`, `_keep` | DG:316a/3172 | 8 bytes each | by a d6, a leg actuator a critical hit takes out, and the mask that clears it (1e31:11ab) |
 | `arm_actuator_bit`, `_keep` | DG:317a/3182 | 8 bytes each | the same for an arm |

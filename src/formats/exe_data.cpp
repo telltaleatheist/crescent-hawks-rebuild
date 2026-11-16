@@ -99,6 +99,12 @@ constexpr std::array kDos103 = {
     ExeSpan{ExeSpan::Kind::Table, "tables.muzzle", 0x46db, 0x2d28, 0x30, "e5f4d337ac08ca39"},
     ExeSpan{ExeSpan::Kind::Table, "tables.line_steps", 0x46db, 0x41dc, 0x20, "b5d668490f6227c0"},
     ExeSpan{ExeSpan::Kind::Table, "tables.path_arrows", 0x46db, 0x3b06, 12, "a9eff4005e9a70e1"},
+    // The terrain outside the towns (docs/wilderness.md):
+    ExeSpan{ExeSpan::Kind::Table, "tables.world_heights", 0x2c6c, 0x0b0b, 256, "1ace38e0c5828f12"},
+    ExeSpan{ExeSpan::Kind::Table, "tables.terrain_templates", 0x2c6c, 0x0c1d, 1024, "c5cddf08c0924d94"},
+    ExeSpan{ExeSpan::Kind::Table, "tables.plain_block", 0x2c6c, 0x209d, 64, "e3a878f25dc4ae8e"},
+    ExeSpan{ExeSpan::Kind::Table, "tables.mirror_east_west", 0x2c6c, 0x211d, 32, "513e0371b0a58371"},
+    ExeSpan{ExeSpan::Kind::Table, "tables.mirror_north_south", 0x2c6c, 0x213d, 32, "d81bed15e8cec54a"},
     ExeSpan{ExeSpan::Kind::Table, "rules.quiz_answers", 0x46db, 0x28ec, 20, "3fe5abf0257c084c"},
     // Text the game shows. The names are the text IDs (docs/text.md): a
     // text provider hands them out, and an override file can replace them.

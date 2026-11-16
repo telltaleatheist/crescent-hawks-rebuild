@@ -31,6 +31,7 @@
 #include "game/records.h"
 #include "game/shown.h"
 #include "game/townspeople.h"
+#include "game/terrain.h"
 #include "game/text.h"
 #include "game/text_provider.h"
 
@@ -205,7 +206,12 @@ public:
     const CombatState& combat() const { return combat_; }
     const MapMarks& marks() const { return marks_; }
     // The original's bugs: kept by default, each fixable (game/fixes.h).
-    void set_fixes(const Fixes& fixes) { fixes_ = fixes; }
+    void set_fixes(const Fixes& fixes) {
+        fixes_ = fixes;
+        load_terrain();
+    }
+    // The land around the party (game/terrain.h).
+    const Terrain& terrain() const { return terrain_; }
     // The fight reached a step the rebuild stops at (logged; docs/combat.md).
     bool fight_unfinished() const { return fight_unfinished_; }
     // Whether the townspeople have left for a fight: their figures 16-23
@@ -353,6 +359,10 @@ private:
     CombatState combat_;
     MapMarks marks_;
     Fixes fixes_;
+    Terrain terrain_{tables_, fixes_};
+    // The terrain as the map load leaves it (1000:4dc7: 287f:104e for the
+    // party's area, 1000:2da8 into grid 4, 287f:1da8).
+    void load_terrain();
     int messages_ = 2;       // DG:2e38: combat messages (0 none, 1 brief, 2 verbose)
     bool graphics_ = true;   // DG:2e3a: see combat graphics
     bool computer_ = false;  // F:009e: the computer fights for you

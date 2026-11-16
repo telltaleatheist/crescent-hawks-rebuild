@@ -143,11 +143,18 @@ Town::Town(const formats::MtpMap& map, int map_number, formats::MapPosition star
            const TextProvider& texts, const formats::Tables& tables)
     : map_(map), map_number_(map_number), tile_sheet_(tile_sheet_for_map(map_number)),
       position_(start), texts_(texts), tables_(tables) {
+    load_terrain();
     people_ = Townspeople::place(map_, map_number_, random_, tables_);
     // One more random number between the map load and the main loop
     // (docs/town_loop.md, "Random numbers").
     random_.next();
     record_party_places();
+}
+
+void Town::load_terrain() {
+    terrain_.generate(((position_.y & 0xf000) | (position_.x & 0x0f00)) >> 8);
+    terrain_.place_map(map_, 4);
+    terrain_.link_blocks();
 }
 
 // BTECH.EXE 1000:0bc9..0c7d (the end of 1000:051b)

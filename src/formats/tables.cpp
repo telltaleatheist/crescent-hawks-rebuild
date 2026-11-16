@@ -85,6 +85,11 @@ const std::vector<Flat>& flat_tables() {
         {"muzzle", 0x46db, 0x2d28, Element::S8, [](Tables& t) { return all(t.muzzle); }},
         {"line_steps", 0x46db, 0x41dc, Element::S8, [](Tables& t) { return all(t.line_steps); }},
         {"path_arrows", 0x46db, 0x3b06, Element::U8, [](Tables& t) { return all(t.path_arrows); }},
+        {"world_heights", 0x2c6c, 0x0b0b, Element::U8, [](Tables& t) { return all(t.world_heights); }},
+        {"terrain_templates", 0x2c6c, 0x0c1d, Element::U8, [](Tables& t) { return all(t.terrain_templates); }},
+        {"plain_block", 0x2c6c, 0x209d, Element::U8, [](Tables& t) { return all(t.plain_block); }},
+        {"mirror_east_west", 0x2c6c, 0x211d, Element::U8, [](Tables& t) { return all(t.mirror_east_west); }},
+        {"mirror_north_south", 0x2c6c, 0x213d, Element::U8, [](Tables& t) { return all(t.mirror_north_south); }},
     };
     return kFlat;
 }

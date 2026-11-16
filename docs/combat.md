@@ -1132,6 +1132,7 @@ mistake; "quirk" means it may be intended.
 | 34 | Only ten ammunition bytes: an 11th weapon would use the walking MP byte as its ammunition. No template has more than nine weapons. | `1e31:10a2`, `22e8:000c` | none |
 | 35 | The end of the round caps heat at 30 for party record a only, whichever record it heated: an enemy 'Mech's heat climbs past 30 (and its MP stays 0 only at exactly 30, 3.2). | `1e31:0c63` | `fix_enemy_heat_cap` |
 | 36 | The terrain under a figure (F:32ae, F:3750, F:45ce, F:4554: to-hit, water cooling, fire, the missed-shot mark) is written only by the figure drawers (`1000:051b`, `1000:0e4b`). In a computer-fought fight they run only for the combat graphics (the round's redraw and the shot's presentation) or the Arena's spectator, so with combat graphics off the terrain has no effect at all (the player's orders screen draws the figures too). With graphics on, only figures in Jason's view get theirs. Quirk; the fix writes the drawer's values at the round's redraw without showing it, as with graphics on. | `22e8:000c`, `22e8:12c7` | `fix_terrain_without_graphics` |
+| 37 | The terrain generator's inside right sides take the whole noise byte as their displacement (c / 8 for c cells, which is 0), not one scaled to their length like the other sides. Every terrain block shows it; docs/wilderness.md. | `287f:0df8` | `fix_terrain_noise` |
 
 The switches are `game/fixes.h`. Each is off by default, except where the original reads or
 writes memory the rebuild does not hold, or never returns: bugs 2, 18, 21, 23, 26 and 32

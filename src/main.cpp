@@ -165,6 +165,16 @@ void print_state(const chr::game::Town& town) {
     std::printf("\nstate menus");
     for (const auto last : town.menu_last()) std::printf(" %d", last);
     std::printf("\n");
+    std::printf("state noise ");
+    for (const auto n : chr::game::Terrain::start_up_noise()) std::printf("%02x", n);
+    std::printf("\n");
+    const auto& grids = town.terrain().grids();
+    for (int k = 0; k < chr::game::Terrain::kGrids; ++k) {
+        std::printf("state grid %d ", k);
+        for (int b = 0; b < chr::game::Terrain::kGridBlocks; ++b)
+            std::printf("%02x", grids[std::size_t(k * chr::game::Terrain::kGridBlocks + b)]);
+        std::printf("\n");
+    }
 }
 
 // The fight's tables, as tools/reference/state.py reads them (docs/combat.md).
