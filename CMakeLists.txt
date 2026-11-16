@@ -49,6 +49,7 @@ add_library(chrgame STATIC
   src/game/text.cpp
   src/game/text_provider.cpp
   src/game/town.cpp
+  src/game/townspeople.cpp
 )
 target_include_directories(chrgame PUBLIC src)
 target_link_libraries(chrgame PUBLIC chrformats)
@@ -109,8 +110,17 @@ if(SDL3_FOUND)
       COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/reference/check.py
         --chr $<TARGET_FILE:chr> --game-dir ${CHR_GAME_DIR}
         --data-dir ${CMAKE_BINARY_DIR}/chr-data --work ${CMAKE_BINARY_DIR}/reference)
-    set_tests_properties(reference_compare PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 300
+    set_tests_properties(reference_compare PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 300 LABELS reference
       ENVIRONMENT "CHR_SCRATCH=${CMAKE_BINARY_DIR}/reference-scratch;SDL_VIDEO_DRIVER=dummy;SDL_AUDIO_DRIVER=dummy")
+    # The long cases too (a few minutes): `ctest -LE long` leaves it out.
+    add_test(NAME reference_compare_full
+      COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/reference/check.py --full
+        --chr $<TARGET_FILE:chr> --game-dir ${CHR_GAME_DIR}
+        --data-dir ${CMAKE_BINARY_DIR}/chr-data --work ${CMAKE_BINARY_DIR}/reference-full)
+    set_tests_properties(reference_compare_full PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 900
+      LABELS "reference;long" RESOURCE_LOCK dosbox
+      ENVIRONMENT "CHR_SCRATCH=${CMAKE_BINARY_DIR}/reference-scratch-full;SDL_VIDEO_DRIVER=dummy;SDL_AUDIO_DRIVER=dummy")
+    set_tests_properties(reference_compare PROPERTIES RESOURCE_LOCK dosbox)
   endif()
   if(WIN32)
     # SDL3.dll beside chr.exe.

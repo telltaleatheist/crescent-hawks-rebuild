@@ -6,6 +6,7 @@
 #include <stdexcept>
 
 #include "game/tile_animation.h"
+#include "game/world.h"
 
 namespace chr::game {
 
@@ -79,7 +80,29 @@ std::deque<ScriptItem> parse_key_script(const std::string& script) {
 Town::Town(const formats::MtpMap& map, int map_number, formats::MapPosition start,
            const TextProvider& texts)
     : map_(map), map_number_(map_number), tile_sheet_(tile_sheet_for_map(map_number)),
-      position_(start), texts_(texts) {}
+      position_(start), texts_(texts) {
+    people_ = Townspeople::place(map_, map_number_, random_);
+    // One more random number is drawn between the map load and the first
+    // pass of the main loop in a new game (found by comparing the original's
+    // memory; where is not located yet).
+    random_.next();
+    record_party_places();
+}
+
+// BTECH.EXE 1000:0bc9..0c7d (the end of 1000:051b)
+// After drawing, each character drawn is recorded where it stands: the
+// party's position plus the k-th formation offset. The townspeople's step
+// refuses these places until the next drawing.
+void Town::record_party_places() {
+    party_places_ = {};
+    int k = 0;
+    for (int member = 0; member < 8; ++member) {
+        if (!party_.present[member]) continue;
+        party_places_[std::size_t(k)] = {move_x(position_.x, kFormationX[std::size_t(k)]),
+                                         move_y(position_.y, kFormationY[std::size_t(k)])};
+        ++k;
+    }
+}
 
 MapView Town::view() const {
     auto view = view_of(map_, tile_sheet_, position_);
@@ -89,7 +112,12 @@ MapView Town::view() const {
     return view;
 }
 
-std::vector<Figure> Town::figures() const { return party_figures(map_, position_, party_, animation_); }
+std::vector<Figure> Town::figures() const {
+    auto all = party_figures(map_, position_, party_, animation_);
+    const auto people = people_.figures(map_, position_, animation_);
+    all.insert(all.end(), people.begin(), people.end());
+    return all;
+}
 
 // BTECH.EXE 1000:4aa6 (Ghidra FUN_1000_4aa6)
 // Beside each of the first four characters' names (row 14, 16, ...): bars at
@@ -234,12 +262,15 @@ void Town::game_tick() {
     if (money_tick(money_, outdoors_, random_)) draw_cbills();
     countdown_ = 10;
     if (tiles_animate(map_number_)) phase_ = (phase_ + 1) % 3;  // 1000:240b
-    // BTECH.EXE 1000:24c2 (Ghidra FUN_1000_24c2) moves the townspeople on
-    // every third tick: not rebuilt yet.
-    if (third_++ == 2) third_ = 0;
+    // Every third tick the townspeople move (1000:24c2).
+    if (third_++ == 2) {
+        third_ = 0;
+        people_.move(map_, position_, party_places_, animation_, random_);
+    }
     // The map and the figures are drawn again (DGROUP:014a is set in town),
     // over any message box (1000:046e).
     text_.forget(13, 0, kTextColumns - 13, kTextRows);
+    record_party_places();
     ++ticks_;
 }
 

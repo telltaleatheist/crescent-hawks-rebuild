@@ -18,6 +18,7 @@
 #include "game/money.h"
 #include "game/movement.h"
 #include "game/random.h"
+#include "game/townspeople.h"
 #include "game/text.h"
 #include "game/text_provider.h"
 
@@ -101,8 +102,11 @@ public:
     formats::MapPosition position() const { return position_; }
     // The map as it shows now, animated tiles in their current frame.
     MapView view() const;
-    // The party's figures, in drawing order.
+    // The figures on the map, in drawing order: the party, then the
+    // townspeople out walking.
     std::vector<Figure> figures() const;
+    const Townspeople& townspeople() const { return people_; }
+    const Random& random() const { return random_; }
     // The panel's bars, three per character shown.
     std::vector<StatBar> bars() const;
     const Money& money() const { return money_; }
@@ -122,6 +126,7 @@ private:
     void turn(int key, KeySource& keys);
     // BTECH.EXE 1000:020a..050d (the main loop's game tick)
     void game_tick();
+    void record_party_places();
     // BTECH.EXE 1e31:1fdf (Ghidra FUN_1e31_1fdf)
     // "C-Bills:" and the amount, in the party box.
     void draw_cbills();
@@ -140,7 +145,9 @@ private:
     std::array<PanelStats, 8> stats_{{{8, 9, 7, 80}}};
     FigureAnimation animation_;
     TextScreen text_;
-    Random random_;
+    Random random_ = Random::at_town_start();
+    Townspeople people_;
+    PartyPlaces party_places_{};  // DGROUP:4004/4036 for figures 4-11
     Money money_;
     bool outdoors_ = false;   // DGROUP:d310: false on a town map
     int countdown_ = 0;       // the main loop's [bp-1a]: 0 when it starts (1000:0016)

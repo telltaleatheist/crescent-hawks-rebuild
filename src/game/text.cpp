@@ -133,6 +133,7 @@ void TextScreen::put_line(std::string& line, bool newline) {
             }
         }
     } else {
+        const int length = int(line.size());
         if (int(line.size()) < w.width) line.resize(std::size_t(w.width), ' ');
         line.resize(std::size_t(w.width));
         for (int r = w.y; r < w.y + w.height - 1; ++r)
@@ -140,7 +141,16 @@ void TextScreen::put_line(std::string& line, bool newline) {
                 cells_[r * kTextColumns + c] = cells_[(r + 1) * kTextColumns + c];
         fill(w.x, w.y + w.height - 1, w.width, 1, 0);  // cleared to colour 0, not the window's
         put_text(line, w.x, w.y + w.height - 1, w.fg, w.bg);
-        if (!newline) w.row = w.height - 1;
+        if (!newline) {
+            // Without a line break the cursor stays after the text on the
+            // bottom row, as above (the move log's "\rSouth" relies on it).
+            w.row = w.height - 1;
+            w.col = length;
+            if (w.col < w.width) {
+                line.clear();
+                return;
+            }
+        }
     }
     w.col = 0;
     ++w.row;

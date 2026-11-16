@@ -17,13 +17,13 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 1000:002d | 0x1002d | `FUN_1000_002d` | 142 | Main loop, key half: reads a key, flushes, steps, logs the direction, walking frames (231d), then a game tick (docs/town_loop.md) | rebuilt |
 | 1000:00bb | 0x100bb | `FUN_1000_00bb` | 313 | Main loop: one turn per key; redraws the map, figures and panel each turn; resets the one-question-per-turn flag | read |
 | 1000:01f4 | 0x101f4 | `FUN_1000_01f4` | 807 | Main loop, idle half: waits one display frame (273d:0006); every 11 passes a game tick: timers, random, money, tile animation 240b, 24c2 every third, redraw (docs/town_loop.md) | rebuilt |
-| 1000:051b | 0x1051b | `FUN_1000_051b` | 2352 | Draws the figures: map objects (2a93), the party at the formation places with walking frame and sinking in water, townspeople, 'Mechs (party rebuilt) | rebuilt |
+| 1000:051b | 0x1051b | `FUN_1000_051b` | 2352 | Draws the figures: map objects (2a93), the party (walking frame, sinking in water), the townspeople in view, 'Mechs; records the party's places (party and townspeople rebuilt) | rebuilt |
 | 1000:0e4b | 0x10e4b | `FUN_1000_0e4b` | 2279 |  | - |
 | 1000:1732 | 0x11732 | `FUN_1000_1732` | 137 | Runs a figure's walking script to its next frame (0xfd direction, 0xfe jump back, 0xff hold) | rebuilt |
 | 1000:17bb | 0x117bb | `FUN_1000_17bb` | 92 |  | - |
 | 1000:1817 | 0x11817 | `FUN_1000_1817` | 88 |  | - |
 | 1000:186f | 0x1186f | `FUN_1000_186f` | 172 |  | - |
-| 1000:191b | 0x1191b | `FUN_1000_191b` | 164 |  | - |
+| 1000:191b | 0x1191b | `FUN_1000_191b` | 164 | Moves the party position by (dx, dy) half-cells, across area edges | rebuilt |
 | 1000:19bf | 0x119bf | `FUN_1000_19bf` | 30 |  | - |
 | 1000:19dd | 0x119dd | `FUN_1000_19dd` | 22 |  | - |
 | 1000:19f3 | 0x119f3 | `FUN_1000_19f3` | 32 |  | - |
@@ -33,7 +33,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 1000:218f | 0x1218f | `FUN_1000_218f` | 398 | Walking keys: arrows and Home/PgUp/End/PgDn to a step, checks it, moves y then x, loads areas crossed into | rebuilt |
 | 1000:231d | 0x1231d | `FUN_1000_231d` | 238 | After a key: a walking key moves the figures' walking scripts on | rebuilt |
 | 1000:240b | 0x1240b | `FUN_1000_240b` | 183 | Animated tiles: next of 3 frames, ANIMATE.ICN tile 1+3i+frame over each of the 10 tile numbers at DS:04b0 | rebuilt |
-| 1000:24c2 | 0x124c2 | `FUN_1000_24c2` | 933 | Moves the townspeople, every third game tick | read |
+| 1000:24c2 | 0x124c2 | `FUN_1000_24c2` | 933 | Townspeople, every third game tick: count down inside, come out at the last entrance; out and near the party, a step (1e31:0006), walking frame, at the target go in for random&31 rounds | rebuilt |
 | 1000:2867 | 0x12867 | `FUN_1000_2867` | 59 |  | - |
 | 1000:28a2 | 0x128a2 | `FUN_1000_28a2` | 42 | Sets the text colour to light green (CGA: 1) | rebuilt |
 | 1000:28cc | 0x128cc | `FUN_1000_28cc` | 71 |  | - |
@@ -44,8 +44,8 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 1000:2a69 | 0x12a69 | `FUN_1000_2a69` | 21 |  | - |
 | 1000:2a7e | 0x12a7e | `FUN_1000_2a7e` | 21 |  | - |
 | 1000:2a93 | 0x12a93 | `FUN_1000_2a93` | 445 | Draws the map objects (up to 64), toggling sprites 0x7c/0x7d | read |
-| 1000:2c50 | 0x12c50 | `FUN_1000_2c50` | 344 |  | - |
-| 1000:2da8 | 0x12da8 | `FUN_1000_2da8` | 1123 | Load MAP<n>.MTP into the block store and an area grid (DESTRUCT.ICN for map 11) | rebuilt |
+| 1000:2c50 | 0x12c50 | `FUN_1000_2c50` | 344 | Space: the command menu | read |
+| 1000:2da8 | 0x12da8 | `FUN_1000_2da8` | 1123 | Loads MAP<n>.MTP; blocking tile; for a new game places the 8 townspeople (8 random numbers) | read |
 | 1000:320b | 0x1320b | `FUN_1000_320b` | 168 | Loads ANIMATE.ICN into the animation buffer | read |
 | 1000:32b3 | 0x132b3 | `FUN_1000_32b3` | 800 |  | - |
 | 1000:35d3 | 0x135d3 | `FUN_1000_35d3` | 442 |  | - |
@@ -64,7 +64,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 1000:4cac | 0x14cac | `FUN_1000_4cac` | 171 | The left panel: party box (window 3, frame style 3, 'BDC' heading, up to 4 names) and the box above (window 4, style 4) | rebuilt |
 | 1000:4d57 | 0x14d57 | `FUN_1000_4d57` | 112 |  | - |
 | 1000:4dc7 | 0x14dc7 | `FUN_1000_4dc7` | 769 | New game: reset the party, load map 1 into area 4, set the start position | read |
-| 1000:50c8 | 0x150c8 | `FUN_1000_50c8` | 434 | New game: copyright text in window 6, 'first time playing?' and 'load a saved game?' questions | read |
+| 1000:50c8 | 0x150c8 | `FUN_1000_50c8` | 434 | Start-up: fills a 256-byte table with random numbers (DGROUP(5400):09fb); first-time question | read |
 
 ## CODE_1: segment 1527, 2,104 bytes
 
@@ -171,7 +171,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 
 | Address | Linear | Ghidra name | Span | Label | Status |
 |---|---|---|---|---|---|
-| 1e31:0006 | 0x1e316 | `FUN_1e31_0006` | 734 |  | - |
+| 1e31:0006 | 0x1e316 | `FUN_1e31_0006` | 734 | A figure's step toward a target: turn one eighth, try 8 directions (wander pattern flips every 30), free cell and no figure there | rebuilt |
 | 1e31:02e4 | 0x1e5f4 | `FUN_1e31_02e4` | 75 |  | - |
 | 1e31:032f | 0x1e63f | `FUN_1e31_032f` | 124 |  | - |
 | 1e31:03ab | 0x1e6bb | `FUN_1e31_03ab` | 2058 |  | - |
@@ -184,7 +184,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 1e31:11ab | 0x1f4bb | `FUN_1e31_11ab` | 1103 |  | - |
 | 1e31:15fa | 0x1f90a | `FUN_1e31_15fa` | 68 |  | - |
 | 1e31:163e | 0x1f94e | `FUN_1e31_163e` | 109 |  | - |
-| 1e31:16ab | 0x1f9bb | `FUN_1e31_16ab` | 1177 |  | - |
+| 1e31:16ab | 0x1f9bb | `FUN_1e31_16ab` | 1177 | Is a place taken? Party characters, townspeople, 'Mechs (3 half-cells); 'Mechs also crush (not rebuilt) | read |
 | 1e31:1b44 | 0x1fe54 | `FUN_1e31_1b44` | 75 |  | - |
 | 1e31:1b8f | 0x1fe9f | `FUN_1e31_1b8f` | 111 |  | - |
 | 1e31:1bfe | 0x1ff0e | `FUN_1e31_1bfe` | 429 |  | - |
@@ -334,7 +334,7 @@ read each one before taking it as such.
 | 287f:0780 | 0x28f70 | `FUN_287f_0780` | 289 |  | replaced |
 | 287f:08a1 | 0x29091 | `FUN_287f_08a1` | 144 |  | replaced |
 | 287f:0931 | 0x29121 | `FUN_287f_0931` | 64 |  | replaced |
-| 287f:0971 | 0x29161 | `FUN_287f_0971` | 181 |  | replaced |
+| 287f:0971 | 0x29161 | `FUN_287f_0971` | 181 | Direction (0-7) from one position to another, -1 if the same | rebuilt |
 | 287f:0a26 | 0x29216 | `FUN_287f_0a26` | 80 |  | replaced |
 | 287f:0a76 | 0x29266 | `FUN_287f_0a76` | 41 |  | replaced |
 | 287f:0a9f | 0x2928f | `FUN_287f_0a9f` | 135 |  | replaced |

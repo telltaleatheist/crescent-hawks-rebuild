@@ -11,8 +11,8 @@ namespace chr::game {
 
 class Random {
 public:
-    // BTECH.EXE 1000:522c sets the state to 25 13 90 at start-up.
-    // (1000:a9de seeds it again from DGROUP:d456 somewhere not yet traced.)
+    // The state in the program image: 04 03 02. (1000:a9de seeds it again
+    // from DGROUP:d456 in a wait loop not traced yet.)
     Random() = default;
     explicit Random(std::array<std::uint8_t, 3> state) : s_(state) {}
 
@@ -22,8 +22,15 @@ public:
 
     const std::array<std::uint8_t, 3>& state() const { return s_; }
 
+    // The state when a new game reaches the town's map load: the image's
+    // 04 03 02 after 264 draws: 256 fill a table at start-up (1000:50c8,
+    // DGROUP(5400):09fb), 8 pick the 'Mechs' looks in the new game (1000:4f41:
+    // sprite base 0x92 or 0 for figures 0-3 and 12-15). Checked against the
+    // original's memory with the reference rig.
+    static Random at_town_start();
+
 private:
-    std::array<std::uint8_t, 3> s_{0x25, 0x13, 0x90};
+    std::array<std::uint8_t, 3> s_{0x04, 0x03, 0x02};
 };
 
 }  // namespace chr::game

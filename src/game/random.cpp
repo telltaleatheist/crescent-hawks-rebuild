@@ -18,4 +18,10 @@ std::uint8_t Random::next() {
     return std::uint8_t(a ^ b);
 }
 
+Random Random::at_town_start() {
+    Random r;
+    for (int i = 0; i < 264; ++i) r.next();
+    return r;
+}
+
 }  // namespace chr::game

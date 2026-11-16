@@ -55,6 +55,7 @@ struct Options {
     std::string text_file;   // text overrides
     std::filesystem::path data_dir;  // the imported text and font
     bool import = false;
+    bool state = false;      // print the game state after the script
     int map = 0;             // 0: the title screen
 };
 
@@ -83,13 +84,26 @@ bool parse(int argc, char** argv, Options& options) {
             options.script = argv[++i];
         } else if (arg == "--screenshot" && i + 1 < argc) {
             options.screenshot = argv[++i];
+        } else if (arg == "--state") {
+            options.state = true;
         } else {
             std::fprintf(stderr, "usage: chr [--game-dir DIR] [--data-dir DIR] [--import] [--map N] [--script KEYS]\n"
-                         "           [--text FILE] [--screenshot FILE.bmp]\n");
+                         "           [--text FILE] [--screenshot FILE.bmp] [--state]\n");
             return false;
         }
     }
     return true;
+}
+
+// --state: what tools/reference/check.py compares with the original's memory.
+void print_state(const chr::game::Town& town) {
+    const auto& r = town.random().state();
+    std::printf("state random %02x %02x %02x\n", r[0], r[1], r[2]);
+    std::printf("state cbills %d\n", int(town.money().cbills));
+    int i = 0;
+    for (const auto& w : town.townspeople().walkers())
+        std::printf("state walker %d at %04x %04x target %04x %04x route %02x wait %02x heading %d\n", i++,
+                    w.at.x, w.at.y, w.target.x, w.target.y, w.route, w.wait, int(w.heading));
 }
 
 bool save_screenshot(SDL_Renderer* renderer, const std::string& path) {
@@ -259,6 +273,7 @@ int main(int argc, char** argv) {
                 for (const auto& line : town->log()) std::printf("%s\n", line.c_str());
                 if (town->question_open()) std::printf("(waiting for an answer)\n");
             }
+            if (options.state) print_state(*town);
         }
 
         bool running = status == 0;

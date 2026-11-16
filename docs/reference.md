@@ -39,7 +39,11 @@ by 2 (its flush uses up one of the 4 polls), and `idle:N` adds N. `check.py` spe
 for chr (`chr_script()`), so both sides run the same number of game ticks.
 
 Captures (`@snap:NAME`) are written at the same moments, so they show the screen the program is
-waiting on. When the script ends SNAP writes SNAPEND.TXT and `run.py` kills DOSBox-X. Nothing
+waiting on. In the EGA mode a capture also holds the first 640K of memory and the game's data
+segment (DS when it last asked DOS whether a key was waiting), so the game's state can be read
+back: `tools/reference/memory.py CAPTURE ds:4fc0:3 "[538a]:d370:4"` prints bytes, where
+`[538a]` is the segment whose number is the word at DS:538a, as the game reaches its far data.
+`state.py CAPTURE` prints the state the rig compares, in the form `chr --state` prints it. When the script ends SNAP writes SNAPEND.TXT and `run.py` kills DOSBox-X. Nothing
 depends on the clock or on how fast the host is: two runs of the same script give byte-identical
 captures (checked for the start-up, the town and the Citadel question).
 
@@ -55,8 +59,10 @@ Key names are as for `chr --script`, plus `esc`, digits and `@snap:NAME`.
     tools/reference/check.py --chr build/chr --game-dir DIR --data-dir DIR --work DIR
 
 `check.py` (ctest `reference_compare`) runs the cases in it: each lists the rectangles that must
-be identical and the differences still known. It skips (exit 77) without DOSBox-X, nasm or the
-game.
+be identical and the differences still known, and the game state (random numbers, C-Bills, the
+townspeople's records) must be identical too. `--full` (ctest `reference_compare_full`, labelled
+`long`: `ctest -LE long` leaves it out) adds the long cases, about a minute and a half. It skips
+(exit 77) without DOSBox-X, nasm or the game.
 
 ## The start-up, as captured
 
@@ -70,14 +76,22 @@ game.
 
 ## Findings
 
-All four cases in `check.py` (town start, 9 idle passes later, the Citadel question, and 250
-game ticks after answering no) are identical over the whole screen: map, animated tiles, the
-party's figure, the panel with its bars, C-Bills and move log. docs/town_loop.md has what the
-main loop does and when.
+Every case in `check.py` is identical over the whole screen and in the game state:
+
+- quick: the town start, 9 idle passes later, 120 more (a townsperson walking in view), the
+  Citadel question;
+- full: 250 game ticks to the second money step, a walk west and south through MAP1 (146 steps,
+  90 into walls), 400 idle passes, a walk back east and round, then waiting by the Barracks door
+  while a townsperson goes in and, 1,200 passes later, comes out.
+
+docs/town_loop.md has what the main loop does and when, docs/townspeople.md the townspeople.
 
 Found by the comparison along the way:
 
 - The move log ("North" in the upper box): the main loop prints the direction (DS:01aa) in
-  window 4 after each walking key unless a message came up.
+  window 4 after each walking key unless a message came up. Once the box is full it scrolls a
+  line at a time (each entry is a line break, then the word).
 - The main loop's pace is the display's vertical retrace, not the timer (docs/town_loop.md).
 - The party's figure is sprite slot 0xa6, not a 'Mech: its frame offset starts at 0x10.
+- The random numbers at the town start: 256 + 8 draws before map 1 is loaded, 8 for the
+  townspeople, 1 more before the first pass (docs/townspeople.md).

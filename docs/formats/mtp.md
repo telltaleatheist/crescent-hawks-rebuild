@@ -22,14 +22,14 @@ The loader reads the fields one after another:
 | 0x002 | 1 | | block row where the map starts (0 in every map) |
 | 0x003 | 1 | | width in cells (a multiple of 8) |
 | 0x004 | 1 | | height in cells (a multiple of 8) |
-| 0x005 | 0x80 | 2c6c:a461 | 8 people's names, 16 bytes each, NUL-ended (MAP1: Rick Atlas, …) |
+| 0x005 | 0x80 | 2c6c:a461 | 8 people's names, 16 bytes each, NUL-ended (MAP1: Rick Atlas, …): the townspeople (docs/townspeople.md) |
 | 0x085 | 0x100 | 2c6c:a561 | 16 place names, 16 bytes each, one per entrance below (MAP1: Training Center, Citadel, ComStar Station, Weapons Shop, Armor Shop, Mechit-Lube, Barracks, Lounge; the rest are leftovers) |
 | 0x185 | 0x20 | 3892:4564 | 16 entrance x positions (words) |
 | 0x1a5 | 0x20 | 3892:4596 | 16 entrance y positions (words) |
 | 0x1c5 | 0x20 | 3892:39b4 | 16 x positions of a second table (in MAP1 the same values). Used by 19b8:0d58 and 1e31:03ab, not read yet. |
 | 0x1e5 | 0x20 | 3892:39d4 | 16 y positions of the second table |
 | 0x205 | 0x10 | 3892:4602 | 16 bytes, not traced yet (MAP1: 0–7, then 4 2 7 5 6 1 3 0) |
-| 0x215 | 8 | 3892:3768 | 8 bytes, a shuffle. In a new game 1000:2da8 places each of the 8 people at the entrance numbered `table[random & 7]`. |
+| 0x215 | 8 | 3892:3768 | 8 bytes, a shuffle: the townspeople's next entrance after entrance n is `table[n & 7]`; a new game places each at `table[random & 7]` (docs/townspeople.md). |
 | 0x21d | width × height | 2c6c:101d | the cells, one byte each, **in 8x8 blocks** |
 
 ### The cells

@@ -31,9 +31,7 @@ the passes directly.
 
 In order (`1000:020a`..`050d`):
 
-1. Timers that count down when set: bytes DS:d335.., the countdown d343-d345 (on expiry, in a
-   part of the map, `1000:e0a2(1)`), d329, d320, d321, d322. None is set in town at the start of
-   a game; not rebuilt yet.
+1. Timers that count down when set (below, "Timers"). None is set in town at a new game.
 2. A random number (`287f:0bc0`), always. Outdoors (DS:d310 set), if it has none of the bits of
    DS:d330 and DS:d346 is clear, a fight starts (`203b:000a`). Not rebuilt yet; the draw is,
    so the sequence stays in step.
@@ -41,11 +39,29 @@ In order (`1000:020a`..`050d`):
    runs it). Below.
 4. The countdown is set to 10.
 5. `1000:240b`: the animated tiles' next frame. Below.
-6. DS:57fe counts ticks; on every third (`57fe` was 2), `1000:24c2` moves the townspeople. Not
-   rebuilt yet.
+6. DS:57fe counts ticks; on every third (`57fe` was 2), `1000:24c2` moves the townspeople
+   (docs/townspeople.md).
 7. If DS:014a is set (it is in town): the map is drawn again (`2000:9b04`, `a0df`), the figures
-   (`1000:051b`), and the screen is flipped (`7a93`). Then, if DS:01a8 is set, the game is over
+   (`1000:051b`, which also records where the party's characters stand), and the screen is
+   flipped (`7a93`). Then, if DS:01a8 is set, the game is over
    (string 0x12f, a yes/no question, a new game or quit).
+
+## Timers
+
+All in DGROUP(3892), all 0 in town at a new game (read from the original's memory), so none
+acts there yet. Addresses marked linear are byte offsets in the unpacked image (load segment
+0x1000). Rebuilt as far as the town needs: nothing; documented for later.
+
+| Byte | Each tick | Set by | Read by |
+|---|---|---|---|
+| d335 | down to 0 | 0x3f at 1c31:02d3 (after a panel redraw), 0 at linear 0x2160a | 1c31:001b returns at once while it is not 0 |
+| d343-d345 | while d343 is set, the 16-bit count d345:d344 goes down; d343 becomes "count not 0". At 0, if the party is within x 0x800-0xcff and y 0x6000-0xafff, `1d43:0c72(1)` | only the tick writes d343 (others by index) | 2da8: loading map 2 with d343 set calls `1d43:0c72(0)` |
+| d329 | down to 0 | by index (not found by address) | not found by address |
+| d320 | down to 0 | 0xff at linear 0x1d1f4 | linear 0x17e1c: a routine calls on (far 0c67:08a8 in the image) only when it is 0 |
+| d321, d322 | down to 0 | by index | by index |
+
+`1d43:0c72` and the routines around d335 and d320 belong to the world map and the places,
+which are not rebuilt yet.
 
 ## Money
 
@@ -104,6 +120,10 @@ tenth of byte 15 (at least 1) pixels tall, unless that is 0 (Jason's byte 15 is 
 CGA, `273d:031c`) along the top (x+1..x+5, y), the sides (x and x+6, y+1..y+13) and the bottom
 (x+1..x+5, y+14), and a green box (10; 1 on CGA, `273d:01fb`) from (x+2, y+14-value) to (x+4,
 y+13).
+
+## The townspeople
+
+docs/townspeople.md.
 
 ## The party's figures
 

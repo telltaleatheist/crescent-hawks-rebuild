@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Compare the rebuild with the original, screen by screen.
 
-    check.py --chr BUILD/chr --game-dir DIR --data-dir DIR --work DIR
+    check.py --chr BUILD/chr --game-dir DIR --data-dir DIR --work DIR [--full]
 
 Runs the original headless once (run.py) through the cases below, renders
 the same steps with `chr --script ... --screenshot`, and compares them pixel
@@ -9,6 +9,12 @@ for pixel (compare.py). Each case lists the rectangles the rebuild already
 draws, which must be identical, and the differences still known, with their
 cause in the original. A rectangle that stops matching fails the check; the
 known differences are only reported, so that each one is fixed on purpose.
+Each case also compares the game state (`chr --state` against the
+original's memory, state.py): the random numbers, C-Bills and the
+townspeople's records must be identical.
+
+The quick cases run in ctest (`reference_compare`); --full adds the long
+ones (thousands of passes of idling, a walk across MAP1), a few minutes.
 
 Exit status: 0 all required rectangles match, 1 a mismatch, 77 skipped
 (no DOSBox-X, nasm or game folder: the check needs all three).
@@ -23,6 +29,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import compare  # noqa: E402
 import run  # noqa: E402
+import state  # noqa: E402
 
 SKIP = 77
 
@@ -54,16 +61,58 @@ CASES = [
         "match": {"the panel": WHOLE_PANEL, "the map": WHOLE_MAP},
     },
     {
+        # 120 more passes: the townsperson nearest the party (the fifth) walks
+        # toward its next entrance, in view.
+        "name": "people_walking",
+        "keys": "idle:120",
+        "match": {"the panel": WHOLE_PANEL, "the map": WHOLE_MAP},
+    },
+    {
         # Each key is a game tick too; the fifth asks its question first.
         "name": "citadel_question",
         "keys": "up*5",
         "match": {"the panel": WHOLE_PANEL, "the map": WHOLE_MAP},
     },
+]
+
+# Run after CASES with --full, continuing from where they end.
+FULL_CASES = [
     {
         # No, then 250 more ticks: the 257th runs the money step again (35
         # to 50, the floor), and the fence is on frame 2.
         "name": "money_step",
         "keys": "n idle:2753",
+        "match": {"the panel": WHOLE_PANEL, "the map": WHOLE_MAP},
+    },
+    {
+        # A walk west and south through MAP1: scrolling, fences, and the
+        # townspeople's steps against where the party was last drawn.
+        "name": "walk_west",
+        "keys": "down*4 left*26 down*24 right*4 down*10",
+        "match": {"the panel": WHOLE_PANEL, "the map": WHOLE_MAP},
+    },
+    {
+        "name": "walk_idle",
+        "keys": "idle:400",
+        "match": {"the panel": WHOLE_PANEL, "the map": WHOLE_MAP},
+    },
+    {
+        # Back, then east along the street, round the shops and west again.
+        "name": "walk_east",
+        "keys": "up*10 left*4 up*24 right*60 up*8 pgup*6 right*10 down*6 left*30 home*4 left*10",
+        "match": {"the panel": WHOLE_PANEL, "the map": WHOLE_MAP},
+    },
+    {
+        # Waiting by the Barracks door: the fourth townsperson reaches it and
+        # goes in for a random number of rounds (24).
+        "name": "door_in",
+        "keys": "idle:600",
+        "match": {"the panel": WHOLE_PANEL, "the map": WHOLE_MAP},
+    },
+    {
+        # ... and comes out again, for the next entrance.
+        "name": "door_out",
+        "keys": "idle:1200",
         "match": {"the panel": WHOLE_PANEL, "the map": WHOLE_MAP},
     },
 ]
@@ -84,10 +133,10 @@ def expand(keys):
     return out
 
 
-def chr_script(upto):
+def chr_script(cases, upto):
     """The chr script for the case at index `upto`: every item so far."""
     items = ["idle:%d" % FIRST_PASSES]
-    for case in CASES[:upto + 1]:
+    for case in cases[:upto + 1]:
         for k in expand(case["keys"]):
             items.append(k)
             if not k.startswith("idle:"):
@@ -95,9 +144,9 @@ def chr_script(upto):
     return " ".join(items)
 
 
-def original_script():
+def original_script(cases):
     tokens = [START]
-    for case in CASES:
+    for case in cases:
         if case.get("keys"):
             tokens.append(case["keys"])
         tokens.append("@snap:" + case["name"])
@@ -110,7 +159,9 @@ def main():
     ap.add_argument("--game-dir", required=True)
     ap.add_argument("--data-dir", required=True)
     ap.add_argument("--work", required=True, help="where the captures, screenshots and diffs go")
+    ap.add_argument("--full", action="store_true", help="the long cases too")
     a = ap.parse_args()
+    cases = CASES + (FULL_CASES if a.full else [])
 
     missing = [what for what, ok in (("DOSBox-X", os.path.exists(run.DOSBOX)),
                                      ("nasm", shutil.which("nasm")),
@@ -122,19 +173,21 @@ def main():
 
     os.makedirs(a.work, exist_ok=True)
     ref_dir = os.path.join(a.work, "original")
-    finished, _ = run.run(a.game_dir, original_script(), ref_dir, timeout=240)
+    finished, _ = run.run(a.game_dir, original_script(cases), ref_dir, timeout=900 if a.full else 240)
     if not finished:
         print("the original did not reach the end of the script")
         return 1
 
     env = dict(os.environ, SDL_VIDEO_DRIVER="dummy", SDL_AUDIO_DRIVER="dummy")
     ok = True
-    for i, case in enumerate(CASES):
+    for i, case in enumerate(cases):
         name = case["name"]
         shot = os.path.join(a.work, name + ".bmp")
-        subprocess.run([a.chr, "--game-dir", a.game_dir, "--data-dir", a.data_dir, "--map", "1",
-                        "--script", chr_script(i), "--screenshot", shot],
-                       check=True, env=env, stdout=subprocess.DEVNULL)
+        out = subprocess.run([a.chr, "--game-dir", a.game_dir, "--data-dir", a.data_dir, "--map", "1",
+                              "--script", chr_script(cases, i), "--screenshot", shot, "--state"],
+                             check=True, env=env, stdout=subprocess.PIPE, text=True).stdout
+        ours_state = [line for line in out.splitlines() if line.startswith("state ")]
+        ref_state = state.original_state(os.path.join(ref_dir, name + ".bin"))
         ref = compare.reference_pixels(os.path.join(ref_dir, name + ".bin"))
         ours = compare.bmp_pixels(shot)
         compare.write_diff(os.path.join(a.work, name + "-diff.png"), ref, ours)
@@ -146,6 +199,13 @@ def main():
             n = len(compare.compare_rect(ref, ours, rect))
             print(f"  {'ok  ' if n == 0 else 'FAIL'} {label}: {n} pixels differ")
             ok = ok and n == 0
+        differ = [f"original: {r}\n         chr: {c}" for r, c in zip(ref_state, ours_state) if r != c]
+        if len(ref_state) != len(ours_state):
+            differ.append("different number of state lines")
+        print(f"  {'ok  ' if not differ else 'FAIL'} the game state: {len(differ)} lines differ")
+        for d in differ:
+            print("    " + d)
+        ok = ok and not differ
         for known in case.get("known", []):
             print(f"  known: {known}")
     return 0 if ok else 1

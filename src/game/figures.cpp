@@ -42,10 +42,10 @@ constexpr std::array<std::array<std::uint8_t, 4>, 8> kWaterQuarters = {{
 }  // namespace
 
 FigureAnimation::FigureAnimation() {
-    for (int f = 0; f < 12; ++f) {
+    for (int f = 0; f < kFigures; ++f) {
         pos_[f] = character_script(4) - kScriptBase;  // DGROUP:01f6: 37e8:02d0 for all
         direction_[f] = -1;                              // DGROUP:396c = 0xff
-        frame_[f] = f < 4 ? 0 : 0x10;                    // DGROUP:409a
+        frame_[f] = (f < 4 || (f >= 12 && f < 16)) ? 0 : 0x10;  // DGROUP:409a
     }
 }
 
@@ -59,13 +59,15 @@ int FigureAnimation::step(int f) {
     }
 }
 
+void FigureAnimation::walk(int f, int direction) {
+    if (direction_[f] != direction) pos_[f] = character_script(direction) - kScriptBase;
+    frame_[f] = step(f);
+}
+
 void FigureAnimation::key(int k) {
     for (int d = 0; d < 8; ++d) {
         if (kDirectionKeys[d] != k) continue;
-        for (int f = 4; f < 12; ++f) {
-            if (direction_[f] != d) pos_[f] = character_script(d) - kScriptBase;
-            frame_[f] = step(f);
-        }
+        for (int f = 4; f < 12; ++f) walk(f, d);
         return;
     }
 }

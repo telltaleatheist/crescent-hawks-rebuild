@@ -13,6 +13,7 @@
 #include "game/random.h"
 #include "game/movement.h"
 #include "game/town.h"
+#include "game/townspeople.h"
 #include "test.h"
 
 using namespace chr;
@@ -308,15 +309,15 @@ TEST(map1_panel_bars) {
 }
 
 TEST(random_numbers) {
-    // From the start-up state 25 13 90 (an instruction-by-instruction model
-    // of 287f:0bc0 gives the same).
-    Random r;
+    // From the state 25 13 90 (an instruction-by-instruction model of
+    // 287f:0bc0 gives the same).
+    Random r({0x25, 0x13, 0x90});
     const int expected[] = {0xb5, 0x87, 0xf8, 0x8b, 0xab, 0x88, 0x7e, 0x4b, 0xcd, 0xb7, 0xf9, 0xb9};
     for (const int e : expected) CHECK(r.next() == e);
 }
 
 TEST(money_step) {
-    Random r;
+    Random r({0x25, 0x13, 0x90});
     Money money;
     CHECK(money_tick(money, false, r));  // runs on the first tick
     CHECK(money.cbills == 35 && money.countdown == 0xff);
@@ -329,8 +330,51 @@ TEST(money_step) {
     Money m2;
     m2.cbills = 0;
     m2.invested = {9600, 9000, 20000};
-    Random r2;  // draws 0xb5, 0x87, 0xf8: gains for the first two, a loss for the third
+    Random r2({0x25, 0x13, 0x90});  // draws 0xb5, 0x87, 0xf8: gains for the first two, a loss for the third
     money_tick(m2, true, r2);
     CHECK(m2.invested[0] == 10000 && m2.invested[1] == 10000);
     CHECK(m2.invested[2] == 20000 * 48 / 110);
+}
+
+TEST(map1_move_log_scrolls_a_line_at_a_time) {
+    // Window 4 holds 11 lines; the 12th step scrolls it by one, with no
+    // blank lines between (each entry is "\rSouth": break, then the word).
+    std::unique_ptr<Town> town;
+    Map1 m;
+    if (!play_map1("left*13", town, m)) return;
+    for (int row = 1; row <= 11; ++row) CHECK(town->text().row_text(row).substr(1, 4) == "West");
+}
+
+TEST(direction_toward_target) {
+    using formats::MapPosition;
+    const MapPosition at{0x0c20, 0xc020};
+    CHECK(direction_toward(at, at) == -1);
+    CHECK(direction_toward(at, {0x0c20, 0xc010}) == 0);  // north
+    CHECK(direction_toward(at, {0x0c30, 0xc010}) == 1);  // north-east
+    CHECK(direction_toward(at, {0x0c30, 0xc021}) == 2);  // east (nearer east than south-east)
+    CHECK(direction_toward(at, {0x0c22, 0xc030}) == 4);  // south
+    CHECK(direction_toward(at, {0x0c10, 0xc030}) == 5);  // south-west
+    CHECK(direction_toward(at, {0x0c10, 0xc010}) == 7);  // north-west
+}
+
+TEST(map1_townspeople_placed_as_the_original) {
+    // From the original's memory at the town start (tools/reference/state.py).
+    std::unique_ptr<Town> town;
+    Map1 m;
+    if (!play_map1("", town, m)) return;
+    const auto& w = town->townspeople().walkers();
+    CHECK((w[0].at == formats::MapPosition{0x0c20, 0xc02c}) && w[0].route == 0x63 && w[0].wait == 1);
+    CHECK((w[1].target == formats::MapPosition{0x0c45, 0xc014}) && w[1].route == 0x51);
+    CHECK((w[7].at == formats::MapPosition{0x0c11, 0xc00d}) && w[7].route == 0x46);
+    // After 135 passes (12 rounds) only the fifth, near the party, has moved
+    // (to 0c47,c016, heading south-east), as in the original.
+    std::unique_ptr<Town> town2;
+    Map1 m2;
+    if (!play_map1("idle:135", town2, m2)) return;
+    const auto& w2 = town2->townspeople().walkers();
+    CHECK((w2[4].at == formats::MapPosition{0x0c47, 0xc016}) && w2[4].heading == 3);
+    CHECK((w2[5].at == formats::MapPosition{0x0c2e, 0xc072}) && w2[5].wait == 0);
+    const auto figures = town2->figures();
+    CHECK(figures.size() == 2);  // Jason and the fifth person
+    CHECK(figures[1].sprite.index >= 0xfe + 0x10 && figures[1].sprite.index <= 0xfe + 0x1f);
 }

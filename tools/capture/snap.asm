@@ -12,6 +12,10 @@
 ;     mode 13h (MCGA 320x200x256): 64000 bytes from A000:0000;
 ;     text modes 0-3: 4000 bytes (80x25 characters and attributes) from B800:0000;
 ;     other modes: nothing (the header still records the mode).
+;   In mode 0Dh with the key script, the picture is followed by the memory:
+;   'MEMS' (4), the game's DS when it last asked DOS whether a key was
+;   waiting (2), then the
+;   first 640K of memory (segment 0 on), so tools can read the game's state.
 ; Usage: SNAP [ticks] [K]
 ;   ticks: capture every so many ticks (default 18, about one a second; 0
 ;   turns the timed captures off). At most 9999 files.
@@ -57,6 +61,8 @@ MAX_KEYS    equ 2048
 feeding     db 0
 blocking    db 0                    ; feed was called from int 16h
 polls       dw 0                    ; signed: an idle step makes it negative
+game_ds     dw 0                    ; DS of the game's last "key waiting?" call
+                                    ; (a blocking read may come with another DS)
 key_pos     dw 0
 key_count   dw 0
 end_name    db 'SNAPEND.TXT', 0
@@ -158,6 +164,7 @@ int21:
         cmp word [cs:polls], POLLS
         jl .chain
         mov word [cs:polls], 0
+        mov [cs:game_ds], ds
         call feed
 .chain:
         jmp far [cs:old21]
@@ -404,6 +411,26 @@ capture:
         dec dx
         mov al, [gc_index]
         out dx, al
+        cmp byte [feeding], 0
+        je .close
+        mov ax, [game_ds]
+        mov [mem_ds], ax
+        mov cx, 6
+        mov dx, mem_tag
+        mov ah, 40h
+        int 21h
+        xor si, si                  ; segment
+.mem:
+        push ds
+        mov ds, si
+        xor dx, dx
+        mov cx, 8000h
+        mov ah, 40h
+        int 21h
+        pop ds
+        add si, 800h
+        cmp si, 0a000h
+        jb .mem
         jmp .close
 .mcga:
         push ds
@@ -421,6 +448,8 @@ capture:
 .done:
         ret
 
+mem_tag     db 'MEMS'
+mem_ds      dw 0
 gc_index    db 0
 gc_map      db 0
 gc_mode     db 0

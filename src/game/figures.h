@@ -20,12 +20,14 @@ inline AssetId sprite(int slot) { return {"MECHSHAP.CMP:sprite", std::uint16_t(s
 // Each figure's walking animation: a little script per direction that
 // gives the next frame on every key (DGROUP:01f6 holds where each figure is
 // in its script, 0396c the direction it last walked, 409a the frame).
-// Slots 0-3 are the 'Mechs, 4-11 the party's eight characters.
+// Figures 0-3 are the 'Mechs, 4-11 the party's eight characters, 12-15
+// more 'Mechs and 16-23 the map's eight townspeople.
 class FigureAnimation {
 public:
     // BTECH.EXE 1000:5020..50aa (part of the new-game setup): every figure
     // starts on the walking-south script without having stepped through it,
-    // frame 0 for the 'Mechs and 0x10 for the characters.
+    // frame 0 for the 'Mechs and 0x10 for the characters (and, set by the
+    // map load 1000:2da8, for the townspeople).
     FigureAnimation();
 
     // BTECH.EXE 1000:231d (Ghidra FUN_1000_231d)
@@ -35,17 +37,26 @@ public:
     // ('Mechs too, when there are any: not rebuilt yet.)
     void key(int key);
 
+    // A person walking `direction` (0-7, N first, clockwise): starts that
+    // direction's character script over unless it is the one it is on, then
+    // takes the next frame (1000:24c2 does this for the townspeople).
+    void walk(int f, int direction);
+
     // The frame offset of character `member` (0-7): added to its sprite base.
     int character_frame(int member) const { return frame_[4 + member]; }
+    // The frame offset of figure `f`.
+    int frame(int f) const { return frame_[std::size_t(f)]; }
+
+    static constexpr int kFigures = 24;
 
 private:
     // BTECH.EXE 1000:1732 (Ghidra FUN_1000_1732)
     // Runs figure `f`'s script to its next frame.
     int step(int f);
 
-    std::array<int, 12> pos_{};        // offset into the scripts (37e8:0000 + pos)
-    std::array<int, 12> direction_{};  // -1: none yet
-    std::array<int, 12> frame_{};
+    std::array<int, kFigures> pos_{};        // offset into the scripts (37e8:0000 + pos)
+    std::array<int, kFigures> direction_{};  // -1: none yet
+    std::array<int, kFigures> frame_{};
 };
 
 struct Figure {
