@@ -23,14 +23,6 @@ struct FightFigures {
     std::array<bool, kCount> computer{};        // F:3994: the computer moves it
 };
 
-// A character record's bytes the fight reads (F:c614 + 0x11 i): byte 0, the
-// name number (ff: no character), and byte 0x0c, where the character is: a
-// 'Mech record 0-7, or 8 and above on foot.
-struct CharacterPlace {
-    std::uint8_t name = 0xff;
-    std::uint8_t mech = 0;
-};
-
 // A box drawn by XORing a colour into every pixel of a rectangle of text
 // cells on the screen (287f:2b87 on the visible page): the orders screen's
 // mark on the selected unit. The renderer flips the colours of whatever is

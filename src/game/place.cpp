@@ -204,7 +204,7 @@ bool Town::run_script(int file, KeySource& keys) {
         case formats::Op::IfSkill: {
             bool any = false;
             for (std::size_t i = 0; i < 8; ++i)
-                if (party_.present[i] && stats_[i].skills.at(std::size_t(in.bytes[0])) >= sbyte(pc + 2)) any = true;
+                if (party_.present[i] && in.bytes[0] < character::kSkillCount && characters_[i][std::size_t(character::kSkills + in.bytes[0])] >= sbyte(pc + 2)) any = true;
             jump_if(any);
             break;
         }
@@ -262,14 +262,14 @@ bool Town::special(int n, KeySource& keys) {
         // 24d3:0231: the three courses' prices, 125 x Jason's skill + 75,
         // right-aligned to column 39 on rows 5-7, light green.
         for (int i = 0; i < 3; ++i) {
-            const std::string price = std::to_string(125 * stats_[0].skills[std::size_t(i)] + 75);
+            const std::string price = std::to_string(125 * characters_[0][std::size_t(character::kSkills + i)] + 75);
             text_.put_text(price, 39 - static_cast<int>(price.size()), 5 + i, 10, 0);
         }
         return true;
     case 5: {
         // 24d3:02a5: Jason takes the course in flag 08.
         const int course = static_cast<std::int8_t>(flags_[flag::kCourse]);
-        const int level = stats_[0].skills.at(std::size_t(course));
+        const int level = characters_[0].at(std::size_t(character::kSkills + course));
         print_id("course.transcript");
         print_id("course.level." + std::to_string(level));
         print_id("course.subject." + std::to_string(course));
@@ -281,7 +281,7 @@ bool Town::special(int n, KeySource& keys) {
         const int price = 125 * level + 75;
         if (static_cast<std::uint32_t>(money_.cbills) >= static_cast<std::uint32_t>(price)) {
             flags_[flag::kEnrolled] = 1;
-            ++stats_[0].skills[std::size_t(course)];
+            ++characters_[0][std::size_t(character::kSkills + course)];
             money_.cbills -= price;
             draw_cbills();  // 24d3:1961, the end of several cases
         } else {

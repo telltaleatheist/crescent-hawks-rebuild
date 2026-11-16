@@ -128,7 +128,16 @@ void print_state(const chr::game::Town& town) {
     std::printf("state flags ");
     for (const auto f : town.flags()) std::printf("%02x", f);
     std::printf("\nstate skills ");
-    for (const auto k : town.stats()[0].skills) std::printf("%02x", k);
+    for (int k = 0; k < chr::game::character::kSkillCount; ++k)
+        std::printf("%02x", town.characters()[0][std::size_t(chr::game::character::kSkills + k)]);
+    for (std::size_t c = 0; c < town.characters().size(); ++c) {
+        std::printf("\nstate character %zu ", c);
+        for (const auto b : town.characters()[c]) std::printf("%02x", b);
+    }
+    for (std::size_t m = 0; m < town.mechs().size(); ++m) {
+        std::printf("\nstate mech %zu ", m);
+        for (const auto b : town.mechs()[m]) std::printf("%02x", b);
+    }
     std::printf("\nstate menus");
     for (const auto last : town.menu_last()) std::printf(" %d", last);
     std::printf("\n");

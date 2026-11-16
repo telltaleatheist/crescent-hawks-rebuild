@@ -152,11 +152,12 @@ std::vector<StatBar> Town::bars() const {
     int line = 0;
     for (int i = 0; i < 8 && line < 4; ++i) {
         if (!party_.present[i]) continue;
-        const auto& s = stats_[i];
+        const auto& c = characters_[std::size_t(i)];
         const int row = 14 + 2 * line;
-        bars.push_back({9, row, s.b, s.b - std::max(s.byte15 / 10, 1)});
-        bars.push_back({10, row, s.d, 0});
-        bars.push_back({11, row, s.c, 0});
+        const int b = c[character::kB];
+        bars.push_back({9, row, b, b - std::max(c[character::kHitPoints] / 10, 1)});
+        bars.push_back({10, row, c[character::kD], 0});
+        bars.push_back({11, row, c[character::kC], 0});
         ++line;
     }
     return bars;

@@ -4,9 +4,10 @@
     state.py CAPTURE.bin
 
 Prints the same lines as `chr --state` (random numbers, C-Bills, the
-townspeople, the party's place, the script flags, Jason's skills and the
-menus' remembered items), from a capture with memory (tools/capture/snap.asm). The
-addresses are docs/townspeople.md's.
+townspeople, the party's place, the script flags, Jason's skills, the
+character and 'Mech records and the menus' remembered items), from a
+capture with memory (tools/capture/snap.asm). The addresses are
+docs/townspeople.md's and docs/formats/characters.md's.
 """
 import struct
 import sys
@@ -32,6 +33,10 @@ def original_state(path):
     lines.append("state party %04x %04x" % (m.word(m.word(m.ds, 0x538c), 0xa44b), m.word(m.word(m.ds, 0x538e), 0xa44d)))
     lines.append("state flags " + m.read(far, 0xd30c, 0x64).hex())          # docs/scripts.md
     lines.append("state skills " + m.read(far, 0xc614 + 4, 7).hex())       # Jason's record, bytes 4-10
+    for c in range(16):                                                     # the character records
+        lines.append("state character %d %s" % (c, m.read(far, 0xc614 + 0x11 * c, 0x11).hex()))
+    for k in range(8):                                                      # the 'Mech records
+        lines.append("state mech %d %s" % (k, m.read(far, 0xc724 + 0x7d * k, 0x7d).hex()))
     menus = m.word(m.ds, 0x56de)                                            # the menu table, 385b:0092
     lines.append("state menus " + " ".join("%d" % m.word(menus, 0x98 + 16 * i) for i in range(41)))
     return lines

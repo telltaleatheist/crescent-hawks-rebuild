@@ -43,7 +43,9 @@ waiting on. In the EGA mode a capture also holds the first 640K of memory and th
 segment (DS when it last asked DOS whether a key was waiting), so the game's state can be read
 back: `tools/reference/memory.py CAPTURE ds:4fc0:3 "[538a]:d370:4"` prints bytes, where
 `[538a]` is the segment whose number is the word at DG:538a, as the game reaches its far data.
-`state.py CAPTURE` prints the state the rig compares, in the form `chr --state` prints it. When the script ends SNAP writes SNAPEND.TXT and `run.py` kills DOSBox-X. Nothing
+`state.py CAPTURE` prints the state the rig compares, in the form `chr --state` prints it: the
+random numbers, C-Bills, the townspeople, the party's place, the flags, Jason's skills, the 16
+character records and 8 'Mech records byte for byte, and the menus' remembered items. When the script ends SNAP writes SNAPEND.TXT and `run.py` kills DOSBox-X. Nothing
 depends on the clock or on how fast the host is: two runs of the same script give byte-identical
 captures (checked for the start-up, the town and the Citadel question).
 

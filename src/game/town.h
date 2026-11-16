@@ -25,6 +25,7 @@
 #include "game/money.h"
 #include "game/movement.h"
 #include "game/random.h"
+#include "game/records.h"
 #include "game/townspeople.h"
 #include "game/text.h"
 #include "game/text_provider.h"
@@ -70,17 +71,6 @@ private:
 // town's main loop takes a set: item; a question or the start-up refuses one.
 // Throws std::invalid_argument naming the bad token.
 std::deque<ScriptItem> parse_key_script(const std::string& script);
-
-// A character's panel numbers: the three bars under the heading "BDC"
-// (bytes 1, 2 and 3 of its 17-byte record at F:c614) and byte 15, which
-// the first bar's warning part is measured from (docs/town_loop.md).
-struct PanelStats {
-    int b = 0, d = 0, c = 0;
-    int byte15 = 0;
-    // Bytes 4-10: the seven skills (0-4). The combat class (docs/scripts.md,
-    // special 05) teaches the first three.
-    std::array<int, 7> skills{};
-};
 
 // A place's picture in the upper left box (1000:48b7): O<number>.ANM.
 struct PlacePicture {
@@ -166,7 +156,7 @@ public:
     // A test aid (--set-flag): set flag `f` to `v` when the town starts.
     void set_flag_when_town_starts(int f, int v) { pending_flags_.emplace_back(f, v); }
     const std::array<int, formats::kMenuCount>& menu_last() const { return menu_last_; }
-    const std::array<PanelStats, 8>& stats() const { return stats_; }
+    const std::array<CharacterRecord, 16>& characters() const { return characters_; }
 
     // Shows the training center's quiz (--show-quiz, off by default): the
     // scene from the player's files, with no check (game/training_quiz.h).
@@ -257,8 +247,6 @@ private:
     const TextProvider& texts_;
     const formats::Tables& tables_;
     Party party_;
-    // BTECH.EXE 1000:4edf: Jason starts with 8, 9, 7 and 80.
-    std::array<PanelStats, 8> stats_{{{8, 9, 7, 80}}};
     FigureAnimation animation_{tables_};
     TextScreen text_{tables_};
     Random random_ = Random::at_town_start();
@@ -297,14 +285,8 @@ private:
         for (auto& r : m) r[0] = 0xff;
         return m;
     }();
-    // F:c614: Jason (name 0) on foot; records 1-7 empty, 8-15 name 0.
-    std::array<CharacterPlace, 16> characters_ = [] {
-        std::array<CharacterPlace, 16> c{};
-        c[0] = {0, 8};
-        for (int i = 1; i < 8; ++i) c[std::size_t(i)] = {0xff, 0};
-        for (int i = 8; i < 16; ++i) c[std::size_t(i)] = {0, 0};
-        return c;
-    }();
+    // F:c614: the sixteen character records.
+    std::array<CharacterRecord, 16> characters_ = new_game_characters();
     FightFigures figs_;
     int messages_ = 2;       // DG:2e38: combat messages (0 none, 1 brief, 2 verbose)
     bool graphics_ = true;   // DG:2e3a: see combat graphics

@@ -47,7 +47,7 @@ int mech_sink(int tile, int quarters) {
 
 bool Town::on_foot(int character) const {
     const auto& c = characters_[std::size_t(character)];
-    return c.name != 0xff && c.mech >= 8;
+    return c[character::kName] != character::kEmpty && c[character::kMech] >= character::kOnFoot;
 }
 
 // BTECH.EXE 1000:051b (Ghidra FUN_1000_051b), as drawn during special 1's
@@ -137,7 +137,7 @@ bool Town::walk_in(KeySource& keys) {
     const int choice = flags_[flag::kTrainingMech];
     const int t = choice == 0 ? 0 : choice == 1 ? 1 : 4;
     figs_.sprite_base[0] = choice == 0 ? 0 : 0x92;
-    characters_[0].mech = 0;
+    characters_[0][character::kMech] = 0;
     mechs_[0] = rules_->mechs[std::size_t(t)].record;
     mechs_[0][kPilot] = 0;
     show_picture(0, 0);  // 1000:48b7(0, 0); window 4 stays selected
@@ -188,7 +188,7 @@ void Town::place_mission(int mechs, int people) {
     // emptied.
     people_.leave_for_fight();
     for (int m = 4; m < 8; ++m) mechs_[std::size_t(m)][0] = 0xff;
-    for (int c = 8; c < 16; ++c) characters_[std::size_t(c)].name = 0xff;
+    for (int c = 8; c < 16; ++c) characters_[std::size_t(c)][character::kName] = character::kEmpty;
     for (int f = 0; f < FightFigures::kCount; ++f) {
         figs_.destroyed[std::size_t(f)] = false;
         figs_.active[std::size_t(f)] = 0;
@@ -208,8 +208,8 @@ void Town::place_mission(int mechs, int people) {
     int placed = 0;
     for (int i = 0; i < mechs && i < 4; ++i, ++placed) {
         auto& pilot = characters_[std::size_t(8 + i)];
-        pilot.name = 0;
-        pilot.mech = std::uint8_t(4 + i);
+        pilot[character::kName] = 0;
+        pilot[character::kMech] = std::uint8_t(4 + i);
         auto& rec = mechs_[std::size_t(4 + i)];
         rec = rules_->mechs[0].record;
         for (int b = kArmourFirst; b <= kArmourLast; ++b)
@@ -304,7 +304,7 @@ void Town::print_unit_heading(int fig) {
     text_.set_fg(15);
     const auto& rec = mechs_[std::size_t(fig)];
     const auto& pilot = characters_[std::size_t(rec[kPilot])];
-    print_id("character." + std::to_string(pilot.name));
+    print_id("character." + std::to_string(pilot[character::kName]));
     print_id("unit.possessive");
     // The 'Mech's name: the text of the template the record was made from.
     const auto ids = formats::mech_template_ids();
