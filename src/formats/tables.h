@@ -97,6 +97,20 @@ struct Tables {
     std::array<int, 8> location_slot_first{};       // DG:318a: the location's first item byte
     std::array<int, 8> location_slot_count{};       // DG:3192: how many
 
+    // The shot with combat graphics (docs/combat.md 3.14).
+    static constexpr int kPoseScriptBase = 0x3ef0;
+    std::array<int, 0x108> pose_scripts{};   // DG:3ef0: the fire poses', kicks' and missiles' scripts
+    std::array<int, 0x50> mech_poses{};      // DG:2d58: far pointers (offset, segment) by direction: fire, fire
+                                             // (other sprites), kick, kick (other sprites), missile
+    std::array<int, 0xf0> person_poses{};    // DG:3ff8: far pointers, 8 directions per weapon 0-0x0e
+    static constexpr int kReactionScript = 0x2e3c, kExplosionScript = 0x41d8;
+    std::array<int, 6> reaction_script{};    // DG:2e3c: the target's reaction to a hit
+    std::array<int, 4> explosion_script{};   // DG:41d8
+    std::array<int, 4> person_quarters{};    // DG:0372: a person's cell's tile bits, by parity (1000:0e4b)
+    std::array<int, 0x30> muzzle{};          // DG:2d28: a line shot's start, x then y by direction (8 each):
+                                             // a 'Mech, a 'Mech with the other sprites, a person
+    std::array<int, 0x20> line_steps{};      // DG:41dc: by octant, the straight step's x and y, the diagonal's
+
     bool operator==(const Tables&) const = default;
 };
 

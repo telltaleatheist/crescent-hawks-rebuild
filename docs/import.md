@@ -44,7 +44,7 @@ an older data folder without anyone remembering to bump the version.
 
 The versions: 2 the direction names; 3 "C-Bills:"; 4 the .BLD texts; 5 the class and talk texts;
 6 the start-up's; 7 the rule tables, the 'Mech and weapon names, the combat texts; 8 the table
-hash in `import.json`; 9 `rules/quiz.json`; 10 `tables.json`; 11 the round's tables in it.
+hash in `import.json`; 9 `rules/quiz.json`; 10 `tables.json`; 11 the round's tables in it; 12 the shot's poses and scripts.
 
 ## How it reads the program
 

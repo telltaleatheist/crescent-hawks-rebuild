@@ -76,6 +76,14 @@ const std::vector<Flat>& flat_tables() {
         {"arm_actuator_keep", 0x46db, 0x3182, Element::U8, [](Tables& t) { return all(t.arm_actuator_keep); }},
         {"location_slot_first", 0x46db, 0x318a, Element::U8, [](Tables& t) { return all(t.location_slot_first); }},
         {"location_slot_count", 0x46db, 0x3192, Element::U8, [](Tables& t) { return all(t.location_slot_count); }},
+        {"pose_scripts", 0x46db, 0x3ef0, Element::U8, [](Tables& t) { return all(t.pose_scripts); }},
+        {"mech_poses", 0x46db, 0x2d58, Element::U16, [](Tables& t) { return all(t.mech_poses); }},
+        {"person_poses", 0x46db, 0x3ff8, Element::U16, [](Tables& t) { return all(t.person_poses); }},
+        {"reaction_script", 0x46db, 0x2e3c, Element::U8, [](Tables& t) { return all(t.reaction_script); }},
+        {"explosion_script", 0x46db, 0x41d8, Element::U8, [](Tables& t) { return all(t.explosion_script); }},
+        {"person_quarters", 0x46db, 0x0372, Element::U16, [](Tables& t) { return all(t.person_quarters); }},
+        {"muzzle", 0x46db, 0x2d28, Element::S8, [](Tables& t) { return all(t.muzzle); }},
+        {"line_steps", 0x46db, 0x41dc, Element::S8, [](Tables& t) { return all(t.line_steps); }},
     };
     return kFlat;
 }

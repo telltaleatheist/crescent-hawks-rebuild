@@ -55,6 +55,14 @@ word); anything else is refused, and the game asks for a new import.
 | `los_area_x`, `_y` | DG:32aa/32ba | 8 words each | added to x or y when that step crosses into another area |
 | `los_row` | DG:32ca | 8 words | how far a y step moves through the cell window |
 | `step_direction` | DG:2ecc | 11 bytes | by (dy + 1) x 4 + dx + 1, the direction of a path step (22e8:000c) |
+| `pose_scripts` | DG:3ef0 | 0x108 bytes | the scripts of the shot's poses: a 'Mech firing and kicking (two sprite sets), a person firing, the missile (22e8:12c7) |
+| `mech_poses` | DG:2d58 | 40 far pointers | into them by direction: fire, fire with the other sprites, kick, kick with the other sprites, missile |
+| `person_poses` | DG:3ff8 | 120 far pointers | a person's fire pose, 8 directions for each weapon 0-0x0e |
+| `reaction_script` | DG:2e3c | 6 bytes | a 'Mech or person hit: its reaction (it loops) |
+| `explosion_script` | DG:41d8 | 4 bytes | the explosion over a target hit |
+| `muzzle` | DG:2d28 | 48 bytes | a line shot's start by direction, x then y: a 'Mech, a 'Mech with the other sprite set, a person |
+| `line_steps` | DG:41dc | 32 bytes | by octant (1e31:1ea2): the straight step's x and y, then the diagonal step's |
+| `person_quarters` | DG:0372 | 4 words | by parity, the tile bits of a person's cell (1000:0e4b) |
 | `path_quarters` | DG:3b12 | 4 bytes | by the half-cell's parity, the tile bits that make a path step cost more (203b:193b) |
 | `leg_actuator_bit`, `_keep` | DG:316a/3172 | 8 bytes each | by a d6, a leg actuator a critical hit takes out, and the mask that clears it (1e31:11ab) |
 | `arm_actuator_bit`, `_keep` | DG:317a/3182 | 8 bytes each | the same for an arm |

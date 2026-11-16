@@ -87,6 +87,17 @@ constexpr std::array kDos103 = {
     ExeSpan{ExeSpan::Kind::Table, "tables.arm_actuator_keep", 0x46db, 0x3182, 8, "25a134f2663c725d"},
     ExeSpan{ExeSpan::Kind::Table, "tables.location_slot_first", 0x46db, 0x318a, 8, "9fbd883337f64bcc"},
     ExeSpan{ExeSpan::Kind::Table, "tables.location_slot_count", 0x46db, 0x3192, 8, "79569a0bc1d7d49c"},
+    // 22e8:12c7, the shot with combat graphics: the poses' scripts and their
+    // far pointers by direction, the hit reaction, the explosion; 1000:0e4b's
+    // quarter bits for a person's cell:
+    ExeSpan{ExeSpan::Kind::Table, "tables.pose_scripts", 0x46db, 0x3ef0, 0x108, "e3468f75cda6a54c"},
+    ExeSpan{ExeSpan::Kind::Table, "tables.mech_poses", 0x46db, 0x2d58, 0xa0, "f103ff439e3bcf16"},
+    ExeSpan{ExeSpan::Kind::Table, "tables.person_poses", 0x46db, 0x3ff8, 0x1e0, "d98f3f8f3c91bd01"},
+    ExeSpan{ExeSpan::Kind::Table, "tables.reaction_script", 0x46db, 0x2e3c, 6, "4bced400051d4aa7"},
+    ExeSpan{ExeSpan::Kind::Table, "tables.explosion_script", 0x46db, 0x41d8, 4, "c9772bef4d4be38f"},
+    ExeSpan{ExeSpan::Kind::Table, "tables.person_quarters", 0x46db, 0x0372, 8, "7a1284cf4c84ce54"},
+    ExeSpan{ExeSpan::Kind::Table, "tables.muzzle", 0x46db, 0x2d28, 0x30, "e5f4d337ac08ca39"},
+    ExeSpan{ExeSpan::Kind::Table, "tables.line_steps", 0x46db, 0x41dc, 0x20, "b5d668490f6227c0"},
     ExeSpan{ExeSpan::Kind::Table, "rules.quiz_answers", 0x46db, 0x28ec, 20, "3fe5abf0257c084c"},
     // Text the game shows. The names are the text IDs (docs/text.md): a
     // text provider hands them out, and an override file can replace them.
