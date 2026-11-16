@@ -4,7 +4,10 @@
 // the ones the importer wrote from the player's BTECH.EXE
 // (text/english.json, formats/import.h) and the names in the map files
 // (MapText). An override file of the same form, layered on top, replaces any
-// ID, for a translation or a rewrite.
+// ID, for a translation or a rewrite. Under them all is the repo's default
+// interface text (kInterfaceTextFile): the menus, prompts, labels and rule
+// messages only, never story, dialogue, names or descriptions (docs/text.md,
+// "Interface text and imported text").
 //
 // A text is the program's own bytes: it may hold the printer's control codes
 // (docs/text.md), so an override can use them too, written as \u00NN.
@@ -70,5 +73,9 @@ private:
 std::string lookup(const TextProvider& provider, std::string_view id);
 
 std::string place_text_id(int map_number, int place);
+
+// The repo's default interface texts, relative to the program's folder (the
+// build copies data/ there).
+inline constexpr const char* kInterfaceTextFile = "data/text/interface.json";
 
 }  // namespace chr::game

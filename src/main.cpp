@@ -301,6 +301,21 @@ int main(int argc, char** argv) {
             std::fprintf(stderr, "chr: %s\n", e.what());
             status = 1;
         }
+        // The repo's default interface texts (game/text_provider.h), next to
+        // the program, under the import.
+        chr::game::TextTable interface_default;
+        if (const char* base = SDL_GetBasePath()) {
+            const auto path = std::filesystem::path(base) / chr::game::kInterfaceTextFile;
+            std::error_code ec;
+            if (std::filesystem::exists(path, ec)) {
+                try {
+                    interface_default = chr::game::TextTable::load(path);
+                } catch (const std::exception& e) {
+                    std::fprintf(stderr, "chr: %s: %s\n", path.string().c_str(), e.what());
+                    status = 1;
+                }
+            }
+        }
         // The rule tables, for a fight and the quiz scene.
         std::optional<chr::formats::Rules> rules;
         try {
@@ -308,7 +323,7 @@ int main(int argc, char** argv) {
         } catch (const std::exception&) {
         }
         const chr::game::MapText map_text(map, options.map);
-        const chr::game::LayeredText texts({&overrides, &imported, &map_text});
+        const chr::game::LayeredText texts({&overrides, &imported, &map_text, &interface_default});
         auto replay = [&]() -> bool {
             try {
                 town = std::make_unique<chr::game::Town>(map, options.map, start, texts, tables);

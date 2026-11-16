@@ -72,6 +72,7 @@ add_executable(chrtests
   tests/test_quiz.cpp
   tests/test_rules.cpp
   tests/test_tables.cpp
+  tests/test_interface_text.cpp
   tests/test_cmp.cpp
   tests/test_maps.cpp
   tests/test_text.cpp
@@ -79,7 +80,8 @@ add_executable(chrtests
 )
 target_link_libraries(chrtests PRIVATE chrgame)
 target_compile_definitions(chrtests PRIVATE CHR_DEFAULT_GAME_DIR="${CHR_GAME_DIR}"
-  CHR_TEST_SCRATCH="${CMAKE_BINARY_DIR}/test-scratch")
+  CHR_TEST_SCRATCH="${CMAKE_BINARY_DIR}/test-scratch"
+  CHR_INTERFACE_TEXT="${CMAKE_SOURCE_DIR}/data/text/interface.json")
 add_test(NAME chrtests COMMAND chrtests)
 
 # The platform layer: SDL3 window, rendering and the asset provider.
@@ -98,6 +100,10 @@ if(SDL3_FOUND)
 
   add_executable(chr src/main.cpp)
   target_link_libraries(chr PRIVATE chrplatform)
+  # The repo's default interface texts, next to the program (docs/text.md).
+  add_custom_command(TARGET chr POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_SOURCE_DIR}/data/text/interface.json"
+            "$<TARGET_FILE_DIR:chr>/data/text/interface.json")
   target_compile_definitions(chr PRIVATE CHR_DEFAULT_GAME_DIR="${CHR_GAME_DIR}")
   # The program itself, walking known routes on map 1 with no window (SDL's
   # dummy video driver). They need the game files.

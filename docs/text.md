@@ -8,36 +8,20 @@ makeover can replace the font and the frames.
 
 ## Text windows
 
-A table of 16-byte records at 385b:0000 describes the windows: x, y, width,
-height (in cells), foreground and background colour, and the cursor's column and row.
-`2656:0281` selects a window (keeping the old one's colours and cursor), `2656:0388` clears it.
-
-| # | x | y | w | h | colours | used for |
-|---|---|---|---|---|---|---|
-| 0 | 0 | 0 | 40 | 25 | 15 on 0 | whole screen |
-| 1 | 14 | 15 | 25 | 9 | 15 on 0 | |
-| 2 | 1 | 1 | 38 | 23 | 15 on 0 | |
-| 3 | 1 | 13 | 11 | 11 | 15 on 0 | panel, party box |
-| 4 | 1 | 1 | 11 | 11 | 15 on 0 | panel, upper box |
-| 5 | 10 | 1 | 29 | 16 | 15 on 0 | |
-| 6 | 14 | 1 | 25 | 23 | 15 on 0 | new-game text |
-| 7 | 14 | 10 | 25 | 5 | 15 on 0 | message box over the map |
-| 8 | 0 | 0 | 16 | 25 | 15 on 0 | |
-| 9 | 1 | 2 | 38 | 20 | 0 on 15, column 14 | |
-| 10 | 0 | 0 | 25 | 8 | 0 on 15, column 14 | |
+A table of 11 records of 16 bytes at 385b:0000 describes the windows: x, y, width and height (in
+cells), foreground and background colour, and the cursor's column and row. The values are
+imported into `tables.json` (formats/tables.md). `2656:0281` selects a window (keeping the old
+one's colours and cursor), `2656:0388` clears it. The windows the rebuild uses so far: 0 is the
+whole screen, 3 and 4 are the panel's party box and upper box, 6 holds the new-game text, 7 is
+the message box over the map, and 8 is the quiz's column of part names.
 
 ## Frames (2656:0004)
 
-A frame goes one cell outside the current window. Each style is a list of frame pieces: the
-four corners (top-left, top-right, bottom-left, bottom-right), then the top, left, right and
-bottom edges, each a run of pieces ended by 0xff that repeats along the edge (`2656:01e7`).
-The pieces are the 8 cells the start-up cuts from the top-left of BTBORDER.CMP (docs/formats/font.md).
-
-| Style | Corners | Top | Left | Right | Bottom |
-|---|---|---|---|---|---|
-| 0, 1, 2 | 0 1 6 7 | 4 | 5 | 5 | 4 |
-| 3 | 2 3 6 7 | 4 | 5 | 5 | 4 |
-| 4 | 0 1 2 3 | 4 | 5 | 5 | 4 |
+A frame goes one cell outside the current window. Each style names one of three piece tables
+(DG:4fa4); a piece table lists the four corners (top-left, top-right, bottom-left, bottom-right),
+then the top, left, right and bottom edges, each a run of pieces ended by 0xff that repeats along
+the edge (`2656:01e7`). The pieces are the 8 cells the start-up cuts from the top-left of
+BTBORDER.CMP (docs/formats/font.md). The tables are imported into `tables.json`.
 
 The panel (`1000:4cac`) frames window 3 with style 3 and window 4 with style 4, so the two boxes
 share the middle bar: 13 cells, 104 pixels wide, beside the 216-pixel map.
@@ -109,15 +93,16 @@ table in `src/formats/exe_data.cpp` gives each one's address:
 | unit.*, after.* | 15ab | the unit panel; repairs, scrap, salvage and loot after a fight |
 | mission.* | 17dc:0629 | the training missions' messages |
 
-The question "Will you enter the Citadel?" is `walk.enter_question` + `map1.place.1` +
+The question for an entrance is `walk.enter_question` + `map1.place.1` +
 `walk.enter_question_end`. The yes/no keys are still Y and N whatever the language (to be made
 data with the input layer).
 
-## Interface text and imported text (proposal, for review)
+## Interface text and imported text
 
-Owen's rule (2026-11-15): generic interface text may ship in a default text file in the repo,
-layered under the import. Story, dialogue, descriptions and every .BLD text stay imported only.
-This list says which IDs go where. Nothing has moved yet.
+Owen's rule (2026-11-15): generic interface text ships in a default text file in the repo,
+`data/text/interface.json`, layered under the import. Story, dialogue, descriptions and every
+.BLD text stay imported only. This list says which IDs go where. A new ID is imported only unless
+it plainly fits the interface rule; when in doubt, imported.
 
 **The rule used.** *Interface* covers menus, prompts and questions, labels and headings, the
 small pieces a message is built from (punctuation, line breaks, "uses a", "on"), and messages
@@ -125,7 +110,7 @@ about the controls or a rule's state (out of ammo, overheated, can't kick). *Imp
 covers names (people, places, 'Mechs, weapons, armour, 'Mech parts), story and dialogue,
 narration of what happened, descriptions and flavour, and the original's own notices.
 
-### Interface: may ship in the repo default (149 IDs)
+### Interface: in the repo default (149 IDs)
 
 | IDs | Count | What |
 |---|---|---|
@@ -162,26 +147,22 @@ narration of what happened, descriptions and flavour, and the original's own not
 | condition.0-10 | 11 | a person's condition, as flavour descriptions |
 | mission.* | 10 | the training missions' story |
 
-### Borderline: your call
+### The cases decided by hand
 
-- **location.0-10**: rule terms (the record sheet's hit locations), but BattleTech's own terms.
-  Proposed: interface.
+- **location.0-10** are rule terms, the record sheet's hit locations: interface.
+- **destroyed.mech, destroyed.eject, shot.killed** are combat feedback: interface.
+- **talk.nobody, intro.load_old_game** are about the game's own controls: interface.
 - **fight.not_evaded, fight.no_escape, fight.eluded, fight.eluded_2, fight.some_fled,
-  fight.all_fled, fight.return**: plain outcome messages, but they narrate. Proposed: imported.
-- **destroyed.mech, destroyed.eject, shot.killed**: combat feedback with a little narration.
-  Proposed: interface.
-- **talk.nobody, intro.load_old_game**: whole sentences, but about the game's own controls.
-  Proposed: interface.
+  fight.all_fled, fight.return** narrate how a fight ended: imported only.
 
-### How it would work (once the list is agreed)
+### How it works
 
-- The repo gains `data/text/interface.json` (id, address, text), holding exactly the
-  interface IDs above, in the original's words as the import writes them. A translation or a
-  makeover can start from it without the player's files.
-- Layers: the override files, then the import, then the repo default. The import still wins
-  wherever it has an ID.
-- Tests: every ID in the default file is on the interface list (a hand-kept list in the test,
-  so a story text can't slip in), and, with the game folder, each text equals the imported one.
-- The rest of this document quotes only interface texts. The window and frame tables above
-  are values now imported into `tables.json` (formats/tables.md); the proposal is to replace them
-  with the layout description alone.
+- `data/text/interface.json` (id, address, text) holds exactly the interface IDs above, in the
+  original's words as the import writes them. The build copies it next to the program
+  (`game::kInterfaceTextFile`).
+- Layers, first found wins: the override files, the import, the map files' names, then the repo
+  default. The import still wins wherever it has an ID.
+- Tests (tests/test_interface_text.cpp): the file holds the IDs on a hand-kept list in the test
+  and nothing else, so a story text can't slip in; with the game folder, each text equals the
+  imported one. Every ID added to the file goes on that list.
+- This document quotes only interface texts.
