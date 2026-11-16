@@ -697,6 +697,20 @@ CHAIN_CASES = [dict(case, compare=False) for case in SPOT_CASES] + [
     {"name": "chain_back_question", "keys": "pgdn down*15 pgdn right down pgdn right down*85 pgdn right*23 up*2 end left*2 up right*2 up*2 pgdn*2 down home up*2", "match": SCREEN},
     {"name": "chain_back_greeting", "keys": "y orig:enter*4", "match": SCREEN},
     {"name": "chain_briefing", "keys": "y", "match": SCREEN},
+    # The third mission in the Wasp (the menu's bar is where mission 1 left
+    # it), the computer fighting, graphics off: as in `mission`.
+    {"name": "chain_mech_menu", "keys": "enter", "match": SCREEN},
+    {"name": "chain_computer_question", "keys": "enter", "match": SCREEN},
+    {"name": "chain_messages", "keys": "y", "match": SCREEN},
+    {"name": "chain_graphics", "keys": "up*2 enter", "match": SCREEN},
+    {"name": "chain_round_1", "keys": "arm:1 n", "match": SCREEN, "fight": True},
+] + [{"name": "chain_round_%d" % n, "keys": "idle:1", "match": SCREEN, "fight": True} for n in range(2, 17)] + [
+    {"name": "chain_end", "keys": "idle:99", "match": SCREEN, "fight": True},
+    # The walk back to the door (found with chr), the verdict and the town.
+    {"name": "chain_walk", "keys": "enter home*8", "match": SCREEN},
+    {"name": "chain_over", "keys": "home*7 left*30", "match": SCREEN},
+    {"name": "chain_in_town", "keys": "enter", "match": SCREEN},
+    {"name": "chain_walk_on", "keys": "down", "match": SCREEN},
 ]
 
 SEQUENCES = [("town", CASES, FULL_CASES, []), ("training", TRAINING_CASES, [], []),

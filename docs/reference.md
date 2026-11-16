@@ -177,7 +177,7 @@ The window it compares is the one chr holds, which after the spot's cell is put 
 tile 0x50 until the next step, as the original's does. `chain` (long only) goes on from `spot`,
 still without a poke: flag 14 runs down again, the third mission's first try (flag 13 is 0: the
 commandant and special 3), the Barracks and back as in `rest` (one step east first, as the
-handback leaves the party a cell west of `rest`'s), the quiz again and the briefing. `fourth` (long only) is mission 4 (flag 00
+handback leaves the party a cell west of `rest`'s), the quiz again and the briefing, then the third mission in the Wasp with the computer fighting: the shell falls in round 16, the walk back, the verdict (passed) and the town. `fourth` (long only) is mission 4 (flag 00
 poked to 4): no computer question (F:0090), the Locust flees at the first orders menu, the walk
 back, the verdict and the town. `raid` (long only) is mission 7 (flag 00 poked to 7), the
 Kurita raid: the computer question (only mission 4 skips it), then Begin Fight round after round
