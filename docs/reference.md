@@ -211,7 +211,14 @@ letter, armour 0x20 in every location, structure 0x10, working left actuators; c
 0x0c = 0). Those are our own test values, not the template's: they only make a working 'Mech for
 the rebuild to be checked against. With a 'Mech in the party the encounter draws change; he walks
 west to the first group in reach, five soldiers, and the computer fights them through the end of
-the fight (2.10, 2.15). `fourth` (long only) is mission 4 (flag 00
+the fight (2.10, 2.15). Two more poked sequences branch from it and compare only their own
+tails: `chain_heal_poked` also lowers Jason's hit points (character 0 byte 0x0f), so the same
+fight ends in healing; `chain_repair_poked` gives him Tech 4 (byte 9) and walks 27 steps on from
+the first fight to a Wasp and one soldier. The soldier runs (2.10), a key hands the fight back to
+the player, Begin Fight (Enter) runs each round with the computer still moving the Chameleon,
+the Wasp falls, and the repairs run. These values are our own test values too. On foot Jason
+loses to every group in reach, even with a poked rifle and the most hit points a byte allows, so
+no unpoked fight hurts him and lives. `fourth` (long only) is mission 4 (flag 00
 poked to 4): no computer question (F:0090), the Locust flees at the first orders menu, the walk
 back, the verdict and the town. `raid` (long only) is mission 7 (flag 00 poked to 7), the
 Kurita raid: the computer question (only mission 4 skips it), then Begin Fight round after round

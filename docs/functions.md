@@ -77,7 +77,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 
 | Address | Linear | Ghidra name | Span | Label | Status |
 |---|---|---|---|---|---|
-| 15ab:0002 | 0x15ab2 | `FUN_15ab_0002` | 1271 | After a fight: repairs from the wrecks and scrap money | read |
+| 15ab:0002 | 0x15ab2 | `FUN_15ab_0002` | 1271 | After a fight: repairs from the wrecks and scrap money | rebuilt (an SRM 6 with `fix_weapon_count` off logs) |
 | 15ab:04f9 | 0x15fa9 | `FUN_15ab_04f9` | 1106 | After a fight: salvage a wreck for a pilot on foot | read |
 | 15ab:094b | 0x163fb | `FUN_15ab_094b` | 531 | After a fight: loot the beaten soldiers (C-Bills, a weapon swap; bug 27) | rebuilt (not `17dc:15e6`, a weapon offered to a party of two or more) |
 | 15ab:0b5e | 0x1660e | `FUN_15ab_0b5e` | 55 | Asks whether the computer fights for you (F:009e) | read |
@@ -212,7 +212,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 203b:24f0 | 0x228a0 | `FUN_203b_24f0` | 102 |  | - |
 | 203b:2556 | 0x22906 | `FUN_203b_2556` | 59 |  | - |
 | 203b:2591 | 0x22941 | `FUN_203b_2591` | 428 | Scan Unit: Friends / Enemies / Cancel, then the scan list | rebuilt |
-| 203b:273d | 0x22aed | `FUN_203b_273d` | 140 |  | - |
+| 203b:273d | 0x22aed | `FUN_203b_273d` | 140 | A critical slot's location's internal structure (1 for model 200) | rebuilt |
 | 203b:27c9 | 0x22b79 | `FUN_203b_27c9` | 108 |  | - |
 | 203b:2835 | 0x22be5 | `FUN_203b_2835` | 166 | After an encounter: the nine areas' maps loaded again where a grid's first entry isn't 0x90, then the masks | read |
 | 203b:28db | 0x22c8b | `FUN_203b_28db` | 456 | Can Jason reach the first enemy: 30 steps of 1e31:0006 in mode 0x80 (docs/combat.md 2.3) | rebuilt |

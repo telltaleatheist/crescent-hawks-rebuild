@@ -864,8 +864,34 @@ CHAIN_HEAL_POKED_CASES += [
     {"name": "chain_heal_return", "keys": "enter", "match": SCREEN},
 ]
 
+# Poked: chain_mech_poked with Jason given Tech 4 (character 0 byte 9, our
+# own test value). After the soldiers he walks on to a Wasp and a soldier;
+# the soldier runs, the computer brings the Wasp down, and the repairs run
+# (no scrap money: Jason is character 0, bug 24). Only the tail is compared.
+CHAIN_REPAIR_POKED_CASES = [dict(case, compare=False) for case in CHAIN_MECH_POKED_CASES]
+CHAIN_REPAIR_POKED_CASES[[c["name"] for c in CHAIN_REPAIR_POKED_CASES].index("chain_mech_poked")] = {
+    "name": "chain_repair_poked", "keys": MECH_POKES + " char:0:09=04 idle:1", "match": {}}
+CHAIN_REPAIR_POKED_CASES += [
+    {"name": "chain_repair_walk", "keys": "enter", "match": SCREEN, "compare": False},
+    {"name": "chain_repair_enc", "keys": "left*27", "match": SCREEN},
+    # The key after round 1's start hands the fight back to the player
+    # (203b:1015); each Begin Fight (Enter, the default) then runs a round
+    # with the computer still moving the Chameleon. Round 1 ends with "Some
+    # of the enemy humans have fled!" (2.10) and a key. The Wasp falls in
+    # the round of the twelfth key; the next shows the scuffle box.
+    {"name": "chain_repair_round_1", "keys": "y y enter arm:1 n", "match": {}, "fight": True},
+    {"name": "chain_repair_player", "keys": "enter", "match": SCREEN, "fight": True},
+    {"name": "chain_repair_fled", "keys": "enter", "match": SCREEN, "fight": True},
+] + [{"name": "chain_repair_key_%d" % n, "keys": "enter", "match": {}, "fight": True} for n in range(3, 12)] + [
+    {"name": "chain_repair_key_12", "keys": "enter", "match": SCREEN},
+    {"name": "chain_repair_over", "keys": "enter", "match": SCREEN},
+    {"name": "chain_repair", "keys": "enter", "match": SCREEN},
+    {"name": "chain_repair_return", "keys": "enter", "match": SCREEN},
+    {"name": "chain_repair_back", "keys": "enter", "match": SCREEN},
+]
+
 # The long unpoked run: its own tier (`--campaign`, ctest label campaign).
-CAMPAIGN = {"chain", "chain_death", "chain_mech_poked", "chain_heal_poked"}
+CAMPAIGN = {"chain", "chain_death", "chain_mech_poked", "chain_heal_poked", "chain_repair_poked"}
 
 SEQUENCES = [("town", CASES, FULL_CASES, []), ("training", TRAINING_CASES, [], []),
              ("quiz", QUIZ_CASES, [], ["--show-quiz"]), ("mission", MISSION_CASES, MISSION_FULL_CASES, []),
@@ -887,6 +913,7 @@ SEQUENCES = [("town", CASES, FULL_CASES, []), ("training", TRAINING_CASES, [], [
              ("chain_death", [], CHAIN_DEATH_CASES, []),
              ("chain_mech_poked", [], CHAIN_MECH_POKED_CASES, []),
              ("chain_heal_poked", [], CHAIN_HEAL_POKED_CASES, []),
+             ("chain_repair_poked", [], CHAIN_REPAIR_POKED_CASES, []),
              ("handover", [], HANDOVER_CASES, [])]
 
 # The feeder (tools/capture/snap.asm, docs/reference.md) hands over a key at

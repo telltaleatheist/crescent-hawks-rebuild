@@ -360,6 +360,8 @@ private:
     bool enemy_people_run(KeySource& keys, bool& over);
     bool anyone_hurt() const;
     bool heal(int doctor, KeySource& keys);
+    bool repair(KeySource& keys);
+    int slot_location_structure(int m, int slot) const;
     std::optional<StepResult> step_party(Step step, KeySource& keys);
     MechParty active_mechs() const;
     // Which of 'Mech records 0-3 exist (byte 0 not ff).

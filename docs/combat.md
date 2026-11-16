@@ -621,7 +621,8 @@ If F:374c was set this round (an enemy person was planned against a 'Mech, 4.4):
 - With no enemy 'Mech: one r; r & 1 ends the fight with "The enemy humans have fled!" (DG:38e0).
 
 Only in a kind-0 fight that is not already over. The distance is measured from the person as if the
-party stood there (the party position is set to the person's, then put back). The first target is
+party stood there: the party position is set to each active person's in turn and put back only
+after the message and its key, so while it waits the party position is the last active person's. The first target is
 the first byte of its target list (F:3800 + 12 x figure), sign-extended: a byte with bit 7 set would
 index before the position arrays. The fight ends as a fight, not a flight, so 2.15 runs its
 fought path. Rebuilt (`Town::enemy_people_run`), except the sign-extended case, which logs and
@@ -717,6 +718,19 @@ For kind 1 the ending is "You should return to base now." (DG:398b) and a key, u
    wrecks, if the location has structure (bug 23).
 6. Scrap money, only if N (wrecks) > 0 and I > 0: M = the sum of N draws of (r & 0x7f) + 90,
    times I (bug 24). Text DG:0f40, the amount, DG:0f65 ("s" if N > 1), a key; C-Bills + M.
+
+In detail: the text goes to the current window (window 1, from the ending); the phrase for S is
+the far pointer at DG:0f9a + 4 x S, so S 2-4 give DG:0eae, 0ebe and 0ed7, and S above 4 would read
+the pointers past them (the rebuild logs that and stops). The pool loops go byte by byte from the
+last location down, and within each byte through the party's 'Mechs in slot order. The lack is
+the maximum less the byte, as unsigned bytes in a signed word: a byte above its maximum is
+lowered and the pool grows. Heat sinks are counted (item 0x22 in a wreck's slots) but not
+checked. Weapons count only intact items 0x10-0x20 in the wrecks; a party slot whose item has
+bit 0x80 and code 0x10-0x20 is mended (bit cleared) while the count for its code is not 0 and
+its location has structure (`203b:273d`: the location's structure byte, or 1 for model 200; the
+slot ranges are those of docs/formats/mech.md). The amount is printed in light green, and the
+colour stays light green for the rest. Rebuilt (`Town::repair`); with `fix_weapon_count` off a
+destroyed SRM 6 logs and stops, since its count would start from stack data.
 
 **Salvage** (`15ab:04f9`, FUN_15ab_04f9). Run when a 'Mech figure was destroyed on either side, a
 party character with Piloting above 0 is on foot, a party 'Mech slot is free, and none of the

@@ -1357,7 +1357,8 @@ bool Town::enemy_people_run(KeySource& keys, bool& over) {
                 figs_.x[std::size_t(f)] = figs_.y[std::size_t(f)] = 0xffff;
             }
         }
-        position_ = at;
+        // The message and its key come before the party position is put
+        // back: meanwhile it is the last active person's.
         if (fled) {
             open_message_box();  // 24d3:17c6 / 17ea, 273d:0259
             print_id("fight.some_fled");
@@ -1366,6 +1367,7 @@ bool Town::enemy_people_run(KeySource& keys, bool& over) {
                 return false;
             }
         }
+        position_ = at;
         return true;
     }
     combat_.enemy_people_ran = (random_.next() & 1) != 0;

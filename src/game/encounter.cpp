@@ -225,13 +225,10 @@ bool Town::after_fight_steps(KeySource& keys) {
     bool has_mech = false, wreck = false;
     for (int m = 0; m < 4; ++m) has_mech = has_mech || mechs_[std::size_t(m)][0] != 0xff;
     for (int f = 12; f < 16; ++f) wreck = wreck || figs_.destroyed[std::size_t(f)];
-    if (has_mech && wreck)
-        for (int c = 0; c < 8; ++c)
-            if (characters_[std::size_t(c)][0] != 0xff && characters_[std::size_t(c)][character::kSkills + 5] != 0) {
-                log_.push_back("repairs and scrap (15ab:0002): not rebuilt");
-                fight_unfinished_ = true;
-                return false;
-            }
+    bool tech = false;
+    for (int c = 0; c < 8; ++c)
+        tech = tech || (characters_[std::size_t(c)][0] != 0xff && characters_[std::size_t(c)][character::kSkills + 5] != 0);
+    if (has_mech && wreck && tech && !repair(keys)) return false;
     bool mech_down = false;
     for (int m = 0; m < 4; ++m) mech_down = mech_down || figs_.destroyed[std::size_t(m)] || figs_.destroyed[std::size_t(12 + m)];
     if (mech_down) {
@@ -260,6 +257,139 @@ bool Town::after_fight_steps(KeySource& keys) {
         hurt += std::int8_t(std::uint8_t(10 * r[character::kB])) - std::int8_t(r[character::kHitPoints]);
     }
     if (hurt != 0) return heal(0, keys);  // 1c31:000a(0)
+    return true;
+}
+
+// BTECH.EXE 203b:273d (Ghidra FUN_203b_273d)
+// Whether 'Mech record m's critical slot (0x33-0x55) is in a location with
+// internal structure left: the structure byte, or 1 for model 200.
+int Town::slot_location_structure(int m, int slot) const {
+    int at = 0x1c;
+    if (slot >= 0x3a) at = 0x1d;
+    if (slot >= 0x41) at = 0x21;
+    if (slot >= 0x48) at = 0x22;
+    if (slot >= 0x4f) at = 0x1e;
+    if (slot >= 0x51) at = 0x23;
+    if (slot >= 0x53) at = 0x20;
+    if (slot >= 0x55) at = 0x1f;
+    const auto& r = mechs_[std::size_t(m)];
+    if (r[0x7b] == 200) return 1;
+    return r[std::size_t(at)];
+}
+
+// BTECH.EXE 15ab:0002 (Ghidra FUN_15ab_0002)
+// Repairs and scrap after a won fight (docs/combat.md 2.15): the best tech
+// mends the party's 'Mechs from the enemy wrecks (records 4-7 of the
+// destroyed figures 12-15), then sells the scrap.
+bool Town::repair(KeySource& keys) {
+    int skill = 0, tech = 0;
+    for (int c = 0; c < 8; ++c) {
+        const auto& r = characters_[std::size_t(c)];
+        if (r[character::kName] == character::kEmpty) continue;
+        const int s = std::int8_t(r[character::kSkills + 5]);
+        if (skill < s) {
+            tech = c;
+            skill = s;
+        }
+    }
+    if (skill > 4) {
+        // DG:0f9a + 4 x skill runs past the three phrases.
+        log_.push_back("repairs by a tech above level 4: not rebuilt");
+        fight_unfinished_ = true;
+        return false;
+    }
+    print_id("after.repair.break");
+    print_id("character." + std::to_string(characters_[std::size_t(tech)][character::kName]));
+    print_id("after.repair.scavenges");
+    if (skill > 1) print_id("after.repair.skill." + std::to_string(skill));
+    print_id("after.repair.from_wrecks");
+    if (!press_key(keys)) return false;  // 1000:2a4f
+    auto& wrecks = mechs_;  // records 4-7 are the enemy's, for figures 12-15
+    const auto top_up = [&](int first, int last) {
+        // The pool is every wreck's bytes first..last; each byte from last
+        // down to first, each party 'Mech in turn, gets what it lacks from
+        // the maximum at +0x45 (a byte above it gives some back).
+        int pool = 0;
+        for (int f = 12; f < 16; ++f)
+            if (figs_.destroyed[std::size_t(f)])
+                for (int b = first; b <= last; ++b) pool += wrecks[std::size_t(f - 8)][std::size_t(b)];
+        for (int b = last; b >= first; --b)
+            for (int m = 0; m < 4; ++m) {
+                auto& r = mechs_[std::size_t(m)];
+                if (r[0] == 0xff) continue;
+                int lack = int(r[std::size_t(b + 0x45)]) - int(r[std::size_t(b)]);
+                if (lack == 0) continue;
+                if (lack > pool) lack = pool;
+                pool -= lack;
+                r[std::size_t(b)] = std::uint8_t(r[std::size_t(b)] + lack);
+            }
+    };
+    int wrecked = 0;
+    for (int f = 12; f < 16; ++f) wrecked += figs_.destroyed[std::size_t(f)] ? 1 : 0;
+    top_up(0x11, 0x1b);  // armour
+    if (skill >= 4) top_up(0x1c, 0x23);  // internal structure
+    if (skill >= 2) {
+        // Heat sinks: counted in the wrecks, but every destroyed one is
+        // mended (bug 22).
+        int sinks = 0;
+        for (int w = 0; w < 4; ++w)
+            if (figs_.destroyed[std::size_t(12 + w)])
+                for (int s = 0x33; s <= 0x55; ++s) sinks += wrecks[std::size_t(4 + w)][std::size_t(s)] == 0x22 ? 1 : 0;
+        for (int m = 0; m < 4; ++m) {
+            auto& r = mechs_[std::size_t(m)];
+            if (r[0] == 0xff) continue;
+            for (int s = 0x33; s <= 0x55; ++s) {
+                if (r[std::size_t(s)] != 0xa2 || slot_location_structure(m, s) == 0) continue;
+                if (fixes_.fix_heat_sink_count && sinks <= 0) continue;
+                r[std::size_t(s)] = 0x22;
+                --sinks;
+            }
+        }
+    }
+    if (skill >= 3) {
+        // Weapons 0x10-0x20: one mended per intact one in the wrecks. The
+        // count for 0x20 is not cleared first (bug 23).
+        std::array<int, 0x21> spare{};
+        for (int w = 0; w < 4; ++w)
+            if (figs_.destroyed[std::size_t(12 + w)])
+                for (int s = 0x33; s <= 0x55; ++s) {
+                    const int item = wrecks[std::size_t(4 + w)][std::size_t(s)];
+                    if (item >= 0x10 && item <= 0x20) ++spare[std::size_t(item)];
+                }
+        for (int m = 0; m < 4; ++m) {
+            auto& r = mechs_[std::size_t(m)];
+            if (r[0] == 0xff) continue;
+            for (int s = 0x33; s <= 0x55; ++s) {
+                const int item = r[std::size_t(s)];
+                if ((item & 0x80) == 0) continue;
+                const int code = item & 0x7f;
+                if (code < 0x10 || code > 0x20) continue;
+                if (code == 0x20 && !fixes_.fix_weapon_count) {
+                    log_.push_back("an SRM 6 mended from a count left on the stack: not rebuilt");
+                    fight_unfinished_ = true;
+                    return false;
+                }
+                if (spare[std::size_t(code)] == 0 || slot_location_structure(m, s) == 0) continue;
+                r[std::size_t(s)] = std::uint8_t(item & 0x7f);
+                --spare[std::size_t(code)];
+            }
+        }
+    }
+    // Scrap: (r & 0x7f) + 90 a wreck, times the tech's character number
+    // (bug 24: so nothing when Jason is the tech).
+    const int times = fixes_.fix_scrap_multiplier ? skill : tech;
+    if (wrecked == 0 || times == 0) return true;
+    int cash = 0;
+    for (int n = 0; n < wrecked; ++n) cash += (random_.next() & 0x7f) + 90;
+    cash = std::int16_t(cash * times);
+    print_id("after.scrap.found");
+    text_.set_fg(10);  // 1000:28a2, left on
+    text_.print(std::to_string(cash));  // 273d:0053
+    print_id("after.scrap.cbills");
+    if (wrecked > 1) print_id("after.scrap.plural");
+    print_id("after.scrap.end");
+    if (!press_key(keys)) return false;
+    money_.cbills += cash;
     return true;
 }
 
