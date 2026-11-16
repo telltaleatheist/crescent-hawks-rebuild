@@ -5,6 +5,8 @@
 
 #include <cstdint>
 #include <map>
+#include <optional>
+#include <utility>
 
 #include <SDL3/SDL.h>
 
@@ -36,6 +38,8 @@ public:
     void clip(int x, int y, int width, int height);
     void clear_clip();
     void end_frame();
+    // The size `id` covers on the 320x200 screen, or nothing if no provider has it.
+    std::optional<std::pair<int, int>> logical_size(const AssetId& id);
 
 private:
     SDL_Texture* texture_for(const AssetId& id);

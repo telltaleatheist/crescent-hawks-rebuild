@@ -1,10 +1,12 @@
-// Data the rebuild reads from the player's own BTECH.EXE: the font, and the
-// game's text and tables that live in the program rather than in a data file.
-// We never ship any of it (docs/rules.md, rule 1). Each piece has a name and a
-// fixed place in the unpacked program of one known version; the program is
-// checked by its SHA-256 first, so a different version fails cleanly instead
-// of handing back the wrong bytes. Other versions are added on purpose, when
-// someone has one, with their own table.
+// The import table: the data the rebuild takes from the player's own
+// BTECH.EXE (the font, and the game's text and tables that live in the
+// program rather than in a data file), each piece by name with its place in
+// the unpacked program. Only the importer (formats/import.h) reads the
+// program; the game reads what it wrote. We never ship any of it
+// (docs/rules.md, rule 1). The program is checked by its SHA-256 first, so a
+// different version fails cleanly instead of handing back the wrong bytes.
+// Other versions are added on purpose, when someone has one, with their own
+// table.
 #pragma once
 
 #include <cstdint>
@@ -19,7 +21,9 @@ namespace chr::formats {
 // One named piece of the program: segment:offset as in docs/functions.md
 // (load segment 0x1000) and its length in bytes.
 struct ExeSpan {
-    std::string_view name;
+    enum class Kind { Font, Text };
+    Kind kind;
+    std::string_view name;  // for text, the text ID (docs/text.md)
     std::uint16_t segment;
     std::uint16_t offset;
     std::uint16_t size;
@@ -37,9 +41,15 @@ public:
     explicit OriginalExe(std::span<const std::uint8_t> packed);
     static OriginalExe load(const std::filesystem::path& game_dir);
 
+    // Where a piece is, "ssss:oooo", for the imported files.
+    static std::string address(const ExeSpan& span);
+
     // The bytes of the named piece. Throws FormatError for an unknown name.
     std::span<const std::uint8_t> get(std::string_view name) const;
-    // A named piece as text: its bytes up to the first NUL, or all of them.
+    // A named piece as text, read the way the printer (2656:03f5) reads it:
+    // up to the NUL that ends it, where the codes 02, 06, 09 and 13 take the
+    // next byte as their argument (so `06 00`, black, is not the end), and a
+    // byte with the top bit set is the last one.
     std::string text(std::string_view name) const;
 
     static std::span<const ExeSpan> table();

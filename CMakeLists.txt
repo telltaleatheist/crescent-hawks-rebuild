@@ -26,7 +26,10 @@ add_library(chrformats STATIC
   src/formats/cmp.cpp
   src/formats/exe_data.cpp
   src/formats/exepack.cpp
+  src/formats/font_file.cpp
   src/formats/game_files.cpp
+  src/formats/import.cpp
+  src/formats/json.cpp
   src/formats/icn.cpp
   src/formats/mtp.cpp
   src/formats/palette.cpp
@@ -40,6 +43,7 @@ add_library(chrgame STATIC
   src/game/map_view.cpp
   src/game/movement.cpp
   src/game/text.cpp
+  src/game/text_provider.cpp
   src/game/town.cpp
 )
 target_include_directories(chrgame PUBLIC src)
@@ -55,7 +59,8 @@ add_executable(chrtests
   tests/test_walk.cpp
 )
 target_link_libraries(chrtests PRIVATE chrgame)
-target_compile_definitions(chrtests PRIVATE CHR_DEFAULT_GAME_DIR="${CHR_GAME_DIR}")
+target_compile_definitions(chrtests PRIVATE CHR_DEFAULT_GAME_DIR="${CHR_GAME_DIR}"
+  CHR_TEST_SCRATCH="${CMAKE_BINARY_DIR}/test-scratch")
 add_test(NAME chrtests COMMAND chrtests)
 
 # The platform layer: SDL3 window, rendering and the asset provider.
@@ -76,7 +81,7 @@ if(SDL3_FOUND)
   # The program itself, walking known routes on map 1 with no window (SDL's
   # dummy video driver). They need the game files.
   if(EXISTS "${CHR_GAME_DIR}/MAP1.MTP")
-    set(chr_headless "SDL_VIDEO_DRIVER=dummy;SDL_AUDIO_DRIVER=dummy")
+    set(chr_headless "SDL_VIDEO_DRIVER=dummy;SDL_AUDIO_DRIVER=dummy;CHR_DATA_DIR=${CMAKE_BINARY_DIR}/chr-data")
     add_test(NAME walk_blocked_by_fence
       COMMAND chr --map 1 --script "down*3" --screenshot walk_blocked.bmp)
     set_tests_properties(walk_blocked_by_fence PROPERTIES ENVIRONMENT "${chr_headless}"

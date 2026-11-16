@@ -8,6 +8,7 @@
 #include "formats/cmp.h"
 #include "formats/game_files.h"
 #include "formats/icn.h"
+#include "formats/import.h"
 #include "formats/palette.h"
 
 namespace chr::platform {
@@ -38,7 +39,8 @@ Image from_colour_numbers(const std::vector<std::uint8_t>& numbers, int width, i
 
 }  // namespace
 
-OriginalAssets::OriginalAssets(std::filesystem::path game_dir) : game_dir_(std::move(game_dir)) {}
+OriginalAssets::OriginalAssets(std::filesystem::path game_dir, std::filesystem::path data_dir)
+    : game_dir_(std::move(game_dir)), data_dir_(std::move(data_dir)) {}
 
 const formats::TileSheet* OriginalAssets::sheet(const std::string& file) {
     if (auto it = sheets_.find(file); it != sheets_.end()) return &it->second;
@@ -50,28 +52,35 @@ const formats::TileSheet* OriginalAssets::sheet(const std::string& file) {
     return &sheets_.emplace(file, formats::decode_icn(formats::read_file(*path))).first->second;
 }
 
-const formats::OriginalExe* OriginalAssets::exe() {
-    if (!exe_ && exe_error_.empty()) {
+const formats::Font* OriginalAssets::font() {
+    if (!font_ && font_error_.empty()) {
         try {
-            exe_ = std::make_unique<formats::OriginalExe>(formats::OriginalExe::load(game_dir_));
+            const auto bytes = formats::read_file(formats::imported_font_path(data_dir_));
+            font_ = std::make_unique<formats::Font>(
+                formats::parse_font_file(std::string(bytes.begin(), bytes.end())));
         } catch (const std::exception& e) {
-            exe_error_ = e.what();
+            font_error_ = e.what();
         }
     }
-    if (!exe_) last_error_ = exe_error_;
-    return exe_.get();
+    if (!font_) last_error_ = font_error_;
+    return font_.get();
 }
 
 std::optional<Image> OriginalAssets::image(const AssetId& id) {
     last_error_.clear();
     try {
         if (id.file == "FONT") {
-            const auto* program = exe();
-            if (!program) return std::nullopt;
-            const auto bits = formats::font_character(program->get("font"), id.index);
-            Image glyph{8, 8, 8, 8, std::vector<std::uint8_t>(64 * 4, 0)};
-            for (int i = 0; i < 64; ++i)
-                if (bits[i]) std::fill_n(glyph.rgba.begin() + 4 * i, 4, std::uint8_t(0xff));
+            const auto* f = font();
+            if (!f) return std::nullopt;
+            if (id.index >= f->glyphs.size()) {
+                last_error_ = to_string(id) + ": no such character";
+                return std::nullopt;
+            }
+            const auto& bits = f->glyphs[id.index];
+            Image glyph{f->width, f->height, f->width, f->height,
+                        std::vector<std::uint8_t>(bits.size() * 4, 0)};
+            for (std::size_t i = 0; i < bits.size(); ++i)
+                if (bits[i]) std::fill_n(glyph.rgba.begin() + std::ptrdiff_t(4 * i), 4, std::uint8_t(0xff));
             return glyph;
         }
         if (const auto colon = id.file.find(":8x8"); colon != std::string::npos) {

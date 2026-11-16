@@ -43,8 +43,11 @@ and PgDn for the diagonals. `--script "up*5 y"` plays keys first and prints
 what each did; with `--screenshot FILE.bmp` it writes one frame and quits
 without opening a window.
 
-The font and some of the game's text are read from your own `BTECH.EXE`,
-which must be DOS version 1.03.
+The font and some of the game's text live inside your own `BTECH.EXE`, which
+must be DOS version 1.03. The first time `chr` runs it imports them into its
+data folder (`--data-dir DIR`, else `CHR_DATA_DIR`, else your
+application-data folder); `chr --import` does it again. `--text FILE` lays a
+translation or rewrite over the game's text (docs/import.md).
 
 ## Credits and licence
 

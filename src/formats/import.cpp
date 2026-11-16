@@ -1,0 +1,93 @@
+#include "formats/import.h"
+
+#include <fstream>
+
+#include "formats/cmp.h"  // FormatError
+#include "formats/exe_data.h"
+#include "formats/font_file.h"
+#include "formats/game_files.h"
+#include "formats/json.h"
+
+namespace chr::formats {
+
+namespace fs = std::filesystem;
+
+namespace {
+
+fs::path manifest_path(const fs::path& data_dir) { return data_dir / "import.json"; }
+
+void write_file(const fs::path& path, const std::string& contents) {
+    fs::create_directories(path.parent_path());
+    const fs::path temp = path.string() + ".part";
+    {
+        std::ofstream out(temp, std::ios::binary);
+        out << contents;
+        if (!out) throw FormatError("can't write " + temp.string());
+    }
+    fs::rename(temp, path);
+}
+
+}  // namespace
+
+fs::path imported_text_path(const fs::path& data_dir) { return data_dir / "text" / "english.json"; }
+fs::path imported_font_path(const fs::path& data_dir) { return data_dir / "font" / "font.txt"; }
+
+ImportState import_state(const fs::path& data_dir) {
+    std::error_code ec;
+    if (!fs::exists(manifest_path(data_dir), ec) || !fs::exists(imported_text_path(data_dir), ec) ||
+        !fs::exists(imported_font_path(data_dir), ec))
+        return ImportState::Missing;
+    try {
+        const auto bytes = read_file(manifest_path(data_dir));
+        const auto manifest = parse_json(std::string(bytes.begin(), bytes.end()));
+        const auto* version = manifest.find("import_version");
+        if (!version || version->number() != kImportVersion) return ImportState::Outdated;
+    } catch (const std::exception&) {
+        return ImportState::Outdated;
+    }
+    return ImportState::Current;
+}
+
+void import_original(const fs::path& game_dir, const fs::path& data_dir) {
+    const auto exe = OriginalExe::load(game_dir);
+
+    std::string text = "{\n  \"import_version\": " + std::to_string(kImportVersion) +
+                       ",\n  \"source\": " + json_quote("BTECH.EXE " + std::string(kSupportedVersion)) +
+                       ",\n  \"texts\": [\n";
+    bool first = true;
+    for (const auto& span : OriginalExe::table()) {
+        if (span.kind != ExeSpan::Kind::Text) continue;
+        if (!first) text += ",\n";
+        first = false;
+        text += "    {\"id\": " + json_quote(span.name) + ", \"address\": " +
+                json_quote(OriginalExe::address(span)) + ", \"text\": " + json_quote(exe.text(span.name)) + "}";
+    }
+    text += "\n  ]\n}\n";
+
+    // The manifest goes last: a folder without one has no finished import.
+    std::error_code ec;
+    fs::remove(manifest_path(data_dir), ec);
+    write_file(imported_text_path(data_dir), text);
+    write_file(imported_font_path(data_dir), write_font_file(font_from_original(exe.get("font"))));
+    write_file(manifest_path(data_dir),
+               "{\n  \"import_version\": " + std::to_string(kImportVersion) + ",\n  \"source\": " +
+                   json_quote("BTECH.EXE " + std::string(kSupportedVersion)) + ",\n  \"exe_sha256\": " +
+                   json_quote(kSupportedUnpackedSha256) + "\n}\n");
+}
+
+bool ensure_imported(const fs::path& game_dir, const fs::path& data_dir) {
+    const auto state = import_state(data_dir);
+    if (state == ImportState::Current) return false;
+    try {
+        import_original(game_dir, data_dir);
+    } catch (const std::exception& e) {
+        throw FormatError(std::string("the game's text and font have ") +
+                          (state == ImportState::Missing ? "not been imported" : "an older import") +
+                          " in " + data_dir.string() + ", and importing them failed: " + e.what() +
+                          ". Run `chr --import --game-dir DIR` with your copy of the game (DOS " +
+                          std::string(kSupportedVersion.substr(4)) + ").");
+    }
+    return true;
+}
+
+}  // namespace chr::formats

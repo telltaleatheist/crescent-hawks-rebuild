@@ -72,15 +72,26 @@ the end.
 
 ## Messages
 
-`24d3:17c6` opens the message box: window 7, cleared, frame style 0. The texts the walk uses:
+`24d3:17c6` opens the message box: window 7, cleared, frame style 0.
 
-| DS offset | Text |
-|---|---|
-| 0x0410 | The water is too deep that way. |
-| 0x0430, 0x0444 | Will you enter the (new line) *place*? |
-| 0x03ee, 0x03fe | the yes/no answer line, Yes or No picked |
-| 0x0aca | BDC (the panel's heading over the three bar columns 9-11) |
-| 0x00b2-0x00d9 | the eight characters' names, Jason first |
+## Text IDs
 
-The rebuild reads these from the player's BTECH.EXE (`formats/exe_data.h`); it does not carry
-them.
+Every text the game shows has an ID and comes from the text provider (`src/game/text_provider.h`),
+never from a literal in the code. The importer (docs/import.md) writes the program's texts with
+their IDs; an override file can replace any of them.
+
+| ID | Address | Text |
+|---|---|---|
+| walk.too_deep | 46db:0410 | The water is too deep that way. |
+| walk.enter_question | 46db:0430 | Will you enter the (new line) |
+| walk.enter_question_end | 46db:0444 | ? |
+| ui.answer_yes_picked | 46db:03ee | the yes/no line, Yes picked |
+| ui.answer_no_picked | 46db:03fe | the yes/no line, No picked |
+| panel.party_heading | 46db:0aca | BDC (over the bar columns 9-11) |
+| character.0 - character.7 | 46db:00b2 - 00d9 | the eight characters' names, Jason first |
+| mapN.place.E | MAPN.MTP | the place behind entrance E |
+| mapN.person.P | MAPN.MTP | the map's people |
+
+The question "Will you enter the Citadel?" is `walk.enter_question` + `map1.place.1` +
+`walk.enter_question_end`. The yes/no keys are still Y and N whatever the language (to be made
+data with the input layer).

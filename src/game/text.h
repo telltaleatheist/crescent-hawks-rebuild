@@ -14,9 +14,10 @@
 
 namespace chr::game {
 
+// The grid is the original's layout in character cells; how big a cell is
+// on screen is the renderer's business (it measures the font).
 inline constexpr int kTextColumns = 40;
 inline constexpr int kTextRows = 25;
-inline constexpr int kCellPixels = 8;
 
 // Glyph ids: the font is read from the player's BTECH.EXE (formats/exe_data.h).
 inline AssetId font_glyph(std::uint8_t ch) { return {"FONT", std::uint16_t(ch & 0x7f)}; }

@@ -1,8 +1,9 @@
+#include <filesystem>
 #include <memory>
 #include <string>
 #include <vector>
 
-#include "formats/exe_data.h"
+#include "formats/import.h"
 #include "formats/game_files.h"
 #include "formats/mtp.h"
 #include "game/map_view.h"
@@ -101,16 +102,30 @@ namespace {
 
 // Plays `script` on map 1 from the new-game start. False if the game files
 // are not here (the test is skipped).
-bool play_map1(const std::string& script, std::unique_ptr<Town>& town, MtpMap& map,
-               std::unique_ptr<OriginalExe>& exe) {
+struct Map1 {
+    MtpMap map;
+    std::unique_ptr<TextTable> imported;
+    std::unique_ptr<MapText> map_text;
+    std::unique_ptr<LayeredText> texts;
+};
+
+bool play_map1(const std::string& script, std::unique_ptr<Town>& town, Map1& m,
+               const TextProvider* overrides = nullptr) {
     const auto dir = chrtest::game_dir();
     if (dir.empty()) {
         chrtest::skip("no game folder (set CHR_GAME_DIR)");
         return false;
     }
-    map = decode_mtp(read_file(*find_game_file(dir, "MAP1.MTP")));
-    exe = std::make_unique<OriginalExe>(OriginalExe::load(dir));
-    town = std::make_unique<Town>(map, 1, new_game_position(), *exe);
+    m.map = decode_mtp(read_file(*find_game_file(dir, "MAP1.MTP")));
+    // The text as the importer writes it, imported once into the build tree.
+    const std::filesystem::path data = std::filesystem::path(CHR_TEST_SCRATCH) / "walk-data";
+    ensure_imported(dir, data);
+    m.imported = std::make_unique<TextTable>(TextTable::load(imported_text_path(data)));
+    m.map_text = std::make_unique<MapText>(m.map, 1);
+    std::vector<const TextProvider*> layers{m.imported.get(), m.map_text.get()};
+    if (overrides) layers.insert(layers.begin(), overrides);
+    m.texts = std::make_unique<LayeredText>(layers);
+    town = std::make_unique<Town>(m.map, 1, new_game_position(), *m.texts);
     town->draw_panel();
     ScriptKeys keys(parse_key_script(script));
     town->run(keys);
@@ -121,9 +136,8 @@ bool play_map1(const std::string& script, std::unique_ptr<Town>& town, MtpMap& m
 
 TEST(map1_wall_south_of_the_start) {
     std::unique_ptr<Town> town;
-    MtpMap map;
-    std::unique_ptr<OriginalExe> exe;
-    if (!play_map1("down*4", town, map, exe)) return;
+    Map1 m;
+    if (!play_map1("down*4", town, m)) return;
     // Two steps south, then the fence.
     CHECK(town->position() == (MapPosition{0x0c45, 0xc01b}));
     CHECK(town->log()[1] == "moved at 0c45,c01b");
@@ -132,9 +146,8 @@ TEST(map1_wall_south_of_the_start) {
 
 TEST(map1_citadel_question) {
     std::unique_ptr<Town> town;
-    MtpMap map;
-    std::unique_ptr<OriginalExe> exe;
-    if (!play_map1("up*5", town, map, exe)) return;
+    Map1 m;
+    if (!play_map1("up*5", town, m)) return;
     CHECK(town->question_open());
     CHECK(town->position() == (MapPosition{0x0c45, 0xc015}));
     const auto& t = town->text();
@@ -147,9 +160,8 @@ TEST(map1_citadel_question) {
 
 TEST(map1_enter_the_citadel) {
     std::unique_ptr<Town> town;
-    MtpMap map;
-    std::unique_ptr<OriginalExe> exe;
-    if (!play_map1("up*5 right y", town, map, exe)) return;
+    Map1 m;
+    if (!play_map1("up*5 right y", town, m)) return;
     CHECK(town->entered_place() == 1);
     // The right arrow picked No, then y answered yes: the line shows Yes picked.
     CHECK(town->text().cell(14, 12).bg == 14);
@@ -158,9 +170,8 @@ TEST(map1_enter_the_citadel) {
 
 TEST(map1_say_no_and_walk_on) {
     std::unique_ptr<Town> town;
-    MtpMap map;
-    std::unique_ptr<OriginalExe> exe;
-    if (!play_map1("up*5 n down", town, map, exe)) return;
+    Map1 m;
+    if (!play_map1("up*5 n down", town, m)) return;
     CHECK(!town->entered_place());
     CHECK(town->position() == (MapPosition{0x0c45, 0xc015}));
     // The next turn draws the map over the question.
@@ -169,9 +180,8 @@ TEST(map1_say_no_and_walk_on) {
 
 TEST(map1_view_scrolls_with_the_party) {
     std::unique_ptr<Town> town;
-    MtpMap map;
-    std::unique_ptr<OriginalExe> exe;
-    if (!play_map1("left*10", town, map, exe)) return;
+    Map1 m;
+    if (!play_map1("left*10", town, m)) return;
     CHECK(town->position() == (MapPosition{0x0c3b, 0xc019}));
     const auto view = town->view();
     // The view's corner is 12 half-cells up and left of the party.
@@ -180,10 +190,20 @@ TEST(map1_view_scrolls_with_the_party) {
 
 TEST(map1_panel_lists_jason) {
     std::unique_ptr<Town> town;
-    MtpMap map;
-    std::unique_ptr<OriginalExe> exe;
-    if (!play_map1("", town, map, exe)) return;
+    Map1 m;
+    if (!play_map1("", town, m)) return;
     CHECK(town->text().row_text(13).substr(9, 3) == "BDC");
     CHECK(town->text().row_text(14).substr(1, 5) == "Jason");
     CHECK(town->text().cell(0, 0).kind == TextCell::Kind::Frame);
+}
+
+TEST(map1_question_in_another_language) {
+    std::unique_ptr<Town> town;
+    Map1 m;
+    const auto german = TextTable::parse(R"({"texts": [
+        {"id": "walk.enter_question", "text": "Wollt ihr hinein in die\r"},
+        {"id": "map1.place.1", "text": "Zitadelle"}]})");
+    if (!play_map1("up*5", town, m, &german)) return;
+    CHECK(town->text().row_text(10).substr(14, 23) == "Wollt ihr hinein in die");
+    CHECK(town->text().row_text(11).substr(14, 10) == "Zitadelle?");
 }

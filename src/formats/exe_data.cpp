@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cstdio>
 
 #include "formats/cmp.h"  // FormatError
 #include "formats/exepack.h"
@@ -18,25 +19,27 @@ namespace {
 constexpr std::array kDos103 = {
     // 2c6c:a661, 1,024 bytes: the 8x8 font, one bit per pixel, 8 bytes per
     // character, characters 0..127 (273d:00d5 masks with 0x7f).
-    ExeSpan{"font", 0x2c6c, 0xa661, 0x400},
-    // 1000:1c12, the step check.
-    ExeSpan{"text.too_deep", 0x46db, 0x0410, 32},       // "The water is too deep that way."
-    ExeSpan{"text.enter_before", 0x46db, 0x0430, 20},   // "Will you enter the\r"
-    ExeSpan{"text.enter_after", 0x46db, 0x0444, 2},     // "?"
-    // 1000:1a13, the yes/no question: the answer line, Yes picked / No picked.
-    ExeSpan{"text.yes_picked", 0x46db, 0x03ee, 16},
-    ExeSpan{"text.no_picked", 0x46db, 0x03fe, 17},
-    // 1000:4cac, the party box heading.
-    ExeSpan{"text.party_heading", 0x46db, 0x0aca, 4},  // "BDC"
-    // The eight characters' names (pointers at DGROUP:01ca).
-    ExeSpan{"name.0", 0x46db, 0x00b2, 6},  // Jason
-    ExeSpan{"name.1", 0x46db, 0x00b8, 4},
-    ExeSpan{"name.2", 0x46db, 0x00bc, 7},
-    ExeSpan{"name.3", 0x46db, 0x00c3, 5},
-    ExeSpan{"name.4", 0x46db, 0x00c8, 5},
-    ExeSpan{"name.5", 0x46db, 0x00cd, 5},
-    ExeSpan{"name.6", 0x46db, 0x00d2, 7},
-    ExeSpan{"name.7", 0x46db, 0x00d9, 6},
+    ExeSpan{ExeSpan::Kind::Font, "font", 0x2c6c, 0xa661, 0x400},
+    // Text the game shows. The names are the text IDs (docs/text.md): a
+    // text provider hands them out, and an override file can replace them.
+    // 1000:1c12, the step check:
+    ExeSpan{ExeSpan::Kind::Text, "walk.too_deep", 0x46db, 0x0410, 32},
+    ExeSpan{ExeSpan::Kind::Text, "walk.enter_question", 0x46db, 0x0430, 20},  // then the place's name
+    ExeSpan{ExeSpan::Kind::Text, "walk.enter_question_end", 0x46db, 0x0444, 2},
+    // 1000:1a13, the yes/no answer line, with Yes or with No picked:
+    ExeSpan{ExeSpan::Kind::Text, "ui.answer_yes_picked", 0x46db, 0x03ee, 16},
+    ExeSpan{ExeSpan::Kind::Text, "ui.answer_no_picked", 0x46db, 0x03fe, 17},
+    // 1000:4cac, the heading over the party box's three bar columns:
+    ExeSpan{ExeSpan::Kind::Text, "panel.party_heading", 0x46db, 0x0aca, 4},
+    // The eight characters' names (pointers at DGROUP:01ca):
+    ExeSpan{ExeSpan::Kind::Text, "character.0", 0x46db, 0x00b2, 6},
+    ExeSpan{ExeSpan::Kind::Text, "character.1", 0x46db, 0x00b8, 4},
+    ExeSpan{ExeSpan::Kind::Text, "character.2", 0x46db, 0x00bc, 7},
+    ExeSpan{ExeSpan::Kind::Text, "character.3", 0x46db, 0x00c3, 5},
+    ExeSpan{ExeSpan::Kind::Text, "character.4", 0x46db, 0x00c8, 5},
+    ExeSpan{ExeSpan::Kind::Text, "character.5", 0x46db, 0x00cd, 5},
+    ExeSpan{ExeSpan::Kind::Text, "character.6", 0x46db, 0x00d2, 7},
+    ExeSpan{ExeSpan::Kind::Text, "character.7", 0x46db, 0x00d9, 6},
 };
 
 constexpr std::uint16_t kLoadSegment = 0x1000;
@@ -44,6 +47,12 @@ constexpr std::uint16_t kLoadSegment = 0x1000;
 }  // namespace
 
 std::span<const ExeSpan> OriginalExe::table() { return kDos103; }
+
+std::string OriginalExe::address(const ExeSpan& span) {
+    char buf[16];
+    std::snprintf(buf, sizeof buf, "%04x:%04x", span.segment, span.offset);
+    return buf;
+}
 
 OriginalExe::OriginalExe(std::span<const std::uint8_t> packed) {
     const std::string wanted =
@@ -75,8 +84,15 @@ std::span<const std::uint8_t> OriginalExe::get(std::string_view name) const {
 
 std::string OriginalExe::text(std::string_view name) const {
     const auto bytes = get(name);
-    const auto end = std::find(bytes.begin(), bytes.end(), std::uint8_t(0));
-    return std::string(bytes.begin(), end);
+    std::size_t n = 0;
+    while (n < bytes.size()) {
+        const std::uint8_t c = bytes[n];
+        if (c == 0) break;
+        ++n;
+        if (c & 0x80) break;
+        if (c == 0x02 || c == 0x06 || c == 0x09 || c == 0x13) ++n;  // and its argument
+    }
+    return std::string(bytes.begin(), bytes.begin() + std::ptrdiff_t(std::min(n, bytes.size())));
 }
 
 }  // namespace chr::formats

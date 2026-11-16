@@ -13,17 +13,22 @@ The EGA driver draws a character with `287f:2251`; the CGA and Tandy drivers dra
 `287f:2209` and `287f:21a8` from a widened copy made by `287f:2cf7`. All of those are display
 drivers, replaced by the platform layer.
 
-## How the rebuild reads it
+## The rebuild's font file
 
-`src/formats/exe_data.{h,cpp}`: the player's BTECH.EXE is unpacked in memory
-(`src/formats/exepack.cpp`, the same steps as `tools/unexepack.py`), and the result's SHA-256 is
-checked against the DOS 1.03 program (056b4067...). Only then is a named piece handed back
-("font", the texts in docs/text.md, the names). Any other program fails with a message naming
-the version we support; the rebuild never searches a program for something that looks like a
-font. Another version can be added with its own table when someone has one.
+The importer (docs/import.md) writes the font as `font/font.txt` in the data folder, a plain
+text picture that can be read and edited by hand:
 
-The asset provider answers `{"FONT", c}` with character c in white on transparent; the
-renderer colours it. A makeover replaces those IDs with its own font.
+    chr-font 1
+    size 8 8
+    glyph 65
+    ..##....
+    .####...
+    (8 rows of 8: # set, . clear; then the next glyph)
+
+`size` can be anything up to 64x64, so a mod can bring a bigger font. Characters 0-127; a
+missing glyph is blank. The asset provider answers `{"FONT", c}` from this file with character c
+in white on transparent, and the renderer colours it. The text layer measures its cells from the
+font's glyphs rather than assuming 8x8.
 
 ## Frame pieces: BTBORDER.CMP
 

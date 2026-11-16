@@ -56,9 +56,9 @@ std::deque<int> parse_key_script(const std::string& script) {
 }
 
 Town::Town(const formats::MtpMap& map, int map_number, formats::MapPosition start,
-           const formats::OriginalExe& exe)
+           const TextProvider& texts)
     : map_(map), map_number_(map_number), tile_sheet_(tile_sheet_for_map(map_number)),
-      position_(start), exe_(exe) {}
+      position_(start), texts_(texts) {}
 
 MapView Town::view() const { return view_of(map_, tile_sheet_, position_); }
 
@@ -66,13 +66,13 @@ void Town::draw_panel() {
     text_.fill(0, 0, 13, kTextRows, 0);  // the panel starts black
     text_.select_window(3);
     text_.frame(3);
-    text_.put_text(exe_.text("text.party_heading"), 9, 13, 15, 0);
+    text_.put_text(lookup(texts_, "panel.party_heading"), 9, 13, 15, 0);
     // The first four characters of the party, a line each from row 14, two
     // rows apart; the three bars beside each name (1000:4bc1) are not drawn yet.
     int line = 0;
     for (int i = 0; i < 8 && line < 4; ++i) {
         if (!party_.present[i]) continue;
-        text_.put_text(exe_.text("name." + std::to_string(i)), 1, 14 + 2 * line, 15, 0);
+        text_.put_text(lookup(texts_, "character." + std::to_string(i)), 1, 14 + 2 * line, 15, 0);
         ++line;
     }
     text_.select_window(4);
@@ -88,7 +88,7 @@ void Town::open_message_box() {
 std::optional<bool> Town::yes_no(bool yes_first, KeySource& keys) {
     const int saved_fg = text_.window().fg;
     bool yes = yes_first;
-    text_.print(exe_.get(yes ? "text.yes_picked" : "text.no_picked"));
+    text_.print(lookup(texts_, yes ? "ui.answer_yes_picked" : "ui.answer_no_picked"));
     for (;;) {
         const auto k = keys.next();
         if (!k) return std::nullopt;
@@ -101,7 +101,7 @@ std::optional<bool> Town::yes_no(bool yes_first, KeySource& keys) {
         else if (*k == key::kRight) yes = false;
         // Every key, even one it ignores, puts the answer line up again.
         text_.cursor_up();
-        text_.print(exe_.get(yes ? "text.yes_picked" : "text.no_picked"));
+        text_.print(lookup(texts_, yes ? "ui.answer_yes_picked" : "ui.answer_no_picked"));
         if (done) break;
     }
     text_.set_fg(saved_fg);
@@ -114,10 +114,9 @@ public:
     bool ask(int place) override {
         auto& t = town_.text_;
         town_.open_message_box();
-        t.print(town_.exe_.get("text.enter_before"));
-        const auto& name = town_.map_.places[std::size_t(place)];
-        t.print(name);
-        t.print(town_.exe_.get("text.enter_after"));
+        t.print(lookup(town_.texts_, "walk.enter_question"));
+        t.print(lookup(town_.texts_, place_text_id(town_.map_number_, place)));
+        t.print(lookup(town_.texts_, "walk.enter_question_end"));
         const auto answer = town_.yes_no(true, keys_);
         if (!answer) {
             town_.question_open_ = true;
@@ -158,7 +157,7 @@ void Town::turn(int k, KeySource& keys) {
         // yet, so the walk stops here.
         entered_place_ = *r.offered_place;
         log_.push_back("entered place " + std::to_string(*r.offered_place) + " (" +
-                       map_.places[std::size_t(*r.offered_place)] + ")");
+                       lookup(texts_, place_text_id(map_number_, *r.offered_place)) + ")");
         return;
     }
     position_ = r.position;
@@ -174,7 +173,7 @@ void Town::turn(int k, KeySource& keys) {
     case StepOutcome::LeftMap: line += "left the map"; break;
     case StepOutcome::TooDeep:
         open_message_box();
-        text_.print(exe_.get("text.too_deep"));
+        text_.print(lookup(texts_, "walk.too_deep"));
         line += "too deep";
         break;
     }

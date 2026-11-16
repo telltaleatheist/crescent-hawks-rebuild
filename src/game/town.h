@@ -8,11 +8,11 @@
 #include <string>
 #include <vector>
 
-#include "formats/exe_data.h"
 #include "formats/mtp.h"
 #include "game/map_view.h"
 #include "game/movement.h"
 #include "game/text.h"
+#include "game/text_provider.h"
 
 namespace chr::game {
 
@@ -40,9 +40,9 @@ std::deque<int> parse_key_script(const std::string& script);
 
 class Town {
 public:
-    // `exe` supplies the program's own text; it must outlive the Town.
+    // `texts` supplies every text shown (by ID); it must outlive the Town.
     Town(const formats::MtpMap& map, int map_number, formats::MapPosition start,
-         const formats::OriginalExe& exe);
+         const TextProvider& texts);
 
     // BTECH.EXE 1000:4cac (Ghidra FUN_1000_4cac)
     // The left panel: the party box (window 3) and the box above it (window 4).
@@ -73,7 +73,7 @@ private:
     int map_number_;
     std::string tile_sheet_;
     formats::MapPosition position_;
-    const formats::OriginalExe& exe_;
+    const TextProvider& texts_;
     Party party_;
     TextScreen text_;
     std::vector<std::string> log_;

@@ -1,16 +1,23 @@
 #include <array>
+#include <filesystem>
+#include <fstream>
 #include <vector>
 
-#include "formats/cells.h"
+#include "formats/cmp.h"
+#include "formats/font_file.h"
+#include "formats/import.h"
+#include "formats/json.h"
 #include "formats/exe_data.h"
 #include "formats/exepack.h"
 #include "formats/game_files.h"
 #include "formats/sha256.h"
 #include "game/text.h"
+#include "game/text_provider.h"
 #include "test.h"
 
 using namespace chr;
 using namespace chr::game;
+using chr::game::lookup;
 
 TEST(sha256_known_values) {
     CHECK(formats::sha256_hex({}) ==
@@ -23,13 +30,6 @@ TEST(sha256_known_values) {
     CHECK(formats::sha256_hex(std::span(reinterpret_cast<const std::uint8_t*>(long_text.data()),
                                         long_text.size())) ==
           "248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1");
-}
-
-TEST(font_character_bits) {
-    std::vector<std::uint8_t> font(1024, 0);
-    font[65 * 8 + 0] = 0x81;  // 'A', top row: leftmost and rightmost pixels
-    const auto a = formats::font_character(font, 65);
-    CHECK(a[0] == 1 && a[7] == 1 && a[1] == 0 && a[8] == 0);
 }
 
 TEST(window_frame_pieces) {
@@ -98,16 +98,109 @@ TEST(exe_unpacks_like_the_tool_and_has_the_font) {
     CHECK(formats::sha256_hex(unpacked) == formats::kSupportedUnpackedSha256);
     const auto exe = formats::OriginalExe::load(dir);
     CHECK(exe.get("font").size() == 1024);
-    // 'A' has pixels; the space has none.
-    const auto a = formats::font_character(exe.get("font"), 'A');
-    const auto space = formats::font_character(exe.get("font"), ' ');
-    int lit_a = 0, lit_space = 0;
-    for (int i = 0; i < 64; ++i) {
-        lit_a += a[i];
-        lit_space += space[i];
+    CHECK(exe.text("walk.too_deep") == "The water is too deep that way.");
+}
+
+namespace {
+
+// A fresh folder under the build tree's test scratch.
+std::filesystem::path scratch(const std::string& name) {
+    const std::filesystem::path dir = std::filesystem::path(CHR_TEST_SCRATCH) / name;
+    std::filesystem::remove_all(dir);
+    std::filesystem::create_directories(dir);
+    return dir;
+}
+
+}  // namespace
+
+TEST(import_writes_text_and_font) {
+    const auto dir = chrtest::game_dir();
+    if (dir.empty()) {
+        chrtest::skip("no game folder (set CHR_GAME_DIR)");
+        return;
     }
+    const auto data = scratch("import");
+    CHECK(formats::import_state(data) == formats::ImportState::Missing);
+    CHECK(formats::ensure_imported(dir, data));
+    CHECK(formats::import_state(data) == formats::ImportState::Current);
+    CHECK(!formats::ensure_imported(dir, data));  // nothing to do the second time
+
+    const auto texts = TextTable::load(formats::imported_text_path(data));
+    CHECK(lookup(texts, "walk.too_deep") == "The water is too deep that way.");
+    CHECK(lookup(texts, "character.0") == "Jason");
+    CHECK(lookup(texts, "panel.party_heading") == "BDC");
+    CHECK(lookup(texts, "ui.answer_yes_picked").substr(0, 5) == std::string("\r\x06\x00\x02\x0e", 5));
+    // Each entry says where in the program it came from.
+    const auto bytes = formats::read_file(formats::imported_text_path(data));
+    const std::string json(bytes.begin(), bytes.end());
+    CHECK(json.find("\"address\": \"46db:0410\"") != std::string::npos);
+
+    const auto font_bytes = formats::read_file(formats::imported_font_path(data));
+    const auto font = formats::parse_font_file(std::string(font_bytes.begin(), font_bytes.end()));
+    CHECK(font.width == 8 && font.height == 8 && font.glyphs.size() == 128);
+    int lit_a = 0, lit_space = 0;
+    for (const auto bit : font.glyphs['A']) lit_a += bit;
+    for (const auto bit : font.glyphs[' ']) lit_space += bit;
     CHECK(lit_a > 8 && lit_space == 0);
-    CHECK(exe.text("text.too_deep") == "The water is too deep that way.");
-    CHECK(exe.text("name.0") == "Jason");
-    CHECK(exe.text("text.party_heading") == "BDC");
+
+    // A different import version is imported again.
+    std::filesystem::remove(data / "import.json");
+    {
+        std::ofstream(data / "import.json") << "{\"import_version\": 0}";
+    }
+    CHECK(formats::import_state(data) == formats::ImportState::Outdated);
+    CHECK(formats::ensure_imported(dir, data));
+    CHECK(formats::import_state(data) == formats::ImportState::Current);
+}
+
+TEST(missing_import_says_how_to_import) {
+    const auto data = scratch("no-import");
+    const auto no_game = scratch("no-game");
+    bool told = false;
+    try {
+        formats::ensure_imported(no_game, data);
+    } catch (const formats::FormatError& e) {
+        told = std::string(e.what()).find("chr --import") != std::string::npos;
+    }
+    CHECK(told);
+    CHECK(formats::import_state(data) == formats::ImportState::Missing);
+}
+
+TEST(font_file_round_trip) {
+    std::vector<std::uint8_t> bits(1024, 0);
+    bits[65 * 8] = 0x81;  // 'A', top row: the two outer pixels
+    const auto font = formats::font_from_original(bits);
+    CHECK(font.glyphs[65][0] == 1 && font.glyphs[65][7] == 1 && font.glyphs[65][1] == 0);
+    const auto again = formats::parse_font_file(formats::write_font_file(font));
+    CHECK(again.glyphs == font.glyphs);
+    // A mod's font can be any size.
+    const auto big = formats::parse_font_file("chr-font 1\nsize 3 2\nglyph 33\n#.#\n.#.\n");
+    CHECK(big.width == 3 && big.height == 2 && big.glyphs[33][1] == 0 && big.glyphs[33][4] == 1);
+}
+
+TEST(text_overrides_replace_ids) {
+    const auto table = TextTable::parse(R"({"language": "de", "texts": [
+        {"id": "walk.too_deep", "text": "Das Wasser ist dort zu tief."},
+        {"id": "walk.enter_question", "text": "Wollt ihr hinein:\r"},
+        {"id": "ui.answer_yes_picked", "text": "\r\u0006\u0000\u0002\u000eJa\u0006\u000f\u0002\u0000 Nein"}
+    ]})");
+    CHECK(table.size() == 3);
+    CHECK(lookup(table, "walk.too_deep") == "Das Wasser ist dort zu tief.");
+    CHECK(lookup(table, "walk.enter_question") == "Wollt ihr hinein:\r");
+    CHECK(lookup(table, "ui.answer_yes_picked") == std::string("\r\x06\x00\x02\x0eJa\x06\x0f\x02\x00 Nein", 16));
+    // The first layer that has an ID wins.
+    TextTable base;
+    base.set("walk.too_deep", "original");
+    base.set("panel.party_heading", "BDC");
+    const LayeredText layered({&table, &base});
+    CHECK(lookup(layered, "walk.too_deep") == "Das Wasser ist dort zu tief.");
+    CHECK(lookup(layered, "panel.party_heading") == "BDC");
+    bool threw = false;
+    try {
+        TextTable::parse(R"({"texts": [{"id": "x"}]})");
+    } catch (const formats::JsonError&) {
+        threw = true;
+    }
+    CHECK(threw);
+    CHECK(formats::json_quote("a\r\x06\"") == R"("a\r\u0006\"")");
 }

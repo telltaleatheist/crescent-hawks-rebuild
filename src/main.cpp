@@ -3,8 +3,15 @@
 // provider, or with --map N map N with the panel, walking with the arrow
 // keys and Home/PgUp/End/PgDn.
 //
-//   chr [--game-dir DIR] [--map N] [--script KEYS] [--screenshot FILE.bmp]
+//   chr [--game-dir DIR] [--data-dir DIR] [--import] [--map N] [--script KEYS]
+//       [--text FILE] [--screenshot FILE.bmp]
 //
+// The game's text and font are imported once from the player's BTECH.EXE
+// into the data folder (--data-dir, else CHR_DATA_DIR, else the user's
+// application-data folder); that happens by itself the first time, or with
+// --import (which imports again and quits). --text FILE layers a text file
+// of the same form (formats/import.h) over the imported one, e.g. a
+// translation.
 // --script plays a key sequence on the map first ("up*5 y", see
 // game/town.h) and prints what each key did. --screenshot renders one frame
 // to the file without opening a window.
@@ -15,6 +22,7 @@
 #include <cstdio>
 #include <deque>
 #include <memory>
+#include <vector>
 #include <cstdlib>
 #include <filesystem>
 #include <string>
@@ -22,10 +30,12 @@
 #include <SDL3/SDL.h>
 
 #include "formats/game_files.h"
+#include "formats/import.h"
 #include "formats/mtp.h"
 #include "formats/palette.h"
 #include "game/asset_id.h"
 #include "game/map_view.h"
+#include "game/text_provider.h"
 #include "game/town.h"
 #include "platform/map_layer.h"
 #include "platform/original_assets.h"
@@ -38,6 +48,9 @@ struct Options {
     std::filesystem::path game_dir;
     std::string screenshot;  // write one frame here and quit
     std::string script;      // keys to play on the map first
+    std::string text_file;   // text overrides
+    std::filesystem::path data_dir;  // the imported text and font
+    bool import = false;
     int map = 0;             // 0: the title screen
 };
 
@@ -56,12 +69,19 @@ bool parse(int argc, char** argv, Options& options) {
                 std::fprintf(stderr, "chr: --map takes 1 to 15\n");
                 return false;
             }
+        } else if (arg == "--data-dir" && i + 1 < argc) {
+            options.data_dir = argv[++i];
+        } else if (arg == "--import") {
+            options.import = true;
+        } else if (arg == "--text" && i + 1 < argc) {
+            options.text_file = argv[++i];
         } else if (arg == "--script" && i + 1 < argc) {
             options.script = argv[++i];
         } else if (arg == "--screenshot" && i + 1 < argc) {
             options.screenshot = argv[++i];
         } else {
-            std::fprintf(stderr, "usage: chr [--game-dir DIR] [--map N] [--script KEYS] [--screenshot FILE.bmp]\n");
+            std::fprintf(stderr, "usage: chr [--game-dir DIR] [--data-dir DIR] [--import] [--map N] [--script KEYS]\n"
+                         "           [--text FILE] [--screenshot FILE.bmp]\n");
             return false;
         }
     }
@@ -126,6 +146,30 @@ int main(int argc, char** argv) {
     Options options;
     if (!parse(argc, argv, options)) return 2;
 
+    if (options.data_dir.empty()) {
+        if (const char* env = std::getenv("CHR_DATA_DIR"); env && *env) {
+            options.data_dir = env;
+        } else if (char* pref = SDL_GetPrefPath("", "crescent-hawks-rebuild")) {
+            options.data_dir = pref;
+            SDL_free(pref);
+        } else {
+            std::fprintf(stderr, "chr: no data folder (%s); use --data-dir\n", SDL_GetError());
+            return 1;
+        }
+    }
+    try {
+        if (options.import) {
+            chr::formats::import_original(options.game_dir, options.data_dir);
+            std::printf("imported the text and font into %s\n", options.data_dir.string().c_str());
+            return 0;
+        }
+        if (chr::formats::ensure_imported(options.game_dir, options.data_dir))
+            std::fprintf(stderr, "chr: imported the text and font into %s\n", options.data_dir.string().c_str());
+    } catch (const std::exception& e) {
+        std::fprintf(stderr, "chr: %s\n", e.what());
+        return 1;
+    }
+
     // A screenshot run never shows a window: it renders with SDL's dummy
     // video driver and the software renderer (unless SDL_VIDEO_DRIVER or
     // SDL_RENDER_DRIVER names others) into a hidden window, so it is safe to
@@ -154,6 +198,15 @@ int main(int argc, char** argv) {
     chr::formats::MapPosition start;
     std::deque<int> keys;  // every key so far, the script's first
     if (options.map != 0 && !load_map(options.game_dir, options.map, map, start)) status = 1;
+    chr::game::TextTable overrides;
+    if (status == 0 && !options.text_file.empty()) {
+        try {
+            overrides = chr::game::TextTable::load(options.text_file);
+        } catch (const std::exception& e) {
+            std::fprintf(stderr, "chr: --text %s: %s\n", options.text_file.c_str(), e.what());
+            status = 2;
+        }
+    }
     if (status == 0) {
         try {
             keys = chr::game::parse_key_script(options.script);
@@ -163,7 +216,7 @@ int main(int argc, char** argv) {
         }
     }
     if (status == 0) {
-        chr::platform::OriginalAssets assets(options.game_dir);
+        chr::platform::OriginalAssets assets(options.game_dir, options.data_dir);
         chr::platform::Renderer renderer(sdl_renderer, assets);
         const auto palette = chr::formats::standard_palette_ega();
         const auto& title = chr::assets::kTitleScreen;
@@ -172,18 +225,30 @@ int main(int argc, char** argv) {
         // logic asks for keys as it needs them (a question waits for its
         // answer), and replaying keeps it that simple while frames are cheap.
         std::unique_ptr<chr::game::Town> town;
+        chr::game::TextTable imported;
+        try {
+            imported = chr::game::TextTable::load(chr::formats::imported_text_path(options.data_dir));
+        } catch (const std::exception& e) {
+            std::fprintf(stderr, "chr: %s\n", e.what());
+            status = 1;
+        }
+        const chr::game::MapText map_text(map, options.map);
+        const chr::game::LayeredText texts({&overrides, &imported, &map_text});
         auto replay = [&]() -> bool {
-            const auto* exe = assets.exe();
-            if (!exe) return false;
-            town = std::make_unique<chr::game::Town>(map, options.map, start, *exe);
-            town->draw_panel();
-            chr::game::ScriptKeys source(keys);
-            town->run(source);
-            return true;
+            try {
+                town = std::make_unique<chr::game::Town>(map, options.map, start, texts);
+                town->draw_panel();
+                chr::game::ScriptKeys source(keys);
+                town->run(source);
+                return true;
+            } catch (const std::exception& e) {
+                std::fprintf(stderr, "chr: %s\n", e.what());
+                town.reset();
+                return false;
+            }
         };
-        if (options.map != 0) {
+        if (options.map != 0 && status == 0) {
             if (!replay()) {
-                std::fprintf(stderr, "chr: %s\n", assets.last_error().c_str());
                 status = 1;
             } else if (!options.script.empty()) {
                 for (const auto& line : town->log()) std::printf("%s\n", line.c_str());

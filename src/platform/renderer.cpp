@@ -67,6 +67,12 @@ void Renderer::clip(int x, int y, int width, int height) {
 
 void Renderer::clear_clip() { SDL_SetRenderClipRect(sdl_, nullptr); }
 
+std::optional<std::pair<int, int>> Renderer::logical_size(const AssetId& id) {
+    if (!texture_for(id)) return std::nullopt;
+    const Entry& entry = cache_.at(id);
+    return std::pair{int(entry.logical_width), int(entry.logical_height)};
+}
+
 void Renderer::end_frame() { SDL_RenderPresent(sdl_); }
 
 }  // namespace chr::platform
