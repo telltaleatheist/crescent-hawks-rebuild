@@ -72,7 +72,10 @@ be identical and the differences still known, and the game state (random numbers
 townspeople's records) must be identical too. `--full` (ctest `reference_compare_full`, labelled
 `long`: `ctest -LE long` leaves it out) adds the long cases. The sequences (below) run side by side, each in its own copy of the game
 folder, and their reports are printed in order: about 25 seconds for the quick cases and two
-minutes with `--full` on the Mac Studio. It skips
+minutes with `--full` on the Mac Studio. A third tier, `--campaign`, runs only the long
+unpoked run (`chain`), all its cases, which `--full` leaves out: about four and a half minutes
+now, growing with the run. Its ctest `reference_compare_campaign` (label `campaign`) exists only
+when configured with `-DCHR_REFERENCE_CAMPAIGN=ON`. `--sequence chain` also runs it. It skips
 (exit 77) without DOSBox-X, nasm or the game.
 
 ## The start-up, as captured
@@ -174,10 +177,10 @@ without a poke: 2900 idle polls let flag 14 run down (255 town ticks, an idle ti
 polls), the training center again with the quiz on the original's side, the second mission in the
 Wasp, the way to the marked spot (the same random spot in both) and back, and the town after.
 The window it compares is the one chr holds, which after the spot's cell is put back still shows
-tile 0x50 until the next step, as the original's does. `chain` (long only) goes on from `spot`,
+tile 0x50 until the next step, as the original's does. `chain` (campaign tier only) goes on from `spot`,
 still without a poke: flag 14 runs down again, the third mission's first try (flag 13 is 0: the
 commandant and special 3), the Barracks and back as in `rest` (one step east first, as the
-handback leaves the party a cell west of `rest`'s), the quiz again and the briefing, then the third mission in the Wasp with the computer fighting: the shell falls in round 16, the walk back, the verdict (passed) and the town. `fourth` (long only) is mission 4 (flag 00
+handback leaves the party a cell west of `rest`'s), the quiz again and the briefing, then the third mission in the Wasp with the computer fighting: the shell falls in round 16, the walk back, the verdict (passed) and the town; then mission 3 the same way (the last soldier falls in round 13), passed. `fourth` (long only) is mission 4 (flag 00
 poked to 4): no computer question (F:0090), the Locust flees at the first orders menu, the walk
 back, the verdict and the town. `raid` (long only) is mission 7 (flag 00 poked to 7), the
 Kurita raid: the computer question (only mission 4 skips it), then Begin Fight round after round

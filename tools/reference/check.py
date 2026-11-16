@@ -711,7 +711,25 @@ CHAIN_CASES = [dict(case, compare=False) for case in SPOT_CASES] + [
     {"name": "chain_over", "keys": "home*7 left*30", "match": SCREEN},
     {"name": "chain_in_town", "keys": "enter", "match": SCREEN},
     {"name": "chain_walk_on", "keys": "down", "match": SCREEN},
+    # Flag 14 runs down again; mission 3 (enemy people) in the Wasp, the
+    # computer fighting: the last falls in round 13.
+    {"name": "chain_people_waited", "keys": "idle:2900 up*5", "match": SCREEN},
+    {"name": "chain_people_greeting", "keys": "y orig:enter*4", "match": SCREEN},
+    {"name": "chain_people_briefing", "keys": "y", "match": SCREEN},
+    {"name": "chain_people_mech_menu", "keys": "enter", "match": SCREEN},
+    {"name": "chain_people_computer", "keys": "enter", "match": SCREEN},
+    {"name": "chain_people_messages", "keys": "y", "match": SCREEN},
+    {"name": "chain_people_graphics", "keys": "up*2 enter", "match": SCREEN},
+    {"name": "chain_people_round_1", "keys": "arm:1 n", "match": SCREEN, "fight": True},
+] + [{"name": "chain_people_round_%d" % n, "keys": "idle:1", "match": SCREEN, "fight": True} for n in range(2, 14)] + [
+    {"name": "chain_people_end", "keys": "idle:99", "match": SCREEN, "fight": True},
+    {"name": "chain_people_walk", "keys": "enter home*13 left home*2 up*4 right down pgup down pgup down pgup down pgup*2 up*5 home*12 left*30", "match": SCREEN},
+    {"name": "chain_people_in_town", "keys": "enter", "match": SCREEN},
+    {"name": "chain_people_walk_on", "keys": "down", "match": SCREEN},
 ]
+
+# The long unpoked run: its own tier (`--campaign`, ctest label campaign).
+CAMPAIGN = {"chain"}
 
 SEQUENCES = [("town", CASES, FULL_CASES, []), ("training", TRAINING_CASES, [], []),
              ("quiz", QUIZ_CASES, [], ["--show-quiz"]), ("mission", MISSION_CASES, MISSION_FULL_CASES, []),
@@ -839,7 +857,7 @@ def run_sequence(a, sequence, cases, chr_options=()):
     report = []
     say = report.append
     ref_dir = os.path.join(a.work, "original-" + sequence)
-    finished, _ = run.run(a.game_dir, original_script(cases), ref_dir, timeout=900 if a.full else 240)
+    finished, _ = run.run(a.game_dir, original_script(cases), ref_dir, timeout=2400 if sequence in CAMPAIGN else 900 if a.full else 240)
     if not finished:
         say(f"the original did not reach the end of the {sequence} script")
         return False, report
@@ -893,6 +911,8 @@ def main():
     ap.add_argument("--data-dir", required=True)
     ap.add_argument("--work", required=True, help="where the captures, screenshots and diffs go")
     ap.add_argument("--full", action="store_true", help="the long cases too")
+    ap.add_argument("--campaign", action="store_true",
+                    help="only the campaign sequences (the long unpoked run), all their cases")
     ap.add_argument("--sequence", action="append", help="run only this sequence (may be repeated)")
     a = ap.parse_args()
 
@@ -907,9 +927,11 @@ def main():
     os.makedirs(a.work, exist_ok=True)
     # The sequences are separate runs of the original, each in its own
     # copy of the game folder (run.py), so they run side by side.
-    jobs = [(sequence, quick + (full if a.full else []), chr_options)
+    # The campaign sequences run only with --campaign (or by name): they
+    # would make the everyday --full run too long.
+    jobs = [(sequence, quick + (full if a.full or a.campaign else []), chr_options)
             for sequence, quick, full, chr_options in SEQUENCES
-            if not a.sequence or sequence in a.sequence]
+            if (sequence in a.sequence if a.sequence else (sequence in CAMPAIGN) == a.campaign)]
     ok = True
     with concurrent.futures.ThreadPoolExecutor(max_workers=len(jobs) or 1) as pool:
         results = [pool.submit(run_sequence, a, sequence, cases, chr_options)

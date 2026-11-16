@@ -145,6 +145,18 @@ if(SDL3_FOUND)
       LABELS "reference;long" RESOURCE_LOCK dosbox
       ENVIRONMENT "CHR_SCRATCH=${CMAKE_BINARY_DIR}/reference-scratch-full;SDL_VIDEO_DRIVER=dummy;SDL_AUDIO_DRIVER=dummy")
     set_tests_properties(reference_compare PROPERTIES RESOURCE_LOCK dosbox)
+    # The campaign tier, the long unpoked run (tens of minutes as it grows):
+    # only with -DCHR_REFERENCE_CAMPAIGN=ON, or `check.py --campaign`.
+    option(CHR_REFERENCE_CAMPAIGN "Add the reference campaign test (the long unpoked run)" OFF)
+    if(CHR_REFERENCE_CAMPAIGN)
+      add_test(NAME reference_compare_campaign
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/reference/check.py --campaign
+          --chr $<TARGET_FILE:chr> --game-dir ${CHR_GAME_DIR}
+          --data-dir ${CMAKE_BINARY_DIR}/chr-data --work ${CMAKE_BINARY_DIR}/reference-campaign)
+      set_tests_properties(reference_compare_campaign PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 3600
+        LABELS "reference;campaign" RESOURCE_LOCK dosbox
+        ENVIRONMENT "CHR_SCRATCH=${CMAKE_BINARY_DIR}/reference-scratch-campaign;SDL_VIDEO_DRIVER=dummy;SDL_AUDIO_DRIVER=dummy")
+    endif()
   endif()
   if(WIN32)
     # SDL3.dll beside chr.exe.
