@@ -202,10 +202,10 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 |---|---|---|---|---|---|
 | 203b:000a | 0x203ba | `FUN_203b_000a` | 5240 | The fight: set-up, engage question, the round loop, the end, the after-fight steps (docs/combat.md) | read |
 | 203b:1482 | 0x21832 | `FUN_203b_1482` | 65 |  | - |
-| 203b:14c3 | 0x21873 | `FUN_203b_14c3` | 689 | The player's orders menu for each unit; 1 = flee | rebuilt in part (Begin Fight, Flee, Next Unit, Clear Moves) |
+| 203b:14c3 | 0x21873 | `FUN_203b_14c3` | 689 | The player's orders menu for each unit; 1 = flee | rebuilt in part (all but Use Weapons, Kick, Computer, Scan) |
 | 203b:1774 | 0x21b24 | `FUN_203b_1774` | 455 | A unit on the orders screen: the view on it, the box, its path as arrows | rebuilt |
 | 203b:193b | 0x21ceb | `FUN_203b_193b` | 740 | A figure's path from its orders, and its movement cost | rebuilt |
-| 203b:1c1f | 0x21fcf | `FUN_203b_1c1f` | 1554 |  | - |
+| 203b:1c1f | 0x21fcf | `FUN_203b_1c1f` | 1554 | A move order: the type question, the reasons, the map cursor and one waypoint | rebuilt |
 | 203b:2231 | 0x225e1 | `FUN_203b_2231` | 139 |  | - |
 | 203b:22bc | 0x2266c | `FUN_203b_22bc` | 440 | A 'Mech's movement points (walk/run/jump, damage, heat) | rebuilt |
 | 203b:2474 | 0x22824 | `FUN_203b_2474` | 124 | A person's movement points | rebuilt |
@@ -257,7 +257,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 |---|---|---|---|---|---|
 | 273d:0006 | 0x273d6 | `FUN_273d_0006` | 41 | Waits N display frames (vertical retrace, 287f:0b40) | replaced |
 | 273d:002f | 0x273ff | `FUN_273d_002f` | 36 | Is a key waiting? (DOS int 21h 0Bh through 287f:3bdc, or recorded keys) | read |
-| 273d:0053 | 0x27423 | `FUN_273d_0053` | 51 |  | - |
+| 273d:0053 | 0x27423 | `FUN_273d_0053` | 51 | A number printed in decimal (itoa, then the printer) | rebuilt |
 | 273d:0086 | 0x27456 | `FUN_273d_0086` | 79 | Copy a picture buffer to the screen (by display) | replaced |
 | 273d:00d5 | 0x274a5 | `FUN_273d_00d5` | 294 | Writes a string straight onto the screen at (column, row) in two colours with the 8x8 font | rebuilt |
 | 273d:01fb | 0x275cb | `FUN_273d_01fb` | 94 |  | - |

@@ -3,6 +3,7 @@
 // three questions and runs its rounds, the party's side ordered by the
 // player or fought by the computer.
 #include <algorithm>
+#include <map>
 
 #include "game/fight.h"
 #include "game/map_view.h"
@@ -394,7 +395,8 @@ std::optional<int> Town::orders_menu(Combat& combat, KeySource& keys) {
         if (!chosen) return std::nullopt;
         const int c = *chosen;
         if (c >= items - 2) return c == items - 2 ? 1 : 0;
-        if ((mech && c < 3) || (!mech && c == 0)) return stop("the move order");  // 203b:1c1f
+        if ((mech && c < 3) || (!mech && c == 0))
+            if (!move_order(combat, fig, c, keys)) return std::nullopt;
         if (!mech && c == 1) {
             // Clear Moves: the orders deleted, the computer's control off.
             combat_.orders[std::size_t(fig)].fill(0xff);
@@ -441,9 +443,192 @@ void Town::show_unit(Combat& combat, int fig, bool redraw) {
         row += dy;
         const char glyph = char(tables_.path_arrows[std::size_t((dy + 1) * 4 + dx + 1)]);
         text_.put_text(std::string_view(&glyph, 1), col, row, 15, 0);  // 273d:00d5
+        // An arrow written inside the box covers the XOR there: the box
+        // goes on showing only in its other cells.
+        std::vector<XorBox> kept;
+        for (const auto& b : boxes_) {
+            if (col < b.col || col >= b.col + b.width || row < b.row || row >= b.row + b.height) {
+                kept.push_back(b);
+                continue;
+            }
+            for (int r = b.row; r < b.row + b.height; ++r)
+                for (int k = b.col; k < b.col + b.width; ++k)
+                    if (k != col || r != row) kept.push_back({k, r, 1, 1, b.colour});
+        }
+        boxes_ = kept;
     }
     path_end_col_ = col;
     path_end_row_ = row;
+}
+
+void Town::xor_box(const XorBox& box) {
+    // On a cell of text written over the map (a path's arrow) the XOR
+    // flips the text's own colours.
+    const auto text_at = [&](int c, int r) {
+        return c >= 0 && c < kTextColumns && r >= 0 && r < kTextRows && text_.cell(c, r).kind != TextCell::Kind::Empty;
+    };
+    bool on_text = false;
+    for (int r = box.row; r < box.row + box.height; ++r)
+        for (int c = box.col; c < box.col + box.width; ++c) on_text = on_text || text_at(c, r);
+    if (on_text) {
+        for (int r = box.row; r < box.row + box.height; ++r)
+            for (int c = box.col; c < box.col + box.width; ++c)
+                if (text_at(c, r)) text_.xor_bar(c, r, 1, box.colour);
+                else xor_box({c, r, 1, 1, box.colour});
+        return;
+    }
+    const auto overlap = [](const XorBox& a, const XorBox& b) {
+        return a.col < b.col + b.width && b.col < a.col + a.width && a.row < b.row + b.height && b.row < a.row + a.height;
+    };
+    std::map<std::pair<int, int>, int> cells;
+    const auto add = [&](const XorBox& b) {
+        for (int r = b.row; r < b.row + b.height; ++r)
+            for (int c = b.col; c < b.col + b.width; ++c) cells[{c, r}] ^= b.colour;
+    };
+    std::vector<XorBox> kept;
+    for (const auto& b : boxes_) {
+        if (overlap(b, box)) add(b);
+        else kept.push_back(b);
+    }
+    if (cells.empty()) {
+        boxes_.push_back(box);
+        return;
+    }
+    add(box);
+    for (const auto& [cell, colour] : cells)
+        if (colour != 0) kept.push_back({cell.first, cell.second, 1, 1, colour});
+    boxes_ = kept;
+}
+
+// BTECH.EXE 203b:1c1f (Ghidra FUN_203b_1c1f)
+// A move order of `type` (0 walk, 1 run, 2 jump; on foot 0) for unit `fig`:
+// at most one waypoint, placed with a cursor on the map (docs/combat.md 2.6).
+bool Town::move_order(Combat& combat, int fig, int type, KeySource& keys) {
+    auto& orders = combat_.orders[std::size_t(fig)];
+    if (fig < 12) {
+        if (figs_.computer[std::size_t(fig)]) {
+            orders.fill(0xff);
+            show_unit(combat, fig, true);
+        }
+        figs_.computer[std::size_t(fig)] = false;
+    }
+    const auto no_jump_jets = [&] { return mechs_[std::size_t(fig)][mech::kJump] == 0; };
+    // A 'Mech with orders of another type: change them? Yes deletes them.
+    const int current = std::int8_t(orders[0]);
+    if (fig < 4 && current != -1 && !(type == 2 && no_jump_jets()) && current != type) {
+        text_.select_window(4);
+        text_.clear_window();
+        print_id("orders.now");
+        std::string doing = lookup(texts_, "orders.mode." + std::to_string(current));
+        if (current == 1) doing += lookup(texts_, "orders.now_n");
+        doing += lookup(texts_, "orders.now_ing");
+        text_.print(doing);  // one string, built in DG:0012 (287f:3b68, 3b22)
+        print_id("orders.wish");
+        print_id("orders.mode." + std::to_string(type));
+        print_id("orders.instead");
+        const auto change = yes_no(true, keys);
+        if (!change) {
+            place_open_ = true;
+            return false;
+        }
+        if (!*change) {
+            text_.clear_window();
+            return true;
+        }
+        text_.clear_window();
+        print_id("orders.deleted");
+        print_id("orders.new_moves");
+        orders.fill(0xff);
+        show_unit(combat, fig, false);
+        if (!read_key(keys)) return false;
+    }
+    // The new waypoint goes in the first free order.
+    int n = 0;
+    while (n < CombatState::kOrderBytes && orders[std::size_t(n)] != 0xff) n += 4;
+    if (fig < 4) combat.mech_mp(fig, type);
+    else combat.person_mp(fig);
+    combat.simulate_path(fig);
+    text_.select_window(4);
+    text_.clear_window();
+    if (combat.mp() == 0) {
+        // Why not, and a key.
+        if (type == 2 && no_jump_jets()) {
+            print_id("orders.no_jump_jets");
+        } else if (fig < 4 && combat_.heat[std::size_t(fig)] == 0x1e) {
+            print_id("orders.overheated");
+        } else {
+            if (fig >= 4 && fig < 12) combat.clear_slowed();
+            if (combat.legs_slowed() || combat.heat_slowed() != 0) {
+                print_id("orders.inhibited");
+                if (combat.legs_slowed()) print_id("orders.inhibited_legs");
+                else print_id("orders.inhibited_heat");
+            } else {
+                print_id("orders.cant");
+                print_id(fig < 4 ? "orders.mode." + std::to_string(type) : "orders.move");
+                print_id("orders.no_further");
+                if (fig < 4 && type != 1) print_id("orders.try_running");
+            }
+            combat.clear_slowed();
+        }
+        if (!press_key(keys)) return false;
+        text_.clear_window();
+        return true;
+    }
+    print_id("orders.you_have");
+    text_.print(std::to_string(combat.mp()));  // 273d:0053
+    print_id("orders.points_left");
+    // The cursor starts where the shown path ends: a cell XORed with 14.
+    xor_box({path_end_col_, path_end_row_, 1, 1, 14});
+    for (;;) {
+        const auto k = read_key(keys);  // 273d:0259
+        if (!k) return false;
+        const int key = arrow_key(*k);
+        const auto step = step_for_key(key);
+        const int dx = step ? step->dx : 0, dy = step ? step->dy : 0;
+        // Kept inside the map's columns and rows on screen.
+        path_end_col_ += dx;
+        if (path_end_col_ < 0x0d || path_end_col_ > 0x27) path_end_col_ -= dx;
+        path_end_row_ += dy;
+        if (path_end_row_ < 0 || path_end_row_ > 0x18) path_end_row_ -= dy;
+        if (dx != 0 || dy != 0) {
+            // The waypoint under the cursor (1000:191b from the unit),
+            // unless the orders already hold it.
+            const auto saved = position_;
+            position_ = {move_x(position_.x, path_end_col_ - 0x1a), move_y(position_.y, path_end_row_ - 0x0c)};
+            const int wx = position_.x & 0x7f, wy = position_.y & 0x7f;
+            const int area = ((position_.y & 0xf000) | (position_.x & 0x0f00)) >> 8;
+            // The slot: past the twelfth order, the next figure's first (bug 17).
+            std::uint8_t* slot = nullptr;
+            if (n < CombatState::kOrderBytes) slot = &orders[std::size_t(n)];
+            else if (!fixes_.fix_order_bound && fig + 1 < CombatState::kFigures)
+                slot = &combat_.orders[std::size_t(fig + 1)][0];
+            else log_.push_back("fix 17: a 13th waypoint is not written");
+            bool fresh = true;
+            for (int j = 0; j < n; j += 4) {
+                // Bug 16: the area is compared sign-extended.
+                const int a = fixes_.fix_waypoint_compare ? orders[std::size_t(j + 1)] : std::int8_t(orders[std::size_t(j + 1)]);
+                if (a == area && std::int8_t(orders[std::size_t(j + 2)]) == wx && std::int8_t(orders[std::size_t(j + 3)]) == wy) {
+                    fresh = false;
+                    if (slot) slot[0] = 0xff;
+                }
+            }
+            if (fresh && slot) {
+                slot[0] = std::uint8_t(type);
+                slot[1] = std::uint8_t(area);
+                slot[2] = std::uint8_t(wx);
+                slot[3] = std::uint8_t(wy);
+            }
+            position_ = saved;
+            const int col = path_end_col_, row = path_end_row_;
+            show_unit(combat, fig, false);
+            path_end_col_ = col;
+            path_end_row_ = row;
+            xor_box({col, row, 1, 1, 14});
+        }
+        if (key == key::kSpace || key == key::kEnter) break;
+    }
+    text_.clear_window();
+    return true;
 }
 
 // BTECH.EXE 1000:2a4f (Ghidra FUN_1000_2a4f)

@@ -247,6 +247,11 @@ private:
     // out or an order is chosen that the rebuild stops at.
     std::optional<int> orders_menu(Combat& combat, KeySource& keys);
     void show_unit(Combat& combat, int fig, bool redraw);
+    bool move_order(Combat& combat, int fig, int type, KeySource& keys);
+    // 287f:2b87 over the map: a box XORed onto the screen. Where it
+    // overlaps another, the cells get both colours XORed; on text, the
+    // text's colours.
+    void xor_box(const XorBox& box);
     // The rounds, the party's side ordered by the player or planned by the
     // computer, until the fight ends; then its ending.
     bool fight_rounds(int kind, KeySource& keys);

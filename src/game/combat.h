@@ -144,6 +144,15 @@ public:
     // 'Mech record m's movement points for an order type (0 walk, 1 run,
     // 2 jump, -1 none), into F:3770.
     int mech_mp(int m, int type);
+    // What the last movement-point call left: the points (F:3770) and why
+    // they were cut (F:377c the legs, F:4592 the heat).
+    int mp() const { return mp_; }
+    bool legs_slowed() const { return legs_slowed_; }
+    int heat_slowed() const { return heat_slowed_; }
+    void clear_slowed() {
+        legs_slowed_ = false;
+        heat_slowed_ = 0;
+    }
     // BTECH.EXE 203b:2474 (Ghidra FUN_203b_2474)
     // A person's movement points; n is the figure as the caller passes it.
     int person_mp(int n);

@@ -27,6 +27,10 @@ struct Step {
 // the diagonals (the numeric keypad).
 std::optional<Step> step_for_key(int key);
 
+// BTECH.EXE 2656:0d1d (Ghidra FUN_2656_0d1d)
+// The other keys a menu or a cursor takes as arrows (see movement.cpp).
+int arrow_key(int k);
+
 // Who is walking: up to eight characters, each at a fixed offset from the
 // party's position (DGROUP:0464/047c, in half-cells: imported into
 // tables.json as formation_x/y). A new game has one.

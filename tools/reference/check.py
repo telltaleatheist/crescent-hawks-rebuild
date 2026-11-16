@@ -403,13 +403,46 @@ ORDERS_FULL_CASES = ORDERS_ROUNDS[1:] + [
     },
 ]
 
+# The player's move orders (203b:1c1f, docs/combat.md 2.6): Walk with the
+# map cursor, Run over the walk orders (asked, then deleted), Jump with a
+# Locust (no jump jets), then rounds fought on the run orders.
+SCREEN = {"the panel": WHOLE_PANEL, "the map": WHOLE_MAP}
+MOVE_CASES = [dict(case, compare=False) for case in ORDERS_CASES[:12]] + [
+    # Walk: "You have N movement points left", the cursor at the unit.
+    {"name": "move_walk", "keys": "up*9 enter", "match": SCREEN, "fight": True},
+]
+MOVE_FULL_CASES = [
+    # A step east: a tentative waypoint and its path's arrows.
+    {"name": "move_step", "keys": "right", "match": SCREEN, "fight": True},
+    # Further, diagonally and past the box.
+    {"name": "move_steps", "keys": "pgdn right*3 down", "match": SCREEN, "fight": True},
+    # Back onto the first step's cell, and Enter: the menu, its bar on Walk.
+    {"name": "move_accept", "keys": "up left*3 enter", "match": SCREEN, "fight": True},
+    # Walk again: a second waypoint after the first.
+    {"name": "move_walk_again", "keys": "enter left*2 up*3", "match": SCREEN, "fight": True},
+    {"name": "move_accept_again", "keys": "enter", "match": SCREEN, "fight": True},
+    # Run: "You are now Walking. Do you wish to Run instead?"
+    {"name": "move_run_question", "keys": "down enter", "match": SCREEN, "fight": True},
+    # Yes: the orders deleted, a key.
+    {"name": "move_run_deleted", "keys": "y", "match": SCREEN, "fight": True},
+    {"name": "move_run_cursor", "keys": "enter", "match": SCREEN, "fight": True},
+    {"name": "move_run_steps", "keys": "right*4 down*2 enter", "match": SCREEN, "fight": True},
+    # Jump with no jump jets: the reason and "Press a key."
+    {"name": "move_jump", "keys": "down enter", "match": SCREEN, "fight": True},
+    # A key, then Begin Fight: the rounds on the run orders.
+    {"name": "move_round_1", "keys": "enter down*7 enter", "match": SCREEN, "fight": True},
+    {"name": "move_round_2", "keys": "enter", "match": SCREEN, "fight": True},
+    {"name": "move_round_3", "keys": "enter", "match": SCREEN, "fight": True},
+]
+
 # Each sequence is one run of the original: (name, quick cases, --full
 # cases, chr's own options).
 SEQUENCES = [("town", CASES, FULL_CASES, []), ("training", TRAINING_CASES, [], []),
              ("quiz", QUIZ_CASES, [], ["--show-quiz"]), ("mission", MISSION_CASES, MISSION_FULL_CASES, []),
              ("verbose", VERBOSE_CASES, VERBOSE_FULL_CASES, []), ("drawn", DRAWN_CASES, DRAWN_FULL_CASES, []),
              ("brief", [], BRIEF_CASES + BRIEF_FULL_CASES, []),
-             ("orders", ORDERS_CASES, ORDERS_FULL_CASES, [])]
+             ("orders", ORDERS_CASES, ORDERS_FULL_CASES, []),
+             ("moves", MOVE_CASES, MOVE_FULL_CASES, [])]
 
 # The feeder (tools/capture/snap.asm, docs/reference.md) hands over a key at
 # every 4th poll of the keyboard. The main loop polls once a pass, and after

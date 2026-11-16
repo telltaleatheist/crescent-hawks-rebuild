@@ -18,24 +18,6 @@ namespace {
 
 constexpr int kPanelPictureWindow = 4;
 
-// BTECH.EXE 2656:0d1d (Ghidra FUN_2656_0d1d)
-// The keys a menu (and the program's other key loops) take as arrows: the
-// keypad digits, the letters round S (Q W E / A D / Z X C, either case) and a
-// few stray symbols. Every other key comes back as it is.
-int arrow_key(int k) {
-    switch (k) {
-    case '1': case 'Z': case 'z': return key::kEnd;
-    case '2': case 'X': case 'x': case '`': return key::kDown;
-    case '3': case 'C': case 'c': return key::kPageDown;
-    case '4': case 'A': case 'a': case '|': return key::kLeft;
-    case '6': case 'D': case 'd': case 0x0c: return key::kRight;
-    case '7': case 'Q': case 'q': case '\\': return key::kHome;
-    case '8': case 'W': case 'w': case '~': return key::kUp;
-    case '9': case 'E': case 'e': return key::kPageUp;
-    default: return k;
-    }
-}
-
 }  // namespace
 
 std::optional<int> Town::read_key(KeySource& keys) {

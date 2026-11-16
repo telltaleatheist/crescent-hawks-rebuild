@@ -151,8 +151,8 @@ machines of the day each probably took several display frames. The platform hold
 sounds are recorded but not played yet (no sound is rebuilt). A story picture is held 50 frames
 at its last frame.
 
-Not rebuilt yet: the sounds, the player's orders other than Begin Fight, Flee and Next Unit
-(2.6), the Arena's spectator, the double agent, and what follows the fight (2.13 is
+Not rebuilt yet: the sounds, the player's orders other than Begin Fight, Flee, Next Unit and the
+move orders (2.6), the Arena's spectator, the double agent, and what follows the fight (2.13 is
 done; 2.15 is not).
 
 **The cell window in a fight.** The planner's path (3.3) and the line of sight (3.6) read map
@@ -394,7 +394,27 @@ instead.
   0-0x18); each move puts a tentative waypoint at the cursor and redraws the path; Space or Enter
   accepts. There is no cancel key. Each call adds at most one waypoint (up to 12 per figure).
   The number shown is not updated as the cursor moves. The target may be out of reach: the path
-  stops where the points run out.
+  stops where the points run out. In detail (rebuilt, `Town::move_order`):
+  - A unit under the computer has its orders deleted and its screen redrawn first; computer
+    control goes off.
+  - The question (a 'Mech with orders of another type, unless it asks to jump with no jump jets):
+    "You are now" and one string built from the old type's name, "n" for Run, and "ing", then the
+    new type's name, as a yes/no question starting on yes. No leaves the order. Yes: "orders
+    deleted", the orders cleared, the screen shown again without redrawing, and a key.
+  - The new waypoint goes in the first order whose type is ff. The movement points are worked
+    out for the new type and the path simulated, window 4 is cleared.
+  - With no points: the reasons in that order, then "Press a key." On foot, F:377c and F:4592 are
+    cleared before the test, so a person only ever gets "You can't move any further". Both are
+    cleared afterwards.
+  - The cursor starts where the shown path ends (F:3778/377a), a cell XORed with 14. Keys go
+    through `2656:0d1d`. A move that would leave columns 0x0d-0x27 or rows 0-0x18 is undone on
+    that axis. On a move the waypoint under the cursor (`1000:191b` from the unit) is written
+    into the new order, unless an earlier order holds the same cell (area, x, y): then the new
+    order's type is set to ff (bug 16 for areas 0x80 and up). The screen is shown again without
+    redrawing (the path's arrows), and the cursor XORed again. Space or Enter ends, keeping the
+    waypoint as it stands; window 4 is cleared.
+  - Overlapping XORs combine: the cursor on the unit's box shows both colours XORed, and the
+    cursor on an arrow (text written over the box) flips the arrow's own colours.
 - **Use Weapons** (`1d43:0004`): a 'Mech that is shut down (heat 30) cannot (DG:2904); sensors
   damaged once is a warning (DG:292d), twice and it cannot fire (DG:2964). The list shows each
   weapon (up to 12), its ammunition (Full / Out / a count), its target and range band. A
@@ -430,7 +450,9 @@ is still unworked (its first step 2) has its movement points and path worked out
 position; a unit under the computer is planned (`1e31:03ab(fig, 0)`).
 
 The `orders` reference sequence fights mission 2 with Begin Fight and no orders for eight rounds,
-then flees, matching the original's screen and state at each menu.
+then flees, matching the original's screen and state at each menu. The `moves` sequence gives
+walk orders with the cursor, changes them to run (the question), tries to jump with a Locust,
+and fights three rounds on the run orders.
 
 ### 2.7 Fleeing
 
@@ -1018,7 +1040,7 @@ mistake; "quirk" means it may be intended.
 | 14 | Under computer control, an auto-retreat value of 2 is later read as "left the raid area". Probable. | `203b:000a` | `fix_auto_retreat` |
 | 15 | The flee draw is made in kinds 2 and 3, where fleeing is refused. Kept for the draw order. | `203b:000a` | none |
 | 16 | A waypoint in area rows 8-15 is never recognised as a duplicate (sign extension), so it is added again. Harmless. | `203b:1c1f` | `fix_waypoint_compare` |
-| 17 | A 13th waypoint would be written into the next figure's order list. Probably unreachable. | `203b:1c1f` | `fix_order_bound` |
+| 17 | A 13th waypoint is written into the next figure's first order (each Move adds one, so thirteen Moves reach it). The rebuild holds that order, so the original's write is reproduced with the switch off. | `203b:1c1f` | `fix_order_bound` |
 | 18 | The path is written without a bound; more than 12 steps would spill into the next figure's path. | `203b:193b` | `fix_path_bound` |
 | 19 | Scan: for a 'Mech without sensors the "no enemy humans" check is skipped and the list is opened empty. | `203b:2591` | `fix_scan_sensors` |
 | 20 | The reachability test before "Engage" changes figure 0's heading. | `203b:28db` | `fix_probe_heading` |
