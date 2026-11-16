@@ -63,6 +63,19 @@ const std::vector<Flat>& flat_tables() {
         {"mech_cell_odd_y", 0x46db, 0x02f6, Element::S16, [](Tables& t) { return all(t.mech_cell_odd_y); }},
         {"enemy_offset_x", 0x46db, 0x1642, Element::S8, [](Tables& t) { return all(t.enemy_offset_x); }},
         {"enemy_offset_y", 0x46db, 0x164e, Element::S8, [](Tables& t) { return all(t.enemy_offset_y); }},
+        {"los_step_x", 0x46db, 0x328a, Element::S16, [](Tables& t) { return all(t.los_step_x); }},
+        {"los_step_y", 0x46db, 0x329a, Element::S16, [](Tables& t) { return all(t.los_step_y); }},
+        {"los_area_x", 0x46db, 0x32aa, Element::S16, [](Tables& t) { return all(t.los_area_x); }},
+        {"los_area_y", 0x46db, 0x32ba, Element::S16, [](Tables& t) { return all(t.los_area_y); }},
+        {"los_row", 0x46db, 0x32ca, Element::S16, [](Tables& t) { return all(t.los_row); }},
+        {"step_direction", 0x46db, 0x2ecc, Element::S8, [](Tables& t) { return all(t.step_direction); }},
+        {"path_quarters", 0x46db, 0x3b12, Element::U8, [](Tables& t) { return all(t.path_quarters); }},
+        {"leg_actuator_bit", 0x46db, 0x316a, Element::U8, [](Tables& t) { return all(t.leg_actuator_bit); }},
+        {"leg_actuator_keep", 0x46db, 0x3172, Element::U8, [](Tables& t) { return all(t.leg_actuator_keep); }},
+        {"arm_actuator_bit", 0x46db, 0x317a, Element::U8, [](Tables& t) { return all(t.arm_actuator_bit); }},
+        {"arm_actuator_keep", 0x46db, 0x3182, Element::U8, [](Tables& t) { return all(t.arm_actuator_keep); }},
+        {"location_slot_first", 0x46db, 0x318a, Element::U8, [](Tables& t) { return all(t.location_slot_first); }},
+        {"location_slot_count", 0x46db, 0x3192, Element::U8, [](Tables& t) { return all(t.location_slot_count); }},
     };
     return kFlat;
 }

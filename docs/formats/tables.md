@@ -51,6 +51,14 @@ word); anything else is refused, and the game asks for a new import.
 | `mech_water` | DG:02e6 | 4 words | its water quarter bits |
 | `mech_cell_odd_x`, `_odd_y` | DG:02ee/02f6 | 4 words each | added to the cell when the party's x or y is odd |
 | `enemy_offset_x`, `_y` | DG:1642/164e | 12 bytes each | 17dc:0d49's places for the enemy 'Mechs |
+| `los_step_x`, `_y` | DG:328a/329a | 8 words each | 1e31:1bfe's line-of-sight step in each direction |
+| `los_area_x`, `_y` | DG:32aa/32ba | 8 words each | added to x or y when that step crosses into another area |
+| `los_row` | DG:32ca | 8 words | how far a y step moves through the cell window |
+| `step_direction` | DG:2ecc | 11 bytes | by (dy + 1) x 4 + dx + 1, the direction of a path step (22e8:000c) |
+| `path_quarters` | DG:3b12 | 4 bytes | by the half-cell's parity, the tile bits that make a path step cost more (203b:193b) |
+| `leg_actuator_bit`, `_keep` | DG:316a/3172 | 8 bytes each | by a d6, a leg actuator a critical hit takes out, and the mask that clears it (1e31:11ab) |
+| `arm_actuator_bit`, `_keep` | DG:317a/3182 | 8 bytes each | the same for an arm |
+| `location_slot_first`, `_count` | DG:318a/3192 | 8 bytes each | by internal location - 0x1c, its item bytes in the 'Mech record |
 
 ## What stays in the code, and why
 

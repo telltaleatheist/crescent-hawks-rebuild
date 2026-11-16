@@ -80,6 +80,23 @@ struct Tables {
     std::array<int, 12> enemy_offset_x{};           // DG:1642: 17dc:0d49's enemy places
     std::array<int, 12> enemy_offset_y{};           // DG:164e
 
+    // The round (docs/combat.md 3).
+    std::array<int, 8> los_step_x{};                // DG:328a: 1e31:1bfe's step in each direction
+    std::array<int, 8> los_step_y{};                // DG:329a
+    std::array<int, 8> los_area_x{};                // DG:32aa: added when the step crosses into another area
+    std::array<int, 8> los_area_y{};                // DG:32ba
+    std::array<int, 8> los_row{};                   // DG:32ca: the cell window's rows a y step moves
+    std::array<int, 11> step_direction{};           // DG:2ecc: by (dy + 1) 4 + dx + 1, a path step's direction
+    std::array<int, 4> path_quarters{};             // DG:3b12: by parity, the tile bits a path step's cell costs
+    // 1e31:11ab's critical hits: by a d6, an actuator's bit and the mask
+    // that clears it (legs, arms); by location - 0x1c, its item slots.
+    std::array<int, 8> leg_actuator_bit{};          // DG:316a
+    std::array<int, 8> leg_actuator_keep{};         // DG:3172
+    std::array<int, 8> arm_actuator_bit{};          // DG:317a
+    std::array<int, 8> arm_actuator_keep{};         // DG:3182
+    std::array<int, 8> location_slot_first{};       // DG:318a: the location's first item byte
+    std::array<int, 8> location_slot_count{};       // DG:3192: how many
+
     bool operator==(const Tables&) const = default;
 };
 
