@@ -1264,6 +1264,11 @@ sequence compares the scene with the original's, over the whole screen and the s
     no random numbers, and idle passes in town draw one only on the 11th in a row (every key is a
     game tick and resets the countdown, docs/town_loop.md); 52 extra passes and six
     computer-fought rounds give a flee draw with r & 3 = 0.
+16. The raid's walk-out ending (a party figure past the raid area's edge, [bp-0x38] = 2: window 3,
+    "You have eluded your enemies!" (DG:39f7) and `1000:2a4f`'s key) is rebuilt but not compared
+    by the rig: the `raid` sequence ends with the Locust destroyed.
+17. Mission 6 choosing the raid (its one r, the raid if r & 1) is rebuilt but not compared: the
+    `raid` sequence pokes flag 00 to 7, which is always the raid.
 
 ## Functions
 
