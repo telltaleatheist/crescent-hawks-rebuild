@@ -412,7 +412,8 @@ std::optional<int> Town::orders_menu(Combat& combat, KeySource& keys) {
         if (((mech && c == 5) || (!mech && c == 3)) && !no_computer_order_) plan_shown(combat, fig);
         if ((mech && c == 3) || (!mech && c == 2))
             if (!weapons_order(combat, fig, keys)) return std::nullopt;
-        if ((mech && c == 6) || (!mech && c == 4)) return stop("the scan");                // 203b:2591
+        if ((mech && c == 6) || (!mech && c == 4))
+            if (!scan_order(combat, fig, keys)) return std::nullopt;
         if (c == items - 3) {
             // Next Unit: the next active party unit, 11 wrapping to 0, the
             // bar on Next Unit in its menu.
@@ -663,6 +664,141 @@ bool Town::weapons_order(Combat& combat, int fig, KeySource& keys) {
         }
     } while (choice != count);
     return finish();
+}
+
+// BTECH.EXE 203b:2591 (Ghidra FUN_203b_2591)
+// Scan Unit: Friends, Enemies or Cancel, then the list of that side. A
+// person cannot see enemy 'Mechs (and is told so while any is active); a
+// 'Mech whose sensors are destroyed cannot either.
+bool Town::scan_order(Combat& combat, int fig, KeySource& keys) {
+    bool mechs = true;  // whether the list holds 'Mechs
+    text_.select_window(3);
+    text_.clear_window();
+    print_id("scan.which");
+    menus_[3].first_row = 1;
+    menus_[3].items = 3;
+    menu_last_[3] = 0;
+    const auto chosen = menu(3, keys);
+    if (!chosen) return false;
+    const int c = *chosen;
+    bool any = true;
+    if (c == 1) {
+        text_.select_window(4);
+        text_.clear_window();
+        if (fig >= 4) {
+            bool enemy_mech = false;
+            for (int i = 12; i < 16; ++i)
+                if (figs_.active[std::size_t(i)] != 0) enemy_mech = true;
+            if (enemy_mech) {
+                print_id("scan.humans_only");
+                if (!read_key(keys)) return false;  // 273d:0259
+            }
+            any = false;
+            mechs = false;
+        } else if (mechs_[std::size_t(fig)][mech::kSensorHits] == 2) {
+            print_id("scan.no_sensors");
+            mechs = false;
+            if (!read_key(keys)) return false;
+            text_.clear_window();
+            // Bug 19: the "no enemy humans" check below is skipped.
+            if (fixes_.fix_scan_sensors) any = false;
+        }
+    }
+    for (int i = 16; i < 24; ++i)
+        if (figs_.active[std::size_t(i)] != 0 && figs_.x[std::size_t(i)] != 0xffff) any = true;
+    if (!any && !mechs && c == 1) {
+        text_.select_window(4);
+        text_.clear_window();
+        print_id("scan.no_humans");
+        if (!press_key(keys)) return false;  // 1000:2a4f
+    }
+    text_.clear_window();
+    if (c < 2 && (any || mechs))
+        if (!scan_list(combat, fig, 12 * c, mechs, keys)) return false;
+    menus_[3].first_row = 0;
+    menu_last_[3] = fig < 4 ? 6 : 4;  // F:00c8: the bar back on Scan Unit
+    return true;
+}
+
+// BTECH.EXE 15ab:1467 (Ghidra FUN_15ab_1467)
+// The scan list: each active, placed figure of the twelve from `base` (the
+// people only, without `mechs`) in turn, shown on the map with its heading,
+// until Done.
+bool Town::scan_list(Combat& combat, int fig, int base, bool mechs, KeySource& keys) {
+    const int first = base + (mechs ? 0 : 4);
+    int t = first;
+    int chosen = 0;
+    int unseen = 0;  // figures passed over in a row (fix 32)
+    do {
+        if (figs_.active[std::size_t(t)] != 0 && figs_.x[std::size_t(t)] != 0xffff &&
+            figs_.y[std::size_t(t)] != 0xffff) {
+            unseen = 0;
+            text_.select_window(4);
+            text_.clear_window();
+            text_.set_fg(15);
+            if (t >= 4 && t < 12) {
+                log_.push_back("a person in the scan list: not rebuilt");
+                fight_unfinished_ = true;
+                return false;
+            }
+            if (t >= 16) {
+                log_.push_back("an enemy person in the scan list: not rebuilt");
+                fight_unfinished_ = true;
+                return false;
+            }
+            if (t < 4) {
+                print_unit_heading(t);  // 15ab:18e8(t, 1, 1)
+            } else {
+                // An enemy 'Mech: its record's name as the record holds it
+                // (padded with spaces), and the direction it lies in.
+                print_id("scan.enemy");
+                const auto& rec = mechs_[std::size_t(t - 8)];
+                std::string name;
+                for (int i = 0; i < formats::kMechNameSize && rec[std::size_t(i)] != 0; ++i)
+                    name += char(rec[std::size_t(i)]);
+                text_.print(name);
+                text_.set_fg(10);  // 1000:28a2
+                print_id("scan.direction");
+                const int d = direction_toward({figs_.x[std::size_t(fig)], figs_.y[std::size_t(fig)]},
+                                               {figs_.x[std::size_t(t)], figs_.y[std::size_t(t)]}, tables_);
+                static const char* const kNames[] = {"north", "northeast", "east", "southeast",
+                                                     "south", "southwest", "west", "northwest"};
+                if (d >= 0) print_id(std::string("walk.direction.") + kNames[d]);
+                else log_.push_back("bug 32: the scan's direction of one figure from itself (not printed)");
+            }
+            show_unit(combat, t, true);
+            text_.select_window(3);
+            text_.clear_window();
+            menus_[3].items = 2;
+            print_id("scan.menu");
+            bool detail = false;
+            if (mechs && (t < 4 || (t >= 12 && t < 16))) {
+                print_id("scan.detail");
+                menus_[3].items = 3;
+                detail = true;
+            }
+            print_id("scan.done");
+            menus_[3].first_row = 1;
+            menu_last_[3] = 0;
+            const auto c = menu(3, keys);
+            if (!c) return false;
+            chosen = *c;
+            if (chosen == 1 && detail) {
+                log_.push_back("the stats screen (15ab:1afe): not rebuilt");
+                fight_unfinished_ = true;
+                return false;
+            }
+        } else if (fixes_.fix_scan_list && ++unseen > 12) {
+            log_.push_back("fix 32: a scan list with nobody in it ends");
+            break;
+        }
+        if (++t > base + 11) t = first;
+        if (combat_.spectator && t > 11) t = 12;  // the Arena: the opponent only
+    } while (chosen == 0);
+    menus_[3].first_row = 0;
+    menu_last_[3] = 6;
+    text_.set_fg(15);
+    return true;
 }
 
 // BTECH.EXE 203b:2231 (Ghidra FUN_203b_2231)

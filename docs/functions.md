@@ -85,7 +85,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 15ab:0c8f | 0x1673f | `FUN_15ab_0c8f` | 131 |  | - |
 | 15ab:0d12 | 0x167c2 | `FUN_15ab_0d12` | 43 |  | - |
 | 15ab:0d3d | 0x167ed | `FUN_15ab_0d3d` | 1834 | Sets up a random encounter: soldiers and 'Mechs, placed 10-17 cells away | read |
-| 15ab:1467 | 0x16f17 | `FUN_15ab_1467` | 741 |  | - |
+| 15ab:1467 | 0x16f17 | `FUN_15ab_1467` | 741 | The scan list: each figure of a side in turn, Next / Detail / Done | rebuilt in part (no people, no Detail) |
 | 15ab:174c | 0x171fc | `FUN_15ab_174c` | 268 |  | - |
 | 15ab:1858 | 0x17308 | `FUN_15ab_1858` | 144 |  | - |
 | 15ab:18e8 | 0x17398 | `FUN_15ab_18e8` | 534 |  | - |
@@ -202,7 +202,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 |---|---|---|---|---|---|
 | 203b:000a | 0x203ba | `FUN_203b_000a` | 5240 | The fight: set-up, engage question, the round loop, the end, the after-fight steps (docs/combat.md) | read |
 | 203b:1482 | 0x21832 | `FUN_203b_1482` | 65 |  | - |
-| 203b:14c3 | 0x21873 | `FUN_203b_14c3` | 689 | The player's orders menu for each unit; 1 = flee | rebuilt in part (all but Scan) |
+| 203b:14c3 | 0x21873 | `FUN_203b_14c3` | 689 | The player's orders menu for each unit; 1 = flee | rebuilt in part (people's orders need people in fights) |
 | 203b:1774 | 0x21b24 | `FUN_203b_1774` | 455 | A unit on the orders screen: the view on it, the box, its path as arrows | rebuilt |
 | 203b:193b | 0x21ceb | `FUN_203b_193b` | 740 | A figure's path from its orders, and its movement cost | rebuilt |
 | 203b:1c1f | 0x21fcf | `FUN_203b_1c1f` | 1554 | A move order: the type question, the reasons, the map cursor and one waypoint | rebuilt |
@@ -211,7 +211,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 203b:2474 | 0x22824 | `FUN_203b_2474` | 124 | A person's movement points | rebuilt |
 | 203b:24f0 | 0x228a0 | `FUN_203b_24f0` | 102 |  | - |
 | 203b:2556 | 0x22906 | `FUN_203b_2556` | 59 |  | - |
-| 203b:2591 | 0x22941 | `FUN_203b_2591` | 428 |  | - |
+| 203b:2591 | 0x22941 | `FUN_203b_2591` | 428 | Scan Unit: Friends / Enemies / Cancel, then the scan list | rebuilt |
 | 203b:273d | 0x22aed | `FUN_203b_273d` | 140 |  | - |
 | 203b:27c9 | 0x22b79 | `FUN_203b_27c9` | 108 |  | - |
 | 203b:2835 | 0x22be5 | `FUN_203b_2835` | 166 |  | - |

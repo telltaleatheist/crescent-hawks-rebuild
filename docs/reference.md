@@ -154,7 +154,9 @@ weapon the enemy through the target picker and fights four rounds (the picker's 
 past the map file's east edge, so its last column is not compared: docs/combat.md 1.2.2).
 `kick` orders a kick at the enemy through the picker (its last map column is left out for the
 same reason) and fights three rounds; the long run then takes the left hip away (a record poke
-standing in for a critical hit): Kick cannot, and the round drops the kick still ordered. `handover` (long only) lets the computer fight six rounds, hands the fight back with a key at
+standing in for a critical hit): Kick cannot, and the round drops the kick still ordered. `scan` opens Scan Unit: Friends (Next comes back to the unit), Done, Enemies (the enemy Locust
+and its direction; the last map column left out), Done, Cancel, and a round. `handover` (long
+only) lets the computer fight six rounds, hands the fight back with a key at
 the round's poll, and flees and fails. The training
 cases at its start are captured but not compared (`"compare": False`): the `training` sequence
 compares them. These cases compare the fight's tables too: a case with

@@ -495,6 +495,31 @@ KICK_FULL_CASES = [
     {"name": "kick_no_hip_round", "keys": "down*5 enter", "match": SCREEN, "fight": True},
 ]
 
+# Scan Unit (203b:2591) and the scan list (15ab:1467): Friends (the unit
+# itself, Next comes back to it), Done, Enemies (the enemy Locust and its
+# direction), Done, Cancel, then a round.
+SCAN_CASES = [dict(case, compare=False) for case in ORDERS_CASES[:12]] + [
+    # Friends / Enemies / Cancel in window 3.
+    {"name": "scan_menu", "keys": "up*3 enter", "match": SCREEN, "fight": True},
+    # Friends: the unit's heading and screen; Next, Detail, Done.
+    {"name": "scan_friends", "keys": "enter", "match": SCREEN, "fight": True},
+]
+SCAN_FULL_CASES = [
+    # Next: past the inactive figures and back to the unit.
+    {"name": "scan_friends_next", "keys": "enter", "match": SCREEN, "fight": True},
+    # Done: the orders menu, its bar on Scan Unit.
+    {"name": "scan_friends_done", "keys": "down*2 enter", "match": SCREEN, "fight": True},
+    # Enemies: the enemy Locust, its direction, the view on it. The view's
+    # last column is past the map file's edge, as in weapons_picker.
+    {"name": "scan_enemies", "keys": "enter down enter",
+     "match": {"the panel": WHOLE_PANEL, "the map but its last column": (104, 0, 208, 200)}, "fight": True},
+    {"name": "scan_enemies_done", "keys": "down*2 enter", "match": SCREEN, "fight": True},
+    # Cancel.
+    {"name": "scan_cancel", "keys": "enter down*2 enter", "match": SCREEN, "fight": True},
+    # Begin Fight from Scan Unit.
+    {"name": "scan_round", "keys": "down*3 enter", "match": SCREEN, "fight": True},
+]
+
 # The computer hands the fight back (a key at the round's poll) and the
 # player flees, and fails: 52 idle passes in town before the walk to the
 # training center and six computer-fought rounds give a flee draw with
@@ -523,6 +548,7 @@ SEQUENCES = [("town", CASES, FULL_CASES, []), ("training", TRAINING_CASES, [], [
              ("waypoints", [], WAYPOINT_CASES + WAYPOINT_FULL_CASES, []),
              ("weapons", WEAPON_CASES, WEAPON_FULL_CASES, []),
              ("kick", KICK_CASES, KICK_FULL_CASES, []),
+             ("scan", SCAN_CASES, SCAN_FULL_CASES, []),
              ("handover", [], HANDOVER_CASES, [])]
 
 # The feeder (tools/capture/snap.asm, docs/reference.md) hands over a key at

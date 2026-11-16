@@ -151,7 +151,7 @@ machines of the day each probably took several display frames. The platform hold
 sounds are recorded but not played yet (no sound is rebuilt). A story picture is held 50 frames
 at its last frame.
 
-Not rebuilt yet: the sounds, the player's Scan order (2.6), the Arena's spectator, the double agent, and what follows the fight (2.13 is
+Not rebuilt yet: the sounds, people on foot in a fight and their orders, Scan's Detail (the stats screen, 2.6), the Arena's spectator, the double agent, and what follows the fight (2.13 is
 done; 2.15 is not).
 
 **The cell window in a fight.** The planner's path (3.3) and the line of sight (3.6) read map
@@ -461,7 +461,26 @@ instead.
   (`203b:1774(fig, 1)`), and the position restored. The menu's pass for a unit under the computer
   shows "The computer is currently moving this unit" and does the same.
 - **Scan** (`203b:2591`): a person cannot see enemy 'Mechs while any is active; a 'Mech whose
-  sensors are destroyed (byte 0x77 = 2) cannot scan 'Mechs.
+  sensors are destroyed (byte 0x77 = 2) cannot scan 'Mechs. In detail (rebuilt for 'Mechs,
+  `Town::scan_order`, `Town::scan_list`):
+  - Window 3: Friends / Enemies / Cancel (menu 3 from row 1, starting on Friends). Enemies, for a
+    person: "humans only" and a key if an enemy 'Mech is active, and the list holds people only;
+    for a 'Mech with destroyed sensors: a message, a key, people only (bug 19: the check for enemy
+    people that follows is skipped). If the list would hold no 'Mechs and no enemy person is
+    placed, "no humans" and `1000:2a4f`'s key. Afterwards menu 3's first row is 0 and its last
+    item Scan Unit (6 for a 'Mech, 4 for a person).
+  - The list (`15ab:1467(fig, 12 x side, mechs)`) takes the twelve figures of that side in turn,
+    from the first (from the first person without 'Mechs), skipping any inactive or unplaced
+    (x or y ffff). Each is shown in window 4: a party unit's heading (`15ab:18e8`); an enemy
+    'Mech, "Enemy", the record's name as it is stored (padded with spaces) and in light green
+    "Direction:" with the direction from the scanning unit (`287f:0971`, DG:01aa's names); an
+    enemy person, its condition (`1e31:02e4`) and weapon. Then the unit's screen
+    (`203b:1774(t, 1)`), and in window 3 Next Unit, Detail Scan (a 'Mech, while the list holds
+    'Mechs) and Done. Detail opens the stats screen (`15ab:1afe`) and redraws the screen
+    (`1e31:032f`), then shows the same figure again. In the Arena (F:e48e) the enemy list jumps
+    back to figure 12 after each figure, so the spectator (13) is never shown.
+  - Not rebuilt: the people in the list (the rebuild's fights have no people on foot yet) and
+    Detail Scan (the stats screen); either stops the fight with a log line.
 
 The menu's loop, as rebuilt (`Town::orders_menu`): each pass prints the unit's heading in
 window 4 (`15ab:18e8`), then either "The computer is moving" (DG:3a42) and the planner with show

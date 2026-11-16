@@ -267,6 +267,8 @@ private:
     bool move_order(Combat& combat, int fig, int type, KeySource& keys);
     bool weapons_order(Combat& combat, int fig, KeySource& keys);
     bool kick_order(Combat& combat, int fig, KeySource& keys);
+    bool scan_order(Combat& combat, int fig, KeySource& keys);
+    bool scan_list(Combat& combat, int fig, int base, bool mechs, KeySource& keys);
     bool pick_target(Combat& combat, int fig, int w, int slot, KeySource& keys);
     // A 'Mech record's name (the text of the template it was made from).
     std::optional<std::string> mech_name_id(int record) const;
