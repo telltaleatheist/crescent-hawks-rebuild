@@ -449,6 +449,45 @@ WAYPOINT_FULL_CASES = [
     {"name": "waypoints_round", "keys": "down*9 enter", "match": SCREEN, "fight": True},
 ]
 
+# Use Weapons (1d43:0004, docs/combat.md 2.6): the list, the first weapon
+# at the enemy Locust through the target picker, Done, then rounds fought
+# with it, and a Flee after the shots have drawn numbers.
+WEAPON_CASES = [dict(case, compare=False) for case in ORDERS_CASES[:12]] + [
+    # The list in window 5, the bar on the first weapon.
+    {"name": "weapons_list", "keys": "up*6 enter", "match": SCREEN, "fight": True},
+]
+WEAPON_FULL_CASES = [
+    # The first weapon: "Choose a target", the picker on the enemy Locust.
+    # The view's last column is past the map file's east edge, which the
+    # rebuild does not fill yet (docs/combat.md 1.2.2), so it is left out.
+    {"name": "weapons_picker", "keys": "enter",
+     "match": {"the panel": WHOLE_PANEL, "the map but its last column": (104, 0, 208, 200)}, "fight": True},
+    # Fire: back to the list, the weapon's target and range band shown.
+    {"name": "weapons_targeted", "keys": "enter", "match": SCREEN, "fight": True},
+    # Done (up from the first item wraps to it): the orders menu.
+    {"name": "weapons_done", "keys": "up enter", "match": SCREEN, "fight": True},
+] + [
+    {"name": "weapons_round_%d" % n, "keys": "up enter" if n == 1 else "enter", "match": SCREEN, "fight": True}
+    for n in range(1, 5)
+]
+
+# The computer hands the fight back (a key at the round's poll) and the
+# player flees, and fails: 52 idle passes in town before the walk to the
+# training center and six computer-fought rounds give a flee draw with
+# r & 3 = 0 (docs/combat.md 2.7). The unit stays under the computer, so
+# the orders screen shows its plan (1e31:03ab with show).
+HANDOVER_CASES = [dict(case, compare=False) for case in MISSION_CASES[:4]] + [
+    dict(MISSION_CASES[4], keys="idle:52 " + MISSION_CASES[4]["keys"], compare=False)] + [
+    dict(case, compare=False) for case in MISSION_CASES[5:]] + [
+    dict(case, name=case["name"].replace("mission", "handover")) for case in MISSION_ROUNDS[1:6]] + [
+    # A key at the poll: the orders menu, "The computer is moving this unit".
+    {"name": "handover_menu", "keys": "enter", "match": SCREEN, "fight": True},
+    # Flee, and fail: "You do not escape!", "Press a key."
+    {"name": "handover_flee_failed", "keys": "up enter", "match": SCREEN, "fight": True},
+    # The key: the round goes on; the next orders menu.
+    {"name": "handover_next_round", "keys": "enter", "match": SCREEN, "fight": True},
+]
+
 # Each sequence is one run of the original: (name, quick cases, --full
 # cases, chr's own options).
 SEQUENCES = [("town", CASES, FULL_CASES, []), ("training", TRAINING_CASES, [], []),
@@ -457,7 +496,9 @@ SEQUENCES = [("town", CASES, FULL_CASES, []), ("training", TRAINING_CASES, [], [
              ("brief", [], BRIEF_CASES + BRIEF_FULL_CASES, []),
              ("orders", ORDERS_CASES, ORDERS_FULL_CASES, []),
              ("moves", MOVE_CASES, MOVE_FULL_CASES, []),
-             ("waypoints", [], WAYPOINT_CASES + WAYPOINT_FULL_CASES, [])]
+             ("waypoints", [], WAYPOINT_CASES + WAYPOINT_FULL_CASES, []),
+             ("weapons", WEAPON_CASES, WEAPON_FULL_CASES, []),
+             ("handover", [], HANDOVER_CASES, [])]
 
 # The feeder (tools/capture/snap.asm, docs/reference.md) hands over a key at
 # every 4th poll of the keyboard. The main loop polls once a pass, and after

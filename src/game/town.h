@@ -247,7 +247,13 @@ private:
     // out or an order is chosen that the rebuild stops at.
     std::optional<int> orders_menu(Combat& combat, KeySource& keys);
     void show_unit(Combat& combat, int fig, bool redraw);
+    void plan_shown(Combat& combat, int fig);
     bool move_order(Combat& combat, int fig, int type, KeySource& keys);
+    bool weapons_order(Combat& combat, int fig, KeySource& keys);
+    bool pick_target(Combat& combat, int fig, int w, int slot, KeySource& keys);
+    // A 'Mech record's name (the text of the template it was made from).
+    std::optional<std::string> mech_name_id(int record) const;
+    int picked_ = 0x0c;  // DG:2b20: the target picker's figure, kept between calls
     // 287f:2b87 over the map: a box XORed onto the screen. Where it
     // overlaps another, the cells get both colours XORed; on text, the
     // text's colours.

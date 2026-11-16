@@ -89,6 +89,12 @@ public:
         windows_[current_].col = col;
         windows_[current_].row = row;
     }
+    // Window n's top row and height, changed at run time (385b:0000 + 16 n,
+    // words +2 and +6: the weapons list sizes window 5 to fit).
+    void place_window(int n, int y, int height) {
+        windows_[n].y = y;
+        windows_[n].height = height;
+    }
     // Moves the cursor up a row (the yes/no question rewrites its line).
     void cursor_up() { --windows_[current_].row; }
 

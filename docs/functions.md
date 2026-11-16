@@ -161,8 +161,8 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 
 | Address | Linear | Ghidra name | Span | Label | Status |
 |---|---|---|---|---|---|
-| 1d43:0004 | 0x1d434 | `FUN_1d43_0004` | 1991 | The Use Weapons screen | read |
-| 1d43:07cb | 0x1dbfb | `FUN_1d43_07cb` | 618 | The target picker | read |
+| 1d43:0004 | 0x1d434 | `FUN_1d43_0004` | 1991 | The Use Weapons screen | rebuilt |
+| 1d43:07cb | 0x1dbfb | `FUN_1d43_07cb` | 618 | The target picker | rebuilt |
 | 1d43:0a35 | 0x1de65 | `FUN_1d43_0a35` | 573 | A 'Mech destroyed: targets cleared, the party crew ejects | rebuilt in part |
 | 1d43:0c72 | 0x1e0a2 | `FUN_1d43_0c72` | 108 |  | - |
 | 1d43:0cde | 0x1e10e | `FUN_1d43_0cde` | 520 |  | - |
@@ -174,11 +174,11 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 1e31:0006 | 0x1e316 | `FUN_1e31_0006` | 734 | A figure's step toward a target: turn one eighth, try 8 directions (wander pattern flips every 30), free cell and no figure there | rebuilt |
 | 1e31:02e4 | 0x1e5f4 | `FUN_1e31_02e4` | 75 |  | - |
 | 1e31:032f | 0x1e63f | `FUN_1e31_032f` | 124 |  | - |
-| 1e31:03ab | 0x1e6bb | `FUN_1e31_03ab` | 2058 | The computer's orders for a unit: target, waypoint, weapons (docs/combat.md) | rebuilt |
+| 1e31:03ab | 0x1e6bb | `FUN_1e31_03ab` | 2058 | The computer's orders for a unit: target, waypoint, weapons; with show, the unit's screen (docs/combat.md) | rebuilt |
 | 1e31:0bb5 | 0x1eec5 | `FUN_1e31_0bb5` | 174 | Distance from the party position: min + max/2 | rebuilt |
 | 1e31:0c63 | 0x1ef73 | `FUN_1e31_0c63` | 705 | End of a combat round: heat, fired marks cleared, the dead removed | rebuilt |
 | 1e31:0f24 | 0x1f234 | `FUN_1e31_0f24` | 307 |  | - |
-| 1e31:1057 | 0x1f367 | `FUN_1e31_1057` | 75 |  | - |
+| 1e31:1057 | 0x1f367 | `FUN_1e31_1057` | 75 | A message in window 4 and a key, then the window that was current | rebuilt |
 | 1e31:10a2 | 0x1f3b2 | `FUN_1e31_10a2` | 128 |  | - |
 | 1e31:1122 | 0x1f432 | `FUN_1e31_1122` | 137 | Damage transfer to the next location inward | rebuilt |
 | 1e31:11ab | 0x1f4bb | `FUN_1e31_11ab` | 1103 | Critical hits in a location | rebuilt |
@@ -202,7 +202,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 |---|---|---|---|---|---|
 | 203b:000a | 0x203ba | `FUN_203b_000a` | 5240 | The fight: set-up, engage question, the round loop, the end, the after-fight steps (docs/combat.md) | read |
 | 203b:1482 | 0x21832 | `FUN_203b_1482` | 65 |  | - |
-| 203b:14c3 | 0x21873 | `FUN_203b_14c3` | 689 | The player's orders menu for each unit; 1 = flee | rebuilt in part (all but Use Weapons, Kick, Computer, Scan) |
+| 203b:14c3 | 0x21873 | `FUN_203b_14c3` | 689 | The player's orders menu for each unit; 1 = flee | rebuilt in part (all but Kick and Scan) |
 | 203b:1774 | 0x21b24 | `FUN_203b_1774` | 455 | A unit on the orders screen: the view on it, the box, its path as arrows | rebuilt |
 | 203b:193b | 0x21ceb | `FUN_203b_193b` | 740 | A figure's path from its orders, and its movement cost | rebuilt |
 | 203b:1c1f | 0x21fcf | `FUN_203b_1c1f` | 1554 | A move order: the type question, the reasons, the map cursor and one waypoint | rebuilt |
@@ -260,7 +260,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 273d:0053 | 0x27423 | `FUN_273d_0053` | 51 | A number printed in decimal (itoa, then the printer) | rebuilt |
 | 273d:0086 | 0x27456 | `FUN_273d_0086` | 79 | Copy a picture buffer to the screen (by display) | replaced |
 | 273d:00d5 | 0x274a5 | `FUN_273d_00d5` | 294 | Writes a string straight onto the screen at (column, row) in two colours with the 8x8 font | rebuilt |
-| 273d:01fb | 0x275cb | `FUN_273d_01fb` | 94 |  | - |
+| 273d:01fb | 0x275cb | `FUN_273d_01fb` | 94 | A rectangle of pixels filled with a colour (x0, y0, x1, y1, colour) | rebuilt (as text cells) |
 | 273d:0259 | 0x27629 | `FUN_273d_0259` | 195 | Reads a key (287f:0b8a), or plays one back from / records one into the key buffer (F:3938, F:458c) | read |
 | 273d:031c | 0x276ec | `FUN_273d_031c` | 207 | A horizontal or vertical line (here a point) in a colour, clipped to the screen, on the visible screen | rebuilt (a line shot's pixels) |
 | 273d:03eb | 0x277bb | `FUN_273d_03eb` | 178 |  | - |

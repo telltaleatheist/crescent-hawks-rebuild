@@ -151,8 +151,7 @@ machines of the day each probably took several display frames. The platform hold
 sounds are recorded but not played yet (no sound is rebuilt). A story picture is held 50 frames
 at its last frame.
 
-Not rebuilt yet: the sounds, the player's orders other than Begin Fight, Flee, Next Unit and the
-move orders (2.6), the Arena's spectator, the double agent, and what follows the fight (2.13 is
+Not rebuilt yet: the sounds, the player's Kick and Scan orders and orders on foot (2.6), the Arena's spectator, the double agent, and what follows the fight (2.13 is
 done; 2.15 is not).
 
 **The cell window in a fight.** The planner's path (3.3) and the line of sight (3.6) read map
@@ -420,7 +419,29 @@ instead.
   weapon (up to 12), its ammunition (Full / Out / a count), its target and range band. A
   destroyed weapon's target is cleared. Listing a weapon clears its "held" bit. Choosing one
   that already has a target asks to override. The target picker (`1d43:07cb`) offers only enemy
-  figures 12-23, with no range or line-of-sight check (the round decides).
+  figures 12-23, with no range or line-of-sight check (the round decides). In detail (rebuilt,
+  `Town::weapons_order`, `Town::pick_target`):
+  - A 'Mech's list is its first twelve items 0x10-0x20 (bit 7 destroyed) in item order. Window 5
+    is sized to it: top row 0x16 - n, height n + 2 (the window record changes). "Select the
+    weapon to fire." is printed once in window 4; each pass shows the unit's screen again and the
+    list in window 5 (frame 0): the heading in light green, then per weapon its name (yellow with
+    a target, white without, grey destroyed; on the CGA 1, 15, 2), at column 0x0b its ammunition
+    padded to three, at 0x10 its target and at 0x18 the range band from the unit; then Done. A
+    target no longer active is cleared.
+  - Choosing a destroyed weapon or one with no ammunition: a message in window 4 and a key
+    (`1e31:1057`), and the menu's bar is XORed off. Done ends: windows 4 and 3 are cleared and
+    framed again.
+  - The picker starts from DG:2b20, the figure last offered, kept between calls (12 at start),
+    skipping inactive figures and wrapping 23 to 12. Each shows the figure's screen
+    (`203b:1774(t, 1)`: the view moves onto the target), a menu of three in window 3 (target
+    here, next enemy, cancel; the bar where menu 3 was left), the target's name ('Mech) or its
+    weapon (person) and the range band from the unit. Target here sets the slot, cancel clears
+    it. If no enemy figure were active the loop would never end; a fight with none is over first.
+  - On foot: the weapon's target now and its range band, with a yes/no to change it; then the
+    picker for slot 0.
+- **Computer** (`1e31:03ab(fig, 1)`): the planner, then the unit's screen with the planned path
+  (`203b:1774(fig, 1)`), and the position restored. The menu's pass for a unit under the computer
+  shows "The computer is currently moving this unit" and does the same.
 - **Scan** (`203b:2591`): a person cannot see enemy 'Mechs while any is active; a 'Mech whose
   sensors are destroyed (byte 0x77 = 2) cannot scan 'Mechs.
 
@@ -1151,14 +1172,10 @@ sequence compares the scene with the original's, over the whole screen and the s
     are set).
 14. The three character bytes 1-3 (by use: byte 1 sets the hit-point maximum, byte 2 the walking
     speed on foot); their names.
-15. A failed Flee is not compared with the original. In the `orders` run the draw escapes after
-    every round: with no shots no random numbers are drawn. Nothing reseeds the numbers on the way
-    to the fight (`1000:a9de` is not reached): every key is a game tick and sets the main loop's
-    countdown to 10, so idle passes draw a number only on the 11th in a row (docs/town_loop.md).
-    A few extra passes before the walk therefore change nothing; 19 or more do, but from about 80
-    the training center takes another path (its picture and quiz draws change), and the counts
-    tried in between all escape. Comparing a failed Flee needs a run whose draws differ: a shot
-    fired (Use Weapons) before fleeing.
+15. (Answered.) A failed Flee is compared by the `handover` sequence. With no shots, rounds draw
+    no random numbers, and idle passes in town draw one only on the 11th in a row (every key is a
+    game tick and resets the countdown, docs/town_loop.md); 52 extra passes and six
+    computer-fought rounds give a flee draw with r & 3 = 0.
 
 ## Functions
 

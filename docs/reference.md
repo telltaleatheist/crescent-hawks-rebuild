@@ -145,7 +145,11 @@ lists what the logic showed on the way, and `--event N --screenshot F` renders t
 each round, each capture at the next round's orders menu (round 1 quick, the rest long), then
 Flee. `moves` gives the player's move orders and fights on them (docs/combat.md 2.6).
 `waypoints` (long only) gives thirteen walk orders on the unit's own cell, so the thirteenth goes
-into figure 1's orders (bug 17), then a round. The training
+into figure 1's orders (bug 17), then a round. `weapons` opens Use Weapons, gives the first
+weapon the enemy through the target picker and fights four rounds (the picker's view reaches
+past the map file's east edge, so its last column is not compared: docs/combat.md 1.2.2).
+`handover` (long only) lets the computer fight six rounds, hands the fight back with a key at
+the round's poll, and flees and fails. The training
 cases at its start are captured but not compared (`"compare": False`): the `training` sequence
 compares them. These cases compare the fight's tables too: a case with
 `"fight": True` runs `chr --fight-state` and `state.py --fight` (the 24 figures' places,

@@ -346,14 +346,17 @@ void Town::print_unit_heading(int fig) {
     const auto& pilot = characters_[std::size_t(rec[kPilot])];
     print_id("character." + std::to_string(pilot[character::kName]));
     print_id("unit.possessive");
-    // The 'Mech's name: the text of the template the record was made from.
+    if (const auto name = mech_name_id(fig)) print_id(*name);
+    else log_.push_back("a 'Mech record with no template's name");
+}
+
+std::optional<std::string> Town::mech_name_id(int record) const {
+    const auto& rec = mechs_[std::size_t(record)];
     const auto ids = formats::mech_template_ids();
     for (std::size_t t = 0; t < rules_->mechs.size() && t < ids.size(); ++t)
-        if (std::equal(rec.begin(), rec.begin() + formats::kMechNameSize, rules_->mechs[t].record.begin())) {
-            print_id(formats::mech_text_id(ids[t]));
-            return;
-        }
-    log_.push_back("a 'Mech record with no template's name");
+        if (std::equal(rec.begin(), rec.begin() + formats::kMechNameSize, rules_->mechs[t].record.begin()))
+            return formats::mech_text_id(ids[t]);
+    return std::nullopt;
 }
 
 // BTECH.EXE 203b:14c3 (Ghidra FUN_203b_14c3)
@@ -379,9 +382,10 @@ std::optional<int> Town::orders_menu(Combat& combat, KeySource& keys) {
         text_.set_fg(15);
         if (figs_.computer[std::size_t(fig)]) {
             print_id("orders.computer_moving");
-            return stop("the computer's plan on the orders screen");  // 1e31:03ab(fig, 1)
+            plan_shown(combat, fig);
+        } else {
+            show_unit(combat, fig, true);
         }
-        show_unit(combat, fig, true);
         text_.select_window(3);
         text_.clear_window();
         text_.set_fg(15);
@@ -404,8 +408,9 @@ std::optional<int> Town::orders_menu(Combat& combat, KeySource& keys) {
             show_unit(combat, fig, false);
         }
         if (mech && c == 4) return stop("the kick order");                                  // 203b:2231
-        if (((mech && c == 5) || (!mech && c == 3)) && !no_computer_order_) return stop("the Computer order");
-        if ((mech && c == 3) || (!mech && c == 2)) return stop("the weapons order");       // 1d43:0004
+        if (((mech && c == 5) || (!mech && c == 3)) && !no_computer_order_) plan_shown(combat, fig);
+        if ((mech && c == 3) || (!mech && c == 2))
+            if (!weapons_order(combat, fig, keys)) return std::nullopt;
         if ((mech && c == 6) || (!mech && c == 4)) return stop("the scan");                // 203b:2591
         if (c == items - 3) {
             // Next Unit: the next active party unit, 11 wrapping to 0, the
@@ -415,6 +420,16 @@ std::optional<int> Town::orders_menu(Combat& combat, KeySource& keys) {
             menu_last_[3] = fig < 4 ? 7 : 5;
         }
     }
+}
+
+// BTECH.EXE 1e31:03ab (Ghidra FUN_1e31_03ab) with show: the computer plans
+// party unit `fig`, and its screen is shown with the planned path
+// (203b:1774(fig, 1)); then the position it started from.
+void Town::plan_shown(Combat& combat, int fig) {
+    const auto saved = position_;
+    combat.plan(fig);
+    show_unit(combat, fig, true);
+    position_ = saved;  // 1000:17bb
 }
 
 // BTECH.EXE 203b:1774 (Ghidra FUN_203b_1774)
@@ -459,6 +474,247 @@ void Town::show_unit(Combat& combat, int fig, bool redraw) {
     }
     path_end_col_ = col;
     path_end_row_ = row;
+}
+
+// BTECH.EXE 1d43:0004 (Ghidra FUN_1d43_0004)
+// Use Weapons for unit `fig`: a 'Mech's weapons listed in window 5 with
+// their ammunition, target and range band, until Done; a person's one
+// weapon at a new target (docs/combat.md 2.6). The display is EGA's.
+bool Town::weapons_order(Combat& combat, int fig, KeySource& keys) {
+    auto& targets = combat_.targets[std::size_t(fig)];
+    if (fig < 12) figs_.computer[std::size_t(fig)] = false;
+    const auto finish = [&] {
+        text_.set_fg(15);
+        text_.select_window(4);
+        text_.clear_window();
+        text_.frame(4);
+        text_.set_fg(15);
+        text_.select_window(3);
+        text_.clear_window();
+        text_.frame(3);
+        text_.set_fg(15);
+        return true;
+    };
+    if (fig >= 4) {
+        // On foot: the weapon's target now, and whether to change it.
+        show_unit(combat, fig, true);
+        text_.select_window(4);
+        text_.clear_window();
+        const int t = std::int8_t(targets[0]);
+        const int w = std::int8_t(characters_[std::size_t(fig - 4)][0x0b]);
+        bool change = true;
+        if (t != -1) {
+            print_id("weapons.using");
+            print_id(formats::weapon_text_id(w));
+            print_id("weapons.against");
+            if (t >= 16) print_id("weapons.human");
+            else if (const auto name = mech_name_id(t - 8)) print_id(*name);
+            print_id("weapons.at");
+            print_id("weapons.range." + std::to_string(combat.range_band(t, w)));
+            print_id("weapons.range_override");
+            const auto yes = yes_no(true, keys);
+            if (!yes) {
+                place_open_ = true;
+                return false;
+            }
+            change = *yes;
+        }
+        if (change) {
+            text_.clear_window();
+            print_id("pick.use");
+            print_id(formats::weapon_text_id(w));
+            print_id("pick.against");
+            if (!pick_target(combat, fig, w, 0, keys)) return false;
+        }
+        return finish();
+    }
+    // A 'Mech: its first twelve weapon items (0x10-0x20, bit 7 destroyed).
+    const auto& rec = mechs_[std::size_t(fig)];
+    std::array<std::uint8_t, 12> items{};
+    int count = 0;
+    for (int b = mech::kItems; b < mech::kItemsEnd; ++b) {
+        const int t = rec[std::size_t(b)] & 0x7f;
+        if (count < 12 && t >= 0x10 && t <= 0x20) items[std::size_t(count++)] = rec[std::size_t(b)];
+    }
+    text_.select_window(4);
+    text_.clear_window();
+    if (combat_.heat[std::size_t(fig)] == 0x1e) {
+        // Shut down: every weapon held this round.
+        print_id("weapons.shut_down");
+        if (!press_key(keys)) return false;
+        for (auto& t : targets) t |= 0x80;
+        return finish();
+    }
+    const int sensors = rec[mech::kSensorHits];
+    if (sensors == 1 || sensors == 2) {
+        print_id(sensors == 1 ? "weapons.sensors_damaged" : "weapons.sensors_destroyed");
+        if (!read_key(keys)) return false;
+        text_.clear_window();
+        if (sensors == 2) return true;  // straight back, without the windows' frames
+    }
+    print_id("weapons.select");  // once: the loop comes back after it (1d43:0151)
+    int choice = 0;
+    do {
+        show_unit(combat, fig, true);
+        // Window 5 holds the list: one row a weapon, a heading and Done.
+        text_.place_window(5, 0x16 - count, count + 2);
+        text_.select_window(5);
+        text_.frame(0);
+        text_.clear_window();
+        text_.set_fg(10);  // 1000:28a2
+        print_id("weapons.heading");
+        for (int i = 0; i < 12; ++i) {
+            text_.set_cursor(0, i + 1);
+            if (items[std::size_t(i)] == 0) continue;
+            int v = std::int8_t(items[std::size_t(i)]);
+            auto& target = targets[std::size_t(i)];
+            // Yellow with a target, white without, grey destroyed.
+            text_.set_fg(target == 0xff ? 15 : 14);
+            if (v & 0x80) text_.set_fg(8);
+            print_id(formats::weapon_text_id((v & 0x7f) - 1));
+            text_.set_cursor(0x0b, i + 1);
+            if (v & 0x80) {
+                print_id("weapons.destroyed");
+                target = 0xff;
+                continue;
+            }
+            v &= 0x7f;
+            const int ammo = rec[std::size_t(mech::kAmmunition + i)];
+            if (ammo == 0xff) {
+                print_id("weapons.ammo_full");
+            } else if (ammo == 0) {
+                print_id("weapons.ammo_out");
+            } else {
+                const std::string n = std::to_string(ammo);  // 287f:3bb6
+                for (std::size_t k = n.size(); k < 3; ++k) print_id("weapons.space");
+                text_.print(n);
+            }
+            text_.set_cursor(0x10, i + 1);
+            if (target != 0xff && figs_.active[std::size_t(target & 0x7f)] == 0) target = 0xff;
+            if (target != 0xff) {
+                // Listing a weapon clears its held bit.
+                target &= 0x7f;
+                const int t = target;
+                if (t >= 16) print_id("weapons.human");
+                else if (const auto name = mech_name_id(t - 8)) print_id(*name);
+                text_.set_cursor(0x18, i + 1);
+                print_id("weapons.range." + std::to_string(combat.range_band(t, v - 1)));
+            } else {
+                print_id("weapons.none");
+            }
+        }
+        text_.set_cursor(0, count + 1);
+        print_id("weapons.done");
+        menus_[5].items = count + 1;
+        text_.select_window(5);
+        const auto chosen = menu(5, keys);
+        if (!chosen) return false;
+        choice = *chosen;
+        if (choice >= count) break;
+        const auto bar_off = [&] {
+            // The menu left its bar on the weapon: XORed off again.
+            const auto& w = text_.window();
+            text_.xor_bar(w.x, w.y + menus_[5].first_row + choice, menus_[5].width, menus_[5].highlight);
+        };
+        const auto message = [&](const std::string& id) {
+            // 1e31:1057: in window 4, a key, then back.
+            const int previous = text_.window_number();
+            text_.select_window(4);
+            text_.clear_window();
+            print_id(id);
+            const bool got = read_key(keys).has_value();
+            text_.clear_window();
+            text_.select_window(previous);
+            return got;
+        };
+        if (items[std::size_t(choice)] & 0x80) {
+            if (!message("weapons.choose_other")) return false;
+            bar_off();
+        } else if (rec[std::size_t(mech::kAmmunition + choice)] == 0) {
+            if (!message("weapons.no_ammo")) return false;
+            bar_off();
+        } else {
+            bool go = true;
+            if (targets[std::size_t(choice)] != 0xff) {
+                text_.select_window(4);
+                text_.clear_window();
+                print_id("weapons.already_firing");
+                const auto yes = yes_no(true, keys);
+                if (!yes) {
+                    place_open_ = true;
+                    return false;
+                }
+                go = *yes;
+                text_.clear_window();
+            }
+            if (go) {
+                targets[std::size_t(choice)] = 0xff;
+                text_.select_window(4);
+                text_.frame(4);
+                text_.clear_window();
+                print_id("weapons.choose_target");
+                if (!pick_target(combat, fig, (items[std::size_t(choice)] & 0x7f) - 1, choice, keys)) return false;
+                text_.select_window(3);
+                text_.clear_window();
+                text_.select_window(4);
+                text_.clear_window();
+            }
+        }
+    } while (choice != count);
+    return finish();
+}
+
+// BTECH.EXE 1d43:07cb (Ghidra FUN_1d43_07cb)
+// The target picker: the enemy figures 12-23 in turn from the last one
+// picked, each shown on the map with its name and range band from unit
+// `fig` for weapon `w`, until one is taken for target slot `slot` or the
+// choice is cancelled. No range or line-of-sight check.
+bool Town::pick_target(Combat& combat, int fig, int w, int slot, KeySource& keys) {
+    text_.set_fg(10);  // 1000:28a2
+    print_id("pick.target_range");
+    int choice = 1;
+    do {
+        if (figs_.active[std::size_t(picked_)] != 0) {
+            const int t = picked_;
+            text_.select_window(3);
+            text_.frame(3);
+            text_.clear_window();
+            menus_[3].items = 3;
+            print_id("pick.menu");
+            show_unit(combat, t, true);
+            text_.select_window(4);
+            if (t >= 16) {
+                text_.set_fg(10);
+                text_.set_cursor(0, 8);
+                print_id("pick.weapon");
+            } else {
+                text_.fill(1, 9, 10, 2, 0);  // 273d:01fb (8, 0x48)-(0x57, 0x57)
+            }
+            text_.set_cursor(0, 5);
+            if (t > 15) {
+                print_id("pick.human");
+                text_.fill(1, 10, 10, 1, 0);
+                const int weapon = characters_[std::size_t(t - 8)][0x0b];
+                text_.put_text(lookup(texts_, formats::weapon_text_id(weapon)), 1, 10, 15, 0);  // 273d:00d5
+            } else {
+                if (const auto name = mech_name_id(t - 8)) print_id(*name);
+                text_.fill(1, 9, 10, 1, 0);
+            }
+            text_.set_cursor(0, 7);
+            position_ = {figs_.x[std::size_t(fig)], figs_.y[std::size_t(fig)]};  // 1000:17bb
+            print_id("weapons.range." + std::to_string(combat.range_band(t, w)));
+            print_id("pick.blank");
+            text_.select_window(3);
+            const auto chosen = menu(3, keys);
+            if (!chosen) return false;
+            choice = *chosen;
+            if (choice == 0) combat_.targets[std::size_t(fig)][std::size_t(slot)] = std::uint8_t(t);
+            if (choice == 2) combat_.targets[std::size_t(fig)][std::size_t(slot)] = 0xff;
+            if (choice != 1) continue;
+        }
+        if (++picked_ > 0x17) picked_ = 0x0c;
+    } while (choice == 1);
+    return true;
 }
 
 void Town::xor_box(const XorBox& box) {
