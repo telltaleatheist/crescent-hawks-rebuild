@@ -4,6 +4,7 @@
 #include <array>
 #include <cstdint>
 
+#include "formats/tables.h"
 #include "game/flags.h"
 #include "game/random.h"
 
@@ -22,6 +23,6 @@ struct Money {
 // money is below the floor, 15 C-Bills are added; then each investment
 // grows or shrinks at random. Returns true when the C-Bills line is drawn
 // again (in town, every time the step runs). `outdoors` is F:d310.
-bool money_tick(Money& money, Flags& flags, bool outdoors, Random& random);
+bool money_tick(Money& money, Flags& flags, bool outdoors, Random& random, const formats::Tables& tables);
 
 }  // namespace chr::game

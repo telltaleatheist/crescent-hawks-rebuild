@@ -11,9 +11,12 @@
 #include <filesystem>
 #include <map>
 #include <optional>
+#include <span>
 #include <string>
 #include <string_view>
 #include <vector>
+
+#include "formats/tables.h"
 
 namespace chr::formats {
 
@@ -86,13 +89,13 @@ struct Instruction {
 std::string_view op_name(Op op);
 
 // Decodes the instruction at `at`. A Menu's table has the menu's item count
-// (menus.h) of words. A SwitchFlag's table has one word per value of the
+// (`menus`, the menu table: formats/tables.h) of words. A SwitchFlag's table has one word per value of the
 // flag, a count the file doesn't hold: it is read up to the first entry's
 // code (docs/formats/bld.md). Throws FormatError past the end.
-Instruction decode(const std::vector<std::uint8_t>& script, int at);
+Instruction decode(const std::vector<std::uint8_t>& script, int at, std::span<const MenuRecord> menus);
 
 // Every instruction reachable from offset 0, by offset.
-std::map<int, Instruction> walk(const std::vector<std::uint8_t>& script);
+std::map<int, Instruction> walk(const std::vector<std::uint8_t>& script, std::span<const MenuRecord> menus);
 
 // The text ID of the text printed at offset `at` (the Print opcode's offset)
 // in place file `file` ("CITADEL"): "bld.citadel.00f3".

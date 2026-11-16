@@ -1,0 +1,95 @@
+// The small tables built into BTECH.EXE that the town, the screen and the
+// fight read: layouts, offsets, masks and scripts (docs/formats/tables.md).
+// The importer reads them from the player's program once and writes them to
+// tables.json in the data folder, each under a name with its address; the
+// game reads only that file, so a mod can change any of them. The repo has
+// the names, addresses and shapes, never the values.
+#pragma once
+
+#include <array>
+#include <cstdint>
+#include <filesystem>
+#include <string>
+
+namespace chr::formats {
+
+class OriginalExe;
+
+// A text window, 385b:0000 + 16 n: where its inside starts and how big it is
+// in cells, its colours and its cursor.
+struct WindowRecord {
+    int x = 0, y = 0, width = 0, height = 0;
+    int fg = 15, bg = 0;
+    int col = 0, row = 0;
+    bool operator==(const WindowRecord&) const = default;
+};
+inline constexpr int kWindowCount = 11;
+
+// A menu, 385b:0092 + 16 m (docs/scripts.md, "Menus"). The record's +6, the
+// item last chosen, is game state and starts at 0; it is not imported.
+struct MenuRecord {
+    int first_row = 0;  // the first item's row in the current window
+    int width = 0;      // the highlight bar's width, in cells
+    int items = 0;      // how many items (the script's jump table has one word each)
+    int colour = 0;     // +8: kept with the record; not read by the menu itself
+    int highlight = 0;  // the highlight bar's colour (the bar is XORed in)
+    bool operator==(const MenuRecord&) const = default;
+};
+inline constexpr int kMenuCount = 41;
+
+inline constexpr int kFrameStyleCount = 5;
+inline constexpr int kFramePieceTables = 3;
+inline constexpr int kFramePieceLength = 12;
+inline constexpr std::uint8_t kFramePieceEnd = 0xff;
+
+struct Tables {
+    // The screen.
+    std::array<int, 16> palette{};                  // 37e8:0000: colour number of each register (EGA)
+    std::array<WindowRecord, kWindowCount> windows{};  // 385b:0000
+    // 385b:0320/0338/0350: the four corners, then the top, left, right and
+    // bottom edges, each a run of frame pieces ended by kFramePieceEnd.
+    std::array<std::array<int, kFramePieceLength>, kFramePieceTables> frame_pieces{};
+    std::array<int, kFrameStyleCount> frame_style_pieces{};  // DG:4fa4: which piece table each style uses
+    std::array<MenuRecord, kMenuCount> menus{};     // 385b:0092
+
+    // The town.
+    std::array<int, 3> money_loss_mask{};           // DG:02a2: per investment, bits that all clear mean a loss
+    std::array<int, 3> money_rate{};                // DG:02a8: per investment, the rate
+    std::array<int, 10> animated_tiles{};           // DG:04b0: tile numbers that cycle through ANIMATE.ICN
+    std::array<int, 0x80> walking_scripts{};        // 37e8:0270: the figures' walking frames (docs/town_loop.md)
+    std::array<int, 8> walking_keys{};              // DG:0160: the walking keys, N first, clockwise
+    std::array<int, 8> formation_x{};               // DG:0464: the k-th character's half-cells from the party
+    std::array<int, 8> formation_y{};               // DG:047c
+    std::array<std::array<int, 4>, 8> party_water{};  // DG:0332: water quarter bits by figure k and parity
+    std::array<int, 26> place_pictures{};           // DG:141a: by script number, O<n>.ANM or 0
+    std::array<int, 3> picture_chance{};            // DG:0ac4: by flag 4f, the mask a random number ANDs
+    // The townspeople.
+    std::array<int, 16> direction_of{};             // 2c6c:0240: 287f:0971's four tests to a direction
+    std::array<int, 8> step_x{};                    // DG:311a: one half-cell in each direction
+    std::array<int, 8> step_y{};                    // DG:312a
+    std::array<int, 16> turns{};                    // DG:310a: the turns 1e31:0006 tries
+    std::array<int, 4> person_water{};              // DG:032e: water quarter bits by parity
+
+    // The fight.
+    std::array<int, 4> mech_formation_x{};          // DG:3a26: the k-th 'Mech's half-cells from the party
+    std::array<int, 4> mech_formation_y{};          // DG:3a2a
+    std::array<int, 4> mech_cell{};                 // DG:02de: the window cell under the k-th 'Mech
+    std::array<int, 4> mech_water{};                // DG:02e6: its water quarter bits
+    std::array<int, 4> mech_cell_odd_x{};           // DG:02ee: added when the party's x is odd
+    std::array<int, 4> mech_cell_odd_y{};           // DG:02f6: added when the party's y is odd
+    std::array<int, 12> enemy_offset_x{};           // DG:1642: 17dc:0d49's enemy places
+    std::array<int, 12> enemy_offset_y{};           // DG:164e
+
+    bool operator==(const Tables&) const = default;
+};
+
+// Reads the tables from the program (the importer only).
+Tables tables_from_original(const OriginalExe& exe);
+// tables.json's contents, and reading them back. Throws FormatError or
+// JsonError for a file that is not of this shape.
+std::string write_tables_file(const Tables& tables, int import_version);
+Tables read_tables_file(const std::string& text);
+Tables read_tables(const std::filesystem::path& data_dir);
+std::filesystem::path tables_path(const std::filesystem::path& data_dir);
+
+}  // namespace chr::formats

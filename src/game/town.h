@@ -13,7 +13,7 @@
 #include <string>
 #include <vector>
 
-#include "formats/menus.h"
+#include "formats/tables.h"
 #include "game/asset_id.h"
 #include "formats/mtp.h"
 #include "formats/rules.h"
@@ -100,9 +100,10 @@ struct StatBar {
 
 class Town {
 public:
-    // `texts` supplies every text shown (by ID); it must outlive the Town.
+    // `texts` supplies every text shown (by ID), `tables` the program's small
+    // tables (imported, formats/tables.h); both must outlive the Town.
     Town(const formats::MtpMap& map, int map_number, formats::MapPosition start,
-         const TextProvider& texts);
+         const TextProvider& texts, const formats::Tables& tables);
 
     // Begins with the program's start-up (game/startup.cpp): the Infocom
     // screen, the title and the first-time question, before the town. Call
@@ -164,7 +165,7 @@ public:
     const Flags& flags() const { return flags_; }
     // A test aid (--set-flag): set flag `f` to `v` when the town starts.
     void set_flag_when_town_starts(int f, int v) { pending_flags_.emplace_back(f, v); }
-    const std::array<int, formats::kMenus.size()>& menu_last() const { return menu_last_; }
+    const std::array<int, formats::kMenuCount>& menu_last() const { return menu_last_; }
     const std::array<PanelStats, 8>& stats() const { return stats_; }
 
     // Shows the training center's quiz (--show-quiz, off by default): the
@@ -254,11 +255,12 @@ private:
     std::string tile_sheet_;
     formats::MapPosition position_;
     const TextProvider& texts_;
+    const formats::Tables& tables_;
     Party party_;
     // BTECH.EXE 1000:4edf: Jason starts with 8, 9, 7 and 80.
     std::array<PanelStats, 8> stats_{{{8, 9, 7, 80}}};
-    FigureAnimation animation_;
-    TextScreen text_;
+    FigureAnimation animation_{tables_};
+    TextScreen text_{tables_};
     Random random_ = Random::at_town_start();
     Townspeople people_;
     PartyPlaces party_places_{};  // F:4004/4036 for figures 4-11
@@ -278,10 +280,11 @@ private:
     Stage stage_ = Stage::Town;
     int infocom_frames_ = 0;  // frames the Infocom screen has been up
     bool start_up_open_ = false;
-    // The menu table (385b:0092): the items count changes at run time (talk
-    // sets menu 20's), and each menu remembers its last item (+6).
-    std::array<formats::MenuRecord, formats::kMenus.size()> menus_ = formats::kMenus;
-    std::array<int, formats::kMenus.size()> menu_last_{};
+    // The menu table (385b:0092, imported: tables.json, menus): the items
+    // count changes at run time (talk sets menu 20's), and each menu
+    // remembers its last item (+6).
+    std::array<formats::MenuRecord, formats::kMenuCount> menus_ = tables_.menus;
+    std::array<int, formats::kMenuCount> menu_last_{};
     std::optional<PlacePicture> picture_;
     int place_number_ = 0;  // F:4584: the entrance last entered
     std::optional<std::filesystem::path> game_dir_;

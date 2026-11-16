@@ -96,10 +96,10 @@ std::deque<ScriptItem> parse_key_script(const std::string& script) {
 }
 
 Town::Town(const formats::MtpMap& map, int map_number, formats::MapPosition start,
-           const TextProvider& texts)
+           const TextProvider& texts, const formats::Tables& tables)
     : map_(map), map_number_(map_number), tile_sheet_(tile_sheet_for_map(map_number)),
-      position_(start), texts_(texts) {
-    people_ = Townspeople::place(map_, map_number_, random_);
+      position_(start), texts_(texts), tables_(tables) {
+    people_ = Townspeople::place(map_, map_number_, random_, tables_);
     // One more random number between the map load and the main loop
     // (docs/town_loop.md, "Random numbers").
     random_.next();
@@ -115,8 +115,8 @@ void Town::record_party_places() {
     int k = 0;
     for (int member = 0; member < 8; ++member) {
         if (!party_.present[member]) continue;
-        party_places_[std::size_t(k)] = {move_x(position_.x, kFormationX[std::size_t(k)]),
-                                         move_y(position_.y, kFormationY[std::size_t(k)])};
+        party_places_[std::size_t(k)] = {move_x(position_.x, tables_.formation_x[std::size_t(k)]),
+                                         move_y(position_.y, tables_.formation_y[std::size_t(k)])};
         ++k;
     }
 }
@@ -130,13 +130,13 @@ MapView Town::live_view() const {
     auto view = view_of(map_, tile_sheet_, position_);
     if (tiles_animate(map_number_))
         for (auto& cell : view.cells)
-            if (const auto frame = animated_tile(std::uint8_t(cell.tile.index), phase_)) cell.tile = *frame;
+            if (const auto frame = animated_tile(std::uint8_t(cell.tile.index), phase_, tables_)) cell.tile = *frame;
     return view;
 }
 
 std::vector<Figure> Town::figures() const {
     if (frozen_) return frozen_->figures;
-    auto all = party_figures(map_, position_, party_, animation_);
+    auto all = party_figures(map_, position_, party_, animation_, tables_);
     const auto people = people_.figures(map_, position_, animation_);
     all.insert(all.end(), people.begin(), people.end());
     return all;
@@ -322,7 +322,7 @@ void Town::game_tick() {
     (void)r;  // outdoors, (r & F:d330) == 0 starts a fight (docs/town_loop.md)
     // BTECH.EXE 1000:02b6..02ed: flags 1d, 14, 15 and 16 count down to 0.
     for (const int f : {0x1d, 0x14, 0x15, 0x16}) count_down(f);
-    if (money_tick(money_, flags_, outdoors(), random_)) draw_cbills();
+    if (money_tick(money_, flags_, outdoors(), random_, tables_)) draw_cbills();
     countdown_ = 10;
     if (tiles_animate(map_number_)) phase_ = (phase_ + 1) % 3;  // 1000:240b
     // Every third tick the townspeople move (1000:24c2).
@@ -359,7 +359,7 @@ void Town::turn(int k, KeySource& keys) {
         return;
     }
     Question question(*this, keys);
-    const auto r = take_step(map_, map_number_, position_, party_, *step, question);
+    const auto r = take_step(map_, map_number_, position_, party_, *step, question, tables_);
     if (place_open_) {
         log_.push_back("waiting in place " + std::to_string(*r.offered_place));
         return;

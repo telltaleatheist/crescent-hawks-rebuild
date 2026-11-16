@@ -1,0 +1,68 @@
+# The small tables (tables.json)
+
+The layouts, offsets, masks and scripts built into BTECH.EXE that the screen, the town and the
+fight read. The prefixes DG: (DGROUP, file segment 46db), P: (2c6c) and 37e8:/385b: are the
+program's segments as loaded at 0x1000 (see [combat.md](../combat.md)).
+
+**None of these tables is shipped.** The importer ([import.md](../import.md), import version 10)
+reads them from the player's own BTECH.EXE, each through a hashed span `tables.<name>` in the
+import table (`src/formats/exe_data.cpp`), and writes `tables.json` in the player's data folder
+(`formats/tables.h`). The game reads only that file, so a mod can change any of them. The repo
+holds the names, addresses and shapes on this page, never the values. A test checks that the file
+gives back exactly what was read from the program.
+
+## The file
+
+```
+{"import_version": N,
+ "tables":       {"<name>": {"address": "ssss:oooo", "values": [...]}, ...},
+ "windows":      {"address": "385b:0000", "records": [{"x", "y", "width", "height", "fg", "bg", "col", "row"}, ...]},
+ "menus":        {"address": "385b:0092", "records": [{"first_row", "width", "items", "colour", "highlight"}, ...]},
+ "frame_styles": {"address": "46db:4fa4", "by": "frame_pieces", "values": [...]}}
+```
+
+A value is read back only if it fits the way the program stored it (a byte, a signed byte or a
+word); anything else is refused, and the game asks for a new import.
+
+## The tables
+
+| Name | Address | Shape | Read by |
+|---|---|---|---|
+| `palette` | 37e8:0000 | 16 bytes | the EGA colour number of each of the 16 colours (formats/palette.h) |
+| `windows` | 385b:0000 | 11 records of 8 words | the text windows: inside's position and size, colours, cursor (game/text.h) |
+| `frame_pieces_0..2` | 385b:0320/0338/0350 | 12 words each | a frame's corners, then its edges, each run ended by 0xff (2656 frame drawing) |
+| `frame_styles` | DG:4fa4 | 5 far pointers | which piece table each frame style uses; written as the table's number |
+| `menus` | 385b:0092 | 41 records of 16 bytes | a menu's first row, bar width, item count, colour (+8), bar colour; +6, the item last chosen, is state and not imported (docs/scripts.md, "Menus") |
+| `money_loss_mask` | DG:02a2 | 3 words | per investment, the bits that must all be clear for a loss (game/money.h) |
+| `money_rate` | DG:02a8 | 3 words | per investment, the rate |
+| `animated_tiles` | DG:04b0 | 10 bytes | the tiles that cycle through ANIMATE.ICN (game/tile_animation.h) |
+| `walking_scripts` | 37e8:0270 | 0x80 bytes | the figures' walking frames, 'Mechs then characters ([town_loop.md](../town_loop.md)) |
+| `walking_keys` | DG:0160 | 8 words | the walking key for each direction, north first |
+| `formation_x`, `formation_y` | DG:0464/047c | 8 words each | the k-th character's half-cells from the party (game/movement.h) |
+| `party_water` | DG:0332 | 8 x 4 words | the k-th figure's water quarter bits by half-cell parity (1000:051b) |
+| `place_pictures` | DG:141a | 26 bytes | by script number, the O<n>.ANM picture a place opens with, or 0 |
+| `picture_chance` | DG:0ac4 | 3 words | by flag 4f, the mask a random number must clear for a place's picture |
+| `direction_of` | P:0240 | 16 bytes | 287f:0971's four tests (north 8, south 4, east 2, west 1) to a direction |
+| `step_x`, `step_y` | DG:311a/312a | 8 words each | one half-cell in each direction (the townspeople) |
+| `turns` | DG:310a | 16 bytes | the turns 1e31:0006 tries, read from the end, two mirrored patterns |
+| `person_water` | DG:032e | 4 bytes | a townsperson's water quarter bits by parity |
+| `mech_formation_x`, `_y` | DG:3a26/3a2a | 4 bytes each | the k-th 'Mech's half-cells from the party in a fight |
+| `mech_cell` | DG:02de | 4 words | the window cell under the k-th 'Mech (1000:051b) |
+| `mech_water` | DG:02e6 | 4 words | its water quarter bits |
+| `mech_cell_odd_x`, `_odd_y` | DG:02ee/02f6 | 4 words each | added to the cell when the party's x or y is odd |
+| `enemy_offset_x`, `_y` | DG:1642/164e | 12 bytes each | 17dc:0d49's places for the enemy 'Mechs |
+
+## What stays in the code, and why
+
+- **The sprite cut list.** The sprite slots of MECHSHAP.CMP are cut by a run of calls to
+  1527:0044, each with its rectangle as operands (formats/sprite_sheet.h). It is code, not a
+  table, so the rebuild keeps it as logic; a mod replaces the sprites through the asset provider.
+- **The .BLD file names** (`kBldFiles`, formats/bld.h): the names of the player's files, like any
+  asset ID, not something the game shows or a rule.
+- **Single numbers** set by code, such as the blocking tile (DG:0150, set by 1000:2da8) and the
+  sprite bases (F:d562, set at 1000:4f0f). They are operands of the instructions that store
+  them, documented beside the function that stands in for that code.
+- **Tables the rebuild works out itself.** DG:02ae/02be/02fe (where the k-th figure is drawn) are
+  filled by the program from the formation table; the rebuild computes them from `formation_x/y`.
+- **Our own IDs**, such as the town's text ID list (game/town.cpp): they name texts in
+  `text/english.json` and are not part of the program.

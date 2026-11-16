@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "formats/mtp.h"
+#include "formats/tables.h"
 #include "game/asset_id.h"
 #include "game/movement.h"
 
@@ -28,7 +29,9 @@ public:
     // starts on the walking-south script without having stepped through it,
     // frame 0 for the 'Mechs and 0x10 for the characters (and, set by the
     // map load 1000:2da8, for the townspeople).
-    FigureAnimation();
+    // The walking scripts and keys come from the imported tables, which must
+    // outlive it.
+    explicit FigureAnimation(const formats::Tables& tables);
 
     // BTECH.EXE 1000:231d (Ghidra FUN_1000_231d)
     // Called by the main loop after every key. A walking key moves each
@@ -67,6 +70,7 @@ private:
     // Runs figure `f`'s script to its next frame.
     int step(int f);
 
+    const formats::Tables* tables_;
     std::array<int, kFigures> pos_{};        // offset into the scripts (37e8:0000 + pos)
     std::array<int, kFigures> direction_{};  // -1: none yet
     std::array<int, kFigures> frame_{};
@@ -86,6 +90,7 @@ struct Figure {
 // 4. (The map's objects, the townspeople and the 'Mechs come before and
 // after it: docs/town_loop.md.)
 std::vector<Figure> party_figures(const formats::MtpMap& map, formats::MapPosition position,
-                                  const Party& party, const FigureAnimation& animation);
+                                  const Party& party, const FigureAnimation& animation,
+                                  const formats::Tables& tables);
 
 }  // namespace chr::game

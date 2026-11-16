@@ -41,24 +41,12 @@ struct XorBox {
     bool operator==(const XorBox&) const = default;
 };
 
-// DGROUP:3a26/3a2a: where the k-th 'Mech drawn stands relative to the
-// party, in half-cells (1000:051b and 203b:000a's placement).
-inline constexpr std::array<int, 4> kMechFormationX = {0, 0, 3, -3};
-inline constexpr std::array<int, 4> kMechFormationY = {-2, 4, 1, 1};
-
-// DGROUP:02de/02ee/02f6/02e6: for the k-th 'Mech drawn by 1000:051b, the
-// window cell under it relative to the view's corner cell (more when the
-// party's x or y is odd) and which quarter bits of that tile mean water
-// (XOR 5 when the party's y is odd).
-inline constexpr std::array<int, 4> kMechCell = {126, 198, 152, 149};
-inline constexpr std::array<int, 4> kMechCellOddX = {1, 1, 0, 0};
-inline constexpr std::array<int, 4> kMechCellOddY = {0, 0, 24, 24};
-inline constexpr std::array<int, 4> kMechWaterQuarters = {1, 1, 4, 4};
-
-// DGROUP:1642/164e (signed bytes): 17dc:0d49 places the enemies, 'Mechs
-// first and then people, at these half-cell offsets from its start point.
-inline constexpr std::array<int, 12> kEnemyOffsetX = {0, 4, 0, 4, 0, 1, 2, 0, 1, 2, 0, 1};
-inline constexpr std::array<int, 12> kEnemyOffsetY = {0, 0, 4, 4, 1, 1, 1, 2, 2, 2, 3, 3};
+// The fight's placement tables were part of BTECH.EXE: DGROUP:3a26/3a2a
+// (the k-th 'Mech's place around the party), DGROUP:02de/02e6/02ee/02f6 (the
+// cell and water bits under it, for 1000:051b) and DGROUP:1642/164e
+// (17dc:0d49's enemy places). They are now imported (tables.json:
+// mech_formation_x/y, mech_cell, mech_water, mech_cell_odd_x/y,
+// enemy_offset_x/y).
 
 // A 'Mech standing in water sinks (051b, 0e4b): 8 rows, or 16 in deep water.
 int mech_sink(int tile, int quarters);

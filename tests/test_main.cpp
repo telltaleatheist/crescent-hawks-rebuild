@@ -1,7 +1,10 @@
 #include <cstdlib>
 #include <exception>
 #include <filesystem>
+#include <memory>
 
+#include "formats/import.h"
+#include "formats/tables.h"
 #include "test.h"
 
 namespace chrtest {
@@ -30,6 +33,26 @@ std::string game_dir() {
         dir = CHR_DEFAULT_GAME_DIR;
     std::error_code ec;
     return std::filesystem::is_directory(dir, ec) ? dir : std::string();
+}
+
+std::string imported_data_dir() {
+    static const std::string dir = [] {
+        const auto game = game_dir();
+        if (game.empty()) return std::string();
+        const auto data = std::filesystem::path(CHR_TEST_SCRATCH) / "walk-data";
+        chr::formats::ensure_imported(game, data);
+        return data.string();
+    }();
+    return dir;
+}
+
+const chr::formats::Tables* tables() {
+    static const auto loaded = []() -> std::unique_ptr<chr::formats::Tables> {
+        const auto data = imported_data_dir();
+        if (data.empty()) return nullptr;
+        return std::make_unique<chr::formats::Tables>(chr::formats::read_tables(data));
+    }();
+    return loaded.get();
 }
 
 }  // namespace chrtest

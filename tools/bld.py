@@ -1,21 +1,27 @@
 #!/usr/bin/env python3
 """List a place script (.BLD) from the player's own copy of the game.
 
-    tools/bld.py ORIGINAL_DIR/CITADEL.BLD          the reachable code, with text IDs
-    tools/bld.py --raw ORIGINAL_DIR/CITADEL.BLD    the deciphered bytes to stdout
+    tools/bld.py --data DATA_DIR ORIGINAL_DIR/CITADEL.BLD   the reachable code, with text IDs
+    tools/bld.py --raw ORIGINAL_DIR/CITADEL.BLD             the deciphered bytes to stdout
+
+DATA_DIR is the data folder the game's importer wrote (chr --import): the menu
+item counts come from its tables.json (docs/formats/tables.md).
 
 A reading aid for docs/scripts.md: it deciphers the file (docs/formats/bld.md)
 and walks the script from offset 0, as src/formats/bld.cpp does. Nothing it
 prints goes in the repo (docs/rules.md, rule 1).
 """
 import argparse
+import json
 import os
 import struct
 import sys
 
-# Menu item counts, BTECH.EXE 385b:0092 (src/formats/menus.h).
-MENU_ITEMS = [20, 8, 0, 11, 5, 1, 2, 3, 5, 4, 3, 3, 4, 6, 5, 4, 7, 4, 3, 3, 3,
-              6, 2, 7, 2, 5, 8, 6, 7, 2, 3, 2, 3, 6, 6, 2, 2, 20, 3, 8, 7]
+
+def menu_items(data_dir):
+    """The menu item counts: the menu table (385b:0092) as the importer wrote it."""
+    with open(os.path.join(data_dir, "tables.json"), encoding="utf-8") as f:
+        return [m["items"] for m in json.load(f)["menus"]["records"]]
 
 # opcode: (name, operands) with b byte, w word, s text, M menu table, T switch table
 OPS = {
@@ -38,7 +44,7 @@ def decipher(data):
     return bytes(((b + 0x29) & 0xFF) ^ 0xE9 for b in data[2:2 + length])
 
 
-def decode(code, at):
+def decode(code, at, menus):
     op = code[at]
     if op not in OPS:
         return {"at": at, "name": None, "raw": op, "next": at + 1, "targets": [], "falls": True}
@@ -52,7 +58,7 @@ def decode(code, at):
         elif k == "s":
             end = code.index(0, p); text = code[p:end]; p = end + 1
         elif k == "M":
-            for _ in range(MENU_ITEMS[args[0]]):
+            for _ in range(menus[args[0]]):
                 targets.append(struct.unpack_from("<H", code, p)[0]); p += 2
         elif k == "T":
             end = None
@@ -67,12 +73,12 @@ def decode(code, at):
             "targets": targets, "falls": name not in ("end", "goto", "menu", "switch_flag")}
 
 
-def walk(code):
+def walk(code, menus):
     seen, todo = {}, [0]
     while todo:
         at = todo.pop()
         while at < len(code) and at not in seen:
-            ins = decode(code, at)
+            ins = decode(code, at, menus)
             seen[at] = ins
             todo += [t for t in ins["targets"] if t < len(code)]
             if not ins["falls"]:
@@ -85,14 +91,19 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("file")
     ap.add_argument("--raw", action="store_true", help="write the deciphered script to stdout")
+    ap.add_argument("--data", help="the imported data folder (its tables.json has the menus)")
     a = ap.parse_args()
     code = decipher(open(a.file, "rb").read())
     if a.raw:
         sys.stdout.buffer.write(code)
         return
+    if not a.data:
+        ap.error("--data DATA_DIR is needed to list a script")
+    menus = menu_items(a.data)
     stem = os.path.splitext(os.path.basename(a.file))[0].lower()
-    labels = {t for ins in walk(code).values() for t in ins["targets"]}
-    for at, ins in sorted(walk(code).items()):
+    code_map = walk(code, menus)
+    labels = {t for ins in code_map.values() for t in ins["targets"]}
+    for at, ins in sorted(code_map.items()):
         mark = "L" if at in labels else " "
         if ins["name"] is None:
             print(f"{mark}{at:04x}  .byte {ins['raw']:02x}")

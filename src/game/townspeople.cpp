@@ -18,21 +18,10 @@ constexpr int kFirstWalker = 16;
 // people of MECHSHAP.CMP's row 40, plus the walking frame 0x10-0x1f).
 constexpr int kWalkerSprite = 0xfe;
 
-// P:0240 (Ghidra 2c6c:0240): direction_toward's answer for each combination of its four
-// tests (north 8, south 4, east 2, west 1).
-constexpr std::array<int, 16> kDirectionOf = {-1, 6, 2, -1, 4, 5, 3, -1, 0, 7, 1, -1, -1, -1, -1, -1};
-
-// DGROUP:311a/312a: one half-cell in each direction.
-constexpr std::array<int, 8> kStepX = {0, 1, 1, 1, 0, -1, -1, -1};
-constexpr std::array<int, 8> kStepY = {-1, -1, 0, 1, 1, 1, 0, -1};
-
-// DGROUP:310a: the turns tried, read from the end: straight on, then one
-// way and the other, wider and wider. Two patterns, mirrored.
-constexpr std::array<std::int8_t, 16> kTurns = {7, -6, 5, -4, 3, -2, 1, 0, -7, 6, -5, 4, -3, 2, -1, 0};
-
-// DGROUP:032e: for the person's odd/even half-cells, which quarter bits of
-// the tile under it mean water there.
-constexpr std::array<std::uint8_t, 4> kWaterQuarters = {0x9, 0x3, 0xc, 0x6};
+// The tables 287f:0971 and 1e31:0006 read (P:0240, DGROUP:311a/312a,
+// DGROUP:310a, DGROUP:032e) were part of BTECH.EXE; they are now imported
+// into tables.json (formats/tables.h: direction_of, step_x/y, turns,
+// person_water).
 
 std::int16_t wrap16(int v) { return std::int16_t(std::uint16_t(v)); }
 
@@ -71,7 +60,7 @@ int window_tile(const formats::MtpMap& map, MapPosition party, MapPosition next,
     return cell ? *cell : tile_at(map, next);
 }
 
-int direction_toward(MapPosition from, MapPosition to) {
+int direction_toward(MapPosition from, MapPosition to, const formats::Tables& tables) {
     // Rows: from - to, in 8 bits; across an area edge only the sign is kept.
     int dy = std::int8_t(std::uint8_t(from.y - to.y));
     const int from_area_y = (from.y >> 8) & 0xf0, to_area_y = (to.y >> 8) & 0xf0;
@@ -88,11 +77,13 @@ int direction_toward(MapPosition from, MapPosition to) {
     if (wrap16(-dy * 2) >= adx) bits |= 4;
     if (wrap16(dx * 2) >= ady) bits |= 2;
     if (wrap16(-dx * 2) >= ady) bits |= 1;
-    return kDirectionOf[std::size_t(bits)];
+    return tables.direction_of[std::size_t(bits)];
 }
 
-Townspeople Townspeople::place(const formats::MtpMap& map, int map_number, Random& random) {
+Townspeople Townspeople::place(const formats::MtpMap& map, int map_number, Random& random,
+                               const formats::Tables& tables) {
     Townspeople t;
+    t.tables_ = &tables;
     t.blocking_ = blocking_tile(map_number);
     for (int i = 0; i < 8; ++i) {
         auto& w = t.walkers_[std::size_t(i)];
@@ -146,7 +137,7 @@ void Townspeople::move(const formats::MtpMap& map, MapPosition party, const Part
 // BTECH.EXE 1e31:0006 (Ghidra FUN_1e31_0006), for a person (it moves the
 // 'Mechs and others too: docs/townspeople.md).
 // Turns one eighth toward the target (unless already facing it), then tries
-// eight directions, turning by kTurns from the end each time (straight on
+// eight directions, turning by `turns` from the end each time (straight on
 // first); takes the first one onto a cell that does not block (tile below
 // DGROUP:0150, read through the cell window: window_tile) and that no other
 // figure stands on. Stays put if at the
@@ -157,15 +148,16 @@ void Townspeople::step(int i, const formats::MtpMap& map, MapPosition party, con
         wobble_count_ = 30;
         wobble_ ^= 8;
     }
-    const int want = direction_toward(w.at, w.target);
+    const int want = direction_toward(w.at, w.target, *tables_);
     if (want == -1) return;
     int d = w.heading;
     if (want != d) d = (((want - d) & 7) < 5 ? d + 1 : d - 1) & 7;
     for (int k = 7; k >= 0; --k) {
-        d = (d + kTurns[std::size_t(wobble_ + k)]) & 7;
+        d = (d + tables_->turns[std::size_t(wobble_ + k)]) & 7;
         MapPosition next = w.at;
-        if (kStepX[std::size_t(d)] != 0) next.x = step_x(next.x, kStepX[std::size_t(d)]);
-        if (kStepY[std::size_t(d)] != 0) next.y = step_y(next.y, kStepY[std::size_t(d)]);
+        const int dx = tables_->step_x[std::size_t(d)], dy = tables_->step_y[std::size_t(d)];
+        if (dx != 0) next.x = step_x(next.x, dx);
+        if (dy != 0) next.y = step_y(next.y, dy);
         bool outside = false;
         const int tile = window_tile(map, party, next, outside);
         if (outside) outside_window = true;
@@ -215,7 +207,7 @@ std::vector<Figure> Townspeople::figures(const formats::MtpMap& map, MapPosition
         fig.half_x = w.at.half_cell_x() + 1;
         fig.half_y = w.at.half_cell_y();
         const int tile = tile_at(map, w.at);
-        const int quarters = kWaterQuarters[std::size_t((w.at.y & 1) * 2 + ((w.at.x + 1) & 1))];
+        const int quarters = tables_->person_water[std::size_t((w.at.y & 1) * 2 + ((w.at.x + 1) & 1))];
         if (tile >= 0 && tile < 0xf6 && (tile & quarters) != 0 && (tile & 0xf0) < 0x30)
             fig.sink = (tile & 0xf0) == 0x20 ? 4 : 2;
         out.push_back(fig);

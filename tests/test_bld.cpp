@@ -1,8 +1,8 @@
+#include <array>
 #include <set>
 
 #include "formats/bld.h"
 #include "formats/game_files.h"
-#include "formats/menus.h"
 #include "test.h"
 
 using namespace chr;
@@ -18,7 +18,10 @@ TEST(bld_cipher_and_length_word) {
 }
 
 TEST(bld_decode_operands) {
-    // window 6; print "Hi"; if_flag 3 -> 0x0010; menu 6 (2 items); end
+    // window 6; print "Hi"; if_flag 3 -> 0x0010; menu 6 (2 items here); end
+    std::array<MenuRecord, kMenuCount> menus{};
+    menus[6].items = 2;
+    const auto decode = [&](const std::vector<std::uint8_t>& script, int at) { return formats::decode(script, at, menus); };
     const std::vector<std::uint8_t> s{0xFE, 6, 0xFC, 'H', 'i', 0, 0xF7, 3, 0x10, 0x00,
                                       0xF9, 6, 0x20, 0x00, 0x30, 0x00, 0x05, 0xFF};
     auto in = decode(s, 0);
@@ -29,7 +32,6 @@ TEST(bld_decode_operands) {
     CHECK(in.op == Op::IfFlag && in.bytes[0] == 3 && in.targets == std::vector<int>{0x10} && in.falls_through);
     in = decode(s, 10);
     CHECK(in.op == Op::Menu && in.targets == (std::vector<int>{0x20, 0x30}) && !in.falls_through);
-    CHECK(kMenus[6].items == 2);
     in = decode(s, 16);
     CHECK(!in.op && in.next == 17);  // not an opcode: stepped over
     CHECK(bld_text_id("CITADEL", 0xf3) == "bld.citadel.00f3");
@@ -38,12 +40,14 @@ TEST(bld_decode_operands) {
 TEST(bld_walk_reaches_every_text) {
     const auto dir = chrtest::game_dir();
     if (dir.empty()) return chrtest::skip("no game files");
+    const auto* tables = chrtest::tables();
+    if (!tables) return chrtest::skip("no imported tables");
     for (const auto file : kBldFiles) {
         const auto path = find_game_file(dir, std::string(file) + ".BLD");
         CHECK(path.has_value());
         if (!path) continue;
         const auto script = read_bld(*path);
-        const auto code = walk(script);
+        const auto code = walk(script, tables->menus);
         std::set<int> covered;
         int texts = 0;
         for (const auto& [at, in] : code) {

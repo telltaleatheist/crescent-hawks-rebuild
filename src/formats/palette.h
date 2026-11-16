@@ -5,6 +5,7 @@
 
 #include <array>
 #include <cstdint>
+#include "formats/tables.h"
 
 namespace chr::formats {
 
@@ -22,6 +23,6 @@ Rgb ega_200_line_colour(std::uint8_t register_value);
 // The palette the program sets on the 256K EGA/VGA display (choice 3) for the
 // Infocom and title screens, and puts back after screens with their own
 // colours (15ab:1afe), so the map is drawn with it too.
-Palette16 standard_palette_ega();
+Palette16 standard_palette_ega(const Tables& tables);
 
 }  // namespace chr::formats

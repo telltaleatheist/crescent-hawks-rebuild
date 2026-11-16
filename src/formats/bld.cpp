@@ -4,7 +4,6 @@
 
 #include "formats/cmp.h"  // FormatError
 #include "formats/game_files.h"
-#include "formats/menus.h"
 
 namespace chr::formats {
 
@@ -75,7 +74,7 @@ std::vector<std::uint8_t> read_bld(const std::filesystem::path& path) { return p
 
 std::string_view op_name(Op op) { return info(op).name; }
 
-Instruction decode(const std::vector<std::uint8_t>& script, int at) {
+Instruction decode(const std::vector<std::uint8_t>& script, int at, std::span<const MenuRecord> menus) {
     Instruction in;
     in.at = at;
     in.raw = static_cast<std::uint8_t>(byte_at(script, at));
@@ -101,9 +100,9 @@ Instruction decode(const std::vector<std::uint8_t>& script, int at) {
         }
         case 'M': {
             const int menu = static_cast<std::int8_t>(in.bytes.back());
-            if (menu < 0 || menu >= static_cast<int>(kMenus.size()))
+            if (menu < 0 || menu >= static_cast<int>(menus.size()))
                 throw FormatError("a script asks for menu " + std::to_string(menu));
-            for (int i = 0; i < kMenus[menu].items; ++i, p += 2) in.targets.push_back(word_at(script, p));
+            for (int i = 0; i < menus[std::size_t(menu)].items; ++i, p += 2) in.targets.push_back(word_at(script, p));
             break;
         }
         case 'T': {
@@ -148,7 +147,7 @@ Instruction decode(const std::vector<std::uint8_t>& script, int at) {
     return in;
 }
 
-std::map<int, Instruction> walk(const std::vector<std::uint8_t>& script) {
+std::map<int, Instruction> walk(const std::vector<std::uint8_t>& script, std::span<const MenuRecord> menus) {
     std::map<int, Instruction> seen;
     std::vector<int> todo{0};
     const int size = static_cast<int>(script.size());
@@ -156,7 +155,7 @@ std::map<int, Instruction> walk(const std::vector<std::uint8_t>& script) {
         int at = todo.back();
         todo.pop_back();
         while (at < size && !seen.count(at)) {
-            Instruction in = decode(script, at);
+            Instruction in = decode(script, at, menus);
             for (const int t : in.targets)
                 if (t < size) todo.push_back(t);
             const bool on = in.falls_through;

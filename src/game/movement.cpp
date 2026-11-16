@@ -44,7 +44,8 @@ std::uint16_t move_y(std::uint16_t y, int dy) {
 }  // namespace
 
 StepResult take_step(const formats::MtpMap& map, int map_number, MapPosition from,
-                     const Party& party, Step step, EntranceQuestion& question) {
+                     const Party& party, Step step, EntranceQuestion& question,
+                     const formats::Tables& tables) {
     StepResult result;
     result.position = from;
     const int hx = from.half_cell_x(), hy = from.half_cell_y();
@@ -75,7 +76,7 @@ StepResult take_step(const formats::MtpMap& map, int map_number, MapPosition fro
     const int limit = blocking_tile(map_number);
     for (int i = 0; i < 8; ++i) {
         if (!party.present[i]) continue;
-        const int fx = kFormationX[i] + step.dx, fy = kFormationY[i] + step.dy;
+        const int fx = tables.formation_x[std::size_t(i)] + step.dx, fy = tables.formation_y[std::size_t(i)] + step.dy;
         if (!asked && map_number != 14) {  // ('Mech mode, map 14, has tile events instead)
             const std::uint16_t x = std::uint16_t(from.x + fx), y = std::uint16_t(from.y + fy);
             for (int e = 0; e < 12; ++e) {

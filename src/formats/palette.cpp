@@ -17,17 +17,14 @@ Rgb ega_200_line_colour(std::uint8_t value) {
 // BTECH.EXE 273d:0525 (Ghidra FUN_273d_0525)
 // Sets the 16 palette registers for the chosen display. For EGA it takes 16
 // colour numbers from a table and moves 8-15 up to 16-23, where the 200-line
-// mode keeps its bright colours. The standard table is at
-// 37e8:0000. It is the standard order with three changes: 1 is black, and 5
-// and 9 swap.
-Palette16 standard_palette_ega() {
-    static constexpr std::array<std::uint8_t, 16> kColourNumbers = {
-        0, 0, 2, 3, 4, 9, 6, 7, 8, 1, 10, 11, 12, 13, 14, 15};
+// mode keeps its bright colours. The standard table (37e8:0000) was part of
+// BTECH.EXE; it is now imported (tables.json: palette).
+Palette16 standard_palette_ega(const Tables& tables) {
     Palette16 palette;
     for (std::size_t i = 0; i < palette.size(); ++i) {
-        std::uint8_t number = kColourNumbers[i];
+        int number = tables.palette[i] & 0x0f;
         if (number > 7) number += 8;
-        palette[i] = ega_200_line_colour(number);
+        palette[i] = ega_200_line_colour(std::uint8_t(number));
     }
     return palette;
 }

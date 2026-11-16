@@ -19,7 +19,7 @@ user's application-data folder (on macOS `~/Library/Application Support/crescent
 
 ## What it writes
 
-    import.json          {"import_version": 9, "source": "BTECH.EXE DOS 1.03", "exe_sha256": ...,
+    import.json          {"import_version": 10, "source": "BTECH.EXE DOS 1.03", "exe_sha256": ...,
                           "table_sha256": ...}
     text/english.json    {"texts": [{"id": ..., "address": "ssss:oooo", "text": ...}, ...]}
     font/font.txt        the font (docs/formats/font.md)
@@ -27,6 +27,8 @@ user's application-data folder (on macOS `~/Library/Application Support/crescent
     rules/weapons.json   the weapon table      } with named fields
     rules/combat.json    the combat tables     } (docs/formats/mech.md)
     rules/quiz.json      the training center quiz's ten parts: x, y and answer (docs/combat.md 7)
+    tables.json          the program's small tables: layouts, offsets, masks, scripts
+                         (docs/formats/tables.md)
 
 The places' texts come from the player's .BLD files (docs/formats/bld.md): every text a script
 can print, as `bld.<file>.<offset>` with the address `FILE.BLD+offset`. All 26 .BLD files must
@@ -42,7 +44,7 @@ an older data folder without anyone remembering to bump the version.
 
 The versions: 2 the direction names; 3 "C-Bills:"; 4 the .BLD texts; 5 the class and talk texts;
 6 the start-up's; 7 the rule tables, the 'Mech and weapon names, the combat texts; 8 the table
-hash in `import.json`; 9 `rules/quiz.json`.
+hash in `import.json`; 9 `rules/quiz.json`; 10 `tables.json`.
 
 ## How it reads the program
 

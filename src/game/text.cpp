@@ -6,58 +6,37 @@ namespace chr::game {
 
 namespace {
 
-// The window table, 385b:0000: x, y, width, height, colours. (Layout data,
-// kept as a constant: it is where the program puts its boxes, not content.)
-//   0 whole screen        3 lower left box (party)  6 big box right of panel
-//   1 middle box          4 upper left box          7 message box over the map
-//   2 whole screen inset  5 large box               8 left strip, 9/10 dialogs
-constexpr std::array<TextWindow, 11> kWindows = {{
-    {0, 0, 40, 25, 15, 0, 0, 0},
-    {14, 15, 25, 9, 15, 0, 0, 0},
-    {1, 1, 38, 23, 15, 0, 0, 0},
-    {1, 13, 11, 11, 15, 0, 0, 0},
-    {1, 1, 11, 11, 15, 0, 0, 0},
-    {10, 1, 29, 16, 15, 0, 0, 0},
-    {14, 1, 25, 23, 15, 0, 0, 0},
-    {14, 10, 25, 5, 15, 0, 0, 0},
-    {0, 0, 16, 25, 15, 0, 0, 0},
-    {1, 2, 38, 20, 0, 15, 14, 0},
-    {0, 0, 25, 8, 0, 15, 14, 0},
-}};
-
-// Frame styles, 385b:0320/0338/0350 (pointers at DGROUP:4fa4): the four
-// corners (top-left, top-right, bottom-left, bottom-right), then the top,
-// left, right and bottom edges, each a run of pieces ended by 0xff and
-// repeated along the edge.
-constexpr std::uint8_t kEnd = 0xff;
-constexpr std::array<std::uint8_t, 12> kStyleA = {0, 1, 6, 7, 4, kEnd, 5, kEnd, 5, kEnd, 4, kEnd};
-constexpr std::array<std::uint8_t, 12> kStyleB = {2, 3, 6, 7, 4, kEnd, 5, kEnd, 5, kEnd, 4, kEnd};
-constexpr std::array<std::uint8_t, 12> kStyleC = {0, 1, 2, 3, 4, kEnd, 5, kEnd, 5, kEnd, 4, kEnd};
-// Styles 0-2 use A, 3 uses B, 4 uses C (DGROUP:4fa4).
-const std::uint8_t* style_table(int style) {
-    if (style == 3) return kStyleB.data();
-    if (style == 4) return kStyleC.data();
-    return kStyleA.data();
+// The frame piece table for `style` (DGROUP:4fa4), from the imported tables.
+const int* style_table(const formats::Tables& tables, int style) {
+    style = std::clamp(style, 0, formats::kFrameStyleCount - 1);
+    return tables.frame_pieces[std::size_t(tables.frame_style_pieces[std::size_t(style)])].data();
 }
 
 // BTECH.EXE 2656:01e7 (Ghidra FUN_2656_01e7)
 // Lays a run of frame pieces along an edge; returns where the next run starts.
 template <class Put>
-int edge(const std::uint8_t* table, int start, int col, int row, int count, bool across, Put put) {
+int edge(const int* table, int start, int col, int row, int count, bool across, Put put) {
     int i = start;
     for (int n = 0; n < count; ++n) {
         put(table[i], col, row);
         if (across) ++col; else ++row;
         ++i;
-        if (table[i] == kEnd) i = start;
+        if (table[i] == formats::kFramePieceEnd) i = start;
     }
-    while (table[i] != kEnd) ++i;
+    while (table[i] != formats::kFramePieceEnd) ++i;
     return i + 1;
 }
 
 }  // namespace
 
-TextScreen::TextScreen() : windows_(kWindows) {}
+// The window table was part of BTECH.EXE (385b:0000); it is now imported
+// into tables.json (formats/tables.h).
+TextScreen::TextScreen(const formats::Tables& tables) : tables_(&tables) {
+    for (std::size_t n = 0; n < windows_.size(); ++n) {
+        const auto& r = tables.windows[n];
+        windows_[n] = TextWindow{r.x, r.y, r.width, r.height, r.fg, r.bg, r.col, r.row};
+    }
+}
 
 void TextScreen::select_window(int n) {
     // The first call has nothing to keep (DGROUP:4fa2).
@@ -79,7 +58,7 @@ void TextScreen::put_piece(int piece, int col, int row) {
 
 void TextScreen::frame(int style) {
     const auto& w = windows_[current_];
-    const auto* t = style_table(style);
+    const auto* t = style_table(*tables_, style);
     put_piece(t[0], w.x - 1, w.y - 1);
     put_piece(t[1], w.x + w.width, w.y - 1);
     put_piece(t[2], w.x - 1, w.y + w.height);

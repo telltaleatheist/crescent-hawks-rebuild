@@ -7,6 +7,7 @@
 //                        .BLD file), text
 //   font/font.txt        the font (formats/font_file.h)
 //   rules/*.json         the rule tables (formats/rules.h)
+//   tables.json          the small tables: screen, town, fight (formats/tables.h)
 //
 // From then on the game reads only those files; the program is needed only
 // to import. Overrides (a translation, a mod) are more text files of the same
@@ -24,7 +25,7 @@ namespace chr::formats {
 // The shape of the imported files (docs/import.md has each version). A data
 // folder from another version, or imported with another import table
 // (import_table_hash), is imported again.
-inline constexpr int kImportVersion = 9;
+inline constexpr int kImportVersion = 10;
 
 std::filesystem::path imported_text_path(const std::filesystem::path& data_dir);
 std::filesystem::path imported_font_path(const std::filesystem::path& data_dir);

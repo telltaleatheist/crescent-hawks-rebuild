@@ -10,6 +10,7 @@
 #include <string>
 #include <string_view>
 
+#include "formats/tables.h"
 #include "game/asset_id.h"
 
 namespace chr::game {
@@ -44,7 +45,9 @@ struct TextWindow {
 
 class TextScreen {
 public:
-    TextScreen();
+    // The windows and frame styles come from the imported tables, which
+    // must outlive the screen.
+    explicit TextScreen(const formats::Tables& tables);
 
     const TextCell& cell(int col, int row) const { return cells_[row * kTextColumns + col]; }
     const TextWindow& window() const { return windows_[current_]; }
@@ -100,7 +103,8 @@ private:
     void put_piece(int piece, int col, int row);
 
     std::array<TextCell, kTextColumns * kTextRows> cells_{};
-    std::array<TextWindow, 11> windows_;
+    const formats::Tables* tables_;
+    std::array<TextWindow, formats::kWindowCount> windows_{};
     int current_ = 0;
     bool selected_once_ = false;
 };

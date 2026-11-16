@@ -7,6 +7,7 @@
 #include <optional>
 
 #include "formats/mtp.h"
+#include "formats/tables.h"
 
 namespace chr::game {
 
@@ -27,12 +28,11 @@ struct Step {
 std::optional<Step> step_for_key(int key);
 
 // Who is walking: up to eight characters, each at a fixed offset from the
-// party's position (DGROUP:0464/047c, in half-cells). A new game has one.
+// party's position (DGROUP:0464/047c, in half-cells: imported into
+// tables.json as formation_x/y). A new game has one.
 struct Party {
     std::array<bool, 8> present{true, false, false, false, false, false, false, false};
 };
-inline constexpr std::array<int, 8> kFormationX = {0, 0, 0, 1, -1, 1, -1, 1};
-inline constexpr std::array<int, 8> kFormationY = {0, -1, 1, 0, 0, -1, 1, 1};
 
 // The lowest tile number that blocks a step (DGROUP:0150, set by 1000:2da8).
 int blocking_tile(int map_number);
@@ -62,6 +62,7 @@ public:
 };
 
 StepResult take_step(const formats::MtpMap& map, int map_number, formats::MapPosition from,
-                     const Party& party, Step step, EntranceQuestion& question);
+                     const Party& party, Step step, EntranceQuestion& question,
+                     const formats::Tables& tables);
 
 }  // namespace chr::game

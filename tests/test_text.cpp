@@ -13,6 +13,7 @@
 #include "formats/sha256.h"
 #include "game/text.h"
 #include "game/text_provider.h"
+#include "formats/tables.h"
 #include "test.h"
 
 using namespace chr;
@@ -33,7 +34,9 @@ TEST(sha256_known_values) {
 }
 
 TEST(window_frame_pieces) {
-    TextScreen t;
+    const auto* tables = chrtest::tables();
+    if (!tables) return chrtest::skip("no imported tables (set CHR_GAME_DIR)");
+    TextScreen t(*tables);
     t.select_window(3);  // (1, 13) 11x11
     t.frame(3);
     CHECK(t.cell(0, 12).kind == TextCell::Kind::Frame && t.cell(0, 12).code == 2);   // top-left
@@ -45,7 +48,9 @@ TEST(window_frame_pieces) {
 }
 
 TEST(printer_wraps_words) {
-    TextScreen t;
+    const auto* tables = chrtest::tables();
+    if (!tables) return chrtest::skip("no imported tables (set CHR_GAME_DIR)");
+    TextScreen t(*tables);
     t.select_window(7);  // (14, 10) 25x5
     t.clear_window();
     t.print("The water is too deep that way.");
@@ -54,7 +59,9 @@ TEST(printer_wraps_words) {
 }
 
 TEST(printer_newline_and_colours) {
-    TextScreen t;
+    const auto* tables = chrtest::tables();
+    if (!tables) return chrtest::skip("no imported tables (set CHR_GAME_DIR)");
+    TextScreen t(*tables);
     t.select_window(7);
     t.clear_window();
     const std::array<std::uint8_t, 8> s = {'A', 0x0d, 0x06, 4, 0x02, 14, 'B', 0};
@@ -64,7 +71,9 @@ TEST(printer_newline_and_colours) {
 }
 
 TEST(printer_scrolls_at_the_bottom) {
-    TextScreen t;
+    const auto* tables = chrtest::tables();
+    if (!tables) return chrtest::skip("no imported tables (set CHR_GAME_DIR)");
+    TextScreen t(*tables);
     t.select_window(7);
     t.clear_window();
     t.print("1\r2\r3\r4\r5\r6");

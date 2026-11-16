@@ -6,6 +6,10 @@
 #include <string>
 #include <vector>
 
+namespace chr::formats {
+struct Tables;
+}
+
 namespace chrtest {
 
 struct Test {
@@ -18,6 +22,11 @@ void fail(const char* file, int line, const std::string& what);
 // The game folder, or empty if it isn't there: tests that need it skip.
 std::string game_dir();
 void skip(const std::string& why);
+// The player's data imported once into the build tree (empty without the
+// game folder), and the small tables read from it (nullptr without it):
+// the repo holds no values, so tests that need them skip.
+std::string imported_data_dir();
+const chr::formats::Tables* tables();
 
 struct Register {
     Register(const char* name, std::function<void()> body) {

@@ -35,6 +35,7 @@
 #include "formats/import.h"
 #include "formats/mtp.h"
 #include "formats/palette.h"
+#include "formats/tables.h"
 #include "game/asset_id.h"
 #include "game/clock.h"
 #include "game/map_view.h"
@@ -263,10 +264,20 @@ int main(int argc, char** argv) {
             status = 2;
         }
     }
+    // The program's small tables (formats/tables.h), from the import.
+    chr::formats::Tables tables;
     if (status == 0) {
-        chr::platform::OriginalAssets assets(options.game_dir, options.data_dir);
+        try {
+            tables = chr::formats::read_tables(options.data_dir);
+        } catch (const std::exception& e) {
+            std::fprintf(stderr, "chr: %s\n", e.what());
+            status = 1;
+        }
+    }
+    if (status == 0) {
+        const auto palette = chr::formats::standard_palette_ega(tables);
+        chr::platform::OriginalAssets assets(options.game_dir, options.data_dir, palette);
         chr::platform::Renderer renderer(sdl_renderer, assets);
-        const auto palette = chr::formats::standard_palette_ega();
         const auto& title = chr::assets::kTitleScreen;
 
         // The town takes keys and idle passes as they come. A question asks
@@ -291,7 +302,7 @@ int main(int argc, char** argv) {
         const chr::game::LayeredText texts({&overrides, &imported, &map_text});
         auto replay = [&]() -> bool {
             try {
-                town = std::make_unique<chr::game::Town>(map, options.map, start, texts);
+                town = std::make_unique<chr::game::Town>(map, options.map, start, texts, tables);
                 town->set_game_dir(options.game_dir);
                 if (rules) town->set_rules(&*rules);
                 town->set_show_quiz(options.show_quiz);

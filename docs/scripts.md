@@ -1,7 +1,7 @@
 # The place scripts
 
 What happens inside a place: the interpreter for the .BLD scripts (the file is in
-[formats/bld.md](formats/bld.md)). `tools/bld.py ORIGINAL/CITADEL.BLD` lists a script with these
+[formats/bld.md](formats/bld.md)). `tools/bld.py --data DATA ORIGINAL/CITADEL.BLD` (DATA: the imported data folder) lists a script with these
 names and its text IDs.
 
 ## Entering a place (BTECH.EXE 17dc:0008)
@@ -97,7 +97,7 @@ Every original script starts `window 6, clear, frame 0`: the big text box on the
 
 ### The menu (BTECH.EXE 2656:0b5e)
 
-The script prints the menu's words first, as ordinary text. The menu record (menus.h) says where
+The script prints the menu's words first, as ordinary text. The menu record (385b:0092, imported into tables.json: formats/tables.md) says where
 the items are: item i is row first_row + i of the current window, `width` cells wide. Then:
 - The remembered item (record +6) is the start. It is reset to 0 if it is out of range, or while
   a demo plays or records.

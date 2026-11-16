@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "formats/mtp.h"
+#include "formats/tables.h"
 #include "game/figures.h"
 #include "game/random.h"
 
@@ -42,7 +43,9 @@ public:
     // starts at entrance start_shuffle[r & 7], its next entrance too, and
     // comes out next at entrance r & 7. On maps above 10 nobody is out.
     // Draws 8 random numbers.
-    static Townspeople place(const formats::MtpMap& map, int map_number, Random& random);
+    // Its tables come from the imported tables, which must outlive it.
+    static Townspeople place(const formats::MtpMap& map, int map_number, Random& random,
+                             const formats::Tables& tables);
 
     // BTECH.EXE 1000:24c2 (Ghidra FUN_1000_24c2)
     // Every third game tick. A person inside counts down, and comes out at
@@ -84,6 +87,7 @@ public:
 private:
     void step(int i, const formats::MtpMap& map, formats::MapPosition party, const PartyPlaces& party_places);
 
+    const formats::Tables* tables_ = nullptr;
     std::array<Walker, 8> walkers_{};
     std::array<formats::MapPosition, 8> kept_{};  // F:d390/d392 + 0x1a i, during a fight
     int blocking_ = 0x55;  // DGROUP:0150
@@ -97,6 +101,6 @@ private:
 // The direction (0-7, north first, clockwise) from `from` toward `to`, the
 // nearest of the eight to the line between them, or -1 when they are the
 // same place.
-int direction_toward(formats::MapPosition from, formats::MapPosition to);
+int direction_toward(formats::MapPosition from, formats::MapPosition to, const formats::Tables& tables);
 
 }  // namespace chr::game

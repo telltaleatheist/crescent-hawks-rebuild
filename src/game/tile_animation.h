@@ -6,22 +6,20 @@
 #include <cstdint>
 #include <optional>
 
+#include "formats/tables.h"
 #include "game/asset_id.h"
 
 namespace chr::game {
 
-// DGROUP:04b0: the animated tile numbers. 0x69-0x71 are the electric fence.
-inline constexpr std::array<std::uint8_t, 10> kAnimatedTiles = {0x57, 0x58, 0x59, 0x5a, 0x5b,
-                                                                0x69, 0x6a, 0x6b, 0x6f, 0x71};
-
 // BTECH.EXE 1000:320b (Ghidra FUN_1000_320b) loads ANIMATE.ICN and keeps its
 // tiles 1-30; BTECH.EXE 1000:240b (Ghidra FUN_1000_240b) copies frame
 // `phase` of animated tile i (ANIMATE.ICN tile 1 + 3i + phase) over tile
-// slot kAnimatedTiles[i]. So a map cell holding an animated tile shows
+// slot i of DGROUP:04b0's tile numbers (part of BTECH.EXE, now imported:
+// tables.json, animated_tiles). So a map cell holding an animated tile shows
 // that frame instead of the sheet's own tile. Nothing for other tiles.
-inline std::optional<AssetId> animated_tile(std::uint8_t tile, int phase) {
-    for (std::size_t i = 0; i < kAnimatedTiles.size(); ++i)
-        if (kAnimatedTiles[i] == tile) return AssetId{"ANIMATE.ICN", std::uint16_t(1 + 3 * i + phase)};
+inline std::optional<AssetId> animated_tile(std::uint8_t tile, int phase, const formats::Tables& tables) {
+    for (std::size_t i = 0; i < tables.animated_tiles.size(); ++i)
+        if (tables.animated_tiles[i] == tile) return AssetId{"ANIMATE.ICN", std::uint16_t(1 + 3 * i + phase)};
     return std::nullopt;
 }
 

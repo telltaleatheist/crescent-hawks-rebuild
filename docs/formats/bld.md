@@ -52,7 +52,7 @@ and so on).
 
 Two opcodes end in a jump table with no count:
 - The menu (F9 m) has one word per item of menu m, and the count is in the program's menu table
-  (`src/formats/menus.h`).
+  (385b:0092, imported into `tables.json`: [tables.md](tables.md)).
 - The flag switch (F3 f) has one word per value flag f can take, and nothing says how many. In
   every original script the table ends where the code for its first forward entry begins, and
   that is how `formats::decode` and `tools/bld.py` find the end. The interpreter never needs the

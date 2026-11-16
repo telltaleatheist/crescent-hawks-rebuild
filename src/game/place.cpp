@@ -16,16 +16,6 @@ namespace chr::game {
 
 namespace {
 
-// BTECH.EXE DGROUP:141a, by script number: the picture shown on entering
-// (O<n>.ANM), 0 for none.
-constexpr std::array<int, 26> kPlacePictures = {0, 17, 0, 21, 21, 18, 0,  0, 18, 0, 20, 19, 0,
-                                                0, 0,  21, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0};
-
-// BTECH.EXE DGROUP:0ac4: the chance of a place's picture, by flag 4f: it
-// shows when a random number AND this is 0.
-constexpr std::array<int, 3> kPictureChance = {0x03, 0x0f, 0x3f};
-
-
 constexpr int kPanelPictureWindow = 4;
 
 // BTECH.EXE 2656:0d1d (Ghidra FUN_2656_0d1d)
@@ -99,14 +89,16 @@ bool Town::run_script(int file, KeySource& keys) {
     const auto path = formats::find_game_file(*game_dir_, name + ".BLD");
     if (!path) throw std::runtime_error(name + ".BLD is missing from " + game_dir_->string());
     const auto script = formats::read_bld(*path);
-    if (kPlacePictures[std::size_t(file)] != 0) show_picture(kPlacePictures[std::size_t(file)], 1);
+    // DGROUP:141a, the picture by script number, was part of BTECH.EXE; it is
+    // now imported (tables.json: place_pictures).
+    if (const int picture = tables_.place_pictures[std::size_t(file)]; picture != 0) show_picture(picture, 1);
     log_.push_back("script " + name);
 
     int pc = 0;
     const int size = static_cast<int>(script.size());
     auto sbyte = [&](int at) { return static_cast<int>(static_cast<std::int8_t>(script.at(std::size_t(at)))); };
     while (pc < size) {
-        const auto in = formats::decode(script, pc);
+        const auto in = formats::decode(script, pc, menus_);
         if (!in.op) {  // not an opcode: stepped over
             pc = in.next;
             continue;
@@ -385,7 +377,10 @@ bool Town::talk(KeySource& keys) {
 void Town::show_picture(int number, int mode) {
     const int r = random_.next();
     const int chance = flags_[flag::kPictureChance];
-    bool show = chance >= 0 && chance < static_cast<int>(kPictureChance.size()) && (r & kPictureChance[std::size_t(chance)]) == 0;
+    // DGROUP:0ac4, the chance masks, was part of BTECH.EXE; it is now
+    // imported (tables.json: picture_chance).
+    const auto& masks = tables_.picture_chance;
+    bool show = chance >= 0 && chance < static_cast<int>(masks.size()) && (r & masks[std::size_t(chance)]) == 0;
     if (number != 0x10 && (number == 0 || number > 7 || number == 6 || number == 2)) show = true;
     if (mode == 2) show = true;
     if (!show) return;

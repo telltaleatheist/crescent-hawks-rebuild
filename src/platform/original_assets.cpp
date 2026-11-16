@@ -43,8 +43,9 @@ Image from_colour_numbers(const std::vector<std::uint8_t>& numbers, int width, i
 
 }  // namespace
 
-OriginalAssets::OriginalAssets(std::filesystem::path game_dir, std::filesystem::path data_dir)
-    : game_dir_(std::move(game_dir)), data_dir_(std::move(data_dir)) {}
+OriginalAssets::OriginalAssets(std::filesystem::path game_dir, std::filesystem::path data_dir,
+                               formats::Palette16 palette)
+    : game_dir_(std::move(game_dir)), data_dir_(std::move(data_dir)), palette_(palette) {}
 
 const formats::TileSheet* OriginalAssets::sheet(const std::string& file) {
     if (auto it = sheets_.find(file); it != sheets_.end()) return &it->second;
@@ -104,7 +105,7 @@ std::optional<Image> OriginalAssets::image(const AssetId& id) {
             const auto* pic = picture(id.file.substr(0, colon));
             if (!pic) return std::nullopt;
             const auto cell = formats::picture_cell(*pic, id.index);
-            return from_colour_numbers({cell.begin(), cell.end()}, 8, 8, formats::standard_palette_ega());
+            return from_colour_numbers({cell.begin(), cell.end()}, 8, 8, palette_);
         }
         if (id.file == "MECHSHAP.CMP:sprite") {
             // A slot of the program's sprite table. Colour 0 is see-through:
@@ -123,7 +124,7 @@ std::optional<Image> OriginalAssets::image(const AssetId& id) {
             for (int y = 0; y < rect->height; ++y)
                 for (int x = 0; x < rect->width; ++x)
                     numbers.push_back(all[std::size_t((rect->y + y) * formats::kCmpWidth + rect->x + x)]);
-            auto image = from_colour_numbers(numbers, rect->width, rect->height, formats::standard_palette_ega());
+            auto image = from_colour_numbers(numbers, rect->width, rect->height, palette_);
             for (std::size_t i = 0; i < numbers.size(); ++i)
                 if ((numbers[i] & 0x0f) == 0) {
                     image.rgba[4 * i + 3] = 0;
@@ -142,18 +143,16 @@ std::optional<Image> OriginalAssets::image(const AssetId& id) {
                 return std::nullopt;
             }
             const auto picture = formats::decode_cmp(formats::read_file(*path));
-            // The standard 256K EGA/VGA palette. Later the palette becomes part
-            // of what the game asks for (some screens set their own), not a
-            // fixed choice here.
+            // The standard 256K EGA/VGA palette (formats/palette.h), from the import.
             return from_colour_numbers(picture.pixels(), formats::kCmpWidth, formats::kCmpHeight,
-                                       formats::standard_palette_ega());
+                                       palette_);
         }
         if (has_extension(id.file, ".ICN")) {
             const auto* tiles = sheet(id.file);
             if (!tiles) return std::nullopt;
             const auto pixels = tiles->tile(id.index);
             return from_colour_numbers({pixels.begin(), pixels.end()}, formats::kTileSize,
-                                       formats::kTileSize, formats::standard_palette_ega());
+                                       formats::kTileSize, palette_);
         }
         if (has_extension(id.file, ".ANM")) {
             // {"O17.ANM", k}: frame k of a place's picture, as shown.
@@ -165,7 +164,7 @@ std::optional<Image> OriginalAssets::image(const AssetId& id) {
                 return std::nullopt;
             }
             return from_colour_numbers(anm.frames[frame], formats::kAnmSize, formats::kAnmSize,
-                                       formats::standard_palette_ega());
+                                       palette_);
         }
         last_error_ = to_string(id) + ": no reader for this file type yet";
     } catch (const std::exception& e) {

@@ -64,6 +64,13 @@ showing a picture the program sets the palette from a table of its own
 (273d:0525). The caller passes the table's address. The Infocom and title
 screens use the table at 37e8:0000 (MCGA: 37e8:0010).
 
+The rebuild shows every picture with that standard table for now. Still to do:
+
+- find the screens that set a palette of their own (`15ab:1afe` puts the standard one back after
+  them, so there are some), and the tables they use;
+- import those tables, and let the game name the palette along with the picture it shows, so
+  the renderer stops choosing it.
+
 ## The four displays
 
 The start-up menu (1527:0044) sets the display variable at DG:4fba from the

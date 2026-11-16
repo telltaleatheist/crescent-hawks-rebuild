@@ -58,7 +58,7 @@ bool Town::on_foot(int character) const {
 std::vector<Figure> Town::walk_in_figures() {
     Party walking = party_;
     for (int i = 0; i < 8; ++i) walking.present[std::size_t(i)] = walking.present[std::size_t(i)] && on_foot(i);
-    auto all = party_figures(map_, position_, walking, animation_);
+    auto all = party_figures(map_, position_, walking, animation_, tables_);
     const auto people = people_.figures(map_, position_, animation_);
     all.insert(all.end(), people.begin(), people.end());
     const bool odd_x = position_.x & 1, odd_y = position_.y & 1;
@@ -67,15 +67,15 @@ std::vector<Figure> Town::walk_in_figures() {
         if (mechs_[std::size_t(m)][0] == 0xff) continue;
         Figure f;
         f.sprite = sprite(figs_.sprite_base[std::size_t(m)] + animation_.frame(m));
-        f.half_x = position_.half_cell_x() + kMechFormationX[std::size_t(k)];
-        f.half_y = position_.half_cell_y() + kMechFormationY[std::size_t(k)] - 2;
-        const int index = view_corner_index(position_) + kMechCell[std::size_t(k)] +
-                          (odd_x ? kMechCellOddX[std::size_t(k)] : 0) + (odd_y ? kMechCellOddY[std::size_t(k)] : 0);
-        const int quarters = kMechWaterQuarters[std::size_t(k)] ^ (odd_y ? 5 : 0);
+        f.half_x = position_.half_cell_x() + tables_.mech_formation_x[std::size_t(k)];
+        f.half_y = position_.half_cell_y() + tables_.mech_formation_y[std::size_t(k)] - 2;
+        const int index = view_corner_index(position_) + tables_.mech_cell[std::size_t(k)] +
+                          (odd_x ? tables_.mech_cell_odd_x[std::size_t(k)] : 0) + (odd_y ? tables_.mech_cell_odd_y[std::size_t(k)] : 0);
+        const int quarters = tables_.mech_water[std::size_t(k)] ^ (odd_y ? 5 : 0);
         f.sink = mech_sink(window_cell(map_, position_, index).value_or(-1), quarters);
         all.push_back(f);
-        figs_.x[std::size_t(k)] = move_x(position_.x, kMechFormationX[std::size_t(k)]);
-        figs_.y[std::size_t(k)] = move_y(position_.y, kMechFormationY[std::size_t(k)]);
+        figs_.x[std::size_t(k)] = move_x(position_.x, tables_.mech_formation_x[std::size_t(k)]);
+        figs_.y[std::size_t(k)] = move_y(position_.y, tables_.mech_formation_y[std::size_t(k)]);
         figs_.active[std::size_t(k)] = 1;
         ++k;
     }
@@ -228,8 +228,8 @@ void Town::place_mission(int mechs, int people) {
         animation_.set_direction(f, 6);
         figs_.heading[std::size_t(f)] = 6;
         figs_.active[std::size_t(f)] = 1;
-        figs_.x[std::size_t(f)] = std::uint16_t(x0 + kEnemyOffsetX[std::size_t(placed)]);
-        figs_.y[std::size_t(f)] = std::uint16_t(y0 + kEnemyOffsetY[std::size_t(placed)]);
+        figs_.x[std::size_t(f)] = std::uint16_t(x0 + tables_.enemy_offset_x[std::size_t(placed)]);
+        figs_.y[std::size_t(f)] = std::uint16_t(y0 + tables_.enemy_offset_y[std::size_t(placed)]);
     }
     if (people > 0) log_.push_back("enemy people: not rebuilt");
 }
@@ -245,8 +245,8 @@ bool Town::fight(int kind, KeySource& keys) {
     int k = 0;
     for (int m = 0; m < 4; ++m) {
         if (mechs_[std::size_t(m)][0] == 0xff) continue;
-        figs_.x[std::size_t(k)] = move_x(at.x, kMechFormationX[std::size_t(k)]);
-        figs_.y[std::size_t(k)] = move_y(at.y, kMechFormationY[std::size_t(k)]);
+        figs_.x[std::size_t(k)] = move_x(at.x, tables_.mech_formation_x[std::size_t(k)]);
+        figs_.y[std::size_t(k)] = move_y(at.y, tables_.mech_formation_y[std::size_t(k)]);
         ++figs_.active[std::size_t(k)];
         ++k;
     }

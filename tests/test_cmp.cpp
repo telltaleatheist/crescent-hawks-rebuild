@@ -4,6 +4,7 @@
 #include "formats/cmp.h"
 #include "formats/game_files.h"
 #include "formats/palette.h"
+#include "formats/tables.h"
 #include "test.h"
 
 using namespace chr::formats;
@@ -82,10 +83,12 @@ TEST(pixels_are_high_nibble_first) {
 }
 
 TEST(ega_palette_colours) {
+    const auto* tables = chrtest::tables();
+    if (!tables) return chrtest::skip("no imported tables (set CHR_GAME_DIR)");
     CHECK((ega_200_line_colour(0x00) == Rgb{0, 0, 0}));
     CHECK((ega_200_line_colour(0x06) == Rgb{0xaa, 0x55, 0x00}));  // brown
     CHECK((ega_200_line_colour(0x17) == Rgb{0xff, 0xff, 0xff}));
-    const auto palette = standard_palette_ega();
+    const auto palette = standard_palette_ega(*tables);
     CHECK(palette[1] == palette[0]);                                // 1 is black
     CHECK((palette[5] == Rgb{0x55, 0x55, 0xff}));                   // light blue
     CHECK((palette[9] == Rgb{0x00, 0x00, 0xaa}));                   // blue

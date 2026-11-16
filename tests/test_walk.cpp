@@ -14,6 +14,7 @@
 #include "game/movement.h"
 #include "game/town.h"
 #include "game/townspeople.h"
+#include "formats/tables.h"
 #include "test.h"
 
 using namespace chr;
@@ -58,36 +59,44 @@ TEST(keys_give_directions) {
 }
 
 TEST(step_moves_a_half_cell) {
+    const auto* tables = chrtest::tables();
+    if (!tables) return chrtest::skip("no imported tables (set CHR_GAME_DIR)");
     const auto map = open_map();
     Answer no;
-    const auto r = take_step(map, 1, {10, 12}, Party{}, {1, 1}, no);
+    const auto r = take_step(map, 1, {10, 12}, Party{}, {1, 1}, no, *tables);
     CHECK(r.outcome == StepOutcome::Moved);
     CHECK(r.position == (MapPosition{11, 13}));
 }
 
 TEST(wall_blocks) {
+    const auto* tables = chrtest::tables();
+    if (!tables) return chrtest::skip("no imported tables (set CHR_GAME_DIR)");
     const auto map = open_map();
     Answer no;
     // Half-cell row 8 is cell row 4; one up is half-cell 7, cell row 3: the wall.
-    const auto r = take_step(map, 1, {10, 8}, Party{}, {0, -1}, no);
+    const auto r = take_step(map, 1, {10, 8}, Party{}, {0, -1}, no, *tables);
     CHECK(r.outcome == StepOutcome::Blocked);
     CHECK(r.position == (MapPosition{10, 8}));
 }
 
 TEST(entrance_asks_and_then_checks_the_step) {
+    const auto* tables = chrtest::tables();
+    if (!tables) return chrtest::skip("no imported tables (set CHR_GAME_DIR)");
     const auto map = open_map();
     Answer yes;
     yes.yes = true;
-    const auto r = take_step(map, 1, {10, 21}, Party{}, {0, -1}, yes);
+    const auto r = take_step(map, 1, {10, 21}, Party{}, {0, -1}, yes, *tables);
     CHECK(yes.asked == 0 && r.entered);
     CHECK(r.outcome == StepOutcome::Moved);
 }
 
 TEST(map_edge_is_leaving) {
+    const auto* tables = chrtest::tables();
+    if (!tables) return chrtest::skip("no imported tables (set CHR_GAME_DIR)");
     const auto map = open_map();
     Answer no;
-    CHECK(take_step(map, 1, {10, 0}, Party{}, {0, -1}, no).outcome == StepOutcome::LeftMap);
-    CHECK(take_step(map, 1, {31, 20}, Party{}, {1, 0}, no).outcome == StepOutcome::LeftMap);
+    CHECK(take_step(map, 1, {10, 0}, Party{}, {0, -1}, no, *tables).outcome == StepOutcome::LeftMap);
+    CHECK(take_step(map, 1, {31, 20}, Party{}, {1, 0}, no, *tables).outcome == StepOutcome::LeftMap);
 }
 
 TEST(key_script_parses) {
@@ -144,6 +153,7 @@ struct Map1 {
     std::unique_ptr<TextTable> imported;
     std::unique_ptr<MapText> map_text;
     std::unique_ptr<LayeredText> texts;
+    std::unique_ptr<formats::Tables> tables;
 };
 
 bool play_map1(const std::string& script, std::unique_ptr<Town>& town, Map1& m,
@@ -157,12 +167,13 @@ bool play_map1(const std::string& script, std::unique_ptr<Town>& town, Map1& m,
     // The text as the importer writes it, imported once into the build tree.
     const std::filesystem::path data = std::filesystem::path(CHR_TEST_SCRATCH) / "walk-data";
     ensure_imported(dir, data);
+    m.tables = std::make_unique<formats::Tables>(formats::read_tables(data));
     m.imported = std::make_unique<TextTable>(TextTable::load(imported_text_path(data)));
     m.map_text = std::make_unique<MapText>(m.map, 1);
     std::vector<const TextProvider*> layers{m.imported.get(), m.map_text.get()};
     if (overrides) layers.insert(layers.begin(), overrides);
     m.texts = std::make_unique<LayeredText>(layers);
-    town = std::make_unique<Town>(m.map, 1, new_game_position(), *m.texts);
+    town = std::make_unique<Town>(m.map, 1, new_game_position(), *m.texts, *m.tables);
     if (start_up) town->start_up();
     else town->draw_panel();
     ScriptKeys keys(parse_key_script(script));
@@ -380,15 +391,17 @@ TEST(random_numbers) {
 }
 
 TEST(money_step) {
+    const auto* tables = chrtest::tables();
+    if (!tables) return chrtest::skip("no imported tables (set CHR_GAME_DIR)");
     Random r({0x25, 0x13, 0x90});
     Money money;
     Flags flags = new_game_flags();
-    CHECK(money_tick(money, flags, false, r));  // runs on the first tick
+    CHECK(money_tick(money, flags, false, r, *tables));  // runs on the first tick
     CHECK(money.cbills == 35 && flags[flag::kMoneyCountdown] == 0xff);
-    for (int i = 0; i < 255; ++i) CHECK(!money_tick(money, flags, false, r));
-    CHECK(money_tick(money, flags, false, r));
+    for (int i = 0; i < 255; ++i) CHECK(!money_tick(money, flags, false, r, *tables));
+    CHECK(money_tick(money, flags, false, r, *tables));
     CHECK(money.cbills == 50);
-    for (int i = 0; i < 256; ++i) money_tick(money, flags, false, r);
+    for (int i = 0; i < 256; ++i) money_tick(money, flags, false, r, *tables);
     CHECK(money.cbills == 50);  // at the floor: no more
     // Investments: x * 100 / rate on a gain, x * rate / 110 on a loss.
     Money m2;
@@ -396,7 +409,7 @@ TEST(money_step) {
     m2.invested = {9600, 9000, 20000};
     Random r2({0x25, 0x13, 0x90});  // draws 0xb5, 0x87, 0xf8: gains for the first two, a loss for the third
     Flags f2 = new_game_flags();
-    money_tick(m2, f2, true, r2);
+    money_tick(m2, f2, true, r2, *tables);
     CHECK(m2.invested[0] == 10000 && m2.invested[1] == 10000);
     CHECK(m2.invested[2] == 20000 * 48 / 110);
 }
@@ -430,15 +443,17 @@ TEST(window_tile_wraps_to_the_next_row) {
 }
 
 TEST(direction_toward_target) {
+    const auto* tables = chrtest::tables();
+    if (!tables) return chrtest::skip("no imported tables (set CHR_GAME_DIR)");
     using formats::MapPosition;
     const MapPosition at{0x0c20, 0xc020};
-    CHECK(direction_toward(at, at) == -1);
-    CHECK(direction_toward(at, {0x0c20, 0xc010}) == 0);  // north
-    CHECK(direction_toward(at, {0x0c30, 0xc010}) == 1);  // north-east
-    CHECK(direction_toward(at, {0x0c30, 0xc021}) == 2);  // east (nearer east than south-east)
-    CHECK(direction_toward(at, {0x0c22, 0xc030}) == 4);  // south
-    CHECK(direction_toward(at, {0x0c10, 0xc030}) == 5);  // south-west
-    CHECK(direction_toward(at, {0x0c10, 0xc010}) == 7);  // north-west
+    CHECK(direction_toward(at, at, *tables) == -1);
+    CHECK(direction_toward(at, {0x0c20, 0xc010}, *tables) == 0);  // north
+    CHECK(direction_toward(at, {0x0c30, 0xc010}, *tables) == 1);  // north-east
+    CHECK(direction_toward(at, {0x0c30, 0xc021}, *tables) == 2);  // east (nearer east than south-east)
+    CHECK(direction_toward(at, {0x0c22, 0xc030}, *tables) == 4);  // south
+    CHECK(direction_toward(at, {0x0c10, 0xc030}, *tables) == 5);  // south-west
+    CHECK(direction_toward(at, {0x0c10, 0xc010}, *tables) == 7);  // north-west
 }
 
 TEST(map1_townspeople_placed_as_the_original) {

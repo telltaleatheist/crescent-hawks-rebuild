@@ -36,6 +36,7 @@ add_library(chrformats STATIC
   src/formats/mtp.cpp
   src/formats/palette.cpp
   src/formats/rules.cpp
+  src/formats/tables.cpp
   src/formats/sha256.cpp
   src/formats/sprite_sheet.cpp
 )
@@ -70,6 +71,7 @@ add_executable(chrtests
   tests/test_fight.cpp
   tests/test_quiz.cpp
   tests/test_rules.cpp
+  tests/test_tables.cpp
   tests/test_cmp.cpp
   tests/test_maps.cpp
   tests/test_text.cpp

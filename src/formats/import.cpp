@@ -3,6 +3,7 @@
 #include <cstdio>
 
 #include "formats/sha256.h"
+#include "formats/tables.h"
 
 #include <cstdio>
 #include <fstream>
@@ -63,6 +64,7 @@ ImportState import_state(const fs::path& data_dir) {
         return ImportState::Missing;
     for (const auto name : kRulesFiles)
         if (!fs::exists(rules_dir(data_dir) / name, ec)) return ImportState::Missing;
+    if (!fs::exists(tables_path(data_dir), ec)) return ImportState::Missing;
     try {
         const auto bytes = read_file(manifest_path(data_dir));
         const auto manifest = parse_json(std::string(bytes.begin(), bytes.end()));
@@ -97,12 +99,13 @@ void import_original(const fs::path& game_dir, const fs::path& data_dir) {
                 ", \"text\": " + json_quote(named.bytes) + "}";
     // The places' texts, from the player's .BLD files: every text a script
     // can print, found by walking the script from its start.
+    const auto tables = tables_from_original(exe);
     for (const auto file : kBldFiles) {
         const std::string name = std::string(file) + ".BLD";
         const auto path = find_game_file(game_dir, name);
         if (!path) throw FormatError(name + " is missing from " + game_dir.string());
         const auto script = read_bld(*path);
-        for (const auto& [at, in] : walk(script)) {
+        for (const auto& [at, in] : walk(script, tables.menus)) {
             if (in.op != Op::Print) continue;
             char address[16];
             std::snprintf(address, sizeof address, "+%04x", at + 1);
@@ -122,6 +125,7 @@ void import_original(const fs::path& game_dir, const fs::path& data_dir) {
     write_file(rules_dir(data_dir) / kRulesFiles[1], files.weapons);
     write_file(rules_dir(data_dir) / kRulesFiles[2], files.combat);
     write_file(rules_dir(data_dir) / kRulesFiles[3], files.quiz);
+    write_file(tables_path(data_dir), write_tables_file(tables, kImportVersion));
     write_file(manifest_path(data_dir),
                "{\n  \"import_version\": " + std::to_string(kImportVersion) + ",\n  \"source\": " +
                    json_quote("BTECH.EXE " + std::string(kSupportedVersion)) + ",\n  \"exe_sha256\": " +
