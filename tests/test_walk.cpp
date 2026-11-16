@@ -107,6 +107,34 @@ TEST(key_script_parses) {
     CHECK(threw);
 }
 
+// The test aid set:NN=VV: parsed as a flag setting, flag 14 refused, and a
+// question's read refuses one (only the town's loop applies it).
+TEST(key_script_set_flag) {
+    const auto keys = parse_key_script("set:00=02 up");
+    CHECK(keys.size() == 2 && keys[0].is_set() && keys[0].set_flag == 0 && keys[0].set_value == 2);
+    CHECK(!keys[1].is_set());
+    const auto refused = [](const char* script) {
+        try {
+            parse_key_script(script);
+        } catch (const std::invalid_argument&) {
+            return true;
+        }
+        return false;
+    };
+    CHECK(refused("set:14=01"));
+    CHECK(refused("set:64=01"));
+    CHECK(refused("set:00=100"));
+    CHECK(refused("set:00"));
+    ScriptKeys source(parse_key_script("set:05=01 y"));
+    bool threw = false;
+    try {
+        source.next();
+    } catch (const std::invalid_argument&) {
+        threw = true;
+    }
+    CHECK(threw);
+}
+
 namespace {
 
 // Plays `script` on map 1 from the new-game start. False if the game files

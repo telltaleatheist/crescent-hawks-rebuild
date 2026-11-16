@@ -36,6 +36,35 @@ import snap2png  # noqa: E402
 DOSBOX = "/Applications/dosbox-x.app/Contents/MacOS/dosbox-x"
 SNAP_MARK = 0xFFFF
 IDLE_MARK = 0xFFFE
+POKE_MARK = 0xFFFD
+
+# A test poke, "@poke:SEG:OFFSET=BYTES" (hex, e.g. @poke:F:d30c=02), names
+# its segment as the docs do (docs/original.md, "Data segments"); SNAP finds
+# it through the DGROUP word the game itself keeps it in. Data only (SNAP
+# refuses code segments), and never what decides the copy-protection path:
+# flag 14 (F:d320) is refused here.
+POKE_SEGMENTS = {"F": 0x5528, "P": 0x562A, "DG": 0xFFFF}
+POKE_FORBIDDEN = [("F", 0xD320, 0xD321, "flag 14, which decides whether the quiz runs")]
+
+
+def poke_words(token):
+    """The KEYS.BIN words of one @poke token."""
+    body = token[len("@poke:"):]
+    try:
+        where, data = body.split("=")
+        seg, off = where.split(":")
+        offset = int(off, 16)
+        values = bytes.fromhex(data)
+    except ValueError:
+        raise ValueError(f"bad poke {token!r}: use @poke:SEG:OFFSET=BYTES")
+    if seg not in POKE_SEGMENTS:
+        raise ValueError(f"bad poke {token!r}: the segment is one of {', '.join(POKE_SEGMENTS)}")
+    if not values or offset + len(values) > 0x10000:
+        raise ValueError(f"bad poke {token!r}: no bytes, or past the segment's end")
+    for fseg, lo, hi, why in POKE_FORBIDDEN:
+        if seg == fseg and offset < hi and offset + len(values) > lo:
+            raise ValueError(f"refused poke {token!r}: it would write {why}")
+    return [POKE_MARK, POKE_SEGMENTS[seg], offset, len(values)] + list(values)
 
 # BIOS key words: scan code << 8 | character.
 NAMED = {
@@ -66,6 +95,9 @@ def compile_script(script):
         if token.startswith("@snap:"):
             words.append(SNAP_MARK)
             names.append(token[len("@snap:"):])
+            continue
+        if token.startswith("@poke:"):
+            words.extend(poke_words(token))
             continue
         if token.startswith("idle:"):
             # N more passes of a polling wait before the next item: in the
@@ -139,6 +171,9 @@ def run(game_dir, script, out_dir, timeout=120, keep=False):
                 pass
             proc.wait()
             log.close()
+        if os.path.exists(os.path.join(c, "POKEFAIL.TXT")):
+            print("run.py: SNAP refused a poke (not a data segment, or no game DS yet)", file=sys.stderr)
+            finished = False
         shots = sorted(f for f in os.listdir(c) if f.startswith("SNAP") and f.endswith(".BIN"))
         written = []
         for name, shot in zip(names, shots):

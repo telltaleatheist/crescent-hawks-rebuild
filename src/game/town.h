@@ -39,7 +39,10 @@ public:
 // (each one display frame, see game/clock.h).
 struct ScriptItem {
     int key = 0;
-    int idle = 0;  // > 0: idle passes instead of a key
+    int idle = 0;       // > 0: idle passes instead of a key
+    int set_flag = -1;  // >= 0: a test aid, set this flag to set_value instead
+    int set_value = 0;
+    bool is_set() const { return set_flag >= 0; }
     bool operator==(const ScriptItem&) const = default;
 };
 
@@ -59,7 +62,10 @@ private:
 // Parses a key script: names separated by spaces or commas, each with an
 // optional "*N" repeat. Names: up down left right home end pgup pgdn (the
 // keypad diagonals), space enter, a single character such as y or n, or
-// idle:N for N passes of the main loop without a key.
+// idle:N for N passes of the main loop without a key, or set:NN=VV (hex) to
+// set flag NN to VV at that point: a test aid standing in for play not yet
+// rebuilt, matching the rig's test poke (docs/reference.md). Only the town's
+// main loop takes a set: item; a question or the start-up refuses one.
 // Throws std::invalid_argument naming the bad token.
 std::deque<ScriptItem> parse_key_script(const std::string& script);
 
@@ -153,6 +159,8 @@ public:
     // entrance after "yes", as before the places were rebuilt.
     void set_game_dir(std::filesystem::path dir) { game_dir_ = std::move(dir); }
     const Flags& flags() const { return flags_; }
+    // A test aid (--set-flag): set flag `f` to `v` when the town starts.
+    void set_flag_when_town_starts(int f, int v) { pending_flags_.emplace_back(f, v); }
     const std::array<int, formats::kMenus.size()>& menu_last() const { return menu_last_; }
     const std::array<PanelStats, 8>& stats() const { return stats_; }
 
@@ -217,6 +225,7 @@ private:
     std::optional<int> entered_place_;
     bool place_open_ = false;
     Flags flags_ = new_game_flags();
+    std::vector<std::pair<int, int>> pending_flags_;
     Stage stage_ = Stage::Town;
     int infocom_frames_ = 0;  // frames the Infocom screen has been up
     bool start_up_open_ = false;

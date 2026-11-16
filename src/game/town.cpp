@@ -21,6 +21,7 @@ std::optional<int> ScriptKeys::next() {
     while (!items_.empty() && items_.front().idle > 0) items_.pop_front();
     const auto item = next_item();
     if (!item) return std::nullopt;
+    if (item->is_set()) throw std::invalid_argument("a set: item where the game waits for a key");
     return item->key;
 }
 
@@ -29,6 +30,23 @@ std::deque<ScriptItem> parse_key_script(const std::string& script) {
     std::string token;
     auto add = [&](const std::string& t) {
         if (t.empty()) return;
+        if (t.rfind("set:", 0) == 0) {
+            const auto eq = t.find('=');
+            int f = -1, v = -1;
+            try {
+                if (eq != std::string::npos) {
+                    f = std::stoi(t.substr(4, eq - 4), nullptr, 16);
+                    v = std::stoi(t.substr(eq + 1), nullptr, 16);
+                }
+            } catch (const std::exception&) {
+            }
+            if (f < 0 || f >= kFlagCount || v < 0 || v > 0xff)
+                throw std::invalid_argument("bad flag setting \"" + t + "\" (use set:NN=VV, hex)");
+            if (f == flag::kQuizLock)
+                throw std::invalid_argument("\"" + t + "\": flag 14 decides whether the training quiz runs; not settable");
+            keys.push_back({0, 0, f, v});
+            return;
+        }
         if (t.rfind("idle:", 0) == 0) {
             int n = 0;
             try {
@@ -235,10 +253,18 @@ void Town::run(ScriptKeys& input) {
         start_up_open_ = true;
         return;
     }
+    for (const auto& [f, v] : pending_flags_) {
+        flags_[std::size_t(f)] = std::uint8_t(v);
+        log_.push_back("test aid: flag " + std::to_string(f) + " set");
+    }
+    pending_flags_.clear();
     while (!stopped()) {
         const auto item = input.next_item();
         if (!item) break;
-        if (item->idle > 0) {
+        if (item->is_set()) {
+            flags_[std::size_t(item->set_flag)] = std::uint8_t(item->set_value);
+            log_.push_back("test aid: flag " + std::to_string(item->set_flag) + " set");
+        } else if (item->idle > 0) {
             for (int i = 0; i < item->idle; ++i) idle_pass();
         } else {
             key(item->key, input);

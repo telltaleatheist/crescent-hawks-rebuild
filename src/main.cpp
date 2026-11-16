@@ -57,6 +57,8 @@ struct Options {
     bool import = false;
     bool state = false;      // print the game state after the script
     int map = 0;             // 0: the start-up, then map 1
+    // A test aid: flags set as the town starts (--set-flag NN=VV, hex).
+    std::vector<std::pair<int, int>> set_flags;
 };
 
 bool parse(int argc, char** argv, Options& options) {
@@ -86,9 +88,20 @@ bool parse(int argc, char** argv, Options& options) {
             options.screenshot = argv[++i];
         } else if (arg == "--state") {
             options.state = true;
+        } else if (arg == "--set-flag" && i + 1 < argc) {
+            // Parsed like the script's set:NN=VV, which checks it.
+            try {
+                const auto items = chr::game::parse_key_script("set:" + std::string(argv[++i]));
+                options.set_flags.emplace_back(items.front().set_flag, items.front().set_value);
+            } catch (const std::invalid_argument& e) {
+                std::fprintf(stderr, "chr: --set-flag: %s\n", e.what());
+                return false;
+            }
         } else {
             std::fprintf(stderr, "usage: chr [--game-dir DIR] [--data-dir DIR] [--import] [--map N] [--script KEYS]\n"
-                         "           [--text FILE] [--screenshot FILE.bmp] [--state]\n");
+                         "           [--text FILE] [--screenshot FILE.bmp] [--state]\n"
+                         "  test aids (docs/reference.md): [--set-flag NN=VV] sets a flag (hex) as the town\n"
+                         "           starts; a script's set:NN=VV sets one at that point\n");
             return false;
         }
     }
@@ -271,6 +284,7 @@ int main(int argc, char** argv) {
                 town->set_game_dir(options.game_dir);
                 if (start_up) town->start_up();
                 else town->draw_panel();
+                for (const auto& [f, v] : options.set_flags) town->set_flag_when_town_starts(f, v);
                 chr::game::ScriptKeys source(keys);
                 town->run(source);
                 return true;

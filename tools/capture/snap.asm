@@ -24,8 +24,17 @@
 ; Key script (tools/reference/run.py writes KEYS.BIN): a word count, then
 ; that many words: 0FFFFh = capture the screen now; 0FFFEh N = let N more
 ; empty polls go by before the next item (the game idles meanwhile; a
-; blocking read skips it); otherwise a key as the BIOS gives it (scan code
-; << 8 | character). Keys are fed only when the
+; blocking read skips it); 0FFFDh W O N b1..bN = a test poke (below);
+; otherwise a key as the BIOS gives it (scan code << 8 | character).
+;
+; A test poke writes N bytes (one per word, low byte) at segment:O in the
+; game's memory, where the segment is the word at DS:W of the game's own
+; data segment (W = 0FFFFh: DS itself), as the game reaches its data. It
+; stands in for play the rebuild cannot do yet (docs/reference.md). It
+; writes data only: a segment below the game's first data segment (the
+; game's code and the run-time library) or above DS is refused, nothing is
+; written, and SNAP writes POKEFAIL.TXT, which run.py reports. It needs the
+; game's DS, so it only works where the game asks DOS for keys (the town). Keys are fed only when the
 ; game is waiting for one, never by the clock, so a run does not depend on
 ; how fast the machine is:
 ;   - the game calls int 16h function 0 or 10h (wait for a key) and the
@@ -66,6 +75,9 @@ game_ds     dw 0                    ; DS of the game's last "key waiting?" call
 key_pos     dw 0
 key_count   dw 0
 end_name    db 'SNAPEND.TXT', 0
+fail_name   db 'POKEFAIL.TXT', 0
+; DS minus the first data segment, image 36db - 1c6c (docs/original.md).
+DATA_BELOW_DS equ 36dbh - 1c6ch
 header      db 'CHRS', 1
 h_mode      db 0
 h_start     dw 0
@@ -202,8 +214,13 @@ feed:
         shl bx, 1
         mov cx, [keys + bx]
         cmp cx, 0ffffh
-        jne .idle
+        jne .poke
         call capture
+        jmp .next
+.poke:
+        cmp cx, 0fffdh
+        jne .idle
+        call poke
         jmp .next
 .idle:
         cmp cx, 0fffeh
@@ -247,6 +264,60 @@ feed:
         mov byte [cs:busy], 0
 .busy:
         popf
+        ret
+
+; A test poke: the item after 0FFFDh is W O N b1..bN (see the top).
+; DS is SNAP's here; key_pos is on W.
+poke:
+        mov bx, [key_pos]
+        shl bx, 1
+        lea si, [keys + bx]
+        mov ax, [si]                    ; W
+        mov di, [si + 2]                ; O
+        mov cx, [si + 4]                ; N
+        mov bx, cx
+        add bx, 3
+        add [key_pos], bx               ; past the whole item
+        add si, 6                       ; the bytes
+        mov dx, [game_ds]
+        or dx, dx
+        jz .refuse                      ; no DS seen yet
+        cmp ax, 0ffffh
+        je .ds
+        push ds
+        mov ds, dx
+        mov bx, ax
+        mov ax, [bx]                    ; the segment, as the game keeps it
+        pop ds
+        jmp .check
+.ds:
+        mov ax, dx
+.check:
+        mov bx, dx
+        sub bx, DATA_BELOW_DS           ; the first data segment
+        cmp ax, bx
+        jb .refuse
+        cmp ax, dx
+        ja .refuse
+        mov es, ax
+        jcxz .done
+        cld
+.copy:
+        mov al, [si]
+        stosb
+        add si, 2
+        loop .copy
+.done:
+        ret
+.refuse:
+        mov ah, 3ch
+        xor cx, cx
+        mov dx, fail_name
+        int 21h
+        jc .done
+        mov bx, ax
+        mov ah, 3eh
+        int 21h
         ret
 
 ; Writes one capture. Saves and restores the graphics controller registers

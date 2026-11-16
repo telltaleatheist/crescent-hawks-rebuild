@@ -42,6 +42,7 @@ bool Town::run_start_up(ScriptKeys& input) {
     while (stage_ == Stage::Infocom) {
         const auto item = input.next_item();
         if (!item) return false;
+        if (item->is_set()) throw std::invalid_argument("a set: item in the start-up");
         if (item->idle == 0) {
             stage_ = Stage::Title;  // a key ends it (and is not used for anything else)
         } else {

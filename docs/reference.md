@@ -79,6 +79,30 @@ townspeople's records) must be identical too. `--full` (ctest `reference_compare
 The rig drives `chr` through the same start-up (no `--map`), so every case after it runs on from
 the rebuilt start-up.
 
+## Test aids: setting a flag in both programs
+
+Some cases need game state that play would take long to reach, or that the rebuild cannot reach
+yet (a training mission past the first two, before those missions are rebuilt). For those a case
+can set a flag in both programs at the same point of the script: `flag:NN=VV` (hex) in a case's
+keys in `check.py`.
+
+- **The original:** run.py's `@poke:SEG:OFFSET=BYTES` (here `@poke:F:d30c+NN=VV`). SNAP writes the
+  bytes into the running copy's memory in DOSBox-X at that point; nothing is written to the
+  game's files. SEG is F, P or DG (docs/original.md, "Data segments"), found through the DGROUP
+  word the game itself keeps it in. SNAP refuses any segment below the game's first data segment
+  (the game's code and the run-time library) or above DGROUP, writes nothing and leaves
+  POKEFAIL.TXT, which run.py reports as a failed run. A poke needs the game's DS, so it works in
+  the town's main loop, which asks DOS for keys.
+- **The rebuild:** `set:NN=VV` in a `--script`, applied at that point by the town's main loop
+  (a question or the start-up refuses one), or `chr --set-flag NN=VV`, applied as the town starts.
+
+What a poke may not touch: code, and anything that decides the copy-protection path. Flag 14
+(F:d320), which skips the training quiz while nonzero, is refused by run.py and by chr; the
+quiz's result is never in memory to poke. A case that uses a poke says so in its name or
+comment, with what it stands in for (for example "stands in for passing missions 0-1"). When
+the play it stands in for is rebuilt, a long case reaches the same point with keys alone, and
+the poked case stays as a quick one.
+
 ## Findings
 
 Every case in `check.py` is identical over the whole screen and in the game state:

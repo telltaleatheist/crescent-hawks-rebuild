@@ -215,6 +215,19 @@ FIRST_PASSES = 3
 PASSES_AFTER_KEY = 2
 
 
+# A test aid in a case's keys: "flag:NN=VV" (hex) sets a flag in both
+# programs at that point: a test poke in the original (run.py, data only)
+# and set:NN=VV in chr. It stands in for play not rebuilt yet, and a case
+# that uses one says so and what it stands in for (docs/reference.md).
+FLAGS_AT = 0xD30C  # F:d30c, the flags
+
+
+def flag_poke(token):
+    """The original's poke for a flag:NN=VV token."""
+    flag, _, value = token[len("flag:"):].partition("=")
+    return "@poke:F:%04x=%02x" % (FLAGS_AT + int(flag, 16), int(value, 16))
+
+
 def expand(keys):
     out = []
     for token in keys.replace(",", " ").split():
@@ -229,6 +242,9 @@ def chr_script(cases, upto):
     in_town = False
     for case in cases[:upto + 1]:
         for k in expand(case["keys"]):
+            if k.startswith("flag:"):
+                items.append("set:" + k[len("flag:"):])
+                continue
             items.append(k)
             if case.get("starts_town"):
                 # The answer to the first-time question: the town begins.
@@ -243,7 +259,8 @@ def original_script(cases):
     tokens = [START]
     for case in cases:
         if case.get("keys"):
-            tokens.append(case["keys"])
+            tokens.append(" ".join(flag_poke(k) if k.startswith("flag:") else k
+                                   for k in case["keys"].replace(",", " ").split()))
         tokens.append("@snap:" + case["name"])
     return " ".join(tokens)
 
