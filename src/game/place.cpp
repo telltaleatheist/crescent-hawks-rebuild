@@ -67,9 +67,10 @@ bool Town::visit_place(int entrance, KeySource& keys) {
     // 1000:28cc names the game disk the files are on; there are no disks here.
     // Entrance 0, the training center, first runs the quiz 1c67:08a8 while
     // flag 14 is clear and no demo plays (F:3938, F:458c; the rebuild has no
-    // demo yet). Only a failed quiz sets flag 14, so
-    // the original asks on every visit until then. The rebuild has no check
-    // and cannot fail; it makes the quiz's draws and shows nothing yet.
+    // demo yet). A failed quiz sets flag 14 to ff, and so does TRAINING.BLD
+    // as each mission starts; the town's ticks count it down. The rebuild
+    // has no check and cannot fail; it makes the quiz's draws and shows
+    // nothing yet.
     if (entrance == 0 && flags_[flag::kQuizLock] == 0) {
         const auto pictures = draw_quiz_pictures(random_);
         log_.push_back("training quiz: pictures " + std::to_string(pictures[0]) + " " +

@@ -854,8 +854,11 @@ against the 'Mech pictures in the manual.
    entered.
 4. The panel is redrawn.
 
-A pass sets nothing, so the quiz is asked on every visit; after a failure flag 14 counts down
-from ff in the town's ticks and the quiz comes back when it reaches 0.
+The quiz itself sets flag 14 only on a failure, but TRAINING.BLD sets it to ff as each mission
+starts (after special 1), and the town's ticks count it down. While it is nonzero the training
+center says the course is not ready yet (TRAINING.BLD +1bec) and no quiz runs. So the quiz is
+asked on the first visit, and again on the first visit after flag 14 has run down from a mission
+or a failure.
 
 **The copy we read is modified here.** In the BTECH.EXE we read, this check has been altered so
 that it always passes. That is not the original's behaviour, so this page describes the check as
@@ -864,7 +867,7 @@ the rebuild has no protection check and nothing in it can fail.
 
 **The draws are kept.** The original picks the three pictures (step 2) before it compares any
 answer, so the draws are the same whether the player passes or fails. The rebuild makes them on
-each visit while flag 14 is 0 (`game/training_quiz.h`, `draw_quiz_pictures`) and shows nothing for
+every entry while flag 14 is 0 (`game/training_quiz.h`, `draw_quiz_pictures`) and shows nothing for
 now; how the scene looks (for example the stats pictures with the answer given in our own words)
 is still to be decided. The original also waits for input here (a key after the message, then three menu
 answers), which the rebuild does not, so a rig script that enters the training center must leave

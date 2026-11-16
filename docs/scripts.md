@@ -15,8 +15,9 @@ Answering Yes at an entrance calls `17dc:0008(n)` with the map's place number:
 3. Asks for the right game disk (1000:28cc). The rebuild drops this: there are no disks.
 4. **The training center's quiz.** For entrance 0, while flag 14 (d320) is 0 and no demo is
    playing (F:3938, F:458c), `1c67:08a8` runs first; if it returns nonzero, the place isn't
-   entered at all. Only a failed quiz sets flag 14, so the quiz comes back on every visit until
-   then (docs/combat.md, "The copy-protection check").
+   entered at all. A failed quiz sets flag 14 to ff, and so does TRAINING.BLD as each mission
+   starts; it counts down in the town's ticks, so the quiz comes back on the first visit after it
+   runs out (docs/combat.md, "The copy-protection check").
 5. Loads and deciphers the script (`17dc:1d30`), shows the place's picture if it has one (byte
    table DGROUP:141a by script number, through `1000:48b7` with mode 1, below), and runs the
    script from offset 0 until `end`.
