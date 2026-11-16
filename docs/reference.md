@@ -78,6 +78,11 @@ now, growing with the run. Its ctest `reference_compare_campaign` (label `campai
 when configured with `-DCHR_REFERENCE_CAMPAIGN=ON`. `--sequence chain` also runs it. It skips
 (exit 77) without DOSBox-X, nasm or the game.
 
+To stop a run, send `check.py` (or `run.py`) SIGTERM or SIGINT: it SIGKILLs every DOSBox-X it
+started, removes their scratch folders and exits. DOSBox-X answers any other signal with a "Quit
+DOSBox-X" dialog on screen, so never stop the DOSBox-X processes themselves, or the process tree,
+any other way; a dialog must never appear while Owen is streaming.
+
 ## The start-up, as captured
 
 1. Text mode: "Which graphics adapter do you have?" (3: 256K EGA/VGA), then "How many disk

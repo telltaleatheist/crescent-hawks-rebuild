@@ -26,6 +26,7 @@ import struct
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -128,6 +129,36 @@ def build_snap(dest):
     subprocess.run(["nasm", "-f", "bin", "-o", dest, src], check=True)
 
 
+# The DOSBox-X process groups running now, so a stopped run can kill them.
+# DOSBox-X answers anything but SIGKILL with a "Quit DOSBox-X" dialog on
+# screen, so they are only ever stopped with SIGKILL.
+_running = set()
+_work_dirs = set()
+_running_lock = threading.Lock()
+
+
+def kill_all():
+    with _running_lock:
+        groups, works = list(_running), list(_work_dirs)
+    for pgid in groups:
+        try:
+            os.killpg(pgid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+    for work in works:
+        shutil.rmtree(work, ignore_errors=True)
+
+
+def stop_on_signals():
+    """On SIGINT or SIGTERM, SIGKILL every DOSBox-X this process started and
+    exit (call from the main thread)."""
+    def stop(signum, _frame):
+        kill_all()
+        os._exit(128 + signum)
+    signal.signal(signal.SIGINT, stop)
+    signal.signal(signal.SIGTERM, stop)
+
+
 def run(game_dir, script, out_dir, timeout=120, keep=False):
     words, names = compile_script(script)
     os.makedirs(out_dir, exist_ok=True)
@@ -135,6 +166,9 @@ def run(game_dir, script, out_dir, timeout=120, keep=False):
     if scratch:
         os.makedirs(scratch, exist_ok=True)
     work = tempfile.mkdtemp(prefix="chr-ref-", dir=scratch)
+    if not keep:
+        with _running_lock:
+            _work_dirs.add(work)
     try:
         c = os.path.join(work, "c")
         shutil.copytree(game_dir, c)
@@ -155,6 +189,8 @@ def run(game_dir, script, out_dir, timeout=120, keep=False):
         log = open(os.path.join(work, "dosbox.log"), "w")
         proc = subprocess.Popen([DOSBOX, "-silent", "-conf", conf], cwd=work, env=env,
                                 stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
+        with _running_lock:
+            _running.add(proc.pid)
         done = os.path.join(c, "SNAPEND.TXT")
         deadline = time.time() + timeout
         finished = False
@@ -174,6 +210,8 @@ def run(game_dir, script, out_dir, timeout=120, keep=False):
             except ProcessLookupError:
                 pass
             proc.wait()
+            with _running_lock:
+                _running.discard(proc.pid)
             log.close()
         if os.path.exists(os.path.join(c, "POKEFAIL.TXT")):
             print("run.py: SNAP refused a poke (not a data segment, or no game DS yet)", file=sys.stderr)
@@ -204,6 +242,8 @@ def run(game_dir, script, out_dir, timeout=120, keep=False):
     finally:
         if not keep:
             shutil.rmtree(work, ignore_errors=True)
+            with _running_lock:
+                _work_dirs.discard(work)
 
 
 def main():
@@ -214,6 +254,7 @@ def main():
     ap.add_argument("--timeout", type=float, default=120)
     ap.add_argument("--keep", action="store_true", help="keep the scratch C: drive and log")
     a = ap.parse_args()
+    stop_on_signals()
     if not os.path.exists(DOSBOX):
         print(f"run.py: DOSBox-X not found at {DOSBOX}", file=sys.stderr)
         return 1

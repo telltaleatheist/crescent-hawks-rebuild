@@ -971,6 +971,7 @@ def main():
                     help="only the campaign sequences (the long unpoked run), all their cases")
     ap.add_argument("--sequence", action="append", help="run only this sequence (may be repeated)")
     a = ap.parse_args()
+    run.stop_on_signals()  # a stopped run leaves no DOSBox-X (or its quit dialog)
 
     missing = [what for what, ok in (("DOSBox-X", os.path.exists(run.DOSBOX)),
                                      ("nasm", shutil.which("nasm")),
