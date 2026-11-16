@@ -355,8 +355,8 @@ read each one before taking it as such.
 | 287f:12d9 | 0x29ac9 | `FUN_287f_12d9` | 25 |  | replaced |
 | 287f:12f2 | 0x29ae2 | `FUN_287f_12f2` | 17 |  | replaced |
 | 287f:1303 | 0x29af3 | `FUN_287f_1303` | 17 |  | replaced |
-| 287f:1314 | 0x29b04 | `FUN_287f_1314` | 197 | Set the view position and fetch the 3x3 blocks around it into the cell window | rebuilt |
-| 287f:13d9 | 0x29bc9 | `FUN_287f_13d9` | 435 | Copy one block into the cell window (remap terrain tiles, mirror, or copy as is) | rebuilt |
+| 287f:1314 | 0x29b04 | `FUN_287f_1314` | 197 | The cell window: the 3x3 blocks around the position's block (game/terrain.cpp) | rebuilt |
+| 287f:13d9 | 0x29bc9 | `FUN_287f_13d9` | 435 | One block into the cell window: a map block as it is, a terrain block from its template, turned (docs/wilderness.md) | rebuilt |
 | 287f:158c | 0x29d7c | `FUN_287f_158c` | 175 | Position one half-cell up; into the area above at the edge (not past the world's) | rebuilt |
 | 287f:163b | 0x29e2b | `FUN_287f_163b` | 168 | Position one half-cell down; into the area below at the edge | rebuilt |
 | 287f:16e3 | 0x29ed3 | `FUN_287f_16e3` | 226 | Position one half-cell left; into the area to the left at the edge | rebuilt |

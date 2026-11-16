@@ -62,8 +62,8 @@ added in 8 bits; a result of 0x80 or more (past the top, or below zero) becomes 
 displacement. The mask is then 0xff and nothing is taken off: the whole noise byte is added, and
 the point usually comes out 0 or high. The left sides divide the down distance by 8, which is in
 ninths of the lattice (9 per row) and gives the right c; the right side divides the across
-distance, already in cells. The fix uses c. It changes all the terrain, so the rig runs with it
-off.
+distance, already in cells. The fix uses c. Turning it on changes every outdoor area in the
+world (not only a rare case), so it is a mod-level switch; the rig runs with it off.
 
 The area's types are its lattice's first 8 x 8 points AND 0xf0. The world's heights are 0-0x50;
 the shipped table gives types 0x00-0x30 in the areas around the towns.
@@ -116,6 +116,11 @@ the cells past a map's edge are terrain.
   `tables.mirror_north_south` (upside down) and `tables.mirror_east_west` (mirrored). It is
   built in P:20dd and copied from there.
 
+The rebuild's `Terrain::window` is checked against the original's memory: every rig case builds
+the window where the original last built its own (P:02cf, 02d1) and compares the nine values and
+the 576 cells (`check.py`, `window.py`). It does not yet build it at the original's moments;
+the view, line of sight and figures still read the map (below).
+
 13d9 also works out a second value from the block's place, `((row + column) << 2) & 0x10`, and
 loads it, but never uses it.
 
@@ -123,6 +128,9 @@ The step check (1000:1c12) reads P:07a4: a block of type 0 whose four neighbours
 (0x0f) is deep water. 1000:4d57 and 203b:000a read its bit 0x80, a map block (combat.md 2.15).
 
 ## Not rebuilt yet
+
+- The window in use: the map view, the figures' cells and the fight's line of sight still read
+  the map, with the cells past its edge drawn empty and blocking (map_view.cpp).
 
 - The steps across an area's edge outdoors. The position steps (287f:158c up, 287f:17c5 right and
   the others; `world.h` rebuilds their position part) also move the grids over by a row or a

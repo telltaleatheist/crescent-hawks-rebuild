@@ -41,6 +41,17 @@ public:
     // same terrain type. A map block's mask is its number in the block store.
     void link_blocks();
 
+    // The cell window (P:07ad) and what it holds (P:07a4).
+    static constexpr int kWindowCells = 24;
+    struct Window {
+        std::array<std::uint8_t, kWindowCells * kWindowCells> cells{};  // tile numbers, row by row
+        std::array<std::uint8_t, 9> blocks{};  // each block's mask OR grid entry, row by row
+    };
+    // BTECH.EXE 287f:1314 (Ghidra FUN_287f_1314)
+    // The 3x3 blocks around the block holding `position`, from the grids:
+    // map blocks from `map`, terrain blocks from the templates.
+    Window window(formats::MapPosition position, const formats::MtpMap& map) const;
+
     // P:0564: the grids, 64 entries each, row by row.
     const std::array<std::uint8_t, kGrids * kGridBlocks>& grids() const { return grids_; }
     // P:0324: the masks, in the same order.
@@ -55,6 +66,10 @@ private:
     // The height the generator reads at `index` from the world table's
     // start (docs/wilderness.md: it reads past the table at the world's edges).
     int height(int index) const;
+    // BTECH.EXE 287f:13d9 (Ghidra FUN_287f_13d9)
+    // Block (column, row) of grid 4, -1..8 (one past its edge is the next
+    // grid's), into `out` (stride kWindowCells); returns its mask OR entry.
+    std::uint8_t copy_block(int column, int row, const formats::MtpMap& map, std::uint8_t* out) const;
     // BTECH.EXE 287f:0bfb (Ghidra FUN_287f_0bfb)
     // One area's 8x8 terrain types from its four corner heights.
     std::array<std::uint8_t, kGridBlocks> area_types(int nw, int ne, int sw, int se) const;

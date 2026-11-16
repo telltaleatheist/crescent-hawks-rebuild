@@ -110,6 +110,11 @@ outside the eight records (R 0-7, BB below 0x7d, so F:c724-cb0b).
   (a question or the start-up refuses one), or `chr --set-flag NN=VV`, applied as the town starts.
   `mech:R:BB=VV` is applied wherever the next key or pass is taken, the fight's reads included.
 
+`chr --window X,Y` (hex, repeatable) prints the cell window built at that place from the terrain
+as the script leaves it (docs/wilderness.md). check.py adds it to every state case, at the place
+the original last built its own; `window.py CAPTURE...` does the same for any captures with a new
+game's terrain.
+
 What a poke may not touch: code, and anything that decides the copy-protection path. Flag 14
 (F:d320), which skips the training quiz while nonzero, is refused by run.py and by chr; the
 quiz's result is never in memory to poke. A case that uses a poke says so in its name or

@@ -212,6 +212,7 @@ public:
     }
     // The land around the party (game/terrain.h).
     const Terrain& terrain() const { return terrain_; }
+    const formats::MtpMap& map() const { return map_; }
     // The fight reached a step the rebuild stops at (logged; docs/combat.md).
     bool fight_unfinished() const { return fight_unfinished_; }
     // Whether the townspeople have left for a fight: their figures 16-23

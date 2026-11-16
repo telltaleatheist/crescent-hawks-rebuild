@@ -11,7 +11,8 @@ cause in the original. A rectangle that stops matching fails the check; the
 known differences are only reported, so that each one is fixed on purpose.
 Each case also compares the game state (`chr --state` against the
 original's memory, state.py): the random numbers, C-Bills and the
-townspeople's records must be identical.
+townspeople's records must be identical, and the cell window chr builds
+where the original last built its own (window.py) must hold the same cells.
 
 The quick cases run in ctest (`reference_compare`); --full adds the long
 ones (thousands of passes of idling, a walk across MAP1), a few minutes.
@@ -31,6 +32,7 @@ sys.path.insert(0, HERE)
 import compare  # noqa: E402
 import run  # noqa: E402
 import state  # noqa: E402
+import window  # noqa: E402
 
 SKIP = 77
 
@@ -684,12 +686,16 @@ def run_sequence(a, sequence, cases, chr_options=()):
         if not case.get("compare", True):
             continue  # compared by another sequence
         shot = os.path.join(a.work, name + ".bmp")
+        # The cell window too, built where the original last built its own.
+        at, ref_window = window.original_window(os.path.join(ref_dir, name + ".bin"))
         out = subprocess.run([a.chr, "--game-dir", a.game_dir, "--data-dir", a.data_dir,
                               "--script", chr_script(cases, i), "--screenshot", shot,
-                              "--fight-state" if case.get("fight") else "--state", *chr_options],
+                              "--fight-state" if case.get("fight") else "--state",
+                              "--window", "%x,%x" % at, *chr_options],
                              check=True, env=env, stdout=subprocess.PIPE, text=True).stdout
-        ours_state = [line for line in out.splitlines() if line.startswith("state ")]
+        ours_state = [line for line in out.splitlines() if line.startswith(("state ", "window "))]
         ref_state = state.original_state(os.path.join(ref_dir, name + ".bin"), fight=case.get("fight", False))
+        ref_state += ref_window
         ref = compare.reference_pixels(os.path.join(ref_dir, name + ".bin"))
         ours = compare.bmp_pixels(shot)
         compare.write_diff(os.path.join(a.work, name + "-diff.png"), ref, ours)

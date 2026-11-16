@@ -70,6 +70,7 @@ struct Options {
     int map = 0;             // 0: the start-up, then map 1
     // A test aid: flags set as the town starts (--set-flag NN=VV, hex).
     std::vector<std::pair<int, int>> set_flags;
+    std::vector<chr::formats::MapPosition> windows;  // --window X,Y: print the cell window built there
 };
 
 bool parse(int argc, char** argv, Options& options) {
@@ -109,6 +110,13 @@ bool parse(int argc, char** argv, Options& options) {
             options.state = options.fight_state = true;
         } else if (arg == "--show-quiz") {
             options.show_quiz = true;
+        } else if (arg == "--window" && i + 1 < argc) {
+            unsigned x = 0, y = 0;
+            if (std::sscanf(argv[++i], "%x,%x", &x, &y) != 2 || x > 0xffff || y > 0xffff) {
+                std::fprintf(stderr, "chr: --window takes X,Y in hex\n");
+                return false;
+            }
+            options.windows.push_back({std::uint16_t(x), std::uint16_t(y)});
         } else if (arg == "--set-flag" && i + 1 < argc) {
             // Parsed like the script's set:NN=VV, which checks it.
             try {
@@ -125,7 +133,8 @@ bool parse(int argc, char** argv, Options& options) {
                          "  --show-quiz: show the training center's quiz (no check: the right part is\n"
                          "           picked and any answer goes on); by default it is skipped\n"
                          "  test aids (docs/reference.md): [--set-flag NN=VV] sets a flag (hex) as the town\n"
-                         "           starts; a script's set:NN=VV sets one at that point\n");
+                         "           starts; a script's set:NN=VV sets one at that point;\n"
+                         "           [--window X,Y] (hex, repeatable) prints the cell window built there\n");
             return false;
         }
     }
@@ -133,6 +142,21 @@ bool parse(int argc, char** argv, Options& options) {
 }
 
 // --state: what tools/reference/check.py compares with the original's memory.
+// The cell window 287f:1314 builds at `at` from the terrain as it is now:
+// its nine blocks' values (P:07a4), then its cells a row a line (P:07ad).
+void print_window(const chr::game::Town& town, chr::formats::MapPosition at) {
+    using chr::game::Terrain;
+    const auto window = town.terrain().window(at, town.map());
+    std::printf("window %04x %04x blocks ", at.x, at.y);
+    for (const auto b : window.blocks) std::printf("%02x", b);
+    for (int r = 0; r < Terrain::kWindowCells; ++r) {
+        std::printf("\nwindow %04x %04x row %2d ", at.x, at.y, r);
+        for (int c = 0; c < Terrain::kWindowCells; ++c)
+            std::printf("%02x", window.cells[std::size_t(r * Terrain::kWindowCells + c)]);
+    }
+    std::printf("\n");
+}
+
 void print_state(const chr::game::Town& town) {
     const auto& r = town.random().state();
     std::printf("state random %02x %02x %02x\n", r[0], r[1], r[2]);
@@ -419,6 +443,7 @@ int main(int argc, char** argv) {
             }
             if (options.state) print_state(*town);
             if (options.fight_state) print_fight_state(*town);
+            for (const auto at : options.windows) print_window(*town, at);
             if (options.list_events) {
                 for (const auto& e : town->events()) {
                     if (!e.screen) std::printf("event sound %d\n", e.sound);

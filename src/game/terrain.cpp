@@ -1,5 +1,6 @@
 #include "game/terrain.h"
 
+#include <algorithm>
 #include <utility>
 #include <vector>
 
@@ -182,6 +183,56 @@ void Terrain::link_blocks() {
                 if (entry(bx, by + 1) == e) mask |= 4;  // south
                 if (entry(bx - 1, by) == e) mask |= 8;  // west
             }
+}
+
+std::uint8_t Terrain::copy_block(int column, int row, const formats::MtpMap& map, std::uint8_t* out) const {
+    const int grid = 4 + (column < 0 ? -1 : column > 7 ? 1 : 0) + 3 * (row < 0 ? -1 : row > 7 ? 1 : 0);
+    const int at = grid * kGridBlocks + ((row + 8) % 8) * 8 + (column + 8) % 8;
+    const int mask = masks_[std::size_t(at)], entry = grids_[std::size_t(at)];
+    // The block store: the templates, then the map's blocks.
+    const auto stored = [&](int n, int i) -> int {
+        if (n < 16) return tables_.terrain_templates[std::size_t(n * 64 + i)];
+        const std::size_t b = std::size_t((n - 16) * 64 + i);
+        return b < map.blocks.size() ? map.blocks[b] : 0;
+    };
+    std::array<int, 64> block{};
+    if (entry >= 0x80) {
+        for (int i = 0; i < 64; ++i) block[std::size_t(i)] = stored(mask, i);
+    } else if (entry == 0x10) {
+        for (int i = 0; i < 64; ++i) block[std::size_t(i)] = tables_.plain_block[std::size_t(i)];
+    } else {
+        // The type's tiles are the template's (low four bits) plus an offset.
+        const int offset = entry == 0 ? 0 : std::min(entry - 0x10, 0x30);
+        // Turned by its place: 1 upside down, 2 mirrored, 3 both; the mask
+        // and the template's bytes below 0x40 are turned with it.
+        const int turn = (row + column) & 3;
+        const auto turned = [&](int b) {
+            if (turn & 1) b = tables_.mirror_north_south[std::size_t(b)];
+            if (turn & 2) b = tables_.mirror_east_west[std::size_t(b)];
+            return b;
+        };
+        const int n = turned(mask);
+        for (int r = 0; r < 8; ++r)
+            for (int c = 0; c < 8; ++c) {
+                int b = stored(n, 8 * r + c);
+                if (b < 0x40) b = turned(b);
+                const int to_r = (turn & 1) ? 7 - r : r, to_c = (turn & 2) ? 7 - c : c;
+                block[std::size_t(8 * to_r + to_c)] = b < 0x40 ? (b & 0x0f) + offset : b;
+            }
+    }
+    for (int r = 0; r < 8; ++r)
+        for (int c = 0; c < 8; ++c) out[r * kWindowCells + c] = std::uint8_t(block[std::size_t(8 * r + c)]);
+    return std::uint8_t(mask | entry);
+}
+
+Terrain::Window Terrain::window(formats::MapPosition position, const formats::MtpMap& map) const {
+    Window w;
+    const int column = (position.x & 0xff) >> 4, row = (position.y & 0xff) >> 4;
+    for (int r = 0; r < 3; ++r)
+        for (int c = 0; c < 3; ++c)
+            w.blocks[std::size_t(3 * r + c)] =
+                copy_block(column + c - 1, row + r - 1, map, &w.cells[std::size_t(8 * r * kWindowCells + 8 * c)]);
+    return w;
 }
 
 }  // namespace chr::game
