@@ -38,6 +38,11 @@ exact pass counts: the main loop starts with 3 passes before the first item, a k
 by 2 (its flush uses up one of the 4 polls), and `idle:N` adds N. `check.py` spells these out
 for chr (`chr_script()`), so both sides run the same number of game ticks.
 
+`@arm:N` before a key sets the same count, but when that key is read, and it works in a blocking
+read too: the Nth poll after the key gets the next item. It is for a wait that starts right
+after a blocking question, where `idle:N` would be skipped (the computer-fought rounds:
+`mission` below).
+
 Captures (`@snap:NAME`) are written at the same moments, so they show the screen the program is
 waiting on. In the EGA mode a capture also holds the first 640K of memory and the game's data
 segment (DS when it last asked DOS whether a key was waiting), so the game's state can be read

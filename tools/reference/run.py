@@ -36,6 +36,7 @@ import snap2png  # noqa: E402
 DOSBOX = "/Applications/dosbox-x.app/Contents/MacOS/dosbox-x"
 SNAP_MARK = 0xFFFF
 IDLE_MARK = 0xFFFE
+ARM_MARK = 0xFFFC  # "@arm:N": the poll count set at once (tools/capture/snap.asm)
 POKE_MARK = 0xFFFD
 
 # A test poke, "@poke:SEG:OFFSET=BYTES" (hex, e.g. @poke:F:d30c=02), names
@@ -98,6 +99,9 @@ def compile_script(script):
             continue
         if token.startswith("@poke:"):
             words.extend(poke_words(token))
+            continue
+        if token.startswith("@arm:"):
+            words.extend([ARM_MARK, int(token[len("@arm:"):])])
             continue
         if token.startswith("idle:"):
             # N more passes of a polling wait before the next item: in the

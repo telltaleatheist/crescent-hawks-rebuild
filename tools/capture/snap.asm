@@ -24,7 +24,9 @@
 ; Key script (tools/reference/run.py writes KEYS.BIN): a word count, then
 ; that many words: 0FFFFh = capture the screen now; 0FFFEh N = let N more
 ; empty polls go by before the next item (the game idles meanwhile; a
-; blocking read skips it); 0FFFDh W O N b1..bN = a test poke (below);
+; blocking read skips it); 0FFFCh N = the same count, set at once, even in
+; a blocking read, and the script goes on (before a key: the Nth poll after
+; it is fed); 0FFFDh W O N b1..bN = a test poke (below);
 ; otherwise a key as the BIOS gives it (scan code << 8 | character).
 ;
 ; A test poke writes N bytes (one per word, low byte) at segment:O in the
@@ -70,6 +72,8 @@ MAX_KEYS    equ 2048
 feeding     db 0
 blocking    db 0                    ; feed was called from int 16h
 polls       dw 0                    ; signed: an idle step makes it negative
+arm         dw 0                    ; 0FFFCh's count, for when the key is read
+armed       db 0
 game_ds     dw 0                    ; DS of the game's last "key waiting?" call
                                     ; (a blocking read may come with another DS)
 key_pos     dw 0
@@ -157,13 +161,30 @@ int16:
         jne .chain
 .read:
         mov word [cs:polls], 0
+        call apply_arm
         call buffer_empty
         jne .chain
         mov byte [cs:blocking], 1
         call feed
         mov byte [cs:blocking], 0
+        call apply_arm
 .chain:
         jmp far [cs:old16]
+
+; A key is being read: the polls counted from now on start at 0FFFCh's
+; count, if one came before the key. Keeps every register and the flags.
+apply_arm:
+        pushf
+        cmp byte [cs:armed], 0
+        je .out
+        push ax
+        mov ax, [cs:arm]
+        mov [cs:polls], ax
+        mov byte [cs:armed], 0
+        pop ax
+.out:
+        popf
+        ret
 
 int21:
         cmp ah, 0bh
@@ -219,8 +240,19 @@ feed:
         jmp .next
 .poke:
         cmp cx, 0fffdh
-        jne .idle
+        jne .arm
         call poke
+        jmp .next
+.arm:
+        cmp cx, 0fffch
+        jne .idle
+        mov bx, [key_pos]               ; the count follows
+        inc word [key_pos]
+        shl bx, 1
+        mov ax, POLLS
+        sub ax, [keys + bx]
+        mov [arm], ax
+        mov byte [armed], 1
         jmp .next
 .idle:
         cmp cx, 0fffeh
