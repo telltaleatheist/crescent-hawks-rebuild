@@ -78,10 +78,15 @@ void FigureAnimation::walk(int f, int direction) {
     frame_[f] = step(f);
 }
 
-void FigureAnimation::key(int k) {
+void FigureAnimation::key(int k, const std::array<bool, 4>& mechs) {
     for (int d = 0; d < 8; ++d) {
         // DGROUP:0160, the walking keys (imported: tables.json, walking_keys).
         if (tables_->walking_keys[std::size_t(d)] != k) continue;
+        for (int f = 0; f < 4; ++f) {
+            if (!mechs[std::size_t(f)]) continue;
+            if (direction_[std::size_t(f)] != d) pos_[std::size_t(f)] = mech_script(d);
+            frame_[std::size_t(f)] = step(f);
+        }
         for (int f = 4; f < 12; ++f) walk(f, d);
         return;
     }

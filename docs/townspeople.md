@@ -88,8 +88,9 @@ A direction is taken if:
     rebuild reads the same (docs/wilderness.md); past the window's end it reads the real cell and
     logs it (not met on any path tested); and
 - no other figure stands exactly there (`1e31:16ab`): a character of the party where it was
-  last drawn (the end of `1000:051b` records them), or another person. A 'Mech blocks three
-  half-cells of its row; there are none in town. If the place taken is the target itself,
+  last drawn (the end of `1000:051b` records them), or another person. Then a 'Mech figure
+  (0-3 and 12-15, active or not) blocks three half-cells of its row: its x, and one either side
+  (stepped with `1000:191b`). In town that is the party's 'Mech during a training mission's walk. If the place taken is the target itself,
   F:d57e is set (read elsewhere, not rebuilt yet).
 
 Then the person moves there and its heading becomes that direction. If none can be taken it

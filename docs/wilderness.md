@@ -161,7 +161,10 @@ What has been read of these so far:
   the grids move down a row (P:0564..06e3 to P:05a4..07a3, 0x180 bytes), the top row's three
   grids are made with 18d8 and 0bfb (heights at `0x0afa + area`, that is `world[area - 0x11]`),
   and the masks rebuilt (1886). It then sets P:09f3 = 0x100, P:09f5 = 2 and P:09f6..09f8 to the
-  new row's three areas: a queue of map loads still to do, read elsewhere (not found yet). The
+  new row's three areas: a queue of map loads. 1000:218f works through it after each axis's move:
+  for each queued grid (P:09f3..09f5, ff = none) whose area has a map, `2da8(grid, map)` and
+  `1da8`; the entry is then set to ff. 218f ends by building the window (`1314`) and its corner
+  (`1df8`) at the new position. The
   other three steps (163b down, 16e3 left, 17c5 right) are alike. 1000:17bb and 1000:1817 call
   them to walk the position to a place or by a distance; 1000:186f moves the position without
   them.

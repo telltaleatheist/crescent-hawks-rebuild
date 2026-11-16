@@ -13,9 +13,12 @@ inline constexpr int kFlagCount = 0x64;
 using Flags = std::array<std::uint8_t, kFlagCount>;
 
 namespace flag {
+inline constexpr int kMission = 0x00;          // d30c: the training mission (17dc:0629's mode)
+inline constexpr int kPassed = 0x01;           // d30d: the last training mission passed
 inline constexpr int kTrainingMech = 0x02;     // d30e: the 'Mech chosen at the training center
 inline constexpr int kTries = 0x03;            // d30f: failed tries at the training mission
 inline constexpr int kOutdoors = 0x04;        // d310
+inline constexpr int kRaidMech = 0x05;        // d311: Jason's 'Mech came through the raid
 inline constexpr int kCourse = 0x08;          // d314: the course chosen (special 05)
 inline constexpr int kEnrolled = 0x09;        // d315: special 05's answer
 inline constexpr int kInPlace = 0x0a;         // d316: set on entering a place
@@ -26,6 +29,7 @@ inline constexpr int kMoneyCountdown = 0x17;  // d323: the money step runs when 
 inline constexpr int kLetOut = 0x2d;          // d339
 inline constexpr int kLetOutDone = 0x2e;      // d33a
 inline constexpr int kMoneyFloor = 0x33;      // d33f-d340: a word; the training center raises it
+inline constexpr int kTileEvents = 0x3a;      // d346: a map whose tiles have events (map 14, docs/movement.md)
 inline constexpr int kPictureChance = 0x4f;   // d35b: how often a place's picture shows
 }  // namespace flag
 

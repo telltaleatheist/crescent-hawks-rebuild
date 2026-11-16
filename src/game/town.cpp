@@ -49,6 +49,20 @@ std::optional<bool> ScriptKeys::poll() {
     return true;
 }
 
+std::optional<int> ScriptKeys::waiting_key() {
+    apply_pokes();
+    if (items_.empty()) return std::nullopt;
+    auto& item = items_.front();
+    if (item.idle > 0) {
+        if (--item.idle == 0) items_.pop_front();
+        return kNoKey;
+    }
+    if (item.is_set()) throw std::invalid_argument("a set: item where the game asks for a key");
+    const int k = item.key;
+    items_.pop_front();
+    return k;
+}
+
 std::deque<ScriptItem> parse_key_script(const std::string& script) {
     std::deque<ScriptItem> keys;
     std::string token;
@@ -143,6 +157,7 @@ Town::Town(const formats::MtpMap& map, int map_number, formats::MapPosition star
            const TextProvider& texts, const formats::Tables& tables)
     : map_(map), map_number_(map_number), tile_sheet_(tile_sheet_for_map(map_number)),
       position_(start), texts_(texts), tables_(tables) {
+    window_at_ = start;
     load_terrain();
     people_ = Townspeople::place(map_, map_number_, random_, tables_);
     // One more random number between the map load and the main loop
@@ -162,12 +177,28 @@ void Town::load_terrain() {
 // party's position plus the k-th formation offset. The townspeople's step
 // refuses these places until the next drawing.
 void Town::record_party_places() {
+    // 1000:0537..0561: no figure 0-11 is active until drawn.
+    for (int f = 0; f < 12; ++f) figs_.active[std::size_t(f)] = 0;
     party_places_ = {};
     int k = 0;
     for (int member = 0; member < 8; ++member) {
-        if (!party_.present[member]) continue;
-        party_places_[std::size_t(k)] = {move_x(position_.x, tables_.formation_x[std::size_t(k)]),
-                                         move_y(position_.y, tables_.formation_y[std::size_t(k)])};
+        if (!party_.present[member] || !on_foot(member)) continue;
+        const formats::MapPosition at{move_x(position_.x, tables_.formation_x[std::size_t(k)]),
+                                      move_y(position_.y, tables_.formation_y[std::size_t(k)])};
+        party_places_[std::size_t(k)] = at;
+        figs_.x[std::size_t(4 + k)] = at.x;
+        figs_.y[std::size_t(4 + k)] = at.y;
+        figs_.active[std::size_t(4 + k)] = 1;
+        ++k;
+    }
+    // 1000:0c93..: each 'Mech of records 0-3 as figure k at the k-th 'Mech
+    // place.
+    k = 0;
+    for (int m = 0; m < 4; ++m) {
+        if (mechs_[std::size_t(m)][0] == 0xff) continue;
+        figs_.x[std::size_t(k)] = move_x(position_.x, tables_.mech_formation_x[std::size_t(k)]);
+        figs_.y[std::size_t(k)] = move_y(position_.y, tables_.mech_formation_y[std::size_t(k)]);
+        figs_.active[std::size_t(k)] = 1;
         ++k;
     }
 }
@@ -273,12 +304,12 @@ std::optional<bool> Town::yes_no(bool yes_first, KeySource& keys) {
 class Town::Question : public EntranceQuestion {
 public:
     Question(Town& town, KeySource& keys) : town_(town), keys_(keys) {}
-    bool ask(int place) override {
+    bool ask(int place, bool mech) override {
         auto& t = town_.text_;
         town_.open_message_box();
-        t.print(lookup(town_.texts_, "walk.enter_question"));
+        t.print(lookup(town_.texts_, mech ? "walk.mech_enter_question" : "walk.enter_question"));
         t.print(lookup(town_.texts_, place_text_id(town_.map_number_, place)));
-        t.print(lookup(town_.texts_, "walk.enter_question_end"));
+        t.print(lookup(town_.texts_, mech ? "walk.mech_enter_question_end" : "walk.enter_question_end"));
         const auto answer = town_.yes_no(true, keys_);
         if (!answer) {
             town_.question_open_ = true;
@@ -290,6 +321,7 @@ public:
                                  lookup(town_.texts_, place_text_id(town_.map_number_, place)) + ")");
             // BTECH.EXE 17dc:0008 runs the place right here, inside the step.
             if (town_.game_dir_) town_.visit_place(place, keys_);
+            town_.step_mechs_ = town_.active_mechs();
         }
         return *answer;
     }
@@ -354,7 +386,7 @@ void Town::key(int k, KeySource& more) {
     record_party_places();
     // BTECH.EXE 1000:00fb: the figures' walking frames move on, then the key
     // half goes straight on to a game tick.
-    animation_.key(k);
+    animation_.key(k, mech_records());
     game_tick();
 }
 
@@ -387,11 +419,7 @@ void Town::game_tick() {
     // Every third tick the townspeople move (1000:24c2).
     if (third_++ == 2) {
         third_ = 0;
-        people_.move(map_, terrain_, position_, party_places_, animation_, random_, std::span(combat_.on_screen).first<8>());
-        if (people_.outside_window) {
-            people_.outside_window = false;
-            log_.push_back("a person's step looked outside the cell window: read the map instead");
-        }
+        move_townspeople();
     }
     // The map and the figures are drawn again (DGROUP:014a is set in town),
     // over any message box (1000:046e).
@@ -411,39 +439,74 @@ std::string direction_text_id(Step s) {
 
 }  // namespace
 
+MechParty Town::active_mechs() const {
+    MechParty mechs;
+    for (int m = 0; m < 4; ++m) {
+        mechs.present[std::size_t(m)] = figs_.active[std::size_t(m)] != 0;
+        mechs.at[std::size_t(m)] = {figs_.x[std::size_t(m)], figs_.y[std::size_t(m)]};
+    }
+    return mechs;
+}
+
+// BTECH.EXE 1000:24c2 (Ghidra FUN_1000_24c2)
+void Town::move_townspeople() {
+    std::array<formats::MapPosition, 8> mechs;
+    for (int m = 0; m < 4; ++m) {
+        mechs[std::size_t(m)] = {figs_.x[std::size_t(m)], figs_.y[std::size_t(m)]};
+        mechs[std::size_t(4 + m)] = {figs_.x[std::size_t(12 + m)], figs_.y[std::size_t(12 + m)]};
+    }
+    people_.set_mech_places(mechs);
+    people_.move(map_, terrain_, position_, party_places_, animation_, random_, std::span(combat_.on_screen).first<8>());
+    if (people_.outside_window) {
+        people_.outside_window = false;
+        log_.push_back("a person's step looked outside the cell window: read the map instead");
+    }
+}
+
 void Town::turn(int k, KeySource& keys) {
     const auto step = step_for_key(k);
     if (!step) {
         log_.push_back("key " + std::to_string(k) + ": nothing");
         return;
     }
-    Question question(*this, keys);
-    const auto r = take_step(map_, map_number_, position_, party_, *step, question, tables_);
-    if (place_open_) {
-        log_.push_back("waiting in place " + std::to_string(*r.offered_place));
-        return;
-    }
-    if (question_open_) {  // the original waits for the answer before anything else
-        log_.push_back("asked to enter place " + std::to_string(*r.offered_place) + " (waiting)");
-        return;
-    }
-    // Without the game folder the place can't run, and the walk stops at it.
-    if (r.entered && !game_dir_) return;
-    position_ = r.position;
-    char where[32];
-    std::snprintf(where, sizeof where, " at %04x,%04x", position_.x, position_.y);
-    std::string line;
-    if (r.offered_place)
-        line += "asked to enter place " + std::to_string(*r.offered_place) +
-                " (no); ";
+    const auto r = step_party(*step, keys);
+    if (!r) return;
     // The main loop then writes the direction in the upper panel box, unless
-    // a message or question came up this turn (F:d55c). Blocked steps
-    // are logged too.
-    if (!r.offered_place && r.outcome != StepOutcome::TooDeep) {
+    // a message or question came up this turn (F:d55c).
+    if (!r->offered_place && r->outcome != StepOutcome::TooDeep) {
         text_.select_window(4);
         text_.set_fg(15);
         text_.print(lookup(texts_, direction_text_id(*step)));
     }
+}
+
+// BTECH.EXE 1000:218f (Ghidra FUN_1000_218f)
+// The step check (1000:1c12) and the move. The characters walking are those
+// on foot (figures 4-11 active, F:4072); the 'Mechs those of figures 0-3
+// that are active (F:406a), where they were last drawn. Nothing when the
+// game now waits in a question or a place.
+std::optional<StepResult> Town::step_party(Step step, KeySource& keys) {
+    Question question(*this, keys);
+    Party walking = party_;
+    for (int i = 0; i < 8; ++i) walking.present[std::size_t(i)] = walking.present[std::size_t(i)] && on_foot(i);
+    step_mechs_ = active_mechs();
+    const auto r = take_step(map_, map_number_, position_, walking, step, question, tables_, terrain_, step_mechs_,
+                             window_at_);
+    if (place_open_) {
+        log_.push_back("waiting in place " + std::to_string(*r.offered_place));
+        return std::nullopt;
+    }
+    if (question_open_) {  // the original waits for the answer before anything else
+        log_.push_back("asked to enter place " + std::to_string(*r.offered_place) + " (waiting)");
+        return std::nullopt;
+    }
+    // Without the game folder the place can't run, and the walk stops at it.
+    if (r.entered && !game_dir_) return std::nullopt;
+    position_ = r.position;
+    char where[32];
+    std::snprintf(where, sizeof where, " at %04x,%04x", position_.x, position_.y);
+    std::string line;
+    if (r.offered_place) line += "asked to enter place " + std::to_string(*r.offered_place) + " (no); ";
     switch (r.outcome) {
     case StepOutcome::Moved: line += "moved"; break;
     case StepOutcome::Blocked: line += "blocked"; break;
@@ -455,6 +518,8 @@ void Town::turn(int k, KeySource& keys) {
         break;
     }
     log_.push_back(line + where);
+    window_at_ = position_;  // 287f:1314 at the end of 1000:218f
+    return r;
 }
 
 }  // namespace chr::game

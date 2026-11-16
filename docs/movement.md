@@ -60,9 +60,28 @@ It returns "blocked" or "free". In order:
    - **Tile.** A figure is drawn on half-cell (x+1, y), so the cell checked is the one holding
      half-cell (x+1, y): cell ((x+1)/2, y/2). If that tile number is at least DG:0150 the step is
      blocked. DG:0150 is 0x55 on every map but map 14, where it is 0x21 (`1000:2da8` sets it).
-3. **The 'Mechs** (when the party is in its 'Mechs, slots 0-3 with offsets (0,-2), (0,4), (3,1),
-   (-3,1); two cells wide, entrances matched at x +-1, and the tile handlers for map 14's special
-   tiles). Not used in town at the start of the game; documented later with the 'Mech maps.
+   The characters are those with an active figure 4-11 (F:4072): `1000:051b` makes the figure of
+   each character on foot active and clears the rest.
+3. **The 'Mechs.** Only when no character was blocked. For each active 'Mech figure 0-3 (F:406a,
+   also set by `051b`, for the 'Mechs of records 0-3), at its offset from the party in half-cells
+   (DG:045c / 0474, `tables.mech_step_x/y`: (0,-2), (0,4), (3,1), (-3,1)) plus the step: two cells
+   of the window, the one under the half-cell it is drawn on and the one beside it (right when
+   that half-cell's x and the party's x have the same parity, else left); either at DG:0150 or
+   above blocks. Then, unless a question was asked this turn, an entrance on the 'Mech figure's
+   own row (F:4036, plus the step) at its x (F:4004, plus the step) or one either side asks the
+   same question from the program's second copy of the text (DG:0446 / 045a), and Yes goes in.
+   Then the block, if any. The cells are read from the cell window (P:07ad) at the corner cell
+   P:09ed with the same arithmetic as the townspeople's (docs/townspeople.md), the row from the
+   table DG:048c (k x 24).
+4. **Map 14** (F:d346 set): blocking tiles run the tile handlers (`1b5d:*`) instead. Not rebuilt.
+
+**After a place.** The question runs the place inside the check, and the check then goes on
+reading memory as the place left it. After the walking course, TRAINING.BLD's special 3 puts the
+party at (0x0c2e, 0xc076) and nothing has redrawn the figures yet, so the Locust's figure 0 is
+still active: the 'Mech part checks it against the window last built at the course's end (at the
+party's position then), and blocks the step that went in. The party stays where special 3 put
+it. The rebuild reads the position and the active 'Mechs again after a place, and keeps the
+window where the last step built it (`take_step`'s `window_at`).
 
 ## Moving (1000:218f)
 
@@ -78,6 +97,8 @@ the two moves. At the edge of the 16x16-area world the position does not change.
   into the surrounding area, which needs the world map (not rebuilt yet).
 - The deep-water check never fires on a town map, for the reason in step 1; `TooDeep` and its
   message are wired up for when the world is rebuilt.
+- The characters' cells are read from the map file by position, not from the window: the same
+  cells on a town map. The 'Mechs' are read from the window.
 - Saying yes to an entrance stops the walk (`Town::entered_place`): places are not rebuilt yet.
 - Only the party's figures are drawn: the map's objects, the townspeople and the 'Mechs are not
   rebuilt yet (docs/town_loop.md).

@@ -4,6 +4,8 @@
     {"id": "walk.too_deep", "address": "46db:0410", "text": "The water is too deep that way."},
     {"id": "walk.enter_question", "address": "46db:0430", "text": "Will you enter the\r"},
     {"id": "walk.enter_question_end", "address": "46db:0444", "text": "?"},
+    {"id": "walk.mech_enter_question", "address": "46db:0446", "text": "Will you enter the\r"},
+    {"id": "walk.mech_enter_question_end", "address": "46db:045a", "text": "?"},
     {"id": "walk.direction.north", "address": "46db:006c", "text": "\rNorth"},
     {"id": "walk.direction.northeast", "address": "46db:0073", "text": "\rNortheast"},
     {"id": "walk.direction.east", "address": "46db:007e", "text": "\rEast"},

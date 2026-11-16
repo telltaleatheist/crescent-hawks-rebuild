@@ -71,6 +71,8 @@ struct Tables {
     std::array<int, 4> person_water{};              // DG:032e: water quarter bits by parity
 
     // The fight.
+    std::array<int, 4> mech_step_x{};               // DG:045c: the k-th 'Mech's half-cells from the party, for the step check
+    std::array<int, 4> mech_step_y{};               // DG:0474
     std::array<int, 4> mech_formation_x{};          // DG:3a26: the k-th 'Mech's half-cells from the party
     std::array<int, 4> mech_formation_y{};          // DG:3a2a
     std::array<int, 4> mech_cell{};                 // DG:02de: the window cell under the k-th 'Mech

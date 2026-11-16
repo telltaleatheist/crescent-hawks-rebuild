@@ -13,8 +13,9 @@ namespace {
 // "Interface text and imported text"). An ID is added here, by hand, only
 // when it is a menu, prompt, label, message piece or rule message; when in
 // doubt it stays imported only.
-constexpr std::array<std::string_view, 149> kInterfaceIds = {
-    "walk.too_deep", "walk.enter_question", "walk.enter_question_end",
+constexpr std::array<std::string_view, 151> kInterfaceIds = {
+    "walk.too_deep", "walk.enter_question", "walk.enter_question_end", "walk.mech_enter_question",
+    "walk.mech_enter_question_end",
     "walk.direction.north", "walk.direction.northeast", "walk.direction.east",
     "walk.direction.southeast", "walk.direction.south", "walk.direction.southwest",
     "walk.direction.west", "walk.direction.northwest", "ui.answer_yes_picked",

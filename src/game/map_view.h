@@ -48,6 +48,13 @@ MapView view_of(const Terrain& terrain, const std::string& tile_sheet, formats::
 inline constexpr int kWindowCells = 24;
 // P:09ed (set by 287f:18ef): the index of the view's top-left cell.
 int view_corner_index(formats::MapPosition party);
+
+// The index, from the view's corner cell, of the window cell under a figure
+// (dx, dy) half-cells from the party, as 1000:1c12 and 1e31:023c work it
+// out: the row from DG:048c (24 cells a row), the column from the half-cell
+// the figure is drawn on, each a cell on when the party's own half-cell
+// makes it so.
+int window_offset(formats::MapPosition party, int dx, int dy);
 // The tile at `index` of the window around `party`, nothing for an index
 // outside the window (memory the rebuild does not hold).
 inline std::optional<int> window_cell(const Terrain& terrain, formats::MapPosition party, int index) {

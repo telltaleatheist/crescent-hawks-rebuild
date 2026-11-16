@@ -66,6 +66,8 @@ constexpr std::array kDos103 = {
     ExeSpan{ExeSpan::Kind::Table, "tables.step_y", 0x46db, 0x312a, 16, "969207e215e3b0aa"},
     ExeSpan{ExeSpan::Kind::Table, "tables.turns", 0x46db, 0x310a, 16, "42da2f1ae609f2ab"},
     ExeSpan{ExeSpan::Kind::Table, "tables.person_water", 0x46db, 0x032e, 4, "6a03e86ab54be375"},
+    ExeSpan{ExeSpan::Kind::Table, "tables.mech_step_x", 0x46db, 0x045c, 8, "5b76c41e8baa8005"},
+    ExeSpan{ExeSpan::Kind::Table, "tables.mech_step_y", 0x46db, 0x0474, 8, "8a4459acf78eabb8"},
     ExeSpan{ExeSpan::Kind::Table, "tables.mech_formation_x", 0x46db, 0x3a26, 4, "9565215f32d0de3b"},
     ExeSpan{ExeSpan::Kind::Table, "tables.mech_formation_y", 0x46db, 0x3a2a, 4, "e26174938af57d98"},
     ExeSpan{ExeSpan::Kind::Table, "tables.mech_cell", 0x46db, 0x02de, 8, "c8e0ac891029dadd"},
@@ -112,6 +114,14 @@ constexpr std::array kDos103 = {
     ExeSpan{ExeSpan::Kind::Text, "walk.too_deep", 0x46db, 0x0410, 32, "703f071516842f90"},
     ExeSpan{ExeSpan::Kind::Text, "walk.enter_question", 0x46db, 0x0430, 20, "0b636a56d39eba45"},  // then the place's name
     ExeSpan{ExeSpan::Kind::Text, "walk.enter_question_end", 0x46db, 0x0444, 2, "b813d21bdb2ae744"},
+    // ... and its copies for a party in its 'Mechs:
+    ExeSpan{ExeSpan::Kind::Text, "walk.mech_enter_question", 0x46db, 0x0446, 20, "0b636a56d39eba45"},
+    ExeSpan{ExeSpan::Kind::Text, "walk.mech_enter_question_end", 0x46db, 0x045a, 2, "b813d21bdb2ae744"},
+    // 24d3:0187, special 2, after the course:
+    ExeSpan{ExeSpan::Kind::Text, "course.result_locust", 0x46db, 0x48b3, 44, "b005d2c9405c5065"},
+    ExeSpan{ExeSpan::Kind::Text, "course.result_wasp", 0x46db, 0x48df, 5, "5703a9c91b94e70f"},
+    ExeSpan{ExeSpan::Kind::Text, "course.result_chameleon", 0x46db, 0x48e4, 10, "0210015c1105d3dd"},
+    ExeSpan{ExeSpan::Kind::Text, "course.result_other", 0x46db, 0x48ee, 44, "24053ec7ddbb0f41"},
     // 1000:00bb, the main loop: after a walking key it writes the direction
     // in the upper panel box (pointers at DGROUP:01aa, in the order of the
     // keys at DGROUP:0160). Each starts with a new line.

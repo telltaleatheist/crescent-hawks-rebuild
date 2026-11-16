@@ -1,0 +1,162 @@
+// The training missions' driver (docs/combat.md 1.3): a mission's set-up,
+// the walk it shares with every mode, and the results.
+#include "game/text_provider.h"
+#include "game/tile_animation.h"
+#include "game/town.h"
+
+namespace chr::game {
+
+namespace {
+
+// P:200a, the map store's byte 0xfed (block 63, row 5, column 5): the
+// course clears it while it runs and puts it back after.
+constexpr std::size_t kCourseCell = 0xfed;
+
+// The door of the training center: a walk back to it ends a mission.
+bool at_the_door(formats::MapPosition p) { return p.x <= 0x0c3c && p.y >= 0xc049 && p.y <= 0xc04f; }
+
+}  // namespace
+
+void Town::set_map_cell(std::size_t index, int tile) {
+    map_.blocks[index] = std::uint8_t(tile);
+    terrain_.map_changed();
+}
+
+// BTECH.EXE 17dc:0629 (Ghidra FUN_17dc_0629)
+// Sets up the mission of `mode`, then walks: a key is a step, and without
+// one the tiles animate and the townspeople move. A mission ends when the
+// party is back at the training center's door once it is done; then the
+// results.
+bool Town::run_mission(int mode, KeySource& keys) {
+    MissionWalk w;
+    w.mode = mode;
+    switch (mode) {
+    case 0:
+        if (map_.blocks.size() > kCourseCell) {
+            w.saved_cell = map_.blocks[kCourseCell];
+            set_map_cell(kCourseCell, 0);
+        }
+        // 1000:218f(0): a step on the spot.
+        if (!step_party({0, 0}, keys)) return false;
+        break;
+    case 2: {
+        place_mission(1, 0);
+        // The target can't shoot back: 'Mech record 4 loses its weapons and
+        // ammunition (bytes 0x24, 0x25 and 0x27-0x32; 0x26 stays).
+        auto& target = mechs_[4];
+        target[0x24] = target[0x25] = 0;
+        for (int b = 0x27; b <= 0x32; ++b) target[std::size_t(b)] = 0;
+        return fight(1, keys);
+    }
+    case 3:
+        place_mission(0, (random_.next() & 3) + 3);
+        return fight(1, keys);
+    default:
+        log_.push_back("mission " + std::to_string(mode) + ": not rebuilt");
+        fight_unfinished_ = true;
+        return false;
+    }
+    if (!mission_walk(w, keys)) return false;
+    mission_results(w);
+    return true;
+}
+
+bool Town::mission_walk(MissionWalk& w, KeySource& keys) {
+    // The raid (F:3772) and the Arena go straight to the results.
+    bool end = raid_ || w.mode == 8;
+    int countdown = 0;  // [bp-1e]
+    while (!end) {
+        if (at_the_door(position_)) {
+            if (w.done) {
+                end = true;
+                continue;
+            }
+            if (!w.warned) {
+                // 24d3:17c6, then 2656:03f5 (no pause of its own), 273d:086a
+                // and a key.
+                open_message_box();
+                print_id("mission.not_done");
+                if (!read_key(keys)) return false;
+            }
+            w.warned = true;
+        }
+        // 273d:002f: a key waiting?
+        const auto waiting = keys.waiting_key();
+        if (!waiting) {
+            place_open_ = true;
+            return false;
+        }
+        if (*waiting != KeySource::kNoKey) {
+            // 2656:0d1d, 1000:2a2b (the rest of the keyboard is thrown away),
+            // 1000:231d, 1000:218f.
+            const int k = arrow_key(*waiting);
+            animation_.key(k, mech_records());
+            const auto step = step_for_key(k);
+            if (!step_party(step.value_or(Step{}), keys)) return false;
+        } else if (--countdown >= 0) {
+            continue;  // 273d:0006(1): a frame passes
+        }
+        countdown = 10;
+        mission_tick();
+        if (!mission_step_done(w, keys)) return false;
+    }
+    return true;
+}
+
+// The walk's tick: the tiles' next frame (1000:240b), every fourth tick the
+// townspeople move (1000:24c2, counted in DG:5802), and the map and the
+// figures are drawn (287f:18ef, 1000:051b, 273d:06c3).
+void Town::mission_tick() {
+    if (tiles_animate(map_number_)) phase_ = (phase_ + 1) % 3;
+    if (++mission_ticks_ == 1) move_townspeople();
+    mission_ticks_ &= 3;
+    const auto figures = walk_in_figures();
+    record_party_places();
+    text_.forget(13, 0, kTextColumns - 13, kTextRows);
+    frozen_ = Frozen{live_view(), figures};
+}
+
+// What each mode checks after a tick.
+bool Town::mission_step_done(MissionWalk& w, KeySource& keys) {
+    switch (w.mode) {
+    case 0:
+        // The course counts ticks, two more for each in water (F:32ae of
+        // figure 0, 8 or 16 by 1000:051b, divided by 8).
+        ++w.count;
+        if (combat_.terrain[0] != 0) w.count += combat_.terrain[0] >> 3;
+        if (position_.x >= 0x0c78 && position_.y >= 0xc07c && !w.done) {
+            w.done = true;
+            open_message_box();
+            print_id("mission.course_corner");  // 24d3:17ea: a pause, then a key
+            if (!read_key(keys)) return false;
+        }
+        return true;
+    default:
+        return true;
+    }
+}
+
+// 17dc:0bf2: flag 01 says whether the mission was passed.
+void Town::mission_results(const MissionWalk& w) {
+    flags_[flag::kPassed] = 0;
+    switch (w.mode) {
+    case 0: {
+        // Below 215, or 265 in a Locust (record 0's name starts with L).
+        int count = w.count;
+        if (mechs_[0][0] == 'L') count -= 50;
+        if (w.done && count < 215) flags_[flag::kPassed] = 1;
+        if (w.saved_cell) set_map_cell(kCourseCell, *w.saved_cell);
+        break;
+    }
+    default:
+        break;
+    }
+    // The town's own drawing takes over again.
+    frozen_.reset();
+    // F:398e = 0. F:4594 has the place's script deciphered again
+    // (17dc:1d30); the rebuild keeps the script apart from the fight.
+    log_.push_back("mission " + std::to_string(w.mode) + ": " + (flags_[flag::kPassed] ? "passed" : "not passed") +
+                   " (count " + std::to_string(w.count) + ")");
+}
+
+}  // namespace chr::game

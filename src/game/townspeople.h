@@ -58,6 +58,9 @@ public:
     // random 0-31 rounds and picks the entrance after. `near` gets whether
     // each one is within that square (F:42f6 + i, the bytes the fight's
     // drawer later uses for figures 0-7).
+    // Where the 'Mech figures (0-3, 12-15) stand, for the next moves: each
+    // keeps townspeople off three half-cells of its row.
+    void set_mech_places(const std::array<formats::MapPosition, 8>& places) { mech_places_ = places; }
     void move(const formats::MtpMap& map, const Terrain& terrain, formats::MapPosition party, const PartyPlaces& party_places,
               FigureAnimation& animation, Random& random, std::span<bool, 8> near);
 
@@ -99,6 +102,7 @@ public:
     bool outside_window = false;
 
 private:
+    std::array<formats::MapPosition, 8> mech_places_{};
     void step(int i, const formats::MtpMap& map, const Terrain& terrain, formats::MapPosition party, const PartyPlaces& party_places);
 
     const formats::Tables* tables_ = nullptr;

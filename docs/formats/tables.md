@@ -46,6 +46,7 @@ word); anything else is refused, and the game asks for a new import.
 | `step_x`, `step_y` | DG:311a/312a | 8 words each | one half-cell in each direction (the townspeople) |
 | `turns` | DG:310a | 16 bytes | the turns 1e31:0006 tries, read from the end, two mirrored patterns |
 | `person_water` | DG:032e | 4 bytes | a townsperson's water quarter bits by parity |
+| `mech_step_x`, `mech_step_y` | DG:045c/0474 | 4 words each | the k-th 'Mech's half-cells from the party, in the step check (1000:1c12; docs/movement.md) |
 | `mech_formation_x`, `_y` | DG:3a26/3a2a | 4 bytes each | the k-th 'Mech's half-cells from the party in a fight |
 | `mech_cell` | DG:02de | 4 words | the window cell under the k-th 'Mech (1000:051b) |
 | `mech_water` | DG:02e6 | 4 words | its water quarter bits |

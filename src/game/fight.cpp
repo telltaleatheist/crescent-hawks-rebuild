@@ -58,7 +58,9 @@ std::vector<Figure> Town::walk_in_figures() {
         const int index = view_corner_index(position_) + tables_.mech_cell[std::size_t(k)] +
                           (odd_x ? tables_.mech_cell_odd_x[std::size_t(k)] : 0) + (odd_y ? tables_.mech_cell_odd_y[std::size_t(k)] : 0);
         const int quarters = tables_.mech_water[std::size_t(k)] ^ (odd_y ? 5 : 0);
-        f.sink = mech_sink(window_cell(terrain_, position_, index).value_or(-1), quarters);
+        // F:32ae + m: the rows it sinks, 0 on a map with tile events (F:d346).
+        f.sink = flags_[flag::kTileEvents] != 0 ? 0 : mech_sink(window_cell(terrain_, position_, index).value_or(-1), quarters);
+        combat_.terrain[std::size_t(m)] = std::int8_t(f.sink);
         all.push_back(f);
         figs_.x[std::size_t(k)] = move_x(position_.x, tables_.mech_formation_x[std::size_t(k)]);
         figs_.y[std::size_t(k)] = move_y(position_.y, tables_.mech_formation_y[std::size_t(k)]);
@@ -199,28 +201,6 @@ bool Town::walk_in(KeySource& keys) {
     }
     animation_.advance(0);  // a fifth time: frame 6, not drawn here
     return run_mission(flags_[0], keys);
-}
-
-// BTECH.EXE 17dc:0629 (Ghidra FUN_17dc_0629), modes 2 and 3 (the third and
-// fourth training missions): one enemy Locust, disarmed, or three to six
-// enemy people; then the fight.
-bool Town::run_mission(int mode, KeySource& keys) {
-    if (mode == 3) {
-        place_mission(0, (random_.next() & 3) + 3);
-        return fight(1, keys);
-    }
-    if (mode != 2) {
-        log_.push_back("mission " + std::to_string(mode) + ": not rebuilt");
-        fight_unfinished_ = true;
-        return false;
-    }
-    place_mission(1, 0);
-    // The target can't shoot back: 'Mech record 4 loses its weapons and
-    // ammunition (bytes 0x24, 0x25 and 0x27-0x32; 0x26 stays).
-    auto& target = mechs_[4];
-    target[0x24] = target[0x25] = 0;
-    for (int b = 0x27; b <= 0x32; ++b) target[std::size_t(b)] = 0;
-    return fight(1, keys);
 }
 
 // BTECH.EXE 17dc:0d49 (Ghidra FUN_17dc_0d49), for a training mission (no
@@ -1255,7 +1235,7 @@ bool Town::fight_rounds(int kind, KeySource& keys) {
 
     // After the loop (203b:1040): window 3 is cleared.
     text_.select_window(3);
-    text_.clear_window();
+    clear_window();
     if (kind == 1 && combat_.fight_on) {
         // 24d3:17c6 / 17ea and a key.
         open_message_box();

@@ -146,7 +146,9 @@ each one.
 
 | n | code | files | what it does |
 |---|------|-------|--------------|
-| 01–03 | 24d3:0027, 0187, 01c2 | TRAINING | the training missions (to be read in part B) |
+| 01 | 24d3:0027 | TRAINING | the 'Mech walks in and the mission in flag 00 runs (docs/combat.md 1.2, 1.3) |
+| 02 | 24d3:0187 | TRAINING | after the course: by the first letter of 'Mech record 0, DGROUP:48b3 for an L (`course.result_locust`), else 48df for a W or 48e4 for any other letter (the 'Mech's name) and then 48ee (`course.result_*`) |
+| 03 | 24d3:01c2 | TRAINING | the 'Mech is handed back: record 0 emptied (byte 0 = ff), Jason on foot (character 0 byte 0x0c = 8), the party at (0x0c2e, 0xc076) outside the training center. Unless flag 04 is set, marks 0x7c and 0x7d (fires) lose their code, area and x (F:d457, d497, d4d7), keeping y |
 | 04 | 24d3:0231 | CITADEL | prints the three courses' prices: for skill i (0–2), 125 × Jason's skill i + 75, right-aligned to column 39 on row 5 + i |
 | 05 | 24d3:02a5 | CITADEL | takes the course in flag 08: prints DGROUP:491a and the level and course names (tables DGROUP:4ea2, 4eb6). At level 4 it prints 4948 and sets flag 09 = 0. With enough C-Bills: flag 09 = 1, the skill + 1, the price paid. Otherwise it prints 4999 and sets flag 09 = 0. |
 | 12 | 24d3:0aea | ten places | "talk to others": `17dc:17b9`, below |
@@ -184,7 +186,7 @@ Special 05's texts are imported from BTECH.EXE as `course.*` (docs/import.md).
 - **EB/EC** read F:d451 and d450, which nothing rebuilt sets yet (0 in a new game); the
   rebuild never jumps. UnBattletech names them "training complete" and a milestone.
 - **E4** (sound) and **E9** (new member) do nothing but log.
-- The specials other than 1, 4, 5, 12 and 14.
+- The specials other than 1-5, 12 and 14.
 - Talk outdoors (`17dc:17b9`): one of eight rumours (DGROUP:4e5e) at random. No rebuilt place
   is outdoors; the rebuild makes the draw and logs it.
 - The follow-on places (the garage, and the second barracks into VIEWDISK) need flags that no

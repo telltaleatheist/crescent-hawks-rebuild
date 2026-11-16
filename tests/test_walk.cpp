@@ -43,11 +43,22 @@ MtpMap open_map() {
 struct Answer : EntranceQuestion {
     bool yes = false;
     int asked = -1;
-    bool ask(int place) override {
+    bool ask(int place, bool mech) override {
         asked = place;
+        asked_mech = mech;
         return yes;
     }
+    bool asked_mech = false;
 };
+
+// The terrain around `map`, placed as the town places it.
+Terrain terrain_for(const MtpMap& map, const Tables& tables) {
+    static const Fixes fixes;
+    Terrain t(tables, fixes);
+    t.place_map(map, 4);
+    t.link_blocks();
+    return t;
+}
 
 }  // namespace
 
@@ -63,7 +74,7 @@ TEST(step_moves_a_half_cell) {
     if (!tables) return chrtest::skip("no imported tables (set CHR_GAME_DIR)");
     const auto map = open_map();
     Answer no;
-    const auto r = take_step(map, 1, {10, 12}, Party{}, {1, 1}, no, *tables);
+    const auto r = take_step(map, 1, MapPosition{10, 12}, Party{}, {1, 1}, no, *tables, terrain_for(map, *tables), MechParty{}, MapPosition{10, 12});
     CHECK(r.outcome == StepOutcome::Moved);
     CHECK(r.position == (MapPosition{11, 13}));
 }
@@ -74,7 +85,7 @@ TEST(wall_blocks) {
     const auto map = open_map();
     Answer no;
     // Half-cell row 8 is cell row 4; one up is half-cell 7, cell row 3: the wall.
-    const auto r = take_step(map, 1, {10, 8}, Party{}, {0, -1}, no, *tables);
+    const auto r = take_step(map, 1, MapPosition{10, 8}, Party{}, {0, -1}, no, *tables, terrain_for(map, *tables), MechParty{}, MapPosition{10, 8});
     CHECK(r.outcome == StepOutcome::Blocked);
     CHECK(r.position == (MapPosition{10, 8}));
 }
@@ -85,9 +96,31 @@ TEST(entrance_asks_and_then_checks_the_step) {
     const auto map = open_map();
     Answer yes;
     yes.yes = true;
-    const auto r = take_step(map, 1, {10, 21}, Party{}, {0, -1}, yes, *tables);
+    const auto r = take_step(map, 1, MapPosition{10, 21}, Party{}, {0, -1}, yes, *tables, terrain_for(map, *tables), MechParty{}, MapPosition{10, 21});
     CHECK(yes.asked == 0 && r.entered);
     CHECK(r.outcome == StepOutcome::Moved);
+}
+
+TEST(mech_checks_two_cells_and_entrances_beside_it) {
+    const auto* tables = chrtest::tables();
+    if (!tables) return chrtest::skip("no imported tables (set CHR_GAME_DIR)");
+    const auto map = open_map();
+    const auto terrain = terrain_for(map, *tables);
+    Answer no;
+    // No character walks; one 'Mech stands two half-cells above the party.
+    Party nobody;
+    nobody.present.fill(false);
+    MechParty mech;
+    mech.present[0] = true;
+    // Its figure is one half-cell left of an entrance: the 'Mech is asked.
+    mech.at[0] = {std::uint16_t(map.entrances[0].x - 1), map.entrances[0].y};
+    take_step(map, 1, MapPosition{10, 21}, nobody, {0, 0}, no, *tables, terrain, mech, MapPosition{10, 21});
+    CHECK(no.asked == 0 && no.asked_mech);
+    // From half-cell row 9 the 'Mech's foot, two half-cells up, is on
+    // half-cell row 7, cell row 3: the wall. From row 12 it is clear.
+    mech.at[0] = {0, 0};
+    CHECK(take_step(map, 1, MapPosition{10, 9}, nobody, {0, 0}, no, *tables, terrain, mech, MapPosition{10, 9}).outcome == StepOutcome::Blocked);
+    CHECK(take_step(map, 1, MapPosition{10, 12}, nobody, {0, 0}, no, *tables, terrain, mech, MapPosition{10, 12}).outcome == StepOutcome::Moved);
 }
 
 TEST(map_edge_is_leaving) {
@@ -95,8 +128,8 @@ TEST(map_edge_is_leaving) {
     if (!tables) return chrtest::skip("no imported tables (set CHR_GAME_DIR)");
     const auto map = open_map();
     Answer no;
-    CHECK(take_step(map, 1, {10, 0}, Party{}, {0, -1}, no, *tables).outcome == StepOutcome::LeftMap);
-    CHECK(take_step(map, 1, {31, 20}, Party{}, {1, 0}, no, *tables).outcome == StepOutcome::LeftMap);
+    CHECK(take_step(map, 1, MapPosition{10, 0}, Party{}, {0, -1}, no, *tables, terrain_for(map, *tables), MechParty{}, MapPosition{10, 0}).outcome == StepOutcome::LeftMap);
+    CHECK(take_step(map, 1, MapPosition{31, 20}, Party{}, {1, 0}, no, *tables, terrain_for(map, *tables), MechParty{}, MapPosition{31, 20}).outcome == StepOutcome::LeftMap);
 }
 
 TEST(key_script_parses) {

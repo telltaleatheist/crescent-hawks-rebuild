@@ -38,8 +38,9 @@ public:
     // Called by the main loop after every key. A walking key moves each
     // character (present or not) to the next frame of that direction's
     // script, starting the script over if it walked another way before
-    // (the 'Mechs' part: docs/town_loop.md).
-    void key(int key);
+    // (the 'Mechs' part: docs/town_loop.md). The 'Mech figures 0-3 whose
+    // records exist (`mechs`) walk too, with the 'Mech scripts (DG:025a).
+    void key(int key, const std::array<bool, 4>& mechs = {});
 
     // A person walking `direction` (0-7, N first, clockwise): starts that
     // direction's character script over unless it is the one it is on, then

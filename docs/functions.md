@@ -29,9 +29,9 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 1000:19f3 | 0x119f3 | `FUN_1000_19f3` | 32 |  | - |
 | 1000:1a13 | 0x11a13 | `FUN_1000_1a13` | 234 | Yes/no question: Y/N answer, left/right pick, space/Enter accept; reprints the answer line each key | rebuilt |
 | 1000:1afd | 0x11afd | `FUN_1000_1afd` | 277 | Shows one .ANM picture: its frames and delays (docs/formats/anm.md) | rebuilt |
-| 1000:1c12 | 0x11c12 | `FUN_1000_1c12` | 1405 | Can the party step by (dx, dy)? Deep water at a block edge; offers to enter a place at an entrance; blocks on tile >= DG:0150 | rebuilt |
+| 1000:1c12 | 0x11c12 | `FUN_1000_1c12` | 1405 | Can the party step by (dx, dy)? Deep water at a block edge; offers to enter a place at an entrance; blocks on tile >= DG:0150; the party's 'Mechs (two cells each); map 14's tile events (not rebuilt) | rebuilt |
 | 1000:218f | 0x1218f | `FUN_1000_218f` | 398 | Walking keys: arrows and Home/PgUp/End/PgDn to a step, checks it, moves y then x, loads areas crossed into | rebuilt |
-| 1000:231d | 0x1231d | `FUN_1000_231d` | 238 | After a key: a walking key moves the figures' walking scripts on | rebuilt |
+| 1000:231d | 0x1231d | `FUN_1000_231d` | 238 | After a key: a walking key moves the figures' walking scripts on, the 'Mechs' too | rebuilt |
 | 1000:240b | 0x1240b | `FUN_1000_240b` | 183 | Animated tiles: next of 3 frames, ANIMATE.ICN tile 1+3i+frame over each of the 10 tile numbers at DG:04b0 | rebuilt |
 | 1000:24c2 | 0x124c2 | `FUN_1000_24c2` | 933 | Townspeople, every third game tick: count down inside, come out at the last entrance; out and near the party, a step (1e31:0006), walking frame, at the target go in for random&31 rounds | rebuilt |
 | 1000:2867 | 0x12867 | `FUN_1000_2867` | 59 |  | - |
@@ -98,7 +98,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 17dc:0008 | 0x17dc8 | `FUN_17dc_0008` | 440 | Enters a place: loads and runs its .BLD script, then puts the town screen back (docs/scripts.md) | rebuilt |
 | 17dc:01c0 | 0x17f80 | `FUN_17dc_01c0` | 1079 | The .BLD script interpreter: opcodes E4-FF (docs/scripts.md) | rebuilt |
 | 17dc:05f7 | 0x183b7 | `FUN_17dc_05f7` | 50 | Reads a script word (jump targets) | rebuilt |
-| 17dc:0629 | 0x183e9 | `FUN_17dc_0629` | 1824 | Scene driver: training missions 0-7, the arena (8), the jail break (9); results in flag 01 (docs/combat.md) | read |
+| 17dc:0629 | 0x183e9 | `FUN_17dc_0629` | 1824 | Scene driver: training missions 0-7, the arena (8), the jail break (9); results in flag 01 (docs/combat.md); modes 0, 2, 3 and the walk rebuilt | rebuilt (in part) |
 | 17dc:0d49 | 0x18b09 | `FUN_17dc_0d49` | 1538 | Sets up the opponents: enemy pilots and 'Mechs from templates, difficulty armour cut (docs/combat.md) | read |
 | 17dc:134b | 0x1910b | `FUN_17dc_134b` | 147 | Puts the party at figure 0 (or 4) after a fight and redraws | read |
 | 17dc:13de | 0x1919e | `FUN_17dc_13de` | 520 |  | - |
@@ -230,7 +230,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 
 | Address | Linear | Ghidra name | Span | Label | Status |
 |---|---|---|---|---|---|
-| 24d3:0004 | 0x24d34 | `FUN_24d3_0004` | 6082 | The script specials, F5 n (docs/scripts.md); 4, 5, 12 and 14 rebuilt | read |
+| 24d3:0004 | 0x24d34 | `FUN_24d3_0004` | 6082 | The script specials, F5 n (docs/scripts.md); 1-5, 12 and 14 rebuilt | read |
 | 24d3:17c6 | 0x264f6 | `FUN_24d3_17c6` | 36 | Opens the message box over the map: window 7, cleared, frame style 0 | rebuilt |
 | 24d3:17ea | 0x2651a | `FUN_24d3_17ea` | 31 | Prints a message in the open box, waits a moment (273d:086a) | read |
 | 24d3:1809 | 0x26539 | `FUN_24d3_1809` | 21 | Prints DGROUP:4f7e (special 5) | rebuilt |

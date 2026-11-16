@@ -28,6 +28,12 @@ std::optional<int> Town::read_key(KeySource& keys) {
 
 void Town::print_id(const std::string& id) { text_.print(lookup(texts_, id)); }
 
+// The bars are drawn into window 3: clearing it takes them away too.
+void Town::clear_window() {
+    text_.clear_window();
+    if (text_.window_number() == 3) party_box_shown_ = false;
+}
+
 // BTECH.EXE 17dc:0008 (Ghidra FUN_17dc_0008)
 // Goes into the place behind entrance `entrance`: runs its script, then puts
 // the panel back. The step that offered it goes on afterwards as after "no".
@@ -96,7 +102,7 @@ bool Town::run_script(int file, KeySource& keys) {
             text_.select_window(sbyte(pc + 1));
             break;
         case formats::Op::Clear:
-            text_.clear_window();
+            clear_window();
             break;
         case formats::Op::Frame:
             text_.frame(sbyte(pc + 1));
@@ -240,6 +246,26 @@ bool Town::special(int n, KeySource& keys) {
     switch (n) {
     case 1:
         return walk_in(keys);  // game/fight.cpp
+    case 2:
+        // 24d3:0187: after the course, by the 'Mech's first letter.
+        if (mechs_[0][0] == 'L') {
+            print_id("course.result_locust");
+        } else {
+            print_id(mechs_[0][0] == 'W' ? "course.result_wasp" : "course.result_chameleon");
+            print_id("course.result_other");
+        }
+        return true;
+    case 3:
+        // 24d3:01c2: the 'Mech is handed back. Jason is on foot outside the
+        // training center; unless flag 04 is set, the fires (marks 0x7c and
+        // 0x7d) are taken off the map, all but their y.
+        mechs_[0][0] = 0xff;
+        characters_[0][character::kMech] = character::kOnFoot;
+        position_ = {0x0c2e, 0xc076};
+        if (flags_[flag::kOutdoors] == 0)
+            for (auto& m : marks_.marks)
+                if ((m.code & 0x7e) == 0x7c) m.code = m.area = m.x = 0;
+        return true;
     case 4:
         // 24d3:0231: the three courses' prices, 125 x Jason's skill + 75,
         // right-aligned to column 39 on rows 5-7, light green.

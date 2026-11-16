@@ -46,6 +46,10 @@ public:
     // with a key, which is taken; false when none is waiting. Nothing when
     // the keys have run out.
     virtual std::optional<bool> poll() = 0;
+    // The same check, handing over the key it took (273d:002f, then
+    // 273d:0259): kNoKey when none is waiting.
+    static constexpr int kNoKey = 0x10000;
+    virtual std::optional<int> waiting_key() = 0;
 };
 
 // One step of a script: a key, or `idle` passes of the main loop with no key
@@ -73,6 +77,7 @@ public:
     std::optional<int> next() override;
     // An idle item is one pass with no key waiting; a key is waiting.
     std::optional<bool> poll() override;
+    std::optional<int> waiting_key() override;
     // Where mech: items go: they are applied as the next key or pass is taken.
     void set_poke(std::function<void(int record, int byte, int value)> poke) { poke_ = std::move(poke); }
 
@@ -109,6 +114,9 @@ public:
     // tables (imported, formats/tables.h); both must outlive the Town.
     Town(const formats::MtpMap& map, int map_number, formats::MapPosition start,
          const TextProvider& texts, const formats::Tables& tables);
+    // The terrain points at the town's own map.
+    Town(const Town&) = delete;
+    Town& operator=(const Town&) = delete;
 
     // Begins with the program's start-up (game/startup.cpp): the Infocom
     // screen, the title and the first-time question, before the town. Call
@@ -261,6 +269,7 @@ private:
     void hold_screen(int frames);
     std::optional<int> read_key(KeySource& keys);
     void print_id(const std::string& id);
+    void clear_window();
     void count_members();
 
     // A fight (game/fight.cpp, docs/combat.md). Each returns false if the
@@ -268,6 +277,22 @@ private:
     // is rebuilt.
     bool walk_in(KeySource& keys);
     bool run_mission(int mode, KeySource& keys);
+    // 17dc:0629's own state during a mission's walk.
+    struct MissionWalk {
+        int mode = 0;
+        bool done = false;    // [bp-2]: the mission's task is done
+        bool warned = false;  // [bp-e]: "Don't come back here..." shown
+        int count = 0;        // [bp-14]: the course's ticks
+        std::optional<std::uint8_t> saved_cell;  // [bp-18]: a map cell the mission changed
+    };
+    bool mission_walk(MissionWalk& w, KeySource& keys);
+    void mission_tick();
+    bool mission_step_done(MissionWalk& w, KeySource& keys);
+    void mission_results(const MissionWalk& w);
+    void move_townspeople();
+    // Sets byte `index` of the map store (P:101d) and has the window built
+    // again.
+    void set_map_cell(std::size_t index, int tile);
     void place_mission(int mechs, int people);
     bool fight(int kind, KeySource& keys);
     // The orders menu: 0 Begin Fight, 1 Flee; nothing when the keys ran
@@ -298,6 +323,14 @@ private:
     // game/training_quiz.cpp: the quiz's scene (--show-quiz).
     bool show_quiz(KeySource& keys);
     static constexpr int kQuizMenu = 0x25;
+    std::optional<StepResult> step_party(Step step, KeySource& keys);
+    MechParty active_mechs() const;
+    // Which of 'Mech records 0-3 exist (byte 0 not ff).
+    std::array<bool, 4> mech_records() const {
+        std::array<bool, 4> exist{};
+        for (int m = 0; m < 4; ++m) exist[std::size_t(m)] = mechs_[std::size_t(m)][0] != 0xff;
+        return exist;
+    }
     std::vector<Figure> walk_in_figures();
     std::vector<Figure> fight_figures_drawn();
     void print_unit_heading(int fig);
@@ -309,7 +342,7 @@ private:
         std::vector<Figure> figures;
     };
 
-    const formats::MtpMap& map_;
+    formats::MtpMap map_;  // the store's map blocks (P:101d), which the missions change
     int map_number_;
     std::string tile_sheet_;
     formats::MapPosition position_;
@@ -383,6 +416,9 @@ private:
     std::vector<XorBox> boxes_;
     bool party_box_shown_ = true;
     bool fight_unfinished_ = false;
+    MechParty step_mechs_;            // the step check's 'Mechs, read again after a visit
+    formats::MapPosition window_at_;  // where 287f:1314 last built the window
+    int mission_ticks_ = 0;  // DG:5802: the missions' walk's ticks, 0-3
     bool townspeople_away_ = false;
     bool show_quiz_ = false;
     std::optional<QuizScene> quiz_;

@@ -8,6 +8,7 @@
 
 #include "formats/mtp.h"
 #include "formats/tables.h"
+#include "game/terrain.h"
 
 namespace chr::game {
 
@@ -62,11 +63,24 @@ struct StepResult {
 class EntranceQuestion {
 public:
     virtual ~EntranceQuestion() = default;
-    virtual bool ask(int place) = 0;
+    // `mech`: asked of a 'Mech (the program's second copy of the text).
+    virtual bool ask(int place, bool mech) = 0;
 };
 
-StepResult take_step(const formats::MtpMap& map, int map_number, formats::MapPosition from,
+// The party's 'Mechs while it is in them: figures 0-3 that are active
+// (F:406a), each where it was last drawn (F:4004 / 4036).
+struct MechParty {
+    std::array<bool, 4> present{};
+    std::array<formats::MapPosition, 4> at{};
+};
+
+// The characters (`party`) are checked against the map; the 'Mechs against
+// the cell window, as the original does for both.
+// `from` and `mechs` are read again after an entrance's question, since the
+// place may have changed them. `window_at`: where the window was last built.
+StepResult take_step(const formats::MtpMap& map, int map_number, const formats::MapPosition& from,
                      const Party& party, Step step, EntranceQuestion& question,
-                     const formats::Tables& tables);
+                     const formats::Tables& tables, const Terrain& terrain, const MechParty& mechs,
+                     const formats::MapPosition& window_at);
 
 }  // namespace chr::game

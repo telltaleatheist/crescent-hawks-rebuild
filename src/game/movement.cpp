@@ -1,5 +1,7 @@
 #include "game/movement.h"
 
+#include "game/map_view.h"
+
 namespace chr::game {
 
 using formats::MapPosition;
@@ -61,11 +63,18 @@ std::uint16_t move_y(std::uint16_t y, int dy) {
 
 }  // namespace
 
-StepResult take_step(const formats::MtpMap& map, int map_number, MapPosition from,
+StepResult take_step(const formats::MtpMap& map, int map_number, const MapPosition& from,
                      const Party& party, Step step, EntranceQuestion& question,
-                     const formats::Tables& tables) {
+                     const formats::Tables& tables, const Terrain& terrain, const MechParty& mechs,
+                     const MapPosition& window_at) {
     StepResult result;
-    result.position = from;
+    // A place entered on the way can move the party: what is read after the
+    // question is read again, as the original reads its memory.
+    auto finish = [&](StepOutcome outcome) {
+        result.outcome = outcome;
+        result.position = from;
+        return result;
+    };
     const int hx = from.half_cell_x(), hy = from.half_cell_y();
 
     // Crossing into the next 8x8 block (16 half-cells) on either axis looks at
@@ -82,8 +91,7 @@ StepResult take_step(const formats::MtpMap& map, int map_number, MapPosition fro
         // Inside the map every block is one of the map's own (never water);
         // outside it the world's terrain decides (docs/movement.md).
         if (!inside(map, bx * 8, by * 8)) {
-            result.outcome = StepOutcome::LeftMap;
-            return result;
+            return finish(StepOutcome::LeftMap);
         }
     }
 
@@ -101,25 +109,59 @@ StepResult take_step(const formats::MtpMap& map, int map_number, MapPosition fro
                 if (map.entrances[e].x != x || map.entrances[e].y != y) continue;
                 asked = true;
                 result.offered_place = e;
-                result.entered = question.ask(e);
+                result.entered = question.ask(e, false);
                 break;
             }
         }
         const int cx = (hx + fx + 1) >> 1, cy = (hy + fy) >> 1;
         if (hx + fx + 1 < 0 || hy + fy < 0 || !inside(map, cx, cy)) {
-            result.outcome = StepOutcome::LeftMap;
-            return result;
+            return finish(StepOutcome::LeftMap);
         }
         if (map.cell(cx, cy) >= limit) {
-            result.outcome = StepOutcome::Blocked;
-            return result;
+            return finish(StepOutcome::Blocked);
+        }
+    }
+
+    // The 'Mechs: two cells each, the one under the half-cell it is drawn
+    // on and the one beside it on the side the half-cell leans to. A cell
+    // the rebuild does not hold blocks. An entrance is matched on the
+    // 'Mech's row at its x or one either side, and is asked about before
+    // the 'Mech is found blocked.
+    // The window is the one 1000:218f last built (287f:1314), with its
+    // corner cell (P:09ed); the half-cells are the party's now.
+    const int corner = view_corner_index(window_at);
+    auto tile = [&](int index) { return terrain.window_cell(window_at, corner + index).value_or(0xff); };
+    for (int m = 0; m < 4; ++m) {
+        if (!mechs.present[std::size_t(m)]) continue;
+        const int dx = tables.mech_step_x[std::size_t(m)] + step.dx, dy = tables.mech_step_y[std::size_t(m)] + step.dy;
+        int index = window_offset(from, dx, dy);
+        bool blocked = tile(index) >= limit;
+        if (!blocked) {
+            index += (((dx + 0x1a) ^ from.x) & 1) == 0 ? 1 : -1;
+            blocked = tile(index) >= limit;
+        }
+        if (!asked) {
+            const auto& at = mechs.at[std::size_t(m)];
+            const std::uint16_t x = std::uint16_t(at.x + step.dx), y = std::uint16_t(at.y + step.dy);
+            for (int e = 0; e < 12; ++e) {
+                const auto& place = map.entrances[std::size_t(e)];
+                if (place.y != y || (place.x != x && place.x != std::uint16_t(x - 1) && place.x != std::uint16_t(x + 1)))
+                    continue;
+                asked = true;
+                result.offered_place = e;
+                result.entered = question.ask(e, true);
+                break;
+            }
+        }
+        if (blocked) {
+            return finish(StepOutcome::Blocked);
         }
     }
 
     // 1000:218f moves up or down first, then left or right.
+    finish(StepOutcome::Moved);
     result.position.y = move_y(from.y, step.dy);
     result.position.x = move_x(from.x, step.dx);
-    result.outcome = StepOutcome::Moved;
     return result;
 }
 

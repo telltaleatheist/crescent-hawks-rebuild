@@ -192,12 +192,26 @@ sight at long range can (the figure is 8-15 cells from the window's edges).
 
 FUN_17dc_0629. A jump table at cs:086f by mode. All modes share a walking loop like the town's
 (a key is a step, `1000:218f`; with no key the tiles animate and the townspeople move) and the
-results step at 0bf2. The callers: special 1 (modes 0-7 from flag 00), ARENA.BLD's special 0x23
+results step at 0bf2. Rebuilt: modes 0, 2 and 3 and the walk (`game/mission.cpp`); in modes 2 and
+3 the rebuild stops after the fight (2.15), so their walk back is not reached yet.
+
+**The walk** (0883..0bef). Each pass, first: with the party back at the training center's door
+(x <= 0x0c3c, 0xc049 <= y <= 0xc04f) the mission ends if its task is done ([bp-2]); if not, the
+first time only, the message box shows DGROUP:146b (`mission.not_done`) and waits for a key. Then a key waiting (`273d:002f`) is read, turned into an arrow
+(`2656:0d1d`), the rest of the keyboard is thrown away (`1000:2a2b`), the figures walk
+(`1000:231d`) and the party steps (`1000:218f`, any other key a step of (0, 0)), and a tick
+follows at once. With no key a frame passes (`273d:0006(1)`), and every eleventh such pass ticks
+(a countdown from 10, 0 at the start, so the first pass ticks). A tick: the tiles' next frame
+(`1000:240b`), the townspeople move every fourth tick (DGROUP:5802, kept from one mission to the
+next, counts 1, 2, 3, 0: they move when it reaches 1), and the map and figures are drawn
+(`287f:18ef`, `1000:051b`, `273d:06c3`). Then the mode's own check. The town's timers, money step
+and random draw do not run here. The pacing is the town's: the key feeder's polls give the same
+pass counts. The callers: special 1 (modes 0-7 from flag 00), ARENA.BLD's special 0x23
 (`24d3:10e2`, mode 8) and `19b8:152f` (mode 9, run from JAIL.BLD's special 0x28).
 
 | mode | what happens | pass (flag 01 = 1) |
 |---|---|---|
-| 0 | A walking course. P:200a is saved and cleared. Each step counts 1, plus (F:32ae of figure 0) >> 3 when that is set (heavier terrain counts more, a guess). The course ends when the party reaches x >= 0x0c78 and y >= 0xc07c (text DG:14a1, a key). | reached, and the count (less 50 if the 'Mech is a Locust) below 215. P:200a is restored. |
+| 0 | A walking course. P:200a (the map store's byte 0xfed) is saved and set to 0, then a step of (0, 0) (`218f(0)`). Every tick counts 1, plus F:32ae of figure 0 >> 3: 1 more in shallow water, 2 more in deep (`1000:051b` writes 8 or 16 there for a 'Mech, below). So the count is time, idle ticks included. Reaching x >= 0x0c78 and y >= 0xc07c marks the task done, the first time with DG:14a1 (`mission.course_corner`, `24d3:17ea`, a key). | done, and the count (less 50 if record 0's name starts with L, a Locust) below 215. P:200a is restored. |
 | 1 | A marked spot. One r & 7 picks a spot from DG:1632 / DG:163a; that map cell in P:101d is saved and set to tile 0x50. With a Locust a message (DG:1434) comes first. The walk ends on the cell just below the spot (text DG:14ef with a Locust, else DG:152a, and the cell is put back). | the 'Mech is not a Locust (it has no jump jets: a guess). Either way Piloting (character 0 byte 8) + 1 if below 3. |
 | 2 | Target practice. One enemy 'Mech (`0d49(1, 0)`), then its record 4 is disarmed: both actuator bytes 0x24 / 0x25, all ten ammunition bytes 0x27-0x30 and both MP bytes 0x31 / 0x32 set to 0. It cannot move, kick or fire. Fight kind 1. | as below |
 | 3 | 3-6 enemy people (`0d49(0, (r & 3) + 3)`: the random count is pushed first, so it is the second argument), fight kind 1. | as below |
@@ -1195,8 +1209,9 @@ sequence compares the scene with the original's, over the whole screen and the s
 
 1. `17dc:1c9b` sets the eight characters' 'Mech slot bytes to 3 (meaning unknown).
 2. F:32ae and F:3750 are what the figure drawer `1000:0e4b` worked out (3.14: the rows a figure
-   sinks, the tile under it). Open: what `1000:051b` writes to F:32ae (it writes no other of
-   them), and whether it matters before a fight. With combat graphics off nothing draws the
+   sinks, the tile under it). `1000:051b` writes F:32ae for each 'Mech of records 0-3 (at the
+   record's index): the same 8 or 16 rows as `0e4b`, 0 with F:d346 set. Before a fight it is read
+   by the walking course (1.3). With combat graphics off nothing draws the
    figures during the rounds, so in such a fight they keep their start values (0 for kinds
    1-3).
 3. The nine bytes P:07a4..07ac whose bit 0x80 blocks salvage. In a fight's memory they are the

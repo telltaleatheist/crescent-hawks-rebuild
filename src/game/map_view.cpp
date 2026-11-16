@@ -47,4 +47,13 @@ int view_corner_index(formats::MapPosition party) {
     return (((party.half_cell_y() >> 1) & 7) + 2) * kWindowCells + ((party.half_cell_x() >> 1) & 7) + 2;
 }
 
+int window_offset(formats::MapPosition party, int dx, int dy) {
+    const int rx = dx + 0x1a, ry = dy + 0x0c;
+    auto floor_half = [](int v) { return v >= 0 ? v / 2 : -((1 - v) / 2); };  // sar 1
+    int index = floor_half(ry) * kWindowCells + floor_half(rx - 13);
+    if ((rx & 1) == 0 && (party.x & 1) != 0) ++index;
+    if ((ry & 1) != 0 && (party.y & 1) != 0) index += kWindowCells;
+    return index;
+}
+
 }  // namespace chr::game

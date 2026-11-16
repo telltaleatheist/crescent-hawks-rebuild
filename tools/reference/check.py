@@ -532,6 +532,34 @@ PEOPLE_FULL_CASES = [
     for n in range(1, 21)
 ]
 
+# Mission 0 (training mode 0, docs/combat.md 1.3): the walking course.
+# Flag 00 stays 0, as in a new game.
+COURSE_CASES = [dict(case, name=case["name"].replace("training_", "course_")) for case in TRAINING_CASES[:9]]
+COURSE_CASES[4] = dict(COURSE_CASES[4], keys=COURSE_CASES[4]["keys"].replace("flag:00=02 ", ""))
+COURSE_CASES = [dict(case, compare=False) for case in COURSE_CASES[:8]] + [
+    # The Locust walks in, and the course starts: the party waits in its 'Mech.
+    dict(COURSE_CASES[8], name="course_start", match=SCREEN)]
+# The course's way to the southeast corner and back (found with chr's own
+# step check, which the original agrees with along it).
+COURSE_TO_CORNER = "pgdn*14 right*4 pgdn*2 down*8 pgdn*21 right*12"
+COURSE_BACK_1 = "home*24 up*6 right down pgup down pgup down pgup down pgup*2 up*3"
+COURSE_BACK_2 = "up*2 home*12 left*30"
+COURSE_FULL_CASES = [
+    {"name": "course_step_%d" % n, "keys": "right", "match": SCREEN} for n in range(1, 4)
+] + [
+    # The rest of the way to the corner: "You've made it to the southeast
+    # corner", a key.
+    {"name": "course_corner", "keys": COURSE_TO_CORNER, "match": SCREEN},
+    # The key, and half the way back.
+    {"name": "course_returning", "keys": "enter " + COURSE_BACK_1, "match": SCREEN},
+    # The rest: at the door the mission ends and the script goes on.
+    {"name": "course_ended", "keys": COURSE_BACK_2, "match": SCREEN},
+    # A key: the script ends (special 3 hands the 'Mech back) and the party
+    # is in town again, on foot.
+    {"name": "course_in_town", "keys": "enter", "match": SCREEN},
+    {"name": "course_walk_on", "keys": "down*3", "match": SCREEN},
+]
+
 # The computer hands the fight back (a key at the round's poll) and the
 # player flees, and fails: 52 idle passes in town before the walk to the
 # training center and six computer-fought rounds give a flee draw with
@@ -562,6 +590,7 @@ SEQUENCES = [("town", CASES, FULL_CASES, []), ("training", TRAINING_CASES, [], [
              ("kick", KICK_CASES, KICK_FULL_CASES, []),
              ("scan", SCAN_CASES, SCAN_FULL_CASES, []),
              ("people", PEOPLE_CASES, PEOPLE_FULL_CASES, []),
+             ("course", COURSE_CASES, COURSE_FULL_CASES, []),
              ("handover", [], HANDOVER_CASES, [])]
 
 # The feeder (tools/capture/snap.asm, docs/reference.md) hands over a key at

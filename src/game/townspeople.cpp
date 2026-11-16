@@ -47,15 +47,10 @@ int window_tile(const formats::MtpMap& map, const Terrain& terrain, MapPosition 
     int rel_x = wrap16(next.x - party.x);
     if (rel_x < -0x80) rel_x += 0x80;
     if (rel_x > 0x80) rel_x -= 0x80;
-    rel_x += 0x1a;
     int rel_y = wrap16(next.y - party.y);
     if (rel_y < wrap16(0xf080)) rel_y += 0xf80;
     if (rel_y > 0xf80) rel_y -= 0xf80;
-    rel_y += 0x0c;
-    auto floor_half = [](int v) { return v >= 0 ? v / 2 : -((1 - v) / 2); };  // sar 1
-    int index = floor_half(rel_y) * 24 + floor_half(rel_x - 13);
-    if ((rel_x & 1) == 0 && (party.x & 1) != 0) ++index;
-    if ((rel_y & 1) != 0 && (party.y & 1) != 0) index += 24;
+    const int index = window_offset(party, rel_x, rel_y);
     const auto cell = window_cell(terrain, party, view_corner_index(party) + index);
     outside = !cell;
     return cell ? *cell : tile_at(map, next);
@@ -166,12 +161,15 @@ void Townspeople::step(int i, const formats::MtpMap& map, const Terrain& terrain
         if (outside) outside_window = true;
         if (tile < 0 || tile >= blocking_) continue;
         // BTECH.EXE 1e31:16ab (Ghidra FUN_1e31_16ab): a character of the
-        // party where it was last drawn, or another person. (And a 'Mech's
-        // three half-cells: none in town.)
+        // party where it was last drawn, or another person; then a 'Mech
+        // figure (active or not) on the same row, at its x or a half-cell
+        // either side (stepped with 1000:191b).
         bool taken = false;
         for (const auto& place : party_places) taken = taken || place == next;
         for (std::size_t j = 0; j < walkers_.size(); ++j)
             taken = taken || (j != std::size_t(i) && walkers_[j].at == next);
+        for (const auto& m : mech_places_)
+            taken = taken || (m.y == next.y && (m.x == next.x || move_x(m.x, -1) == next.x || move_x(m.x, 1) == next.x));
         if (taken) {
             // F:d57e: someone stands on the target itself.
             if (next == w.target) target_taken = true;

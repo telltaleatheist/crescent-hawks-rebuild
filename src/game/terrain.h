@@ -55,6 +55,8 @@ public:
     // The window around `position` with the map last placed, built once
     // for each block the position is in.
     const Window& window(formats::MapPosition position) const;
+    // The placed map's cells have changed: the window is built again.
+    void map_changed() { built_.reset(); }
     // Cell `index` of that window. Before it, as in the original's memory,
     // the nine block values (P:07a4), the grids (P:0564) and the masks
     // (P:0324); nothing past it or before those (memory the rebuild does

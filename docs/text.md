@@ -69,6 +69,8 @@ their IDs; an override file can replace any of them.
 | walk.too_deep | 46db:0410 | The water is too deep that way. |
 | walk.enter_question | 46db:0430 | Will you enter the (new line) |
 | walk.enter_question_end | 46db:0444 | ? |
+| walk.mech_enter_question | 46db:0446 | Will you enter the (new line): the copy asked of a 'Mech |
+| walk.mech_enter_question_end | 46db:045a | ? |
 | walk.direction.north ... northwest | 46db:006c - 00a7 | (new line) North, Northeast, East, Southeast, South, Southwest, West, Northwest |
 | ui.answer_yes_picked | 46db:03ee | the yes/no line, Yes picked |
 | ui.answer_no_picked | 46db:03fe | the yes/no line, No picked |
@@ -110,11 +112,11 @@ about the controls or a rule's state (out of ammo, overheated, can't kick). *Imp
 covers names (people, places, 'Mechs, weapons, armour, 'Mech parts), story and dialogue,
 narration of what happened, descriptions and flavour, and the original's own notices.
 
-### Interface: in the repo default (149 IDs)
+### Interface: in the repo default (151 IDs)
 
 | IDs | Count | What |
 |---|---|---|
-| walk.too_deep, walk.enter_question, walk.enter_question_end, walk.direction.* | 11 | walking messages, the move log |
+| walk.too_deep, walk.enter_question, walk.enter_question_end, walk.mech_enter_question, walk.mech_enter_question_end, walk.direction.* | 13 | walking messages, the move log |
 | ui.answer_yes_picked, ui.answer_no_picked | 2 | the yes/no line |
 | panel.party_heading, panel.cbills_label | 2 | panel labels |
 | intro.first_time, intro.load_old_game | 2 | the start-up's two questions |
@@ -128,7 +130,7 @@ narration of what happened, descriptions and flavour, and the original's own not
 | shot.* but shot.squashed, shot.arena_damaged, shot.urbanmechs | 26 | the pieces of a shot's message, hit and miss, critical, kill |
 | location.0-10 | 11 | the hit locations, as labels |
 
-### Imported only (602 IDs)
+### Imported only (604 IDs)
 
 | IDs | Count | Why |
 |---|---|---|
@@ -138,7 +140,7 @@ narration of what happened, descriptions and flavour, and the original's own not
 | mech.*, weapon.0-32, armour.0-5, quiz.part.0-19 | 67 | names of 'Mechs, weapons, armour and parts |
 | quiz.message, quiz.question | 2 | the quiz scene, which belongs to the copy protection and the manual |
 | intro.notice.0-3 | 4 | the original's trademark and copyright notice: ours would not be theirs |
-| course.* | 12 | the teacher's dialogue |
+| course.* | 16 | the teacher's dialogue |
 | talk.hello, talk.going_to, talk.reason.0-11 | 14 | the townspeople's dialogue |
 | after.* but the seven above | 11 | narration: repairs, scrap, salvage, loot |
 | unit.suspicious | 1 | the double agent's clue (story) |
