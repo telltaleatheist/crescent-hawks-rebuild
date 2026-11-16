@@ -93,6 +93,22 @@ their IDs; an override file can replace any of them.
 | mapN.place.E | MAPN.MTP | the place behind entrance E |
 | mapN.person.P | MAPN.MTP | the map's people |
 
+The combat texts (import version 7) are grouped by the function that prints them; the import
+table in `src/formats/exe_data.cpp` gives each one's address:
+
+| IDs | Printed by | What |
+|---|---|---|
+| mech.&lt;id&gt;, weapon.0 - weapon.32 | (the rule tables) | the 'Mech templates' and weapons' names, read from inside the tables |
+| fight.* | 203b:000a | the encounter, the engage question, the double agent's story (fight.agent.0-16), the end of a fight, the five encounter descriptions (fight.encounter.0-4) |
+| orders.*, options.*, scan.* | 203b:14c3 and its helpers, 15ab:1467 | the orders menus, movement messages, the movement modes (orders.mode.0-2), the combat options, the Scan browser |
+| weapons.*, pick.*, destroyed.* | 1d43 | the Use Weapons screen, the range bands (weapons.range.0-3), the target picker, a 'Mech destroyed |
+| shot.* | 22e8:000c, 22e8:12c7, 1e31 | the pieces of a shot's message, hit and miss, critical, kills |
+| location.0 - location.10 | 1e31:1b8f | the hit locations, by location index (armour byte 0x11 + index), not the program's name order |
+| condition.0 - condition.10 | 1e31:031e | a person's condition, by hit points |
+| armour.0 - armour.5 | (DG:4e8a) | the personal armour types |
+| unit.*, after.* | 15ab | the unit panel; repairs, scrap, salvage and loot after a fight |
+| mission.* | 17dc:0629 | the training missions' messages |
+
 The question "Will you enter the Citadel?" is `walk.enter_question` + `map1.place.1` +
 `walk.enter_question_end`. The yes/no keys are still Y and N whatever the language (to be made
 data with the input layer).

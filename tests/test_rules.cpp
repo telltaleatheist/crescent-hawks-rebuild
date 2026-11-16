@@ -72,3 +72,21 @@ TEST(import_writes_the_rules_and_names) {
         CHECK(json.find("\"id\": \"" + formats::mech_text_id(id) + "\"") != std::string::npos);
     CHECK(json.find("\"id\": \"weapon.32\", \"address\": \"46db:30f8\"") != std::string::npos);
 }
+
+// Every text in the import table ends inside its span: the span holds the
+// whole text and the byte that ends it, so none is cut short.
+TEST(every_text_span_holds_its_text) {
+    const auto dir = chrtest::game_dir();
+    if (dir.empty()) {
+        chrtest::skip("no game folder (set CHR_GAME_DIR)");
+        return;
+    }
+    const auto exe = formats::OriginalExe::load(dir);
+    for (const auto& span : formats::OriginalExe::table()) {
+        if (span.kind != formats::ExeSpan::Kind::Text) continue;
+        const auto text = exe.text(span.name);
+        const auto bytes = exe.get(span.name);
+        const bool ends = text.size() < bytes.size() ? bytes[text.size()] == 0 : (bytes.back() & 0x80) != 0;
+        if (!ends) chrtest::fail(__FILE__, __LINE__, std::string(span.name) + " is cut short");
+    }
+}
