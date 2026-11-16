@@ -202,11 +202,11 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 |---|---|---|---|---|---|
 | 203b:000a | 0x203ba | `FUN_203b_000a` | 5240 | The fight: set-up, engage question, the round loop, the end, the after-fight steps (docs/combat.md) | read |
 | 203b:1482 | 0x21832 | `FUN_203b_1482` | 65 |  | - |
-| 203b:14c3 | 0x21873 | `FUN_203b_14c3` | 689 | The player's orders menu for each unit; 1 = flee | rebuilt in part (all but Kick and Scan) |
+| 203b:14c3 | 0x21873 | `FUN_203b_14c3` | 689 | The player's orders menu for each unit; 1 = flee | rebuilt in part (all but Scan) |
 | 203b:1774 | 0x21b24 | `FUN_203b_1774` | 455 | A unit on the orders screen: the view on it, the box, its path as arrows | rebuilt |
 | 203b:193b | 0x21ceb | `FUN_203b_193b` | 740 | A figure's path from its orders, and its movement cost | rebuilt |
 | 203b:1c1f | 0x21fcf | `FUN_203b_1c1f` | 1554 | A move order: the type question, the reasons, the map cursor and one waypoint | rebuilt |
-| 203b:2231 | 0x225e1 | `FUN_203b_2231` | 139 |  | - |
+| 203b:2231 | 0x225e1 | `FUN_203b_2231` | 139 | The Kick order: the target picker for slot 11, with both hips | rebuilt |
 | 203b:22bc | 0x2266c | `FUN_203b_22bc` | 440 | A 'Mech's movement points (walk/run/jump, damage, heat) | rebuilt |
 | 203b:2474 | 0x22824 | `FUN_203b_2474` | 124 | A person's movement points | rebuilt |
 | 203b:24f0 | 0x228a0 | `FUN_203b_24f0` | 102 |  | - |

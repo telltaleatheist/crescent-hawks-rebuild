@@ -151,7 +151,7 @@ machines of the day each probably took several display frames. The platform hold
 sounds are recorded but not played yet (no sound is rebuilt). A story picture is held 50 frames
 at its last frame.
 
-Not rebuilt yet: the sounds, the player's Kick and Scan orders and orders on foot (2.6), the Arena's spectator, the double agent, and what follows the fight (2.13 is
+Not rebuilt yet: the sounds, the player's Scan order (2.6), the Arena's spectator, the double agent, and what follows the fight (2.13 is
 done; 2.15 is not).
 
 **The cell window in a fight.** The planner's path (3.3) and the line of sight (3.6) read map
@@ -439,6 +439,13 @@ instead.
     it. If no enemy figure were active the loop would never end; a fight with none is over first.
   - On foot: the weapon's target now and its range band, with a yes/no to change it; then the
     picker for slot 0.
+- **Kick** (`203b:2231`, rebuilt, `Town::kick_order`): window 4 cleared. With both hip
+  actuators (bit 3 of bytes 0x24 and 0x25), "Choose the 'Mech to kick" and the target picker for
+  weapon 0x20 into slot 11; without, a message and a key. Either way the orders menu's last item
+  (menu 3, F:00c8) is set to Kick, so the bar comes back on it. The weapons list also uses slots
+  0-11, one per listed weapon, and the round reads slot 11 of a 'Mech as the Kick: a 'Mech with
+  twelve weapon items would show its twelfth weapon's target in the kick's slot, and ordering
+  that weapon would order a kick.
 - **Computer** (`1e31:03ab(fig, 1)`): the planner, then the unit's screen with the planned path
   (`203b:1774(fig, 1)`), and the position restored. The menu's pass for a unit under the computer
   shows "The computer is currently moving this unit" and does the same.

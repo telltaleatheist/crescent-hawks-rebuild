@@ -148,7 +148,8 @@ Flee. `moves` gives the player's move orders and fights on them (docs/combat.md 
 into figure 1's orders (bug 17), then a round. `weapons` opens Use Weapons, gives the first
 weapon the enemy through the target picker and fights four rounds (the picker's view reaches
 past the map file's east edge, so its last column is not compared: docs/combat.md 1.2.2).
-`handover` (long only) lets the computer fight six rounds, hands the fight back with a key at
+`kick` orders a kick at the enemy through the picker (its last map column is left out for the
+same reason) and fights three rounds. `handover` (long only) lets the computer fight six rounds, hands the fight back with a key at
 the round's poll, and flees and fails. The training
 cases at its start are captured but not compared (`"compare": False`): the `training` sequence
 compares them. These cases compare the fight's tables too: a case with

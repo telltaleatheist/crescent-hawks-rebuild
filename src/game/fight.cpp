@@ -407,7 +407,8 @@ std::optional<int> Town::orders_menu(Combat& combat, KeySource& keys) {
             figs_.computer[std::size_t(fig)] = false;
             show_unit(combat, fig, false);
         }
-        if (mech && c == 4) return stop("the kick order");                                  // 203b:2231
+        if (mech && c == 4)
+            if (!kick_order(combat, fig, keys)) return std::nullopt;                                  // 203b:2231
         if (((mech && c == 5) || (!mech && c == 3)) && !no_computer_order_) plan_shown(combat, fig);
         if ((mech && c == 3) || (!mech && c == 2))
             if (!weapons_order(combat, fig, keys)) return std::nullopt;
@@ -662,6 +663,25 @@ bool Town::weapons_order(Combat& combat, int fig, KeySource& keys) {
         }
     } while (choice != count);
     return finish();
+}
+
+// BTECH.EXE 203b:2231 (Ghidra FUN_203b_2231)
+// Kick: with both hips, the target picker for the kick (weapon item 0x21)
+// into target slot 11; without, a message and a key. The orders menu's bar
+// goes back to Kick.
+bool Town::kick_order(Combat& combat, int fig, KeySource& keys) {
+    text_.select_window(4);
+    text_.clear_window();
+    const auto& rec = mechs_[std::size_t(fig)];
+    if ((rec[mech::kLeftActuators] & 8) && (rec[mech::kRightActuators] & 8)) {
+        print_id("orders.choose_kick");
+        if (!pick_target(combat, fig, 0x20, 0x0b, keys)) return false;
+    } else {
+        print_id("orders.cant_kick");
+        if (!read_key(keys)) return false;  // 273d:0259
+    }
+    menu_last_[3] = 4;  // F:00c8
+    return true;
 }
 
 // BTECH.EXE 1d43:07cb (Ghidra FUN_1d43_07cb)

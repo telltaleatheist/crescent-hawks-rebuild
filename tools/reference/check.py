@@ -471,6 +471,22 @@ WEAPON_FULL_CASES = [
     for n in range(1, 5)
 ]
 
+# Kick (203b:2231): the picker for target slot 11, then Begin Fight and
+# rounds with the kick ordered.
+KICK_CASES = [dict(case, compare=False) for case in ORDERS_CASES[:12]] + [
+    # "Choose the 'Mech to kick", the picker on the enemy Locust.
+    # Its last map column is past the map file's edge, as in weapons_picker.
+    {"name": "kick_picker", "keys": "up*5 enter",
+     "match": {"the panel": WHOLE_PANEL, "the map but its last column": (104, 0, 208, 200)}, "fight": True},
+]
+KICK_FULL_CASES = [
+    # Target here: back to the orders menu, its bar on Kick.
+    {"name": "kick_targeted", "keys": "enter", "match": SCREEN, "fight": True},
+] + [
+    {"name": "kick_round_%d" % n, "keys": "down*5 enter" if n == 1 else "enter", "match": SCREEN, "fight": True}
+    for n in range(1, 4)
+]
+
 # The computer hands the fight back (a key at the round's poll) and the
 # player flees, and fails: 52 idle passes in town before the walk to the
 # training center and six computer-fought rounds give a flee draw with
@@ -498,6 +514,7 @@ SEQUENCES = [("town", CASES, FULL_CASES, []), ("training", TRAINING_CASES, [], [
              ("moves", MOVE_CASES, MOVE_FULL_CASES, []),
              ("waypoints", [], WAYPOINT_CASES + WAYPOINT_FULL_CASES, []),
              ("weapons", WEAPON_CASES, WEAPON_FULL_CASES, []),
+             ("kick", KICK_CASES, KICK_FULL_CASES, []),
              ("handover", [], HANDOVER_CASES, [])]
 
 # The feeder (tools/capture/snap.asm, docs/reference.md) hands over a key at
