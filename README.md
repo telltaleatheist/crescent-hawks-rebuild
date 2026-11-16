@@ -49,6 +49,11 @@ data folder (`--data-dir DIR`, else `CHR_DATA_DIR`, else your
 application-data folder); `chr --import` does it again. `--text FILE` lays a
 translation or rewrite over the game's text (docs/import.md).
 
+The training center's first visit had a quiz on 'Mech parts, the original's
+copy protection. The rebuild has no such check: it skips the quiz. With
+`--show-quiz` it shows the quiz as the original laid it out, with the right
+part already picked and any answer accepted (docs/combat.md 7).
+
 ## Credits and licence
 
 - **BattleTech: The Crescent Hawk's Inception** was written by Westwood

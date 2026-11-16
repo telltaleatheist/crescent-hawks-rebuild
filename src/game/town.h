@@ -18,6 +18,7 @@
 #include "formats/mtp.h"
 #include "formats/rules.h"
 #include "game/fight.h"
+#include "game/training_quiz.h"
 #include "game/figures.h"
 #include "game/flags.h"
 #include "game/map_view.h"
@@ -168,6 +169,14 @@ public:
     const std::array<int, formats::kMenus.size()>& menu_last() const { return menu_last_; }
     const std::array<PanelStats, 8>& stats() const { return stats_; }
 
+    // Shows the training center's quiz (--show-quiz, off by default): the
+    // scene from the player's files, with no check (game/training_quiz.h).
+    // It needs the rules (the parts' places); without them it is not shown.
+    void set_show_quiz(bool on) { show_quiz_ = on; }
+    // The quiz scene, while it shows: the renderer draws BTSTATS.CMP and the
+    // part's box instead of the town, then the text.
+    std::optional<QuizScene> quiz() const { return quiz_; }
+
     // The rule tables (the 'Mech templates and the combat tables): a fight
     // needs them. Without them a fight stops where it would begin.
     void set_rules(const formats::Rules* rules) { rules_ = rules; }
@@ -210,7 +219,9 @@ private:
     // the keys ran out while it waited for one (place_open_ is then set).
     bool visit_place(int entrance, KeySource& keys);
     bool run_script(int file, KeySource& keys);
-    std::optional<int> menu(int m, KeySource& keys);
+    // `start`: the item the bar starts on instead of the remembered one (the
+    // quiz scene's right part); the item chosen is remembered as usual.
+    std::optional<int> menu(int m, KeySource& keys, std::optional<int> start = std::nullopt);
     bool special(int n, KeySource& keys);
     bool talk(KeySource& keys);
     void show_picture(int number, int mode);
@@ -226,6 +237,9 @@ private:
     void place_mission(int mechs, int people);
     bool fight(int kind, KeySource& keys);
     bool orders_menu(KeySource& keys);
+    // game/training_quiz.cpp: the quiz's scene (--show-quiz).
+    bool show_quiz(KeySource& keys);
+    static constexpr int kQuizMenu = 0x25;
     std::vector<Figure> walk_in_figures();
     std::vector<Figure> fight_figures_drawn() const;
     void print_unit_heading(int fig);
@@ -298,6 +312,8 @@ private:
     std::vector<XorBox> boxes_;
     bool party_box_shown_ = true;
     bool fight_unfinished_ = false;
+    bool show_quiz_ = false;
+    std::optional<QuizScene> quiz_;
 };
 
 }  // namespace chr::game

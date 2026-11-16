@@ -43,6 +43,7 @@
 #include "platform/map_layer.h"
 #include "platform/original_assets.h"
 #include "platform/panel_layer.h"
+#include "platform/quiz_layer.h"
 #include "platform/renderer.h"
 #include "platform/text_layer.h"
 
@@ -56,6 +57,7 @@ struct Options {
     std::filesystem::path data_dir;  // the imported text and font
     bool import = false;
     bool state = false;      // print the game state after the script
+    bool show_quiz = false;  // show the training center's quiz (no check)
     int map = 0;             // 0: the start-up, then map 1
     // A test aid: flags set as the town starts (--set-flag NN=VV, hex).
     std::vector<std::pair<int, int>> set_flags;
@@ -88,6 +90,8 @@ bool parse(int argc, char** argv, Options& options) {
             options.screenshot = argv[++i];
         } else if (arg == "--state") {
             options.state = true;
+        } else if (arg == "--show-quiz") {
+            options.show_quiz = true;
         } else if (arg == "--set-flag" && i + 1 < argc) {
             // Parsed like the script's set:NN=VV, which checks it.
             try {
@@ -99,7 +103,9 @@ bool parse(int argc, char** argv, Options& options) {
             }
         } else {
             std::fprintf(stderr, "usage: chr [--game-dir DIR] [--data-dir DIR] [--import] [--map N] [--script KEYS]\n"
-                         "           [--text FILE] [--screenshot FILE.bmp] [--state]\n"
+                         "           [--text FILE] [--screenshot FILE.bmp] [--state] [--show-quiz]\n"
+                         "  --show-quiz: show the training center's quiz (no check: the right part is\n"
+                         "           picked and any answer goes on); by default it is skipped\n"
                          "  test aids (docs/reference.md): [--set-flag NN=VV] sets a flag (hex) as the town\n"
                          "           starts; a script's set:NN=VV sets one at that point\n");
             return false;
@@ -290,6 +296,7 @@ int main(int argc, char** argv) {
                 town = std::make_unique<chr::game::Town>(map, options.map, start, texts);
                 town->set_game_dir(options.game_dir);
                 if (rules) town->set_rules(&*rules);
+                town->set_show_quiz(options.show_quiz);
                 if (start_up) town->start_up();
                 else town->draw_panel();
                 for (const auto& [f, v] : options.set_flags) town->set_flag_when_town_starts(f, v);
@@ -354,6 +361,9 @@ int main(int argc, char** argv) {
             bool drawn = true;
             if (const auto screen = town ? town->full_screen() : std::nullopt) {
                 drawn = renderer.draw(*screen, 0, 0);
+            } else if (const auto quiz = town ? town->quiz() : std::nullopt) {
+                drawn = chr::platform::draw_quiz(renderer, *quiz, palette);
+                drawn = chr::platform::draw_text(renderer, town->text(), palette) && drawn;
             } else if (town) {
                 const auto view = town->view();
                 drawn = chr::platform::draw_map(renderer, view);

@@ -874,17 +874,29 @@ flag the original leaves uninitialised) counts as "missed" and is logged. Bugs 1
 
 `1c67:08a8` (FUN_1c67_08a8) runs on entering the training center (entrance 0) while flag 14 is 0 and
 no demo plays (docs/scripts.md, "Entering a place"). It is the original's copy protection: a quiz
-against the 'Mech pictures in the manual.
+on the 'Mech parts pictured in the manual.
 
-1. BTSTATS.CMP (name at DG:27e6) is loaded and shown (not when F:4594). A message (DG:27f2) says a
-   written test comes first; a key.
-2. Three questions. Each picks a picture number r mod 10 (signed division), drawn again until it
-   was not asked before; a box is drawn round picture i (DG:28c4 / DG:28d8); a menu of 20 'Mech
-   names (menu 0x25, the list at DG:4de2, after DG:286c) asks which it is; the answer is compared
-   with DG:28ec[i]. Any wrong answer sets the fail flag.
+1. BTSTATS.CMP (name at DG:27e6) is loaded and unpacked off the screen (the disk check 1000:28cc
+   first; not when F:4594). A message (DG:27f2, `quiz.message`) in the big box (window 6, frame
+   style 0) says a written quiz comes first; a key.
+2. Three questions. For each: the picture is copied over the whole screen, a line drawn down
+   x 128 from row 0 to 192 (colour 9; 10 on CGA), the left strip (window 8) cleared, "Identify
+   this 'Mech part:" printed (DG:286c, `quiz.question`), and the 20 part names written from row 4,
+   white on black (`273d:00d5`; far pointers at DG:4de2, `quiz.part.0`-`quiz.part.19`). Then
+   the part: r mod 10 (signed division), drawn again while it was asked before. Part i is boxed
+   on the picture: a 9x9 square in white at (DG:28c4[i] - 3, DG:28d8[i] - 3), and a white bar
+   from the line at x 128 to the square, its rows +2 to +6. Menu 0x25 (20 items from row 4,
+   16 cells wide: the part names) asks which part it is, and the answer is compared with
+   DG:28ec[i]. Any wrong answer sets the fail flag.
 3. Failed: text DG:2886, flag 14 = ff (no new try for 255 ticks), a key, and the place is not
    entered.
-4. The panel is redrawn.
+4. `287f:1fbe` sets the screen back, and the panel is redrawn (`4cac(1)`, the party box cleared,
+   then the box above it).
+
+The tables are ten words each: x (DG:28c4), y (DG:28d8) and the answer (DG:28ec), one per part
+pictured. Every answer is one of menu 0x25's 20 items. Menu 0x25's count (20) and the loop's
+(0x14, `1c67:0b1a`) agree with the 20 names at DG:4de2; the pointers after them belong to other
+texts.
 
 The quiz itself sets flag 14 only on a failure, but TRAINING.BLD sets it to ff as each mission
 starts (after special 1), and the town's ticks count it down. While it is nonzero the training
@@ -897,13 +909,20 @@ that it always passes. That is not the original's behaviour, so this page descri
 the program was built and nothing here relies on the altered copy. Following docs/rules.md (rule 3),
 the rebuild has no protection check and nothing in it can fail.
 
-**The draws are kept.** The original picks the three pictures (step 2) before it compares any
-answer, so the draws are the same whether the player passes or fails. The rebuild makes them on
-every entry while flag 14 is 0 (`game/training_quiz.h`, `draw_quiz_pictures`) and shows nothing for
-now; how the scene looks (for example the stats pictures with the answer given in our own words)
-is still to be decided. The original also waits for input here (a key after the message, then three menu
-answers), which the rebuild does not, so a rig script that enters the training center must leave
-them out on the rebuild's side.
+**The draws are kept.** The original picks each part before it reads that question's answer, so
+the draws are the same whether the player passes or fails. The rebuild makes them on every
+entry while flag 14 is 0 (`game/training_quiz.h`, `draw_quiz_parts`).
+
+**The scene is optional.** By default the rebuild skips the scene: the draws are made and nothing
+is shown, and the original's key and three menu answers are not asked (a rig script leaves them
+out on the rebuild's side, `orig:`). With `chr --show-quiz` (`Town::show_quiz`) it plays the
+scene as above from the player's own files: BTSTATS.CMP, the part's box and bar
+(`platform/quiz_layer.cpp`), and the question and part names from imported text IDs. The
+parts' places and answers are imported into `rules/quiz.json`. There is no check: each menu's
+bar starts on the right part, any answer is taken, there is no fail path, and the quiz never
+sets flag 14. The menu remembers the item chosen, as the original's does. The rig's `quiz`
+sequence compares the scene with the original's, over the whole screen and the state
+(docs/reference.md).
 
 ## 8. Open questions
 

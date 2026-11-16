@@ -87,6 +87,7 @@ if(SDL3_FOUND)
     src/platform/map_layer.cpp
     src/platform/original_assets.cpp
     src/platform/panel_layer.cpp
+    src/platform/quiz_layer.cpp
     src/platform/renderer.cpp
     src/platform/text_layer.cpp
   )

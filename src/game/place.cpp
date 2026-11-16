@@ -69,13 +69,16 @@ bool Town::visit_place(int entrance, KeySource& keys) {
     // flag 14 is clear and no demo plays (F:3938, F:458c; the rebuild has no
     // demo yet). A failed quiz sets flag 14 to ff, and so does TRAINING.BLD
     // as each mission starts; the town's ticks count it down. The rebuild
-    // has no check and cannot fail; it makes the quiz's draws and shows
-    // nothing yet.
+    // has no check and cannot fail. By default it makes the quiz's draws and
+    // shows nothing; with --show-quiz it shows the scene (game/training_quiz.cpp).
     if (entrance == 0 && flags_[flag::kQuizLock] == 0) {
-        const auto pictures = draw_quiz_pictures(random_);
-        log_.push_back("training quiz: pictures " + std::to_string(pictures[0]) + " " +
-                       std::to_string(pictures[1]) + " " + std::to_string(pictures[2]) +
-                       " (not shown)");
+        if (show_quiz_ && rules_) {
+            if (!show_quiz(keys)) return false;
+        } else {
+            const auto parts = draw_quiz_parts(random_);
+            log_.push_back("training quiz: parts " + std::to_string(parts[0]) + " " + std::to_string(parts[1]) +
+                           " " + std::to_string(parts[2]) + " (not shown)");
+        }
         // The quiz's last steps are still seen: 1c67:0b40 redraws the panel
         // with the party box cleared, then clears the box above it.
         draw_panel(true);
@@ -238,11 +241,11 @@ bool Town::run_script(int file, KeySource& keys) {
 // BTECH.EXE 2656:0b5e (Ghidra FUN_2656_0b5e)
 // Menu m in the current window: a bar on the item it last chose, moved by
 // the arrows (wrapping), Enter or space to choose.
-std::optional<int> Town::menu(int m, KeySource& keys) {
+std::optional<int> Town::menu(int m, KeySource& keys, std::optional<int> start) {
     const auto& rec = menus_.at(std::size_t(m));
     int& last = menu_last_.at(std::size_t(m));
     if (last >= rec.items) last = 0;
-    int chosen = last;
+    int chosen = start && *start >= 0 && *start < rec.items ? *start : last;
     const auto& w = text_.window();
     const int top = w.y + rec.first_row;
     text_.xor_bar(w.x, top + chosen, rec.width, rec.highlight);

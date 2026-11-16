@@ -269,8 +269,46 @@ TRAINING_CASES = [dict(case, name="training_" + case["name"]) for case in CASES[
     },
 ]
 
-# Each sequence is one run of the original: (name, quick cases, --full cases).
-SEQUENCES = [("town", CASES, FULL_CASES), ("training", TRAINING_CASES, [])]
+# The training center's quiz, shown (chr --show-quiz, docs/combat.md 7).
+# The original asks it as built; the rebuild has no check, and its menu
+# starts on the right part. So the original's bar is moved onto the right
+# part (orig: keys, by DG:28ec's answers for the parts this run draws: 1, 6
+# and 9) before each comparison, and Enter takes it on both sides.
+QUIZ_CASES = TRAINING_CASES[:5] + [
+    {
+        # Yes: the message before the quiz, in the big box.
+        "name": "quiz_message",
+        "keys": "y",
+        "match": {"the panel": WHOLE_PANEL, "the map": WHOLE_MAP},
+    },
+    {
+        # A key: BTSTATS.CMP, the first part boxed, the part names.
+        "name": "quiz_part_1",
+        "keys": "enter orig:down*4",
+        "match": {"the screen": (0, 0, 320, 200)},
+    },
+    {
+        "name": "quiz_part_2",
+        "keys": "enter orig:down*14",
+        "match": {"the screen": (0, 0, 320, 200)},
+    },
+    {
+        "name": "quiz_part_3",
+        "keys": "enter orig:up*2",
+        "match": {"the screen": (0, 0, 320, 200)},
+    },
+    {
+        # The last answer: the training center greets, as without the scene.
+        "name": "quiz_greeting",
+        "keys": "enter",
+        "match": {"the panel": WHOLE_PANEL, "the map": WHOLE_MAP},
+    },
+]
+
+# Each sequence is one run of the original: (name, quick cases, --full
+# cases, chr's own options).
+SEQUENCES = [("town", CASES, FULL_CASES, []), ("training", TRAINING_CASES, [], []),
+             ("quiz", QUIZ_CASES, [], ["--show-quiz"])]
 
 # The feeder (tools/capture/snap.asm, docs/reference.md) hands over a key at
 # every 4th poll of the keyboard. The main loop polls once a pass, and after
@@ -342,7 +380,7 @@ def original_script(cases):
     return " ".join(tokens)
 
 
-def run_sequence(a, sequence, cases):
+def run_sequence(a, sequence, cases, chr_options=()):
     """One run of the original through `cases`, then chr for each case.
     True if every required rectangle and the state match."""
     ref_dir = os.path.join(a.work, "original-" + sequence)
@@ -357,7 +395,7 @@ def run_sequence(a, sequence, cases):
         name = case["name"]
         shot = os.path.join(a.work, name + ".bmp")
         out = subprocess.run([a.chr, "--game-dir", a.game_dir, "--data-dir", a.data_dir,
-                              "--script", chr_script(cases, i), "--screenshot", shot, "--state"],
+                              "--script", chr_script(cases, i), "--screenshot", shot, "--state", *chr_options],
                              check=True, env=env, stdout=subprocess.PIPE, text=True).stdout
         ours_state = [line for line in out.splitlines() if line.startswith("state ")]
         ref_state = state.original_state(os.path.join(ref_dir, name + ".bin"))
@@ -405,9 +443,9 @@ def main():
 
     os.makedirs(a.work, exist_ok=True)
     ok = True
-    for sequence, quick, full in SEQUENCES:
+    for sequence, quick, full, chr_options in SEQUENCES:
         cases = quick + (full if a.full else [])
-        ok = run_sequence(a, sequence, cases) and ok
+        ok = run_sequence(a, sequence, cases, chr_options) and ok
     return 0 if ok else 1
 
 

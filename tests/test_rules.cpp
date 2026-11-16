@@ -53,6 +53,18 @@ TEST(rules_round_trip_to_the_programs_bytes) {
     same(c.target_movement, "rules.target_movement");
     same(c.difficulty_armour, "rules.difficulty_armour");
     same(c.personal_armour, "rules.personal_armour");
+
+    // The quiz: ten parts, each answer one of menu 0x25's 20 names.
+    const auto word = [&](const char* name, int i) {
+        const auto b = exe.get(name);
+        return int(std::int16_t(b[std::size_t(2 * i)] | b[std::size_t(2 * i + 1)] << 8));
+    };
+    for (int i = 0; i < formats::kQuizParts; ++i) {
+        const auto& q = back.quiz[std::size_t(i)];
+        CHECK(q.x == word("rules.quiz_part_x", i) && q.y == word("rules.quiz_part_y", i));
+        CHECK(q.answer == word("rules.quiz_answers", i));
+        CHECK(q.answer >= 0 && q.answer < formats::kQuizPartNames);
+    }
 }
 
 TEST(import_writes_the_rules_and_names) {

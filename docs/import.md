@@ -19,13 +19,14 @@ user's application-data folder (on macOS `~/Library/Application Support/crescent
 
 ## What it writes
 
-    import.json          {"import_version": 8, "source": "BTECH.EXE DOS 1.03", "exe_sha256": ...,
+    import.json          {"import_version": 9, "source": "BTECH.EXE DOS 1.03", "exe_sha256": ...,
                           "table_sha256": ...}
     text/english.json    {"texts": [{"id": ..., "address": "ssss:oooo", "text": ...}, ...]}
     font/font.txt        the font (docs/formats/font.md)
     rules/mechs.json     the 'Mech templates   } the rule tables built into the program,
     rules/weapons.json   the weapon table      } with named fields
     rules/combat.json    the combat tables     } (docs/formats/mech.md)
+    rules/quiz.json      the training center quiz's ten parts: x, y and answer (docs/combat.md 7)
 
 The places' texts come from the player's .BLD files (docs/formats/bld.md): every text a script
 can print, as `bld.<file>.<offset>` with the address `FILE.BLD+offset`. All 26 .BLD files must

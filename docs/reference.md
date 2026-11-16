@@ -109,9 +109,12 @@ the poked case stays as a quick one.
 cases above) and `training` (training mission 2: the walk to the training center, its greeting,
 the briefing, the 'Mech menu, the Locust's walk-in under the first of the fight's three questions,
 the other two, and the orders menu with its box on the Locust; it pokes flags 00 and 13, standing in for passing missions 0-1
-and resting in the Barracks). A key written `orig:KEY` goes to the original only: the training
-center's quiz, which the rebuild does not show (docs/combat.md), takes a key and three menu
-answers there.
+and resting in the Barracks) and `quiz` (the same walk with `chr --show-quiz`: the message, the
+three questions and the greeting after them). A key written `orig:KEY` goes to the original
+only: without the scene, the training center's quiz takes a key and three menu answers there
+that the rebuild does not ask (docs/combat.md 7). In `quiz`, `orig:` keys move the original's
+menu bar onto the right part, where the rebuild's bar starts, before each comparison. A
+sequence can give chr options of its own (`SEQUENCES`).
 
 ## Findings
 
@@ -121,7 +124,11 @@ Every case in `check.py` is identical over the whole screen and in the game stat
   Citadel question;
 - full: 250 game ticks to the second money step, a walk west and south through MAP1 (146 steps,
   90 into walls), 400 idle passes, a walk back east and round, then waiting by the Barracks door
-  while a townsperson goes in and, 1,200 passes later, comes out.
+  while a townsperson goes in and, 1,200 passes later, comes out;
+- training: the walk to the training center (flags poked, above), its greeting, the briefing,
+  the 'Mech menu, the walk-in with the fight's three questions, and the orders menu;
+- quiz: the same walk with `--show-quiz`, the quiz's message and its three questions over the
+  whole screen, and the greeting after it.
 
 docs/town_loop.md has what the main loop does and when, docs/townspeople.md the townspeople.
 

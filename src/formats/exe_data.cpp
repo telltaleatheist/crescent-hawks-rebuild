@@ -38,6 +38,11 @@ constexpr std::array kDos103 = {
     ExeSpan{ExeSpan::Kind::Table, "rules.difficulty_armour", 0x46db, 0x165a, 7, "a8d217a43d0fbae8"},
     // The personal armour types' points, DG:4ddb + 0..5 (1000:3a49, 15ab:1a8f, 24d3:0a3c):
     ExeSpan{ExeSpan::Kind::Table, "rules.personal_armour", 0x46db, 0x4ddb, 6, "50b413dca9156173"},
+    // 1c67:08a8's ten pictured parts on BTSTATS.CMP: each one's point (x at
+    // DG:28c4, y at DG:28d8, words) and its answer, a menu 0x25 item (DG:28ec):
+    ExeSpan{ExeSpan::Kind::Table, "rules.quiz_part_x", 0x46db, 0x28c4, 20, "6ae32790932d22a7"},
+    ExeSpan{ExeSpan::Kind::Table, "rules.quiz_part_y", 0x46db, 0x28d8, 20, "0568d0aff7d516d2"},
+    ExeSpan{ExeSpan::Kind::Table, "rules.quiz_answers", 0x46db, 0x28ec, 20, "3fe5abf0257c084c"},
     // Text the game shows. The names are the text IDs (docs/text.md): a
     // text provider hands them out, and an override file can replace them.
     // 1000:1c12, the step check:
@@ -339,6 +344,31 @@ constexpr std::array kDos103 = {
     ExeSpan{ExeSpan::Kind::Text, "armour.3", 0x46db, 0x46bb, 12, "fe9e952266510b56"},
     ExeSpan{ExeSpan::Kind::Text, "armour.4", 0x46db, 0x46c7, 12, "4d49cde815750482"},
     ExeSpan{ExeSpan::Kind::Text, "armour.5", 0x46db, 0x46d3, 9, "6aab0bee353c5d01"},
+    // 1c67:08a8, the training center's quiz (docs/combat.md 7): the message
+    // before it, the question, and menu 0x25's 20 part names (the pointers
+    // at DG:4de2; 1c67:0ae9 prints 0x14 of them).
+    ExeSpan{ExeSpan::Kind::Text, "quiz.message", 0x46db, 0x27f2, 122, "eb0ca8afa59c4dbc"},
+    ExeSpan{ExeSpan::Kind::Text, "quiz.question", 0x46db, 0x286c, 26, "7c15df140b6c473d"},
+    ExeSpan{ExeSpan::Kind::Text, "quiz.part.0", 0x46db, 0x426e, 12, "8c538a8268c54ba9"},
+    ExeSpan{ExeSpan::Kind::Text, "quiz.part.1", 0x46db, 0x427a, 9, "b95de38623ddc5bf"},
+    ExeSpan{ExeSpan::Kind::Text, "quiz.part.2", 0x46db, 0x4283, 10, "93add76a773576d6"},
+    ExeSpan{ExeSpan::Kind::Text, "quiz.part.3", 0x46db, 0x428d, 13, "8cf89680065f4694"},
+    ExeSpan{ExeSpan::Kind::Text, "quiz.part.4", 0x46db, 0x429a, 13, "0fa52f9a2a5cdd54"},
+    ExeSpan{ExeSpan::Kind::Text, "quiz.part.5", 0x46db, 0x42a7, 14, "60ed793cc352035a"},
+    ExeSpan{ExeSpan::Kind::Text, "quiz.part.6", 0x46db, 0x42b5, 15, "f30809dc623ad40c"},
+    ExeSpan{ExeSpan::Kind::Text, "quiz.part.7", 0x46db, 0x42c4, 14, "e44001d451847d6c"},
+    ExeSpan{ExeSpan::Kind::Text, "quiz.part.8", 0x46db, 0x42d2, 14, "b036cab2a4d90c87"},
+    ExeSpan{ExeSpan::Kind::Text, "quiz.part.9", 0x46db, 0x42e0, 14, "bbb6a33d02783211"},
+    ExeSpan{ExeSpan::Kind::Text, "quiz.part.10", 0x46db, 0x42ee, 15, "3a826fedbb976cf1"},
+    ExeSpan{ExeSpan::Kind::Text, "quiz.part.11", 0x46db, 0x42fd, 14, "6107befc355be4b1"},
+    ExeSpan{ExeSpan::Kind::Text, "quiz.part.12", 0x46db, 0x430b, 15, "5173d3d2b77a3b54"},
+    ExeSpan{ExeSpan::Kind::Text, "quiz.part.13", 0x46db, 0x431a, 17, "475a9eaff7b9737a"},
+    ExeSpan{ExeSpan::Kind::Text, "quiz.part.14", 0x46db, 0x432b, 11, "6a0de3e12187ae49"},
+    ExeSpan{ExeSpan::Kind::Text, "quiz.part.15", 0x46db, 0x4336, 16, "fe06e083247377db"},
+    ExeSpan{ExeSpan::Kind::Text, "quiz.part.16", 0x46db, 0x4346, 16, "2cf1e4e6ab9c3766"},
+    ExeSpan{ExeSpan::Kind::Text, "quiz.part.17", 0x46db, 0x4356, 10, "d473631446e13256"},
+    ExeSpan{ExeSpan::Kind::Text, "quiz.part.18", 0x46db, 0x4360, 13, "86cf8b0ad80cef9b"},
+    ExeSpan{ExeSpan::Kind::Text, "quiz.part.19", 0x46db, 0x436d, 8, "ef0bfc1b90ae3790"},
 };
 
 constexpr std::uint16_t kLoadSegment = 0x1000;

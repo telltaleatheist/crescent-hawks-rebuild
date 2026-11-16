@@ -17,7 +17,8 @@ Answering Yes at an entrance calls `17dc:0008(n)` with the map's place number:
    playing (F:3938, F:458c), `1c67:08a8` runs first; if it returns nonzero, the place isn't
    entered at all. A failed quiz sets flag 14 to ff, and so does TRAINING.BLD as each mission
    starts; it counts down in the town's ticks, so the quiz comes back on the first visit after it
-   runs out (docs/combat.md, "The copy-protection check").
+   runs out (docs/combat.md, "The copy-protection check"). The rebuild has no check: it makes the
+   quiz's draws and, only with `--show-quiz`, shows the scene.
 5. Loads and deciphers the script (`17dc:1d30`), shows the place's picture if it has one (byte
    table DGROUP:141a by script number, through `1000:48b7` with mode 1, below), and runs the
    script from offset 0 until `end`.
@@ -182,7 +183,7 @@ Special 05's texts are imported from BTECH.EXE as `course.*` (docs/import.md).
 
 - **EB/EC** read F:d451 and d450, which nothing rebuilt sets yet; the rebuild never jumps.
 - **E4** (sound) and **E9** (new member) do nothing but log.
-- The specials other than 4, 5, 12 and 14, and the training center's quiz (1c67:08a8; only its draws are rebuilt).
+- The specials other than 4, 5, 12 and 14.
 
 ## Other descriptions
 

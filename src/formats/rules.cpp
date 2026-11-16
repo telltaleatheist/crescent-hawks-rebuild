@@ -133,6 +133,14 @@ Rules rules_from_original(const OriginalExe& exe) {
     copy(c.target_movement, "rules.target_movement");
     copy(c.difficulty_armour, "rules.difficulty_armour");
     copy(c.personal_armour, "rules.personal_armour");
+    // Three tables of ten words: x, y, answer.
+    const auto word = [&](std::string_view name, int i) {
+        const auto b = table(exe, name);
+        return int(std::int16_t(b[std::size_t(2 * i)] | b[std::size_t(2 * i + 1)] << 8));
+    };
+    for (int i = 0; i < kQuizParts; ++i)
+        rules.quiz[std::size_t(i)] = {word("rules.quiz_part_x", i), word("rules.quiz_part_y", i),
+                                      word("rules.quiz_answers", i)};
     return rules;
 }
 
@@ -212,6 +220,16 @@ RulesFiles write_rules_files(const Rules& rules, int import_version) {
                 number_list(c.difficulty_armour) + "},\n";
     f.combat += "  \"personal_armour\": {\"address\": \"46db:4ddb\", \"by\": \"armour type\", \"values\": " +
                 number_list(c.personal_armour) + "}\n}\n";
+
+    f.quiz = header(import_version, "the training center quiz's parts (docs/combat.md 7)");
+    f.quiz += "  \"address\": {\"x\": \"46db:28c4\", \"y\": \"46db:28d8\", \"answer\": \"46db:28ec\"},\n"
+              "  \"parts\": [\n";
+    for (int i = 0; i < kQuizParts; ++i) {
+        const auto& q = rules.quiz[std::size_t(i)];
+        f.quiz += std::string(i ? ",\n" : "") + "    {\"x\": " + std::to_string(q.x) + ", \"y\": " + std::to_string(q.y) +
+                  ", \"answer\": " + std::to_string(q.answer) + "}";
+    }
+    f.quiz += "\n  ]\n}\n";
     return f;
 }
 
@@ -271,6 +289,19 @@ Rules read_rules_files(const RulesFiles& files) {
     fill(c.target_movement, member(member(combat, "target_movement"), "values"));
     fill(c.difficulty_armour, member(member(combat, "difficulty_armour"), "values"));
     fill(c.personal_armour, member(member(combat, "personal_armour"), "values"));
+
+    const Json quiz = parse_json(files.quiz);
+    const auto& parts = member(quiz, "parts").array();
+    if (parts.size() != std::size_t(kQuizParts)) throw FormatError("rules: the quiz needs 10 parts");
+    for (int i = 0; i < kQuizParts; ++i) {
+        const auto& j = parts[std::size_t(i)];
+        const auto in = [&](std::string_view key, int lo, int hi) {
+            const double v = member(j, key).number();
+            if (v < lo || v > hi || v != double(int(v))) throw FormatError("rules: a quiz part's " + std::string(key) + " is out of range");
+            return int(v);
+        };
+        rules.quiz[std::size_t(i)] = {in("x", 0, 319), in("y", 0, 199), in("answer", 0, kQuizPartNames - 1)};
+    }
     return rules;
 }
 
@@ -279,7 +310,7 @@ Rules read_rules(const fs::path& data_dir) {
         const auto bytes = read_file(rules_dir(data_dir) / name);
         return std::string(bytes.begin(), bytes.end());
     };
-    return read_rules_files({read(kRulesFiles[0]), read(kRulesFiles[1]), read(kRulesFiles[2])});
+    return read_rules_files({read(kRulesFiles[0]), read(kRulesFiles[1]), read(kRulesFiles[2]), read(kRulesFiles[3])});
 }
 
 }  // namespace chr::formats

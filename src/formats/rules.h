@@ -7,6 +7,8 @@
 //   rules/weapons.json   the 33 weapons (people's, 'Mechs', the Kick)
 //   rules/combat.json    hit locations, clusters, facing sides, the target
 //                        movement modifier, difficulty, personal armour
+//   rules/quiz.json      the training center quiz's ten parts: where each
+//                        is on BTSTATS.CMP and its menu item
 //
 // The repo has the layouts and addresses only, never the values. What the
 // player reads as a 'Mech's or a weapon's name is a text (mech.<id>,
@@ -63,12 +65,25 @@ struct CombatTables {
     std::array<std::uint8_t, 6> personal_armour{};
 };
 
+// The training center's quiz (1c67:08a8, docs/combat.md 7): ten parts
+// pictured on BTSTATS.CMP. Each has a point on the 320x200 screen, which
+// the quiz boxes, and its answer, an item of menu 0x25 (the part names
+// quiz.part.<n>).
+struct QuizPart {
+    int x = 0, y = 0;
+    int answer = 0;
+};
+inline constexpr int kQuizParts = 10;
+inline constexpr int kQuizPartNames = 20;
+using QuizTables = std::array<QuizPart, kQuizParts>;
+
 struct Rules {
     std::vector<MechTemplate> mechs;
     // By weapon number. The name bytes (00-0a) are left 0: the name is the
     // text weapon.<n>.
     std::vector<WeaponRecord> weapons;
     CombatTables combat;
+    QuizTables quiz{};
 };
 
 // The template ids in the program's order (37e8:02f0 + 0x7d * i).
@@ -87,13 +102,14 @@ std::vector<NamedText> rules_texts_from_original(const OriginalExe& exe);
 // The three files' contents, and reading them back. Throws FormatError
 // (formats/cmp.h) or JsonError for a file that is not of this shape.
 struct RulesFiles {
-    std::string mechs, weapons, combat;
+    std::string mechs, weapons, combat, quiz;
 };
 RulesFiles write_rules_files(const Rules& rules, int import_version);
 Rules read_rules_files(const RulesFiles& files);
 Rules read_rules(const std::filesystem::path& data_dir);
 
 std::filesystem::path rules_dir(const std::filesystem::path& data_dir);
-inline constexpr std::array<std::string_view, 3> kRulesFiles = {"mechs.json", "weapons.json", "combat.json"};
+inline constexpr std::array<std::string_view, 4> kRulesFiles = {"mechs.json", "weapons.json", "combat.json",
+                                                                "quiz.json"};
 
 }  // namespace chr::formats
