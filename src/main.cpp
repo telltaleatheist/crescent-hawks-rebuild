@@ -1,15 +1,20 @@
 // chr: the rebuild's program. For now it opens a window and shows the title
 // screen, decoded from the player's own BTTITLE.CMP through the asset
-// provider, or with --map N the part of map N the player first sees.
+// provider, or with --map N map N with the panel, walking with the arrow
+// keys and Home/PgUp/End/PgDn.
 //
-//   chr [--game-dir DIR] [--map N] [--screenshot FILE.bmp]
+//   chr [--game-dir DIR] [--map N] [--script KEYS] [--screenshot FILE.bmp]
 //
-// --screenshot renders one frame to the file without opening a window.
+// --script plays a key sequence on the map first ("up*5 y", see
+// game/town.h) and prints what each key did. --screenshot renders one frame
+// to the file without opening a window.
 //
 // The game folder is --game-dir, else the CHR_GAME_DIR environment variable,
 // else the folder set when the program was built.
 
 #include <cstdio>
+#include <deque>
+#include <memory>
 #include <cstdlib>
 #include <filesystem>
 #include <string>
@@ -18,17 +23,21 @@
 
 #include "formats/game_files.h"
 #include "formats/mtp.h"
+#include "formats/palette.h"
 #include "game/asset_id.h"
 #include "game/map_view.h"
+#include "game/town.h"
 #include "platform/map_layer.h"
 #include "platform/original_assets.h"
 #include "platform/renderer.h"
+#include "platform/text_layer.h"
 
 namespace {
 
 struct Options {
     std::filesystem::path game_dir;
     std::string screenshot;  // write one frame here and quit
+    std::string script;      // keys to play on the map first
     int map = 0;             // 0: the title screen
 };
 
@@ -47,10 +56,12 @@ bool parse(int argc, char** argv, Options& options) {
                 std::fprintf(stderr, "chr: --map takes 1 to 15\n");
                 return false;
             }
+        } else if (arg == "--script" && i + 1 < argc) {
+            options.script = argv[++i];
         } else if (arg == "--screenshot" && i + 1 < argc) {
             options.screenshot = argv[++i];
         } else {
-            std::fprintf(stderr, "usage: chr [--game-dir DIR] [--map N] [--screenshot FILE.bmp]\n");
+            std::fprintf(stderr, "usage: chr [--game-dir DIR] [--map N] [--script KEYS] [--screenshot FILE.bmp]\n");
             return false;
         }
     }
@@ -65,10 +76,11 @@ bool save_screenshot(SDL_Renderer* renderer, const std::string& path) {
     return ok;
 }
 
-// The view of map `number` at its starting position: the new-game start
-// for map 1; for the others (reached from elsewhere in the game, not yet
+// Map `number` and where the party starts on it: the new-game start for
+// map 1; for the others (reached from elsewhere in the game, not yet
 // rebuilt) the map's middle.
-bool load_map_view(const std::filesystem::path& game_dir, int number, chr::game::MapView& view) {
+bool load_map(const std::filesystem::path& game_dir, int number, chr::formats::MtpMap& map,
+              chr::formats::MapPosition& start) {
     const std::string name = "MAP" + std::to_string(number) + ".MTP";
     try {
         const auto path = chr::formats::find_game_file(game_dir, name);
@@ -76,17 +88,36 @@ bool load_map_view(const std::filesystem::path& game_dir, int number, chr::game:
             std::fprintf(stderr, "chr: %s not found in %s\n", name.c_str(), game_dir.string().c_str());
             return false;
         }
-        const auto map = chr::formats::decode_mtp(chr::formats::read_file(*path));
-        chr::formats::MapPosition position = chr::game::new_game_position();
+        map = chr::formats::decode_mtp(chr::formats::read_file(*path));
+        start = chr::game::new_game_position();
         if (number != 1)
-            position = {std::uint16_t(map.block_x * 16 + map.width),
-                        std::uint16_t(map.block_y * 16 + map.height)};
-        view = chr::game::view_of(map, chr::game::tile_sheet_for_map(number), position);
+            start = {std::uint16_t(map.block_x * 16 + map.width),
+                     std::uint16_t(map.block_y * 16 + map.height)};
         return true;
     } catch (const std::exception& e) {
         std::fprintf(stderr, "chr: %s: %s\n", name.c_str(), e.what());
         return false;
     }
+}
+
+// The original's codes for the keys the town understands, or 0.
+int key_code(SDL_Keycode key) {
+    namespace k = chr::game::key;
+    switch (key) {
+    case SDLK_UP: case SDLK_KP_8: return k::kUp;
+    case SDLK_DOWN: case SDLK_KP_2: return k::kDown;
+    case SDLK_LEFT: case SDLK_KP_4: return k::kLeft;
+    case SDLK_RIGHT: case SDLK_KP_6: return k::kRight;
+    case SDLK_HOME: case SDLK_KP_7: return k::kHome;
+    case SDLK_PAGEUP: case SDLK_KP_9: return k::kPageUp;
+    case SDLK_END: case SDLK_KP_1: return k::kEnd;
+    case SDLK_PAGEDOWN: case SDLK_KP_3: return k::kPageDown;
+    case SDLK_RETURN: case SDLK_KP_ENTER: return k::kEnter;
+    case SDLK_SPACE: return k::kSpace;
+    default: break;
+    }
+    if (key >= SDLK_A && key <= SDLK_Z) return int('a' + (key - SDLK_A));
+    return 0;
 }
 
 }  // namespace
@@ -119,28 +150,68 @@ int main(int argc, char** argv) {
     }
 
     int status = 0;
-    chr::game::MapView map_view;
-    if (options.map != 0 && !load_map_view(options.game_dir, options.map, map_view)) status = 1;
+    chr::formats::MtpMap map;
+    chr::formats::MapPosition start;
+    std::deque<int> keys;  // every key so far, the script's first
+    if (options.map != 0 && !load_map(options.game_dir, options.map, map, start)) status = 1;
+    if (status == 0) {
+        try {
+            keys = chr::game::parse_key_script(options.script);
+        } catch (const std::exception& e) {
+            std::fprintf(stderr, "chr: --script: %s\n", e.what());
+            status = 2;
+        }
+    }
     if (status == 0) {
         chr::platform::OriginalAssets assets(options.game_dir);
         chr::platform::Renderer renderer(sdl_renderer, assets);
+        const auto palette = chr::formats::standard_palette_ega();
         const auto& title = chr::assets::kTitleScreen;
 
-        bool running = true;
+        // The town is played again from the start after every key: the
+        // logic asks for keys as it needs them (a question waits for its
+        // answer), and replaying keeps it that simple while frames are cheap.
+        std::unique_ptr<chr::game::Town> town;
+        auto replay = [&]() -> bool {
+            const auto* exe = assets.exe();
+            if (!exe) return false;
+            town = std::make_unique<chr::game::Town>(map, options.map, start, *exe);
+            town->draw_panel();
+            chr::game::ScriptKeys source(keys);
+            town->run(source);
+            return true;
+        };
+        if (options.map != 0) {
+            if (!replay()) {
+                std::fprintf(stderr, "chr: %s\n", assets.last_error().c_str());
+                status = 1;
+            } else if (!options.script.empty()) {
+                for (const auto& line : town->log()) std::printf("%s\n", line.c_str());
+                if (town->question_open()) std::printf("(waiting for an answer)\n");
+            }
+        }
+
+        bool running = status == 0;
         bool reported = false;
         while (running) {
             SDL_Event event;
             while (SDL_PollEvent(&event)) {
                 if (event.type == SDL_EVENT_QUIT) running = false;
-                if (event.type == SDL_EVENT_KEY_DOWN && event.key.key == SDLK_ESCAPE)
-                    running = false;
+                if (event.type != SDL_EVENT_KEY_DOWN) continue;
+                if (event.key.key == SDLK_ESCAPE) running = false;
+                if (const int k = key_code(event.key.key); k != 0 && town) {
+                    keys.push_back(k);
+                    replay();
+                }
             }
             renderer.begin_frame();
             bool drawn = true;
-            if (options.map != 0)
-                drawn = chr::platform::draw_map(renderer, map_view);
-            else
+            if (town) {
+                drawn = chr::platform::draw_map(renderer, town->view());
+                drawn = chr::platform::draw_text(renderer, town->text(), palette) && drawn;
+            } else {
                 drawn = renderer.draw(title, 0, 0);
+            }
             if (!drawn && !reported) {
                 std::fprintf(stderr, "chr: %s\n", assets.last_error().c_str());
                 reported = true;

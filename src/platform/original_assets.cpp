@@ -1,8 +1,10 @@
 #include "platform/original_assets.h"
 
+#include <algorithm>
 #include <cctype>
 #include <exception>
 
+#include "formats/cells.h"
 #include "formats/cmp.h"
 #include "formats/game_files.h"
 #include "formats/icn.h"
@@ -48,9 +50,44 @@ const formats::TileSheet* OriginalAssets::sheet(const std::string& file) {
     return &sheets_.emplace(file, formats::decode_icn(formats::read_file(*path))).first->second;
 }
 
+const formats::OriginalExe* OriginalAssets::exe() {
+    if (!exe_ && exe_error_.empty()) {
+        try {
+            exe_ = std::make_unique<formats::OriginalExe>(formats::OriginalExe::load(game_dir_));
+        } catch (const std::exception& e) {
+            exe_error_ = e.what();
+        }
+    }
+    if (!exe_) last_error_ = exe_error_;
+    return exe_.get();
+}
+
 std::optional<Image> OriginalAssets::image(const AssetId& id) {
     last_error_.clear();
     try {
+        if (id.file == "FONT") {
+            const auto* program = exe();
+            if (!program) return std::nullopt;
+            const auto bits = formats::font_character(program->get("font"), id.index);
+            Image glyph{8, 8, 8, 8, std::vector<std::uint8_t>(64 * 4, 0)};
+            for (int i = 0; i < 64; ++i)
+                if (bits[i]) std::fill_n(glyph.rgba.begin() + 4 * i, 4, std::uint8_t(0xff));
+            return glyph;
+        }
+        if (const auto colon = id.file.find(":8x8"); colon != std::string::npos) {
+            const std::string file = id.file.substr(0, colon);
+            auto it = pictures_.find(file);
+            if (it == pictures_.end()) {
+                const auto path = formats::find_game_file(game_dir_, file);
+                if (!path) {
+                    last_error_ = file + " not found in " + game_dir_.string();
+                    return std::nullopt;
+                }
+                it = pictures_.emplace(file, formats::decode_cmp(formats::read_file(*path))).first;
+            }
+            const auto cell = formats::picture_cell(it->second, id.index);
+            return from_colour_numbers({cell.begin(), cell.end()}, 8, 8, formats::standard_palette_ega());
+        }
         const auto path = formats::find_game_file(game_dir_, id.file);
         if (!path) {
             last_error_ = id.file + " not found in " + game_dir_.string();

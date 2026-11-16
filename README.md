@@ -37,8 +37,14 @@ sdl3`).
 
 `chr` looks for the game in `--game-dir DIR`, then in the `CHR_GAME_DIR`
 environment variable, then in the folder given when it was built. For now it
-shows the title screen, or with `--map N` the part of map N you first see
-(map 1 is the town a new game starts in).
+shows the title screen, or with `--map N` map N with the side panel (map 1 is
+the town a new game starts in). Walk with the arrow keys, and Home, PgUp, End
+and PgDn for the diagonals. `--script "up*5 y"` plays keys first and prints
+what each did; with `--screenshot FILE.bmp` it writes one frame and quits
+without opening a window.
+
+The font and some of the game's text are read from your own `BTECH.EXE`,
+which must be DOS version 1.03.
 
 ## Credits and licence
 

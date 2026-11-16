@@ -22,11 +22,15 @@ endif()
 # It speaks in game terms and asset IDs (the goal of a later visual makeover as a mod).
 # Readers for the original's files, documented in docs/formats/. Standard C++ only.
 add_library(chrformats STATIC
+  src/formats/cells.cpp
   src/formats/cmp.cpp
+  src/formats/exe_data.cpp
+  src/formats/exepack.cpp
   src/formats/game_files.cpp
   src/formats/icn.cpp
   src/formats/mtp.cpp
   src/formats/palette.cpp
+  src/formats/sha256.cpp
 )
 target_include_directories(chrformats PUBLIC src)
 
@@ -34,6 +38,9 @@ target_include_directories(chrformats PUBLIC src)
 add_library(chrgame STATIC
   src/game/asset_id.cpp
   src/game/map_view.cpp
+  src/game/movement.cpp
+  src/game/text.cpp
+  src/game/town.cpp
 )
 target_include_directories(chrgame PUBLIC src)
 target_link_libraries(chrgame PUBLIC chrformats)
@@ -44,6 +51,8 @@ add_executable(chrtests
   tests/test_main.cpp
   tests/test_cmp.cpp
   tests/test_maps.cpp
+  tests/test_text.cpp
+  tests/test_walk.cpp
 )
 target_link_libraries(chrtests PRIVATE chrgame)
 target_compile_definitions(chrtests PRIVATE CHR_DEFAULT_GAME_DIR="${CHR_GAME_DIR}")
@@ -56,6 +65,7 @@ if(SDL3_FOUND)
     src/platform/map_layer.cpp
     src/platform/original_assets.cpp
     src/platform/renderer.cpp
+    src/platform/text_layer.cpp
   )
   target_include_directories(chrplatform PUBLIC src)
   target_link_libraries(chrplatform PUBLIC chrgame SDL3::SDL3)
@@ -63,6 +73,23 @@ if(SDL3_FOUND)
   add_executable(chr src/main.cpp)
   target_link_libraries(chr PRIVATE chrplatform)
   target_compile_definitions(chr PRIVATE CHR_DEFAULT_GAME_DIR="${CHR_GAME_DIR}")
+  # The program itself, walking known routes on map 1 with no window (SDL's
+  # dummy video driver). They need the game files.
+  if(EXISTS "${CHR_GAME_DIR}/MAP1.MTP")
+    set(chr_headless "SDL_VIDEO_DRIVER=dummy;SDL_AUDIO_DRIVER=dummy")
+    add_test(NAME walk_blocked_by_fence
+      COMMAND chr --map 1 --script "down*3" --screenshot walk_blocked.bmp)
+    set_tests_properties(walk_blocked_by_fence PROPERTIES ENVIRONMENT "${chr_headless}"
+      PASS_REGULAR_EXPRESSION "blocked at 0c45,c01b")
+    add_test(NAME walk_into_citadel
+      COMMAND chr --map 1 --script "up*5 y" --screenshot walk_citadel.bmp)
+    set_tests_properties(walk_into_citadel PROPERTIES ENVIRONMENT "${chr_headless}"
+      PASS_REGULAR_EXPRESSION "entered place 1 \\(Citadel\\)")
+    add_test(NAME walk_scrolls_west
+      COMMAND chr --map 1 --script "left*10" --screenshot walk_west.bmp)
+    set_tests_properties(walk_scrolls_west PROPERTIES ENVIRONMENT "${chr_headless}"
+      PASS_REGULAR_EXPRESSION "moved at 0c3b,c019")
+  endif()
   if(WIN32)
     # SDL3.dll beside chr.exe.
     add_custom_command(TARGET chr POST_BUILD

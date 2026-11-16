@@ -27,6 +27,7 @@ SDL_Texture* Renderer::texture_for(const AssetId& id) {
         if (entry.texture) {
             SDL_UpdateTexture(entry.texture, nullptr, image->rgba.data(), image->width * 4);
             SDL_SetTextureScaleMode(entry.texture, SDL_SCALEMODE_NEAREST);
+            SDL_SetTextureBlendMode(entry.texture, SDL_BLENDMODE_BLEND);
             entry.logical_width = float(image->logical_width);
             entry.logical_height = float(image->logical_height);
         }
@@ -40,6 +41,23 @@ bool Renderer::draw(const AssetId& id, int x, int y) {
     const Entry& entry = cache_.at(id);
     const SDL_FRect dest{float(x), float(y), entry.logical_width, entry.logical_height};
     return SDL_RenderTexture(sdl_, texture, nullptr, &dest);
+}
+
+bool Renderer::draw_tinted(const AssetId& id, int x, int y, std::uint8_t r, std::uint8_t g,
+                           std::uint8_t b) {
+    SDL_Texture* texture = texture_for(id);
+    if (!texture) return false;
+    SDL_SetTextureColorMod(texture, r, g, b);
+    const bool ok = draw(id, x, y);
+    SDL_SetTextureColorMod(texture, 255, 255, 255);
+    return ok;
+}
+
+void Renderer::fill(int x, int y, int width, int height, std::uint8_t r, std::uint8_t g,
+                    std::uint8_t b) {
+    SDL_SetRenderDrawColor(sdl_, r, g, b, 255);
+    const SDL_FRect rect{float(x), float(y), float(width), float(height)};
+    SDL_RenderFillRect(sdl_, &rect);
 }
 
 void Renderer::clip(int x, int y, int width, int height) {
