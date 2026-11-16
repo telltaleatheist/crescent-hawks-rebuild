@@ -850,8 +850,22 @@ CHAIN_MECH_POKED_CASES = [dict(case, compare=False) for case in CHAIN_CASES[:CHA
     {"name": "chain_mech_return", "keys": "enter", "match": SCREEN},
 ]
 
+# Poked: chain_mech_poked with Jason's hit points also lowered (character 0
+# byte 0x0f, our own test value), so the same won fight ends in healing.
+# On foot he loses to every group in reach, even with a poked rifle and the
+# most hit points a byte allows, and the soldiers never hurt a 'Mech's pilot.
+# Pokes draw no numbers, so the fight is the same; only the tail is compared.
+CHAIN_HEAL_POKED_CASES = [dict(case, compare=False) for case in CHAIN_MECH_POKED_CASES
+                          if case["name"] != "chain_mech_return"]
+CHAIN_HEAL_POKED_CASES[[c["name"] for c in CHAIN_HEAL_POKED_CASES].index("chain_mech_poked")] = {
+    "name": "chain_heal_poked", "keys": MECH_POKES + " char:0:0f=30 idle:1", "match": {}}
+CHAIN_HEAL_POKED_CASES += [
+    {"name": "chain_heal", "keys": "enter", "match": SCREEN},
+    {"name": "chain_heal_return", "keys": "enter", "match": SCREEN},
+]
+
 # The long unpoked run: its own tier (`--campaign`, ctest label campaign).
-CAMPAIGN = {"chain", "chain_death", "chain_mech_poked"}
+CAMPAIGN = {"chain", "chain_death", "chain_mech_poked", "chain_heal_poked"}
 
 SEQUENCES = [("town", CASES, FULL_CASES, []), ("training", TRAINING_CASES, [], []),
              ("quiz", QUIZ_CASES, [], ["--show-quiz"]), ("mission", MISSION_CASES, MISSION_FULL_CASES, []),
@@ -872,6 +886,7 @@ SEQUENCES = [("town", CASES, FULL_CASES, []), ("training", TRAINING_CASES, [], [
              ("chain", [], CHAIN_CASES, []),
              ("chain_death", [], CHAIN_DEATH_CASES, []),
              ("chain_mech_poked", [], CHAIN_MECH_POKED_CASES, []),
+             ("chain_heal_poked", [], CHAIN_HEAL_POKED_CASES, []),
              ("handover", [], HANDOVER_CASES, [])]
 
 # The feeder (tools/capture/snap.asm, docs/reference.md) hands over a key at

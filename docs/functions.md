@@ -146,7 +146,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 
 | Address | Linear | Ghidra name | Span | Label | Status |
 |---|---|---|---|---|---|
-| 1c31:000a | 0x1c31a | `FUN_1c31_000a` | 856 |  | - |
+| 1c31:000a | 0x1c31a | `FUN_1c31_000a` | 856 | Healing: the best medic or a doctor treats the hurt, d6s by skill and care (docs/combat.md 2.15) | rebuilt |
 
 ## CODE_7: segment 1c67, 3,522 bytes
 

@@ -320,10 +320,24 @@ bool Town::special(int n, KeySource& keys) {
     case 14:
         count_members();
         return true;
+    case 23:
+        flags_[0x19] = anyone_hurt() ? 1 : 0;
+        return true;
     default:
         log_.push_back("special " + std::to_string(n) + ": not rebuilt");
         return true;
     }
+}
+
+// BTECH.EXE 24d3:0cf8, special 23: flag 19 = whether any party member's
+// hit points are below 10 x B.
+bool Town::anyone_hurt() const {
+    for (int c = 0; c < 8; ++c) {
+        const auto& r = characters_[std::size_t(c)];
+        if (r[character::kName] == character::kEmpty) continue;
+        if (std::int8_t(r[character::kHitPoints]) != std::int8_t(r[character::kB]) * 10) return true;
+    }
+    return false;
 }
 
 // BTECH.EXE 24d3:0af2: flag 0e = the members after Jason.

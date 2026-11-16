@@ -259,11 +259,108 @@ bool Town::after_fight_steps(KeySource& keys) {
         if (r[0] == 0xff) continue;
         hurt += std::int8_t(std::uint8_t(10 * r[character::kB])) - std::int8_t(r[character::kHitPoints]);
     }
-    if (hurt != 0) {
-        log_.push_back("healing (1c31:000a): not rebuilt");
-        fight_unfinished_ = true;
-        return false;
+    if (hurt != 0) return heal(0, keys);  // 1c31:000a(0)
+    return true;
+}
+
+// BTECH.EXE 1c31:000a (Ghidra FUN_1c31_000a)
+// Healing (docs/combat.md 2.15): the party's best medic (byte 0x0a), or a
+// doctor of level `doctor`, treats everyone hurt with dice by skill and
+// care. With flag 29 set it only says whether anyone is still hurt.
+bool Town::heal(int doctor, KeySource& keys) {
+    const auto name = [this](int c) {
+        print_id("character." + std::to_string(characters_[std::size_t(c)][character::kName]));
+    };
+    if (flags_[0x29] != 0) {
+        open_message_box();  // 24d3:17c6 / 17ea, 273d:0259
+        print_id(anyone_hurt() ? "heal.more_time" : "heal.nobody_2");
+        if (!read_key(keys)) {
+            place_open_ = true;
+            return false;
+        }
+        return true;
     }
+    int skill = 0, medic = 0;
+    for (int c = 0; c < 8; ++c) {
+        const auto& r = characters_[std::size_t(c)];
+        if (r[character::kName] == character::kEmpty) continue;
+        const int s = std::int8_t(r[character::kSkills + 6]);
+        if (skill < s) {
+            medic = c;
+            skill = s;
+        }
+    }
+    flags_[0x19] = anyone_hurt() ? 1 : 0;  // special 23
+    if (flags_[0x19] == 0) {
+        if (doctor != 0) return true;
+        open_message_box();
+        print_id("heal.nobody");
+        if (!read_key(keys)) {  // 1000:2a2b's flush, then 273d:0259
+            place_open_ = true;
+            return false;
+        }
+        return true;
+    }
+    text_.select_window(1);
+    text_.frame(1);
+    clear_window();
+    // The care: torn cloth, a MedKit (F:d450), a field surgery kit (F:d451,
+    // skill 3 or more), or a doctor's. Nothing rebuilt sets d450 or d451
+    // yet (docs/scripts.md, "Not rebuilt yet").
+    const bool medkit = false, surgery_kit = false;
+    int care = 1;
+    if (medkit) care = 2;
+    if (skill >= 3 && surgery_kit) care = 3;
+    if (doctor != 0) {
+        care = doctor > 2 ? 4 : 2;
+        print_id("heal.doctor");
+        skill = doctor;
+    } else {
+        name(medic);
+    }
+    if (skill != 0) {
+        print_id("heal.uses");
+        print_id(skill < 3 ? "heal.skill." + std::to_string(skill) : skill < 5 ? "heal.skill." + std::to_string(skill - 1)
+                                                                               : std::string("heal.skill.5"));
+        print_id("heal.skill_and");
+        print_id("heal.care." + std::to_string(care));
+    } else {
+        print_id("heal.no_skill");
+    }
+    print_id("heal.to_assist");
+    text_.set_fg(10);  // 1000:28a2
+    for (int c = 0; c < 8; ++c) {
+        auto& r = characters_[std::size_t(c)];
+        if (r[character::kName] == character::kEmpty) continue;
+        const int most = std::int8_t(r[character::kB]) * 10;
+        if (std::int8_t(r[character::kHitPoints]) == most) continue;
+        print_id("talk.line_end");  // 24d3:181e
+        name(c);
+        print_id("heal.healing");
+        // DG:2601 + 4 x skill + care: the low nibble d6s, times the high
+        // nibble when it is not 0 (sign-extended first, as the original).
+        const int at = 4 * skill + care - 1;
+        if (at < 0 || at >= int(tables_.heal_dice.size())) {
+            log_.push_back("healing past the dice table: not rebuilt");
+            fight_unfinished_ = true;
+            return false;
+        }
+        int dice = std::int8_t(std::uint8_t(tables_.heal_dice[std::size_t(at)]));
+        int times = 1;
+        if ((dice & 0xf0) != 0) {
+            times = (dice >> 4) & 0x0f;
+            dice &= 0x0f;
+        }
+        int gain = 0;
+        for (int n = 0; n < dice; ++n) gain += d6(random_);  // 1000:19f3
+        int hp = std::int8_t(r[character::kHitPoints]) + gain * times;
+        if (hp > most) hp = most;
+        r[character::kHitPoints] = std::uint8_t(hp);
+    }
+    text_.set_fg(15);
+    if (!press_key(keys)) return false;  // 273d:086a, 1000:2a4f
+    draw_panel(false);  // 1000:4cac(0)
+    flags_[0x29] = 0x3f;
     return true;
 }
 

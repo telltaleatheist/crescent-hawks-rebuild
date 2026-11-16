@@ -382,8 +382,9 @@ Rebuilt (`Town::random_encounter`, `Town::place_encounter`, `Combat::reaches`,
 `Town::encounter_end`). The rig checks it on the walk out of the town after the raid: four
 encounters out of reach, then one in reach (four soldiers against Jason alone on foot). Declining
 doesn't evade it, and the computer fights five rounds until Jason is killed (2.12, the game over
-in docs/town_loop.md). A won encounter's after-fight steps are rebuilt as far as their tests;
-repairs, salvage, loot and healing themselves are not rebuilt yet.
+in docs/town_loop.md). A won encounter's after-fight steps: loot and healing are rebuilt and
+compared (`chain_mech_poked`, `chain_heal_poked`); repairs and salvage are rebuilt as far as their
+tests.
 
 Kinds 1-3 always fight.
 
@@ -662,7 +663,7 @@ memory as it was (rebuilt, `Town::walk_position`).
 - **Kinds 0 and 3**, fought, not fled and the leader alive: window 1; "After an invigorating
   scuffle, you defeated the Kuritans." (DG:38fc) if any enemy figure is destroyed; then the
   after-fight steps (2.15), flag 29 = 0, and healing `1c31:000a(0)` if any party character has
-  lost hit points (the sum of 10 x byte 1 - byte 0x0f is not 0; not read).
+  lost hit points (the sum of 10 x byte 1 - byte 0x0f is not 0; healing is below).
   Declined and evaded, or fled: "You have eluded your enemies!" (DG:3936).
   Then, leader alive: the panel, "You return to where you were before combat took place."
   (DG:3954), and the party position is walked back to the entry position, the areas around it
@@ -745,6 +746,28 @@ found one's name, DG:1113, and a yes/no with No first; Yes swaps them. The
 weapons test reads character s + 12 for figure s + 12 (s = 4-11), past the sixteen records into
 'Mech record 0, whose name and armour bytes are seldom 0: so Jason is usually offered a swap even
 when the soldiers carried nothing. Rebuilt (`Town::loot`), except `17dc:15e6`.
+
+**Healing** (`1c31:000a`, FUN_1c31_000a; its argument is a doctor's level, 0 after a fight). With
+flag 29 set it only opens the message box with "Your characters need more time to recover."
+(DG:25a4) if anyone is hurt, otherwise DG:25cf, and waits for a key. Otherwise:
+- The medic is the first present character (records 0-7) with the highest Medical skill (byte
+  0x0a, signed); Jason and 0 if nobody has any.
+- Special 23 sets flag 19 if anyone's hit points (byte 0x0f) differ from 10 x B (byte 1). If
+  nobody is hurt: with no doctor, the message box, DG:2591 and a key; with a doctor, nothing.
+- Window 1, framed (style 1) and cleared. The care is 1 (torn cloth strips), 2 with a MedKit
+  (F:d450), 3 with a field surgery kit (F:d451) and skill 3 or more. A doctor sets the care to 2,
+  or 4 above level 2, and the skill to the doctor's level, and the line starts DG:252d instead of
+  the medic's name.
+- With skill: DG:2538, the skill's name (DG:25e2.. by level: 1, 2 and 3 share the second, 4 the
+  third, 5 and above the fourth), DG:2543 and the care's name. Without: DG:2553. Then DG:256f.
+- In light green, for each hurt member: a line end, the name, DG:2587, and the hit points go up
+  by dice from DG:2601 + 4 x skill + care: the low nibble is a count of d6 (`1000:19f3`: r & 7,
+  drawn again above 5, plus 1), and a high nibble, when not 0, multiplies their sum. Never above
+  10 x B. Skills above 7 read past the table, into the text after it.
+- Colour 15, the message pause, "Press a key." and a key, the panel (`4cac(0)`), flag 29 = 0x3f.
+
+Nothing rebuilt sets F:d450 or F:d451 yet, so the care is 1 unless a doctor treats. Rebuilt
+(`Town::heal`; special 23 `Town::anyone_hurt`); the doctor's callers are not.
 
 ## 3. One round: `22e8:000c`
 

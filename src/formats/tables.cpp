@@ -92,6 +92,7 @@ const std::vector<Flat>& flat_tables() {
         {"world_heights", 0x2c6c, 0x0b0b, Element::U8, [](Tables& t) { return all(t.world_heights); }},
         {"area_maps", 0x37e8, 0x0030, Element::U8, [](Tables& t) { return all(t.area_maps); }},
         {"encounter_weapons", 0x46db, 0x2cf4, Element::U8, [](Tables& t) { return all(t.encounter_weapons); }},
+        {"heal_dice", 0x46db, 0x2602, Element::U8, [](Tables& t) { return all(t.heal_dice); }},
         {"foot_formation_x", 0x46db, 0x3a16, Element::S8, [](Tables& t) { return all(t.foot_formation_x); }},
         {"foot_formation_y", 0x46db, 0x3a1e, Element::S8, [](Tables& t) { return all(t.foot_formation_y); }},
         {"terrain_templates", 0x2c6c, 0x0c1d, Element::U8, [](Tables& t) { return all(t.terrain_templates); }},

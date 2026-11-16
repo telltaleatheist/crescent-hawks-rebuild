@@ -122,6 +122,8 @@ struct Tables {
     std::array<int, 256> world_heights{};        // 2c6c:0b0b: one height per area, 16 x 16
     std::array<int, 256> area_maps{};            // 37e8:0030: each area's map number, 0 for none
     std::array<int, 22> encounter_weapons{};     // DG:2cf4: an encounter soldier's weapon by the sum of 7 (r & 3)
+    std::array<int, 32> heal_dice{};             // DG:2602: healing by skill s (0-7) and care c (1-4) at 4s + c - 1: d6 count, x multiplier
+
     std::array<int, 8> foot_formation_x{};       // DG:3a16: the k-th character on foot's half-cells from the party in a fight
     std::array<int, 8> foot_formation_y{};       // DG:3a1e
     std::array<int, 1024> terrain_templates{};   // 2c6c:0c1d: 16 blocks of 8x8, one per neighbour mask

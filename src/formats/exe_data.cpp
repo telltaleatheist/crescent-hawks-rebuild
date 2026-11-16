@@ -108,6 +108,7 @@ constexpr std::array kDos103 = {
     ExeSpan{ExeSpan::Kind::Table, "tables.area_maps", 0x37e8, 0x0030, 256, "c4fa392e7eb70166"},
     // The random encounter (docs/combat.md 2.2, 2.3):
     ExeSpan{ExeSpan::Kind::Table, "tables.encounter_weapons", 0x46db, 0x2cf4, 22, "e715fbca48ead8b7"},
+    ExeSpan{ExeSpan::Kind::Table, "tables.heal_dice", 0x46db, 0x2602, 32, "cab6c5404e723ff5"},
     ExeSpan{ExeSpan::Kind::Table, "tables.foot_formation_x", 0x46db, 0x3a16, 8, "7edd3039cea710f9"},
     ExeSpan{ExeSpan::Kind::Table, "tables.foot_formation_y", 0x46db, 0x3a1e, 8, "54a0cc86c63b8864"},
     ExeSpan{ExeSpan::Kind::Table, "tables.terrain_templates", 0x2c6c, 0x0c1d, 1024, "c5cddf08c0924d94"},
@@ -456,6 +457,24 @@ constexpr std::array kDos103 = {
     ExeSpan{ExeSpan::Kind::Text, "quiz.part.17", 0x46db, 0x4356, 10, "d473631446e13256"},
     ExeSpan{ExeSpan::Kind::Text, "quiz.part.18", 0x46db, 0x4360, 13, "86cf8b0ad80cef9b"},
     ExeSpan{ExeSpan::Kind::Text, "quiz.part.19", 0x46db, 0x436d, 8, "ef0bfc1b90ae3790"},
+    // Healing (1c31:000a): the skills by level, the care by level, the lines.
+    ExeSpan{ExeSpan::Kind::Text, "heal.skill.1", 0x46db, 0x24b6, 10, "def8cbe01901c853"},
+    ExeSpan{ExeSpan::Kind::Text, "heal.skill.2", 0x46db, 0x24c0, 15, "ac13105360b05d5f"},
+    ExeSpan{ExeSpan::Kind::Text, "heal.skill.4", 0x46db, 0x24cf, 14, "186198a039f6fc6d"},
+    ExeSpan{ExeSpan::Kind::Text, "heal.skill.5", 0x46db, 0x24dd, 17, "8f4d0384adf7b42b"},
+    ExeSpan{ExeSpan::Kind::Text, "heal.care.1", 0x46db, 0x24ee, 18, "9e03a9f575a7dbd0"},
+    ExeSpan{ExeSpan::Kind::Text, "heal.care.2", 0x46db, 0x2500, 7, "9b1fbe9d427abd6a"},
+    ExeSpan{ExeSpan::Kind::Text, "heal.care.3", 0x46db, 0x2507, 18, "53c26f2458148e8b"},
+    ExeSpan{ExeSpan::Kind::Text, "heal.care.4", 0x46db, 0x2519, 20, "da1970e9af9ad76e"},
+    ExeSpan{ExeSpan::Kind::Text, "heal.doctor", 0x46db, 0x252d, 11, "db317a32c6808cd3"},
+    ExeSpan{ExeSpan::Kind::Text, "heal.uses", 0x46db, 0x2538, 11, "aade1a4519119e26"},
+    ExeSpan{ExeSpan::Kind::Text, "heal.skill_and", 0x46db, 0x2543, 16, "1826976a31fc0594"},
+    ExeSpan{ExeSpan::Kind::Text, "heal.no_skill", 0x46db, 0x2553, 28, "dee50b99b3374928"},
+    ExeSpan{ExeSpan::Kind::Text, "heal.to_assist", 0x46db, 0x256f, 24, "d748ad00b52431af"},
+    ExeSpan{ExeSpan::Kind::Text, "heal.healing", 0x46db, 0x2587, 10, "d2fab493ded7f756"},
+    ExeSpan{ExeSpan::Kind::Text, "heal.nobody", 0x46db, 0x2591, 19, "1a406fa4b46db7b0"},
+    ExeSpan{ExeSpan::Kind::Text, "heal.more_time", 0x46db, 0x25a4, 43, "aedf8b581a931198"},
+    ExeSpan{ExeSpan::Kind::Text, "heal.nobody_2", 0x46db, 0x25cf, 19, "1a406fa4b46db7b0"},
 };
 
 constexpr std::uint16_t kLoadSegment = 0x1000;
