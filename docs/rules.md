@@ -9,8 +9,12 @@ it on the right side of that line. Every change is checked against them.
 
 1. **We never distribute the original's files.** No executable, data, maps,
    graphics, sound or game text goes into this repository, its releases or
-   its installers. You supply your own copy of the game, and the rebuild reads
-   it from your disk.
+   its installers. The one exception is the game's generic interface text
+   (menus, prompts, labels and rule messages), listed ID by ID in
+   docs/text.md and kept in data/text/interface.json; story, dialogue, names,
+   descriptions and every .BLD text stay imported from your own copy only.
+   You supply your own copy of the game, and the rebuild reads it from your
+   disk.
 2. **No decompiled code in the repository.** We study the original program to
    understand what it does, then write our own C++ that does the same thing.
    Comments may name the original function's address and the name the
