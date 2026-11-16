@@ -1127,6 +1127,11 @@ sequence compares the scene with the original's, over the whole screen and the s
     are set).
 14. The three character bytes 1-3 (by use: byte 1 sets the hit-point maximum, byte 2 the walking
     speed on foot); their names.
+15. A failed Flee is not compared with the original. In the `orders` run the draw escapes after
+    every round: with no shots no random numbers are drawn, and idle passes in town before the
+    walk to the training center leave the random state at the fight unchanged (something on the
+    way resets or re-draws it; not traced). Comparing one needs a run whose draws differ: a shot
+    fired (Use Weapons) before fleeing.
 
 ## Functions
 
