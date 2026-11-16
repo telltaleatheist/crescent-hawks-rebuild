@@ -543,7 +543,8 @@ PEOPLE_FULL_CASES = [
 # Mission 0 (training mode 0, docs/combat.md 1.3): the walking course.
 # Flag 00 stays 0, as in a new game.
 COURSE_CASES = [dict(case, name=case["name"].replace("training_", "course_")) for case in TRAINING_CASES[:9]]
-COURSE_CASES[4] = dict(COURSE_CASES[4], keys=COURSE_CASES[4]["keys"].replace("flag:00=02 ", ""))
+# No pokes: the course run starts from the new game as it is.
+COURSE_CASES[4] = dict(COURSE_CASES[4], keys=COURSE_CASES[4]["keys"].replace("flag:00=02 flag:13=01 ", ""))
 COURSE_CASES = [dict(case, compare=False) for case in COURSE_CASES[:8]] + [
     # The Locust walks in, and the course starts: the party waits in its 'Mech.
     dict(COURSE_CASES[8], name="course_start", match=SCREEN)]
@@ -676,6 +677,28 @@ SPOT_CASES = [dict(case, compare=False) for case in COURSE_CASES + COURSE_FULL_C
     {"name": "spot_walk_on", "keys": "down", "match": SCREEN},
 ]
 
+# The long run with no pokes, from the new game on: the course and the
+# spot (missions 0 and 1, as `course` and `spot`), then the third mission's
+# first try: flag 14 runs down, the commandant sends Jason to rest, the
+# Barracks, and back for the third mission.
+CHAIN_CASES = [dict(case, compare=False) for case in SPOT_CASES] + [
+    {"name": "chain_waited", "keys": "idle:2900 up*5", "match": SCREEN},
+    {"name": "chain_greeting", "keys": "y orig:enter*4", "match": SCREEN},
+    {"name": "chain_commandant", "keys": "y", "match": SCREEN},
+    {"name": "chain_handed_back", "keys": "enter", "match": SCREEN},
+    # One step east, then the `rest` sequence's ways there and back.
+    {"name": "chain_barracks_question", "keys": "right up home*2 down*2 left*2 down right*2 pgup down*2 left*23 home up*85 left home up left home up*15 home", "match": SCREEN},
+    {"name": "chain_barracks", "keys": "y", "match": SCREEN},
+    {"name": "chain_sleep", "keys": "down enter", "match": SCREEN},
+    {"name": "chain_story_4", "keys": "enter*3", "match": SCREEN},
+    {"name": "chain_story_7", "keys": "enter*3", "match": SCREEN},
+    {"name": "chain_menu_again", "keys": "enter", "match": SCREEN},
+    {"name": "chain_leave", "keys": "up enter", "match": SCREEN},
+    {"name": "chain_back_question", "keys": "pgdn down*15 pgdn right down pgdn right down*85 pgdn right*23 up*2 end left*2 up right*2 up*2 pgdn*2 down home up*2", "match": SCREEN},
+    {"name": "chain_back_greeting", "keys": "y orig:enter*4", "match": SCREEN},
+    {"name": "chain_briefing", "keys": "y", "match": SCREEN},
+]
+
 SEQUENCES = [("town", CASES, FULL_CASES, []), ("training", TRAINING_CASES, [], []),
              ("quiz", QUIZ_CASES, [], ["--show-quiz"]), ("mission", MISSION_CASES, MISSION_FULL_CASES, []),
              ("verbose", VERBOSE_CASES, VERBOSE_FULL_CASES, []), ("drawn", DRAWN_CASES, DRAWN_FULL_CASES, []),
@@ -692,6 +715,7 @@ SEQUENCES = [("town", CASES, FULL_CASES, []), ("training", TRAINING_CASES, [], [
              ("fourth", [], FOURTH_CASES, []),
              ("raid", [], RAID_CASES, []),
              ("rest", [], REST_CASES, []),
+             ("chain", [], CHAIN_CASES, []),
              ("handover", [], HANDOVER_CASES, [])]
 
 # The feeder (tools/capture/snap.asm, docs/reference.md) hands over a key at

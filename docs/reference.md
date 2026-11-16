@@ -165,7 +165,7 @@ past the map file's east edge, into the terrain: docs/wilderness.md).
 standing in for a critical hit): Kick cannot, and the round drops the kick still ordered. `scan` opens Scan Unit: Friends (Next comes back to the unit), Done, Enemies (the enemy Locust
 and its direction, the view reaching the terrain), Done, Cancel, and a round. `people` is mission 3 (flag 00 = 3): three to six enemy people, the orders menu and 20 rounds
 (long; from round 6 the soldiers' lines of sight read the area grids before the cell window), compared with the walker lines showing figures 16-23 during the fight, as the original's
-shared memory does. `course` is mission 0 with no poke (flag 00 = 0, as in a new game): the
+shared memory does. `course` is mission 0 with no poke (no flag set at all, as in a new game): the
 Locust walks in and the course starts, three steps, then (long) the way to the southeast corner
 and its message, back to the door (found with chr's step check, which the original agrees with
 along it), the script's verdict (special 2), and a key: special 3 hands the 'Mech back and the
@@ -174,7 +174,10 @@ without a poke: 2900 idle polls let flag 14 run down (255 town ticks, an idle ti
 polls), the training center again with the quiz on the original's side, the second mission in the
 Wasp, the way to the marked spot (the same random spot in both) and back, and the town after.
 The window it compares is the one chr holds, which after the spot's cell is put back still shows
-tile 0x50 until the next step, as the original's does. `fourth` (long only) is mission 4 (flag 00
+tile 0x50 until the next step, as the original's does. `chain` (long only) goes on from `spot`,
+still without a poke: flag 14 runs down again, the third mission's first try (flag 13 is 0: the
+commandant and special 3), the Barracks and back as in `rest` (one step east first, as the
+handback leaves the party a cell west of `rest`'s), the quiz again and the briefing. `fourth` (long only) is mission 4 (flag 00
 poked to 4): no computer question (F:0090), the Locust flees at the first orders menu, the walk
 back, the verdict and the town. `raid` (long only) is mission 7 (flag 00 poked to 7), the
 Kurita raid: the computer question (only mission 4 skips it), then Begin Fight round after round
