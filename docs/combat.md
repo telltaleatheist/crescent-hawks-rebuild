@@ -1152,9 +1152,12 @@ sequence compares the scene with the original's, over the whole screen and the s
 14. The three character bytes 1-3 (by use: byte 1 sets the hit-point maximum, byte 2 the walking
     speed on foot); their names.
 15. A failed Flee is not compared with the original. In the `orders` run the draw escapes after
-    every round: with no shots no random numbers are drawn, and idle passes in town before the
-    walk to the training center leave the random state at the fight unchanged (something on the
-    way resets or re-draws it; not traced). Comparing one needs a run whose draws differ: a shot
+    every round: with no shots no random numbers are drawn. Nothing reseeds the numbers on the way
+    to the fight (`1000:a9de` is not reached): every key is a game tick and sets the main loop's
+    countdown to 10, so idle passes draw a number only on the 11th in a row (docs/town_loop.md).
+    A few extra passes before the walk therefore change nothing; 19 or more do, but from about 80
+    the training center takes another path (its picture and quiz draws change), and the counts
+    tried in between all escape. Comparing a failed Flee needs a run whose draws differ: a shot
     fired (Use Weapons) before fleeing.
 
 ## Functions
