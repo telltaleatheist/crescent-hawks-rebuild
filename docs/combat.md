@@ -126,7 +126,7 @@ results step at 0bf2. The callers: special 1 (modes 0-7 from flag 00), ARENA.BLD
 | 2 | Target practice. One enemy 'Mech (`0d49(1, 0)`), then its record 4 is disarmed: both actuator bytes 0x24 / 0x25, all ten ammunition bytes 0x27-0x30 and both MP bytes 0x31 / 0x32 set to 0. It cannot move, kick or fire. Fight kind 1. | as below |
 | 3 | 3-6 enemy people (`0d49(0, (r & 3) + 3)`: the random count is pushed first, so it is the second argument), fight kind 1. | as below |
 | 4-7 | 1-4 enemy 'Mechs (`0d49(mode - 3, 0)`), fight kind 1, with F:0090 = 1 (no "computer fights for you" question, no Computer order). Mode 6: one r, the raid if r & 1. Mode 7: always the raid. In the raid F:3772 = 1 and the 16 cells P:101d + 0ff0..0fff are set to tile 0x40 (a gap in a wall: a guess). F:0090 = 0 afterwards. | as below |
-| 8 | The Arena: `0d49(0x81, 0)` (one enemy 'Mech through the bit-0x80 branch of 1.4, figure 0 active), fight kind 2. Not followed further. | not set by this mode |
+| 8 | The Arena: `0d49(0x81, 0)`: one enemy 'Mech by the bit-0x80 branch of 1.4 (two, the second the spectator, when F:d452..d455 holds an ff), figure 0 active, fight kind 2. | not set by this mode |
 | 9 | Jason alone on foot (`19b8:152f` first hides characters 1-7 and the four 'Mechs, saving their first bytes at F:3fe9 + p and F:d452 + m, and puts the party at (0x0d10, 0x7024)). F:398e = 1. Every key is a step; on every 80th step `0d49(0, 0x88)` (eight enemy people) and fight kind 3. The mode ends when DG:014a is 0 after a fight. On y = 0x702d, at x = 0x0d14 + 4i (i < 4), texts DG:155d, 159a, 15d4 the first time and a call to `19b8:16b2`. | not set by this mode |
 
 The results step (all modes): flag 01 (F:d30d) = 0 first.
@@ -151,11 +151,15 @@ FUN_17dc_0d49. `a` is the number of enemy 'Mechs, `b` the number of enemy people
 2. Empties 'Mech records 4-7 and character records 8-15 (byte 0 = ff). Every figure: destroyed
    flag 0, active 0, x = y = ffff.
 3. b below 0x80: figure 0 active (Jason's 'Mech); else figure 4 (Jason on foot).
-4. The place. If a has bit 0x80 (an outdoor site, a guess): x = 0x0a10 + (r & 3), then an r, and
-   if r & 1, x = 0x0a28 + (r & 3); y = 0x806f + (r & 3). The 'Mech type comes from the
-   encounter table DG:13e2 at index 2d6 - 2 (or (r & 3) + 3 when F:e48e is set), with the
-   sprite base DG:140e at the same index (formats/mech.md). With F:e48e set, a = 2 if any of
-   F:d452..d455 is ff. Only the Arena (mode 8, `0d49(0x81, 0)`) takes this branch.
+4. The place. If a has bit 0x80 (only the Arena, mode 8: `0d49(0x81, 0)`): x = 0x0a10 + (r & 3),
+   then an r, and if r & 1, x = 0x0a28 + (r & 3); y = 0x806f + (r & 3) (`17dc:0e4e`). With F:e48e
+   set, a = 2 if any of F:d452..d455 (the first bytes `19b8:152f` saved of 'Mech records 0-3) is
+   ff. Then a 2d6 is drawn and the index is 2d6 - 2; with F:e48e set, one more r replaces it:
+   (r & 3) + 3. The template is DG:13e2 at that index and the sprite base DG:140e
+   (formats/mech.md). In the Arena F:e48e is set (`17dc:1c9b`, 1.5), so the index is 3-6: the
+   LOCUST, WASP, LOCUST or STINGER, and the 2d6 is drawn but not used. So the Arena draws three
+   or four r for the place, a 2d6 (`1000:19dd`: two d6, each drawing again on r & 7 above 5) and
+   one r for the template.
    Otherwise: x = 0x0c65 + (r & 7), y = 0xc059 + (r & 7) (the training field); b with bit 0x80:
    (0x0d10, 0x7024); flag 00 = 2: x = 0x0c72. The template is LOCUST (27e8:02f0).
 5. a = a & 0x7f; in the raid (F:3772) a = 4. For each i below a:
@@ -184,7 +188,7 @@ FUN_17dc_0d49. `a` is the number of enemy 'Mechs, `b` the number of enemy people
   and replaced by the LOCUST template, characters 1-7 are hidden (first bytes saved at F:3fe9),
   all eight characters' 'Mech slot bytes are set to 3, and F:e48e = 1. Special 0x23 runs mode 8
   and then `17dc:1b41`, which undoes it (slots back to 8, F:e48e = 0). F:e48e marks figure 13 as
-  the "spectator" (3.14). How the Arena's enemy 'Mechs are made is open (open question 1).
+  the "spectator" (3.14). The enemy 'Mech is made by `0d49`'s bit-0x80 branch (1.4, step 4).
 - **The Kurita raid** (F:3772, modes 6 and 7): four JENNERs, the armour cut off, a story message
   first (2.4), one more story line per round (2.11), and fleeing only by walking out of the
   area (2.7).
@@ -853,7 +857,7 @@ mistake; "quirk" means it may be intended.
 | 26 | The wreck search includes figures 4-11 (killed party people), which index the wrong records, and never ends if no flag is set. | `15ab:04f9` | `fix_wreck_search` |
 | 27 | Loot reads character s + 12 (off the table, into 'Mech 0) to decide whether weapons were found; a dead party member alone gives the pocket text and 2 C-Bills. Probable. | `15ab:094b` | `fix_loot_index` |
 | 28 | Encounter soldiers' armour points are 2d6 + 2d6 whatever the type (also with none). Quirk. | `15ab:0d3d` | none |
-| 29 | Withdrawn: mode 3 asks for 3-6 enemy people, not 'Mechs (`0d49(0, (r & 3) + 3)`, 1.3), and the people are capped at character record 16. The switch is unused. | `17dc:0629` | `fix_mission_count` |
+| 29 | Withdrawn: mode 3 asks for 3-6 enemy people, not 'Mechs (`0d49(0, (r & 3) + 3)`: the random count is pushed first, 1.3), and `0d49` caps the people at character record 16. Nothing to fix. | `17dc:0629` | none |
 | 30 | The difficulty's destroyed slots are picked from 0x34-0x53 only: the first left-arm slot, the second centre-torso slot and the head slot are never hit. Quirk. | `17dc:0d49` | none |
 | 31 | Reloading the areas around the party does not wrap columns: column 0's left neighbour is column 15 of the row above. | `203b:2835` | `fix_area_wrap` |
 | 32 | The scan list never ends if no figure in it is active; a direction of -1 reads before the direction names. | `15ab:1467` | `fix_scan_list` |
@@ -861,10 +865,10 @@ mistake; "quirk" means it may be intended.
 | 34 | Only ten ammunition bytes: an 11th weapon would use the walking MP byte as its ammunition. No template has more than nine weapons. | `1e31:10a2`, `22e8:000c` | none |
 
 The switches are `game/fixes.h`. Each is off by default, except where the original reads or
-writes memory the rebuild does not hold, or never returns: bugs 2, 17, 18, 21, 23, 26, 29 and 32
+writes memory the rebuild does not hold, or never returns: bugs 2, 17, 18, 21, 23, 26 and 32
 take the fixed path by default and log it. Bug 5 is kept, but the first shot of a session (whose
 flag the original leaves uninitialised) counts as "missed" and is logged. Bugs 12, 15, 28, 30 and
-34 have no switch, nor does the unreachable encounter-table path (DG:13e2).
+34 have no switch.
 
 ## 7. The copy-protection check
 
@@ -903,9 +907,7 @@ them out on the rebuild's side.
 
 ## 8. Open questions
 
-1. How the Arena's enemy 'Mech is made: mode 8 takes `0d49`'s branch for bit 0x80 of its first
-   argument (the F:e48e code and the encounter table DG:13e2); not followed further. `17dc:1c9b` sets the eight characters' 'Mech slot bytes to 3 (meaning
-   unknown).
+1. `17dc:1c9b` sets the eight characters' 'Mech slot bytes to 3 (meaning unknown).
 2. F:32ae (terrain: to-hit, the course count, water cooling) and F:3750 (the tile under a figure):
    exact meanings and who sets them.
 3. The nine bytes P:07a4..07ac whose bit 0x80 blocks salvage.

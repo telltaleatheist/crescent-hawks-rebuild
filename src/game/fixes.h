@@ -43,7 +43,6 @@ struct Fixes {
     bool fix_flee_target = true;      // 21: 203b:000a, figure -1 (F:4002 / F:4034)
     bool fix_weapon_count = true;     // 23: 15ab:0002, a count left from the stack
     bool fix_wreck_search = true;     // 26: 15ab:04f9, wrong records, may never end
-    bool fix_mission_count = true;    // 29: 17dc:0d49, 'Mech records 8-9 past the table
     bool fix_scan_list = true;        // 32: 15ab:1467, may never end
 };
 

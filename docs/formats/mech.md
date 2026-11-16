@@ -156,7 +156,7 @@ The range band names: far pointers DG:2ebc to "Short", "Med", "Long", "OUT" (DG:
 | critical slots | DG:316e, DG:3176 | per location | first slot and slot count | criticals |
 | actuator bits | DG:316a (legs), DG:317a (arms) | by d6 | the bit a critical clears | criticals |
 | difficulty armour cut | DG:165a | 7 bytes | index flag 03 (clamped to 0-6), value subtracted from each armour byte, to 0 at least (0 at index 0, 20 at index 6). The bytes after index 6 are text, so the clamp matters | `17dc:0d49` |
-| encounter templates | DG:13e2 | 11 far pointers | index 2d6 - 2; a template in 27e8 (Jenner, UrbanMech, Commando, Locust, Wasp, Stinger; the Locust is the most likely, 10 in 36) | `17dc:0d49`'s unreached branch (combat.md, open question 1) |
+| encounter templates | DG:13e2 | 11 far pointers | index 2d6 - 2; a template in 27e8 (Jenner, UrbanMech, Commando, Locust, Wasp, Stinger; the Locust is the most likely, 10 in 36) | `17dc:0d49`'s branch for the Arena (combat.md 1.4): there the index is (r & 3) + 3, entries 3-6 |
 | encounter sprite base | DG:140e | 11 bytes | same index; 0 or 0x92 (the two sprite sets) for the matching template | as DG:13e2 |
 | random encounter templates | DG:2df8 | 3 far pointers | index r mod 3: Locust, Wasp, Stinger | `15ab:0d3d` |
 | opponent offsets | DG:1642 (x), DG:164e (y) | bytes | added to the set-up place for 'Mech i or character j | `17dc:0d49` |
