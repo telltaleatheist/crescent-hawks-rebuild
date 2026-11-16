@@ -79,7 +79,8 @@ the two moves. At the edge of the 16x16-area world the position does not change.
 - The deep-water check never fires on a town map, for the reason in step 1; `TooDeep` and its
   message are wired up for when the world is rebuilt.
 - Saying yes to an entrance stops the walk (`Town::entered_place`): places are not rebuilt yet.
-- The figures and the panel's bars are not drawn yet.
+- Only the party's figures are drawn: the map's objects, the townspeople and the 'Mechs are not
+  rebuilt yet (docs/town_loop.md).
 
 ## Trying it
 
@@ -87,5 +88,6 @@ the two moves. At the edge of the 16x16-area world the position does not change.
 
 plays the keys headless and prints what each did ("moved at 0c45,c018", "blocked at ...",
 "entered place 1 (Citadel)"). Key names: up down left right home end pgup pgdn space enter, or a
-single character; "*N" repeats. Without `--screenshot` a window opens and play continues with the
+single character; "*N" repeats; `idle:N` is N passes of the main loop without a key
+(docs/town_loop.md). Without `--screenshot` a window opens and play continues with the
 keyboard.

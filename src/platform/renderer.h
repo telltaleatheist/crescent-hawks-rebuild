@@ -29,6 +29,9 @@ public:
     // Draws the picture for `id` with its top-left corner at (x, y) in
     // 320x200 screen units. Returns false if no provider has it.
     bool draw(const AssetId& id, int x, int y);
+    // Only the top `visible_height` screen units of it (a figure standing
+    // in water shows less of itself).
+    bool draw_top(const AssetId& id, int x, int y, int visible_height);
     // The same, with every pixel's colour multiplied by (r, g, b): a white
     // glyph drawn this way comes out in that colour.
     bool draw_tinted(const AssetId& id, int x, int y, std::uint8_t r, std::uint8_t g, std::uint8_t b);

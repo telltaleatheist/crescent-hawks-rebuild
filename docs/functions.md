@@ -14,12 +14,12 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | Address | Linear | Ghidra name | Span | Label | Status |
 |---|---|---|---|---|---|
 | 1000:0000 | 0x10000 | `switchD_1000:f462::caseD_6` | 45 |  | - |
-| 1000:002d | 0x1002d | `FUN_1000_002d` | 142 | Main loop, key half: reads a key, flushes, selects window 4, steps DS:015a times, logs the direction (DS:01aa) unless a message came up | read |
+| 1000:002d | 0x1002d | `FUN_1000_002d` | 142 | Main loop, key half: reads a key, flushes, steps, logs the direction, walking frames (231d), then a game tick (docs/town_loop.md) | rebuilt |
 | 1000:00bb | 0x100bb | `FUN_1000_00bb` | 313 | Main loop: one turn per key; redraws the map, figures and panel each turn; resets the one-question-per-turn flag | read |
-| 1000:01f4 | 0x101f4 | `FUN_1000_01f4` | 807 | Main loop, idle half: waits a tick; every 11 passes a game tick (tile animation 240b, 24c2, money, panel C-Bills, redraw map and figures) | read |
-| 1000:051b | 0x1051b | `FUN_1000_051b` | 2352 | Draws the party's figures on the map (leader at half-cell X+1, Y); sets which of the 8 characters are present | read |
+| 1000:01f4 | 0x101f4 | `FUN_1000_01f4` | 807 | Main loop, idle half: waits one display frame (273d:0006); every 11 passes a game tick: timers, random, money, tile animation 240b, 24c2 every third, redraw (docs/town_loop.md) | rebuilt |
+| 1000:051b | 0x1051b | `FUN_1000_051b` | 2352 | Draws the figures: map objects (2a93), the party at the formation places with walking frame and sinking in water, townspeople, 'Mechs (party rebuilt) | rebuilt |
 | 1000:0e4b | 0x10e4b | `FUN_1000_0e4b` | 2279 |  | - |
-| 1000:1732 | 0x11732 | `FUN_1000_1732` | 137 |  | - |
+| 1000:1732 | 0x11732 | `FUN_1000_1732` | 137 | Runs a figure's walking script to its next frame (0xfd direction, 0xfe jump back, 0xff hold) | rebuilt |
 | 1000:17bb | 0x117bb | `FUN_1000_17bb` | 92 |  | - |
 | 1000:1817 | 0x11817 | `FUN_1000_1817` | 88 |  | - |
 | 1000:186f | 0x1186f | `FUN_1000_186f` | 172 |  | - |
@@ -31,19 +31,19 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 1000:1afd | 0x11afd | `FUN_1000_1afd` | 277 |  | - |
 | 1000:1c12 | 0x11c12 | `FUN_1000_1c12` | 1405 | Can the party step by (dx, dy)? Deep water at a block edge; offers to enter a place at an entrance; blocks on tile >= DS:0150 | rebuilt |
 | 1000:218f | 0x1218f | `FUN_1000_218f` | 398 | Walking keys: arrows and Home/PgUp/End/PgDn to a step, checks it, moves y then x, loads areas crossed into | rebuilt |
-| 1000:231d | 0x1231d | `FUN_1000_231d` | 238 |  | - |
-| 1000:240b | 0x1240b | `FUN_1000_240b` | 183 | Tile animation: steps a 3-frame phase (DS:5800) and copies that frame of 10 ANIMATE.ICN tiles into the tile slots at DS:04b0 | read |
-| 1000:24c2 | 0x124c2 | `FUN_1000_24c2` | 933 |  | - |
+| 1000:231d | 0x1231d | `FUN_1000_231d` | 238 | After a key: a walking key moves the figures' walking scripts on | rebuilt |
+| 1000:240b | 0x1240b | `FUN_1000_240b` | 183 | Animated tiles: next of 3 frames, ANIMATE.ICN tile 1+3i+frame over each of the 10 tile numbers at DS:04b0 | rebuilt |
+| 1000:24c2 | 0x124c2 | `FUN_1000_24c2` | 933 | Moves the townspeople, every third game tick | read |
 | 1000:2867 | 0x12867 | `FUN_1000_2867` | 59 |  | - |
-| 1000:28a2 | 0x128a2 | `FUN_1000_28a2` | 42 |  | - |
+| 1000:28a2 | 0x128a2 | `FUN_1000_28a2` | 42 | Sets the text colour to light green (CGA: 1) | rebuilt |
 | 1000:28cc | 0x128cc | `FUN_1000_28cc` | 71 |  | - |
 | 1000:2913 | 0x12913 | `FUN_1000_2913` | 226 |  | - |
-| 1000:29f5 | 0x129f5 | `FUN_1000_29f5` | 54 |  | - |
+| 1000:29f5 | 0x129f5 | `FUN_1000_29f5` | 54 | The money floor: word DS:d340/d33f | rebuilt |
 | 1000:2a2b | 0x12a2b | `FUN_1000_2a2b` | 36 | Empties the keyboard buffer (unless playing back recorded keys) | read |
 | 1000:2a4f | 0x12a4f | `FUN_1000_2a4f` | 26 |  | - |
 | 1000:2a69 | 0x12a69 | `FUN_1000_2a69` | 21 |  | - |
 | 1000:2a7e | 0x12a7e | `FUN_1000_2a7e` | 21 |  | - |
-| 1000:2a93 | 0x12a93 | `FUN_1000_2a93` | 445 |  | - |
+| 1000:2a93 | 0x12a93 | `FUN_1000_2a93` | 445 | Draws the map objects (up to 64), toggling sprites 0x7c/0x7d | read |
 | 1000:2c50 | 0x12c50 | `FUN_1000_2c50` | 344 |  | - |
 | 1000:2da8 | 0x12da8 | `FUN_1000_2da8` | 1123 | Load MAP<n>.MTP into the block store and an area grid (DESTRUCT.ICN for map 11) | rebuilt |
 | 1000:320b | 0x1320b | `FUN_1000_320b` | 168 | Loads ANIMATE.ICN into the animation buffer | read |
@@ -58,9 +58,9 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 1000:46a7 | 0x146a7 | `FUN_1000_46a7` | 198 | Show the title screen (BTTITLE.CMP, with its palette) | read |
 | 1000:476d | 0x1476d | `FUN_1000_476d` | 330 |  | - |
 | 1000:48b7 | 0x148b7 | `FUN_1000_48b7` | 495 |  | - |
-| 1000:4aa6 | 0x14aa6 | `FUN_1000_4aa6` | 14 | One party line in the panel: name, then three bars in columns 9-11 | read |
+| 1000:4aa6 | 0x14aa6 | `FUN_1000_4aa6` | 14 | Panel: a character's name and three bars (columns 9-11), the first with a red part | rebuilt |
 | 1000:4ab4 | 0x14ab4 | `FUN_1000_4ab4` | 269 |  | - |
-| 1000:4bc1 | 0x14bc1 | `FUN_1000_4bc1` | 235 |  | - |
+| 1000:4bc1 | 0x14bc1 | `FUN_1000_4bc1` | 235 | Panel: one bar, a yellow outline and a green fill from the bottom | rebuilt |
 | 1000:4cac | 0x14cac | `FUN_1000_4cac` | 171 | The left panel: party box (window 3, frame style 3, 'BDC' heading, up to 4 names) and the box above (window 4, style 4) | rebuilt |
 | 1000:4d57 | 0x14d57 | `FUN_1000_4d57` | 112 |  | - |
 | 1000:4dc7 | 0x14dc7 | `FUN_1000_4dc7` | 769 | New game: reset the party, load map 1 into area 4, set the start position | read |
@@ -71,7 +71,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | Address | Linear | Ghidra name | Span | Label | Status |
 |---|---|---|---|---|---|
 | 1527:000a | 0x1527a | `FUN_1527_000a` | 58 |  | - |
-| 1527:0044 | 0x152b4 | `FUN_1527_0044` | 2046 | Start-up: ask for the display, show INFOCOM.CMP then the title, cut the tile sheets | read |
+| 1527:0044 | 0x152b4 | `FUN_1527_0044` | 2046 | Start-up: cuts MECHSHAP.CMP into the sprite table | rebuilt |
 
 ## CODE_2: segment 15ab, 8,982 bytes
 
@@ -194,7 +194,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 1e31:1ea2 | 0x201b2 | `FUN_1e31_1ea2` | 103 |  | - |
 | 1e31:1f09 | 0x20219 | `FUN_1e31_1f09` | 106 |  | - |
 | 1e31:1f73 | 0x20283 | `FUN_1e31_1f73` | 108 |  | - |
-| 1e31:1fdf | 0x202ef | `FUN_1e31_1fdf` | 203 |  | - |
+| 1e31:1fdf | 0x202ef | `FUN_1e31_1fdf` | 203 | Panel: "C-Bills:" and the amount in green, in window 3 | rebuilt |
 
 ## CODE_10: segment 203b, 10,962 bytes
 
@@ -255,7 +255,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 
 | Address | Linear | Ghidra name | Span | Label | Status |
 |---|---|---|---|---|---|
-| 273d:0006 | 0x273d6 | `FUN_273d_0006` | 41 |  | - |
+| 273d:0006 | 0x273d6 | `FUN_273d_0006` | 41 | Waits N display frames (vertical retrace, 287f:0b40) | replaced |
 | 273d:002f | 0x273ff | `FUN_273d_002f` | 36 | Is a key waiting? (DOS int 21h 0Bh through 287f:3bdc, or recorded keys) | read |
 | 273d:0053 | 0x27423 | `FUN_273d_0053` | 51 |  | - |
 | 273d:0086 | 0x27456 | `FUN_273d_0086` | 79 | Copy a picture buffer to the screen (by display) | replaced |
@@ -269,7 +269,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 273d:05bc | 0x2798c | `FUN_273d_05bc` | 127 |  | - |
 | 273d:063b | 0x27a0b | `FUN_273d_063b` | 136 | Load a .CMP: 2-byte length, then the body (asks for the disk on failure) | rebuilt |
 | 273d:06c3 | 0x27a93 | `FUN_273d_06c3` | 71 |  | - |
-| 273d:070a | 0x27ada | `FUN_273d_070a` | 266 |  | - |
+| 273d:070a | 0x27ada | `FUN_273d_070a` | 266 | Cuts a rectangle of a picture into a sprite slot | rebuilt |
 | 273d:0814 | 0x27be4 | `FUN_273d_0814` | 86 |  | - |
 | 273d:086a | 0x27c3a | `FUN_273d_086a` | 24 | Short pause after a message, then flushes the keyboard | read |
 
@@ -297,8 +297,8 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 
 | Address | Linear | Ghidra name | Span | Label | Status |
 |---|---|---|---|---|---|
-| 284b:0048 | 0x284f8 | `FUN_284b_0048` | 73 |  | - |
-| 284b:0091 | 0x28541 | `FUN_284b_0091` | 44 |  | - |
+| 284b:0048 | 0x284f8 | `FUN_284b_0048` | 73 | Hooks int 8 and sets the timer to ~291 Hz for the music driver | replaced |
+| 284b:0091 | 0x28541 | `FUN_284b_0091` | 44 | Restores int 8 and the timer | replaced |
 | 284b:00bd | 0x2856d | `FUN_284b_00bd` | 551 |  | - |
 | 284b:02e4 | 0x28794 | `FUN_284b_02e4` | 34 |  | - |
 | 284b:0306 | 0x287b6 | `FUN_284b_0306` | 54 |  | - |
@@ -327,7 +327,7 @@ read each one before taking it as such.
 | 287f:022a | 0x28a1a | `FUN_287f_022a` | 54 | EGA: set one attribute palette register | replaced |
 | 287f:0260 | 0x28a50 | `FUN_287f_0260` | 179 | EGA: write a packed picture into the four planes at A800 | replaced |
 | 287f:0313 | 0x28b03 | `FUN_287f_0313` | 100 |  | replaced |
-| 287f:0377 | 0x28b67 | `FUN_287f_0377` | 507 |  | replaced |
+| 287f:0377 | 0x28b67 | `FUN_287f_0377` | 507 | Draws a sprite on the EGA screen, colour 0 see-through | replaced |
 | 287f:0572 | 0x28d62 | `FUN_287f_0572` | 77 |  | replaced |
 | 287f:05bf | 0x28daf | `FUN_287f_05bf` | 17 |  | replaced |
 | 287f:05d0 | 0x28dc0 | `FUN_287f_05d0` | 432 |  | replaced |
@@ -343,7 +343,7 @@ read each one before taking it as such.
 | 287f:0b73 | 0x29363 | `FUN_287f_0b73` | 23 |  | replaced |
 | 287f:0b8a | 0x2937a | `FUN_287f_0b8a` | 29 | BIOS int 16h function 0: wait for a key; character, or minus the scan code | replaced |
 | 287f:0ba7 | 0x29397 | `FUN_287f_0ba7` | 25 |  | replaced |
-| 287f:0bc0 | 0x293b0 | `FUN_287f_0bc0` | 59 |  | replaced |
+| 287f:0bc0 | 0x293b0 | `FUN_287f_0bc0` | 59 | Random number: 3-byte shift register at DS:4fc0 | rebuilt |
 | 287f:0bfb | 0x293eb | `FUN_287f_0bfb` | 268 |  | replaced |
 | 287f:0d07 | 0x294f7 | `FUN_287f_0d07` | 114 |  | replaced |
 | 287f:0d79 | 0x29569 | `FUN_287f_0d79` | 127 |  | replaced |

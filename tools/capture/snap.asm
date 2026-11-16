@@ -18,8 +18,10 @@
 ;   K: play the key script in KEYS.BIN (see below).
 ;
 ; Key script (tools/reference/run.py writes KEYS.BIN): a word count, then
-; that many words: 0FFFFh = capture the screen now, otherwise a key as the
-; BIOS gives it (scan code << 8 | character). Keys are fed only when the
+; that many words: 0FFFFh = capture the screen now; 0FFFEh N = let N more
+; empty polls go by before the next item (the game idles meanwhile; a
+; blocking read skips it); otherwise a key as the BIOS gives it (scan code
+; << 8 | character). Keys are fed only when the
 ; game is waiting for one, never by the clock, so a run does not depend on
 ; how fast the machine is:
 ;   - the game calls int 16h function 0 or 10h (wait for a key) and the
@@ -53,7 +55,8 @@ old21       dd 0
 POLLS       equ 4
 MAX_KEYS    equ 2048
 feeding     db 0
-polls       dw 0
+blocking    db 0                    ; feed was called from int 16h
+polls       dw 0                    ; signed: an idle step makes it negative
 key_pos     dw 0
 key_count   dw 0
 end_name    db 'SNAPEND.TXT', 0
@@ -138,7 +141,9 @@ int16:
         mov word [cs:polls], 0
         call buffer_empty
         jne .chain
+        mov byte [cs:blocking], 1
         call feed
+        mov byte [cs:blocking], 0
 .chain:
         jmp far [cs:old16]
 
@@ -151,7 +156,7 @@ int21:
         jne .chain
         inc word [cs:polls]
         cmp word [cs:polls], POLLS
-        jb .chain
+        jl .chain
         mov word [cs:polls], 0
         call feed
 .chain:
@@ -190,9 +195,21 @@ feed:
         shl bx, 1
         mov cx, [keys + bx]
         cmp cx, 0ffffh
-        jne .key
+        jne .idle
         call capture
         jmp .next
+.idle:
+        cmp cx, 0fffeh
+        jne .key
+        mov bx, [key_pos]               ; the count follows
+        inc word [key_pos]
+        shl bx, 1
+        cmp byte [blocking], 0
+        jne .next                       ; nothing idles in a blocking read
+        mov ax, POLLS
+        sub ax, [keys + bx]
+        mov [polls], ax
+        jmp .out
 .key:
         mov ah, 5
         pushf

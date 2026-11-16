@@ -12,9 +12,11 @@
 // --import (which imports again and quits). --text FILE layers a text file
 // of the same form (formats/import.h) over the imported one, e.g. a
 // translation.
-// --script plays a key sequence on the map first ("up*5 y", see
+// --script plays a key sequence on the map first ("up*5 y", "idle:40", see
 // game/town.h) and prints what each key did. --screenshot renders one frame
-// to the file without opening a window.
+// to the file without opening a window. In a window the town runs at the
+// original's pace, one main-loop pass per display frame of a VGA card
+// (game/clock.h).
 //
 // The game folder is --game-dir, else the CHR_GAME_DIR environment variable,
 // else the folder set when the program was built.
@@ -34,11 +36,13 @@
 #include "formats/mtp.h"
 #include "formats/palette.h"
 #include "game/asset_id.h"
+#include "game/clock.h"
 #include "game/map_view.h"
 #include "game/text_provider.h"
 #include "game/town.h"
 #include "platform/map_layer.h"
 #include "platform/original_assets.h"
+#include "platform/panel_layer.h"
 #include "platform/renderer.h"
 #include "platform/text_layer.h"
 
@@ -196,7 +200,7 @@ int main(int argc, char** argv) {
     int status = 0;
     chr::formats::MtpMap map;
     chr::formats::MapPosition start;
-    std::deque<int> keys;  // every key so far, the script's first
+    std::deque<chr::game::ScriptItem> keys;  // every key and idle stretch so far, the script's first
     if (options.map != 0 && !load_map(options.game_dir, options.map, map, start)) status = 1;
     chr::game::TextTable overrides;
     if (status == 0 && !options.text_file.empty()) {
@@ -221,9 +225,10 @@ int main(int argc, char** argv) {
         const auto palette = chr::formats::standard_palette_ega();
         const auto& title = chr::assets::kTitleScreen;
 
-        // The town is played again from the start after every key: the
-        // logic asks for keys as it needs them (a question waits for its
-        // answer), and replaying keeps it that simple while frames are cheap.
+        // The town takes keys and idle passes as they come. A question asks
+        // for its answer in the middle of a turn; when it is left waiting,
+        // the town is played again from the start with the answer (replay),
+        // which keeps the logic a plain sequence.
         std::unique_ptr<chr::game::Town> town;
         chr::game::TextTable imported;
         try {
@@ -258,6 +263,8 @@ int main(int argc, char** argv) {
 
         bool running = status == 0;
         bool reported = false;
+        chr::game::FrameClock clock;
+        Uint64 last = SDL_GetTicksNS();
         while (running) {
             SDL_Event event;
             while (SDL_PollEvent(&event)) {
@@ -265,15 +272,31 @@ int main(int argc, char** argv) {
                 if (event.type != SDL_EVENT_KEY_DOWN) continue;
                 if (event.key.key == SDLK_ESCAPE) running = false;
                 if (const int k = key_code(event.key.key); k != 0 && town) {
-                    keys.push_back(k);
-                    replay();
+                    keys.push_back({k, 0});
+                    if (town->question_open()) {
+                        replay();
+                    } else {
+                        chr::game::ScriptKeys none({});
+                        town->key(k, none);
+                    }
                 }
+            }
+            const Uint64 now = SDL_GetTicksNS();
+            const int frames = clock.advance(double(now - last) / 1e9);
+            last = now;
+            if (town && frames > 0 && !town->question_open() && options.screenshot.empty()) {
+                for (int i = 0; i < frames; ++i) town->idle_pass();
+                if (!keys.empty() && keys.back().idle > 0) keys.back().idle += frames;
+                else keys.push_back({0, frames});
             }
             renderer.begin_frame();
             bool drawn = true;
             if (town) {
-                drawn = chr::platform::draw_map(renderer, town->view());
+                const auto view = town->view();
+                drawn = chr::platform::draw_map(renderer, view);
+                drawn = chr::platform::draw_figures(renderer, view, town->figures()) && drawn;
                 drawn = chr::platform::draw_text(renderer, town->text(), palette) && drawn;
+                chr::platform::draw_bars(renderer, town->bars(), palette);
             } else {
                 drawn = renderer.draw(title, 0, 0);
             }

@@ -20,7 +20,9 @@ public:
     OriginalAssets(std::filesystem::path game_dir, std::filesystem::path data_dir);
     // Also answers {"FONT", c}, the font's character c from the imported
     // font file (white on transparent, for the renderer to colour), and
-    // {"NAME.CMP:8x8", n}, cell n of that picture cut into 8x8 cells.
+    // {"NAME.CMP:8x8", n}, cell n of that picture cut into 8x8 cells, and
+    // {"MECHSHAP.CMP:sprite", n}, slot n of the program's sprite table
+    // (formats/sprite_sheet.h), colour 0 see-through.
     std::optional<Image> image(const AssetId& id) override;
 
 
@@ -29,6 +31,7 @@ public:
 
 private:
     const formats::TileSheet* sheet(const std::string& file);
+    const formats::CmpPicture* picture(const std::string& file);
 
     std::filesystem::path game_dir_;
     std::map<std::string, formats::TileSheet> sheets_;  // decoded once per file

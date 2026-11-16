@@ -43,6 +43,19 @@ bool Renderer::draw(const AssetId& id, int x, int y) {
     return SDL_RenderTexture(sdl_, texture, nullptr, &dest);
 }
 
+bool Renderer::draw_top(const AssetId& id, int x, int y, int visible_height) {
+    SDL_Texture* texture = texture_for(id);
+    if (!texture) return false;
+    const Entry& entry = cache_.at(id);
+    if (visible_height >= entry.logical_height) return draw(id, x, y);
+    if (visible_height <= 0) return true;
+    float tw = 0, th = 0;
+    SDL_GetTextureSize(texture, &tw, &th);
+    const SDL_FRect src{0, 0, tw, th * float(visible_height) / entry.logical_height};
+    const SDL_FRect dest{float(x), float(y), entry.logical_width, float(visible_height)};
+    return SDL_RenderTexture(sdl_, texture, &src, &dest);
+}
+
 bool Renderer::draw_tinted(const AssetId& id, int x, int y, std::uint8_t r, std::uint8_t g,
                            std::uint8_t b) {
     SDL_Texture* texture = texture_for(id);

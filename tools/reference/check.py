@@ -32,39 +32,67 @@ SKIP = 77
 # first time playing BattleTech?" (Enter: yes) and starts the town.
 START = "3 3 enter enter enter enter"
 
+# Every case runs on from the one before it, in one run of the original.
+# "keys" are the original's keys and idle steps since the previous case
+# (run.py's script language); chr is given the same input with the feeder's
+# idle passes spelled out (chr_script()).
+WHOLE_PANEL = (0, 0, 104, 200)
+WHOLE_MAP = (104, 0, 216, 200)
+
 CASES = [
     {
+        # The first pass of the main loop is a game tick: 15 C-Bills (20 to
+        # 35), the animated tiles on frame 1.
         "name": "town_start",
-        "chr_script": "",
-        "match": {
-            "map above the party": (104, 0, 216, 96),
-            "panel: upper box and frames": (0, 0, 104, 112),
-            "panel: party names": (0, 112, 72, 64),
-        },
-        "known": [
-            "the party's figure (1000:051b, not drawn yet)",
-            "animated tiles, e.g. the fence (1000:240b: a 3-frame cycle from ANIMATE.ICN, advanced "
-            "every 11 idle ticks of the main loop 1000:01f4)",
-            "the panel's three bars per character (1000:4bc1)",
-            "C-Bills and their amount (1e31:1fdf; the amount grows in the main loop's game tick)",
-        ],
+        "keys": "",
+        "match": {"the panel": WHOLE_PANEL, "the map": WHOLE_MAP},
     },
     {
+        # 12 passes: the second game tick (the fence's frame 2).
+        "name": "town_idle",
+        "keys": "idle:9",
+        "match": {"the panel": WHOLE_PANEL, "the map": WHOLE_MAP},
+    },
+    {
+        # Each key is a game tick too; the fifth asks its question first.
         "name": "citadel_question",
-        "chr_script": "up*5",
         "keys": "up*5",
-        "match": {
-            "the question box": (104, 72, 216, 56),
-            "map above the box": (104, 0, 216, 72),
-            "panel: the move log and frames": (0, 0, 104, 112),
-            "panel: party names": (0, 112, 72, 64),
-        },
-        "known": [
-            "animated tiles below the box (1000:240b)",
-            "the panel's bars and C-Bills (1000:4bc1, 1e31:1fdf)",
-        ],
+        "match": {"the panel": WHOLE_PANEL, "the map": WHOLE_MAP},
+    },
+    {
+        # No, then 250 more ticks: the 257th runs the money step again (35
+        # to 50, the floor), and the fence is on frame 2.
+        "name": "money_step",
+        "keys": "n idle:2753",
+        "match": {"the panel": WHOLE_PANEL, "the map": WHOLE_MAP},
     },
 ]
+
+# The feeder (tools/capture/snap.asm, docs/reference.md) hands over a key at
+# every 4th poll of the keyboard. The main loop polls once a pass, and after
+# a key it flushes the keyboard with one more poll, so the town starts with
+# 3 passes before the first item, and a key is followed by 2. idle:N is N.
+FIRST_PASSES = 3
+PASSES_AFTER_KEY = 2
+
+
+def expand(keys):
+    out = []
+    for token in keys.replace(",", " ").split():
+        name, _, count = token.partition("*")
+        out += [name] * (int(count) if count else 1)
+    return out
+
+
+def chr_script(upto):
+    """The chr script for the case at index `upto`: every item so far."""
+    items = ["idle:%d" % FIRST_PASSES]
+    for case in CASES[:upto + 1]:
+        for k in expand(case["keys"]):
+            items.append(k)
+            if not k.startswith("idle:"):
+                items.append("idle:%d" % PASSES_AFTER_KEY)
+    return " ".join(items)
 
 
 def original_script():
@@ -94,18 +122,18 @@ def main():
 
     os.makedirs(a.work, exist_ok=True)
     ref_dir = os.path.join(a.work, "original")
-    finished, _ = run.run(a.game_dir, original_script(), ref_dir, timeout=120)
+    finished, _ = run.run(a.game_dir, original_script(), ref_dir, timeout=240)
     if not finished:
         print("the original did not reach the end of the script")
         return 1
 
     env = dict(os.environ, SDL_VIDEO_DRIVER="dummy", SDL_AUDIO_DRIVER="dummy")
     ok = True
-    for case in CASES:
+    for i, case in enumerate(CASES):
         name = case["name"]
         shot = os.path.join(a.work, name + ".bmp")
         subprocess.run([a.chr, "--game-dir", a.game_dir, "--data-dir", a.data_dir, "--map", "1",
-                        "--script", case["chr_script"], "--screenshot", shot],
+                        "--script", chr_script(i), "--screenshot", shot],
                        check=True, env=env, stdout=subprocess.DEVNULL)
         ref = compare.reference_pixels(os.path.join(ref_dir, name + ".bin"))
         ours = compare.bmp_pixels(shot)
@@ -118,7 +146,7 @@ def main():
             n = len(compare.compare_rect(ref, ours, rect))
             print(f"  {'ok  ' if n == 0 else 'FAIL'} {label}: {n} pixels differ")
             ok = ok and n == 0
-        for known in case["known"]:
+        for known in case.get("known", []):
             print(f"  known: {known}")
     return 0 if ok else 1
 

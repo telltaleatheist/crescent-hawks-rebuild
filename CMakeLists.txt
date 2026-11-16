@@ -34,14 +34,18 @@ add_library(chrformats STATIC
   src/formats/mtp.cpp
   src/formats/palette.cpp
   src/formats/sha256.cpp
+  src/formats/sprite_sheet.cpp
 )
 target_include_directories(chrformats PUBLIC src)
 
 # (The game logic reads the map data through chrformats.)
 add_library(chrgame STATIC
   src/game/asset_id.cpp
+  src/game/figures.cpp
   src/game/map_view.cpp
+  src/game/money.cpp
   src/game/movement.cpp
+  src/game/random.cpp
   src/game/text.cpp
   src/game/text_provider.cpp
   src/game/town.cpp
@@ -69,6 +73,7 @@ if(SDL3_FOUND)
   add_library(chrplatform STATIC
     src/platform/map_layer.cpp
     src/platform/original_assets.cpp
+    src/platform/panel_layer.cpp
     src/platform/renderer.cpp
     src/platform/text_layer.cpp
   )

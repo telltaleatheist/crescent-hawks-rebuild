@@ -75,6 +75,12 @@ public:
 
     // The window's current colours: the yes/no question sets and restores them.
     void set_fg(int fg) { windows_[current_].fg = fg; }
+    // Puts the current window's cursor at (col, row) inside it
+    // (DGROUP:3748/374e for the current window).
+    void set_cursor(int col, int row) {
+        windows_[current_].col = col;
+        windows_[current_].row = row;
+    }
     // Moves the cursor up a row (the yes/no question rewrites its line).
     void cursor_up() { --windows_[current_].row; }
 

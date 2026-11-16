@@ -1,23 +1,44 @@
 #include "game/town.h"
 
+#include <algorithm>
 #include <cctype>
 #include <cstdio>
 #include <stdexcept>
 
+#include "game/tile_animation.h"
+
 namespace chr::game {
 
-std::optional<int> ScriptKeys::next() {
-    if (keys_.empty()) return std::nullopt;
-    const int k = keys_.front();
-    keys_.pop_front();
-    return k;
+std::optional<ScriptItem> ScriptKeys::next_item() {
+    if (items_.empty()) return std::nullopt;
+    const auto item = items_.front();
+    items_.pop_front();
+    return item;
 }
 
-std::deque<int> parse_key_script(const std::string& script) {
-    std::deque<int> keys;
+std::optional<int> ScriptKeys::next() {
+    while (!items_.empty() && items_.front().idle > 0) items_.pop_front();
+    const auto item = next_item();
+    if (!item) return std::nullopt;
+    return item->key;
+}
+
+std::deque<ScriptItem> parse_key_script(const std::string& script) {
+    std::deque<ScriptItem> keys;
     std::string token;
     auto add = [&](const std::string& t) {
         if (t.empty()) return;
+        if (t.rfind("idle:", 0) == 0) {
+            int n = 0;
+            try {
+                n = std::stoi(t.substr(5));
+            } catch (const std::exception&) {
+                throw std::invalid_argument("bad count in \"" + t + "\"");
+            }
+            if (n < 0) throw std::invalid_argument("bad count in \"" + t + "\"");
+            if (n > 0) keys.push_back({0, n});
+            return;
+        }
         std::string name = t;
         int count = 1;
         if (const auto star = t.find('*'); star != std::string::npos) {
@@ -41,7 +62,7 @@ std::deque<int> parse_key_script(const std::string& script) {
         else if (name == "enter") k = key::kEnter;
         else if (name.size() == 1) k = static_cast<unsigned char>(name[0]);
         else throw std::invalid_argument("unknown key \"" + name + "\"");
-        for (int i = 0; i < count; ++i) keys.push_back(k);
+        for (int i = 0; i < count; ++i) keys.push_back({k, 0});
     };
     for (const char c : script) {
         if (c == ' ' || c == ',') {
@@ -60,7 +81,34 @@ Town::Town(const formats::MtpMap& map, int map_number, formats::MapPosition star
     : map_(map), map_number_(map_number), tile_sheet_(tile_sheet_for_map(map_number)),
       position_(start), texts_(texts) {}
 
-MapView Town::view() const { return view_of(map_, tile_sheet_, position_); }
+MapView Town::view() const {
+    auto view = view_of(map_, tile_sheet_, position_);
+    if (tiles_animate(map_number_))
+        for (auto& cell : view.cells)
+            if (const auto frame = animated_tile(std::uint8_t(cell.tile.index), phase_)) cell.tile = *frame;
+    return view;
+}
+
+std::vector<Figure> Town::figures() const { return party_figures(map_, position_, party_, animation_); }
+
+// BTECH.EXE 1000:4aa6 (Ghidra FUN_1000_4aa6)
+// Beside each of the first four characters' names (row 14, 16, ...): bars at
+// columns 9, 10 and 11. The first bar's top part, its number less a tenth
+// of byte 15 (at least 1), is drawn as a warning.
+std::vector<StatBar> Town::bars() const {
+    std::vector<StatBar> bars;
+    int line = 0;
+    for (int i = 0; i < 8 && line < 4; ++i) {
+        if (!party_.present[i]) continue;
+        const auto& s = stats_[i];
+        const int row = 14 + 2 * line;
+        bars.push_back({9, row, s.b, s.b - std::max(s.byte15 / 10, 1)});
+        bars.push_back({10, row, s.d, 0});
+        bars.push_back({11, row, s.c, 0});
+        ++line;
+    }
+    return bars;
+}
 
 void Town::draw_panel() {
     text_.fill(0, 0, 13, kTextRows, 0);  // the panel starts black
@@ -68,13 +116,14 @@ void Town::draw_panel() {
     text_.frame(3);
     text_.put_text(lookup(texts_, "panel.party_heading"), 9, 13, 15, 0);
     // The first four characters of the party, a line each from row 14, two
-    // rows apart; the three bars beside each name (1000:4bc1) are not drawn yet.
+    // rows apart, with their bars (bars()).
     int line = 0;
     for (int i = 0; i < 8 && line < 4; ++i) {
         if (!party_.present[i]) continue;
         text_.put_text(lookup(texts_, "character." + std::to_string(i)), 1, 14 + 2 * line, 15, 0);
         ++line;
     }
+    draw_cbills();
     text_.select_window(4);
     text_.frame(4);
 }
@@ -130,12 +179,68 @@ private:
     KeySource& keys_;
 };
 
-void Town::run(KeySource& keys) {
+void Town::draw_cbills() {
+    const int previous = text_.window_number();
+    text_.select_window(3);
+    text_.set_cursor(0, 9);
+    text_.print(lookup(texts_, "panel.cbills_label"));
+    // BTECH.EXE 1000:28a2 (Ghidra FUN_1000_28a2): light green (CGA: colour 1).
+    text_.set_fg(10);
+    // The amount in decimal, padded with spaces to ten characters so a
+    // shorter number covers a longer one.
+    std::string amount = std::to_string(money_.cbills);
+    if (amount.size() < 10) amount.resize(10, ' ');
+    text_.print(amount);
+    text_.set_fg(15);
+    text_.select_window(previous);
+}
+
+void Town::run(ScriptKeys& input) {
     while (!question_open_ && !entered_place_) {
-        const auto k = keys.next();
-        if (!k) break;
-        turn(*k, keys);
+        const auto item = input.next_item();
+        if (!item) break;
+        if (item->idle > 0) {
+            for (int i = 0; i < item->idle; ++i) idle_pass();
+        } else {
+            key(item->key, input);
+        }
     }
+}
+
+void Town::idle_pass() {
+    if (question_open_ || entered_place_) return;
+    if (--countdown_ < 0) game_tick();
+}
+
+void Town::key(int k, KeySource& more) {
+    if (question_open_ || entered_place_) return;
+    turn(k, more);
+    if (question_open_ || entered_place_) return;
+    // BTECH.EXE 1000:00fb: the figures' walking frames move on, then the key
+    // half goes straight on to a game tick.
+    animation_.key(k);
+    game_tick();
+}
+
+void Town::game_tick() {
+    // Timers that count down every tick when set (DGROUP:d335, d343-d345,
+    // d329, d320-d322): none is set in the town at the start of a game; their
+    // uses are not read yet.
+    // A random number is drawn every tick for the chance of an encounter
+    // (DGROUP:d330 masks it, 203b:000a starts the fight). Only outdoors,
+    // which is not rebuilt yet; the draw keeps the sequence in step.
+    const std::uint8_t r = random_.next();
+    (void)r;  // outdoors, (r & DGROUP:d330) == 0 starts a fight: not rebuilt
+    if (money_tick(money_, outdoors_, random_)) draw_cbills();
+    countdown_ = 10;
+    if (tiles_animate(map_number_)) phase_ = (phase_ + 1) % 3;  // 1000:240b
+    // BTECH.EXE 1000:24c2 (Ghidra FUN_1000_24c2) moves the townspeople on
+    // every third tick: not rebuilt yet.
+    if (third_++ == 2) third_ = 0;
+    // The map and the figures are drawn again (DGROUP:014a is set in town),
+    // over any message box (1000:046e).
+    text_.forget(13, 0, kTextColumns - 13, kTextRows);
+    ++ticks_;
 }
 
 namespace {
@@ -150,8 +255,6 @@ std::string direction_text_id(Step s) {
 }  // namespace
 
 void Town::turn(int k, KeySource& keys) {
-    // The map is drawn again every turn (1000:00bb), over the message box.
-    text_.forget(13, 0, kTextColumns - 13, kTextRows);
     const auto step = step_for_key(k);
     if (!step) {
         log_.push_back("key " + std::to_string(k) + ": nothing");

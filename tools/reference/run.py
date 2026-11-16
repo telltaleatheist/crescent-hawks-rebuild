@@ -35,6 +35,7 @@ import snap2png  # noqa: E402
 
 DOSBOX = "/Applications/dosbox-x.app/Contents/MacOS/dosbox-x"
 SNAP_MARK = 0xFFFF
+IDLE_MARK = 0xFFFE
 
 # BIOS key words: scan code << 8 | character.
 NAMED = {
@@ -65,6 +66,11 @@ def compile_script(script):
         if token.startswith("@snap:"):
             words.append(SNAP_MARK)
             names.append(token[len("@snap:"):])
+            continue
+        if token.startswith("idle:"):
+            # N more passes of a polling wait before the next item: in the
+            # town's main loop, N more idle passes (docs/reference.md).
+            words.extend([IDLE_MARK, int(token[len("idle:"):])])
             continue
         name, _, count = token.partition("*")
         words.extend([key_word(name)] * (int(count) if count else 1))

@@ -32,6 +32,12 @@ key in the BIOS buffer (int 16h function 5) only when the program is waiting for
 - int 21h function 0Bh is asked with an empty buffer for the 4th time in a row since the last key
   read. A flush asks once and stops, so it never gets a key; a polling wait asks again and gets one.
 
+`idle:N` in a script lets N more polls go by before the next item (the main loop runs one idle
+pass per poll); a blocking read skips it, since nothing idles there. In the town that gives
+exact pass counts: the main loop starts with 3 passes before the first item, a key is followed
+by 2 (its flush uses up one of the 4 polls), and `idle:N` adds N. `check.py` spells these out
+for chr (`chr_script()`), so both sides run the same number of game ticks.
+
 Captures (`@snap:NAME`) are written at the same moments, so they show the screen the program is
 waiting on. When the script ends SNAP writes SNAPEND.TXT and `run.py` kills DOSBox-X. Nothing
 depends on the clock or on how fast the host is: two runs of the same script give byte-identical
@@ -62,15 +68,16 @@ game.
    game, or start a new game. Do you want to load an old game?".
 4. The town, map 1, at the start position.
 
-## Findings so far (town start and the Citadel question)
+## Findings
 
-Identical: the map tiles, the panel's frames, the party names, the message box and its text, the
-yes/no line, and the move log. Different, with the cause in the original:
+All four cases in `check.py` (town start, 9 idle passes later, the Citadel question, and 250
+game ticks after answering no) are identical over the whole screen: map, animated tiles, the
+party's figure, the panel with its bars, C-Bills and move log. docs/town_loop.md has what the
+main loop does and when.
 
-| Difference | Cause |
-|---|---|
-| The party's figure | `1000:051b` draws the figures; not rebuilt yet. Leader at screen (208, 96), as docs/movement.md says. |
-| Fence and other animated tiles | `1000:240b`: 10 tiles (numbers at DS:04b0) cycle through 3 frames from ANIMATE.ICN (loaded by `1000:320b`). The main loop's idle half (`1000:01f4`) waits a timer tick per pass and every 11 passes runs a game tick: one animation step, every third tick `1000:24c2`, money, and a redraw. The phase in a capture depends on how many ticks ran, which the feeder makes repeatable. |
-| The three bars per character | `1000:4bc1`, drawn by `1000:4aa6` in columns 9-11 under "BDC". |
-| "C-Bills:" and the amount | `1e31:1fdf`. The amount is 20 on the first-time screen and 35 in town: the game tick adds to it. |
-| The move log ("North" in the upper box) | Found by this comparison and now rebuilt: the main loop prints the direction (DS:01aa) in window 4 after each walking key unless a message came up. |
+Found by the comparison along the way:
+
+- The move log ("North" in the upper box): the main loop prints the direction (DS:01aa) in
+  window 4 after each walking key unless a message came up.
+- The main loop's pace is the display's vertical retrace, not the timer (docs/town_loop.md).
+- The party's figure is sprite slot 0xa6, not a 'Mech: its frame offset starts at 0x10.

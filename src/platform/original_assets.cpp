@@ -10,6 +10,7 @@
 #include "formats/icn.h"
 #include "formats/import.h"
 #include "formats/palette.h"
+#include "formats/sprite_sheet.h"
 
 namespace chr::platform {
 
@@ -66,6 +67,19 @@ const formats::Font* OriginalAssets::font() {
     return font_.get();
 }
 
+const formats::CmpPicture* OriginalAssets::picture(const std::string& file) {
+    auto it = pictures_.find(file);
+    if (it == pictures_.end()) {
+        const auto path = formats::find_game_file(game_dir_, file);
+        if (!path) {
+            last_error_ = file + " not found in " + game_dir_.string();
+            return nullptr;
+        }
+        it = pictures_.emplace(file, formats::decode_cmp(formats::read_file(*path))).first;
+    }
+    return &it->second;
+}
+
 std::optional<Image> OriginalAssets::image(const AssetId& id) {
     last_error_.clear();
     try {
@@ -84,18 +98,32 @@ std::optional<Image> OriginalAssets::image(const AssetId& id) {
             return glyph;
         }
         if (const auto colon = id.file.find(":8x8"); colon != std::string::npos) {
-            const std::string file = id.file.substr(0, colon);
-            auto it = pictures_.find(file);
-            if (it == pictures_.end()) {
-                const auto path = formats::find_game_file(game_dir_, file);
-                if (!path) {
-                    last_error_ = file + " not found in " + game_dir_.string();
-                    return std::nullopt;
-                }
-                it = pictures_.emplace(file, formats::decode_cmp(formats::read_file(*path))).first;
-            }
-            const auto cell = formats::picture_cell(it->second, id.index);
+            const auto* pic = picture(id.file.substr(0, colon));
+            if (!pic) return std::nullopt;
+            const auto cell = formats::picture_cell(*pic, id.index);
             return from_colour_numbers({cell.begin(), cell.end()}, 8, 8, formats::standard_palette_ega());
+        }
+        if (id.file == "MECHSHAP.CMP:sprite") {
+            // A slot of the program's sprite table. Colour 0 is see-through:
+            // the EGA sprite drawer (287f:0377) masks with the OR of the four
+            // planes.
+            const auto rect = formats::mechshap_sprite(id.index);
+            if (!rect) {
+                last_error_ = to_string(id) + ": the program never fills this slot";
+                return std::nullopt;
+            }
+            const auto* pic = picture("MECHSHAP.CMP");
+            if (!pic) return std::nullopt;
+            const auto all = pic->pixels();
+            std::vector<std::uint8_t> numbers;
+            numbers.reserve(std::size_t(rect->width * rect->height));
+            for (int y = 0; y < rect->height; ++y)
+                for (int x = 0; x < rect->width; ++x)
+                    numbers.push_back(all[std::size_t((rect->y + y) * formats::kCmpWidth + rect->x + x)]);
+            auto image = from_colour_numbers(numbers, rect->width, rect->height, formats::standard_palette_ega());
+            for (std::size_t i = 0; i < numbers.size(); ++i)
+                if ((numbers[i] & 0x0f) == 0) image.rgba[4 * i + 3] = 0;
+            return image;
         }
         const auto path = formats::find_game_file(game_dir_, id.file);
         if (!path) {

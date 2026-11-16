@@ -42,6 +42,7 @@ constexpr std::array kDos103 = {
     ExeSpan{ExeSpan::Kind::Text, "ui.answer_no_picked", 0x46db, 0x03fe, 17},
     // 1000:4cac, the heading over the party box's three bar columns:
     ExeSpan{ExeSpan::Kind::Text, "panel.party_heading", 0x46db, 0x0aca, 4},
+    ExeSpan{ExeSpan::Kind::Text, "panel.cbills_label", 0x46db, 0x32da, 12},
     // The eight characters' names (pointers at DGROUP:01ca):
     ExeSpan{ExeSpan::Kind::Text, "character.0", 0x46db, 0x00b2, 6},
     ExeSpan{ExeSpan::Kind::Text, "character.1", 0x46db, 0x00b8, 4},

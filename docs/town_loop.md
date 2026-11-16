@@ -1,0 +1,136 @@
+# The town's main loop
+
+`1000:0000` starts the main loop on a map; `1000:002d` is its key half and `1000:01f4` its idle
+half. Rebuilt in `src/game/town.cpp` (`Town::key`, `Town::idle_pass`, `Town::game_tick`).
+
+## Pace: a pass is a display frame
+
+Each pass of the loop asks DOS whether a key is waiting (`273d:002f`, int 21h function 0Bh).
+
+- **No key** (idle half): it waits once in `273d:0006`. That is not a timer wait: it calls
+  `287f:0b40` (0x29330), which waits for the vertical retrace on the VGA/EGA status port 3DAh.
+  So a pass lasts one display frame: about 70 per second on a VGA card in the 320x200 modes (what
+  DOSBox shows), 60 on an EGA card. Then a countdown (`[bp-1a]`, 0 when the loop starts) is
+  decremented; when it goes below 0 a game tick runs. So the first pass on a map is a tick, and
+  then every 11th pass.
+- **A key** (key half): it reads the key, flushes the keyboard, takes the steps, logs the
+  direction, then calls `1000:231d` (the figures' walking frames) and goes straight on to a game
+  tick, without waiting. Every key is a game tick.
+
+The timer chip is reprogrammed, but only for the music: `284b:0048`, called after
+WWOODBT.SIF is loaded into the sound driver, hooks int 8 and sets PIT channel 0 to divisor
+0x0FFF (about 291 Hz). Its handler calls the sound driver's hook every interrupt and the BIOS's
+own handler every 16th (so the BIOS clock still runs at 18.2 Hz). `284b:0091` restores 0xFFFF.
+The main loop never reads it.
+
+The rebuild counts passes and ticks only. The window's main loop turns real time into passes
+with `game::FrameClock` (70.086 a second, a VGA card's rate); scripts (`idle:N`) and tests give
+the passes directly.
+
+## The game tick
+
+In order (`1000:020a`..`050d`):
+
+1. Timers that count down when set: bytes DS:d335.., the countdown d343-d345 (on expiry, in a
+   part of the map, `1000:e0a2(1)`), d329, d320, d321, d322. None is set in town at the start of
+   a game; not rebuilt yet.
+2. A random number (`287f:0bc0`), always. Outdoors (DS:d310 set), if it has none of the bits of
+   DS:d330 and DS:d346 is clear, a fight starts (`203b:000a`). Not rebuilt yet; the draw is,
+   so the sequence stays in step.
+3. The money step, every 256th tick (DS:d323 counts down; it starts at 0, so the first tick
+   runs it). Below.
+4. The countdown is set to 10.
+5. `1000:240b`: the animated tiles' next frame. Below.
+6. DS:57fe counts ticks; on every third (`57fe` was 2), `1000:24c2` moves the townspeople. Not
+   rebuilt yet.
+7. If DS:014a is set (it is in town): the map is drawn again (`2000:9b04`, `a0df`), the figures
+   (`1000:051b`), and the screen is flipped (`7a93`). Then, if DS:01a8 is set, the game is over
+   (string 0x12f, a yes/no question, a new game or quit).
+
+## Money
+
+C-Bills are DS:d370 (32-bit). Three more 32-bit amounts at DS:d374, d378, d37c behave like
+investments. A new game (`1000:4e89`, `4e9c`) sets C-Bills to 20 and the three to 0; the floor,
+the word made of DS:d340 (high) and d33f (low) and read by `1000:29f5`, is 50 (`1000:4f70`).
+
+The money step:
+
+- The total is the C-Bills plus the three amounts.
+- In town (d310 clear): if the floor is above the total, 15 C-Bills are added. Either way the
+  C-Bills line is drawn again (`1e31:1fdf`).
+- Outdoors, or if the floor was above the total: for each of the three, a random number; if it
+  has any of the bits 0xff, 0x07, 0x01 (DS:02a2) the amount becomes amount x 100 / rate,
+  otherwise amount x rate / 110, with the rates 96, 90, 48 (DS:02a8). 32-bit arithmetic,
+  truncating. After a gain the third is cut to a quarter when it is over 18,000 (an unsigned
+  32-bit shift).
+
+So a new game in town has 35 C-Bills after the first tick and 50 after the 257th, and no more
+come that way. Checked against the original by `check.py` (`money_step`).
+
+`1e31:1fdf`, the C-Bills line: in window 3, cursor column 0 row 9, it prints the string at
+DS:32da (colour code 15, "C-Bills:", a line break), sets the colour to 10 (`1000:28a2`; 1 on
+CGA), prints the amount in decimal padded with spaces to 10 characters, sets 15 again, and
+selects the window that was current before.
+
+## Animated tiles
+
+`1000:320b` loads ANIMATE.ICN into the tile slots and copies 30 of its tiles (from tile 1) to a
+buffer of its own. `1000:240b` runs only when the word at 3892:3988 is 0: loading BTTLTECH.ICN
+sets it to 0, map 11's tiles set 1 and map 14's 2. It moves DS:5800 on (0, 1, 2, 0, ...;
+0 at start-up) and copies, for each of the 10 tile numbers at DS:04b0 (57 58 59 5A 5B 69 6A 6B
+6F 71), ANIMATE.ICN tile 1 + 3i + frame over that tile's slot. Rebuilt as a lookup in
+`Town::view()` (`game/tile_animation.h`): the cells keep their tile numbers and the view names
+the frame's picture.
+
+## Random numbers
+
+`287f:0bc0` keeps 3 bytes at DS:4fc0 (s0, s1, s2). Each call: s2 shifts left taking bit 1 of
+s0, s1 shifts left taking s2's old top bit; t = (s0 >> 2) - s0 - (1 - s1's old top bit) in 8
+bits; s0 shifts right taking t's low bit at the top; the result is s0 XOR s1. The image starts
+04 03 02; `1000:522c` sets 25 13 90 at start-up. `1000:a9de` seeds it from DS:d456 x 0x187 in a
+wait loop not traced yet. Rebuilt in `src/game/random.cpp`.
+
+## The panel
+
+`1000:4cac` draws the party box (window 3): for each of the first four characters present,
+`1000:4aa6` (row 14, 16, 18, 20), then the C-Bills line, then window 4's frame.
+
+`1000:4aa6` prints the name and draws three bars at columns 9, 10, 11 of the name's row, with
+the character's bytes 1, 2 and 3 (its 17-byte record at DS:c614; Jason: 8, 9, 7). Over the
+first it draws a red part (colour 4; 2 on CGA), from the bar's top down, the bar's number less a
+tenth of byte 15 (at least 1) pixels tall, unless that is 0 (Jason's byte 15 is 80: 8 - 8 = 0).
+
+`1000:4bc1` draws a bar at column c, pixel row y (all inclusive, x = 8c): yellow lines (14; 3 on
+CGA, `273d:031c`) along the top (x+1..x+5, y), the sides (x and x+6, y+1..y+13) and the bottom
+(x+1..x+5, y+14), and a green box (10; 1 on CGA, `273d:01fb`) from (x+2, y+14-value) to (x+4,
+y+13).
+
+## The party's figures
+
+`1000:051b` draws the map's objects first (`1000:2a93`, up to 64; not rebuilt), then the
+party. For each of the 8 characters present (byte 0 of its record not 0xff, byte 12 at least
+8), the k-th one drawn goes at the k-th formation place: screen (DS:02ae[k], DS:02be[k]),
+which is the party's half-cell plus the formation offset (docs/movement.md) plus one half-cell
+right. Its sprite slot is its base (DS:d562; Jason's is 0x96, from the new game at `1000:4f0f`)
+plus its walking frame (DS:409a). Then the townspeople (0x10-0x17) and the 'Mechs; not rebuilt.
+
+Sinking: the tile under the figure (the cell holding its half-cell) means water in that quarter
+if it is below 0xf6, its high nibble below 3, and it has any of the bits that DS:0332 gives for
+the figure's place k and the position's odd/even half-cells. Then the figure sinks 2 rows, or 4
+if the high nibble is 2: the sprite's height is cut, so its bottom rows are not drawn.
+
+Walking frames: after every key, `1000:231d` checks it against the 8 walking keys (DS:0160).
+For the matching direction it moves every character's script on (`1000:1732`): if the
+character last walked another way, its script starts over at that direction's. A script (at
+37e8:0270, 8 bytes per direction, the 'Mechs' then the characters') is frame bytes with three
+codes: 0xfd n records direction n, 0xfe n jumps back n bytes, 0xff holds. The characters' are
+four frames per direction: north 0x18-0x1b, the east side 0x14-0x17, south 0x10-0x13, the west
+side 0x1c-0x1f. A new game starts everyone on the south script without stepping through it:
+frame 0x10. A key that asks a question gets its frame only after the answer.
+
+## Sprites
+
+`1527:0044` cuts MECHSHAP.CMP into the sprite table at start-up with `273d:070a` (slot, column
+of 8 pixels, pixel row, width in columns, height). The full list is `formats/sprite_sheet.cpp`.
+The EGA drawer (`287f:0377`) treats colour 0 as see-through. The party's 8x8 people are row 32
+(slots 0xa6..0xb9); row 24 has red ones, row 40 grey ones.

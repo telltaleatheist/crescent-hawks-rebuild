@@ -1,0 +1,37 @@
+// Animated map tiles (docs/town_loop.md): ten tile numbers whose picture
+// cycles through three frames from ANIMATE.ICN, one step per game tick.
+#pragma once
+
+#include <array>
+#include <cstdint>
+#include <optional>
+
+#include "game/asset_id.h"
+
+namespace chr::game {
+
+// DGROUP:04b0: the animated tile numbers. 0x69-0x71 are the electric fence.
+inline constexpr std::array<std::uint8_t, 10> kAnimatedTiles = {0x57, 0x58, 0x59, 0x5a, 0x5b,
+                                                                0x69, 0x6a, 0x6b, 0x6f, 0x71};
+
+// BTECH.EXE 1000:320b (Ghidra FUN_1000_320b) loads ANIMATE.ICN and keeps its
+// tiles 1-30; BTECH.EXE 1000:240b (Ghidra FUN_1000_240b) copies frame
+// `phase` of animated tile i (ANIMATE.ICN tile 1 + 3i + phase) over tile
+// slot kAnimatedTiles[i]. So a map cell holding an animated tile shows
+// that frame instead of the sheet's own tile. Nothing for other tiles.
+inline std::optional<AssetId> animated_tile(std::uint8_t tile, int phase) {
+    for (std::size_t i = 0; i < kAnimatedTiles.size(); ++i)
+        if (kAnimatedTiles[i] == tile) return AssetId{"ANIMATE.ICN", std::uint16_t(1 + 3 * i + phase)};
+    return std::nullopt;
+}
+
+}  // namespace chr::game
+
+namespace chr::game {
+
+// DGROUP(3892):3988 must be 0 for 1000:240b to run. Loading BTTLTECH.ICN
+// (1000:4621) sets 0; map 11's DESTRUCT.ICN (1000:2e2e) sets 1, map 14's
+// loader (1b5d:...) sets 2. So only the maps drawn with BTTLTECH.ICN animate.
+inline bool tiles_animate(int map_number) { return map_number != 11 && map_number != 14; }
+
+}  // namespace chr::game

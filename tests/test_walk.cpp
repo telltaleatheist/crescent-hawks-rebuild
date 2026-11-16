@@ -1,12 +1,16 @@
 #include <filesystem>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
 #include "formats/import.h"
 #include "formats/game_files.h"
 #include "formats/mtp.h"
+#include "game/figures.h"
 #include "game/map_view.h"
+#include "game/money.h"
+#include "game/random.h"
 #include "game/movement.h"
 #include "game/town.h"
 #include "test.h"
@@ -86,9 +90,13 @@ TEST(map_edge_is_leaving) {
 }
 
 TEST(key_script_parses) {
-    const auto keys = parse_key_script("up*3, pgdn y");
-    CHECK(keys.size() == 5);
-    CHECK(keys[0] == key::kUp && keys[2] == key::kUp && keys[3] == key::kPageDown && keys[4] == 'y');
+    const auto keys = parse_key_script("up*3, pgdn idle:40 y");
+    CHECK(keys.size() == 6);
+    CHECK(keys[0].key == key::kUp && keys[2].key == key::kUp && keys[3].key == key::kPageDown);
+    CHECK(keys[4].idle == 40 && keys[5].key == 'y' && keys[5].idle == 0);
+    // A question's blocking read skips idle stretches.
+    ScriptKeys source(parse_key_script("idle:5 y"));
+    CHECK(source.next() == std::optional<int>('y'));
     bool threw = false;
     try {
         parse_key_script("jump");
@@ -224,4 +232,105 @@ TEST(map1_move_log_in_the_upper_box) {
     if (!play_map1("down*3 pgup", town2, m2)) return;
     CHECK(town2->text().row_text(4).substr(1, 5) == "South");
     CHECK(town2->text().row_text(5).substr(1, 9) == "Northeast");
+}
+
+TEST(map1_game_ticks_and_money) {
+    std::unique_ptr<Town> town;
+    Map1 m;
+    // The first idle pass is a game tick: the money step runs at once (20 is
+    // below the floor of 50, so 15 are added), then every 256th tick.
+    if (!play_map1("idle:3", town, m)) return;
+    CHECK(town->ticks() == 1);
+    CHECK(town->animation_phase() == 1);
+    CHECK(town->money().cbills == 35);
+    CHECK(town->text().row_text(22).substr(1, 8) == "C-Bills:");
+    CHECK(town->text().row_text(23).substr(1, 3) == "35 ");
+    CHECK(town->text().cell(1, 23).fg == 10);
+
+    // Tick n comes at pass 1 + 11(n - 1): 257 ticks after 2817 passes, as in
+    // the original (checked with the reference rig).
+    std::unique_ptr<Town> town2;
+    Map1 m2;
+    if (!play_map1("idle:2816", town2, m2)) return;
+    CHECK(town2->ticks() == 256);
+    CHECK(town2->money().cbills == 35);
+    std::unique_ptr<Town> town3;
+    Map1 m3;
+    if (!play_map1("idle:2817", town3, m3)) return;
+    CHECK(town3->ticks() == 257);
+    CHECK(town3->money().cbills == 50);
+    CHECK(town3->animation_phase() == 2);
+    CHECK(town3->text().row_text(23).substr(1, 3) == "50 ");
+}
+
+TEST(map1_keys_are_game_ticks) {
+    std::unique_ptr<Town> town;
+    Map1 m;
+    // Each key is followed by a tick; the fifth step asks about the Citadel
+    // and waits, before its tick.
+    if (!play_map1("up*5", town, m)) return;
+    CHECK(town->ticks() == 4);
+    CHECK(town->animation_phase() == 1);
+}
+
+TEST(map1_party_figure) {
+    std::unique_ptr<Town> town;
+    Map1 m;
+    if (!play_map1("", town, m)) return;
+    auto figures = town->figures();
+    CHECK(figures.size() == 1);
+    // Jason: sprite 0x96 + 0x10, one half-cell right of the position.
+    CHECK(figures[0].sprite == sprite(0xa6));
+    CHECK(figures[0].half_x == (0x45 + 1) && figures[0].half_y == 0x19);
+    CHECK(figures[0].sink == 0);
+
+    // Walking north runs frames 0x18-0x1b; the step that asks a question
+    // does not move the animation on.
+    std::unique_ptr<Town> town2;
+    Map1 m2;
+    if (!play_map1("up*5", town2, m2)) return;
+    CHECK(town2->figures()[0].sprite == sprite(0x96 + 0x1b));
+    std::unique_ptr<Town> town3;
+    Map1 m3;
+    if (!play_map1("up down", town3, m3)) return;
+    CHECK(town3->figures()[0].sprite == sprite(0x96 + 0x10));
+}
+
+TEST(map1_panel_bars) {
+    std::unique_ptr<Town> town;
+    Map1 m;
+    if (!play_map1("", town, m)) return;
+    const auto bars = town->bars();
+    CHECK(bars.size() == 3);
+    CHECK((bars[0] == StatBar{9, 14, 8, 0}));
+    CHECK((bars[1] == StatBar{10, 14, 9, 0}));
+    CHECK((bars[2] == StatBar{11, 14, 7, 0}));
+}
+
+TEST(random_numbers) {
+    // From the start-up state 25 13 90 (an instruction-by-instruction model
+    // of 287f:0bc0 gives the same).
+    Random r;
+    const int expected[] = {0xb5, 0x87, 0xf8, 0x8b, 0xab, 0x88, 0x7e, 0x4b, 0xcd, 0xb7, 0xf9, 0xb9};
+    for (const int e : expected) CHECK(r.next() == e);
+}
+
+TEST(money_step) {
+    Random r;
+    Money money;
+    CHECK(money_tick(money, false, r));  // runs on the first tick
+    CHECK(money.cbills == 35 && money.countdown == 0xff);
+    for (int i = 0; i < 255; ++i) CHECK(!money_tick(money, false, r));
+    CHECK(money_tick(money, false, r));
+    CHECK(money.cbills == 50);
+    for (int i = 0; i < 256; ++i) money_tick(money, false, r);
+    CHECK(money.cbills == 50);  // at the floor: no more
+    // Investments: x * 100 / rate on a gain, x * rate / 110 on a loss.
+    Money m2;
+    m2.cbills = 0;
+    m2.invested = {9600, 9000, 20000};
+    Random r2;  // draws 0xb5, 0x87, 0xf8: gains for the first two, a loss for the third
+    money_tick(m2, true, r2);
+    CHECK(m2.invested[0] == 10000 && m2.invested[1] == 10000);
+    CHECK(m2.invested[2] == 20000 * 48 / 110);
 }
