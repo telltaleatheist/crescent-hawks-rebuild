@@ -807,9 +807,12 @@ CHAIN_CASES = [dict(case, compare=False) for case in SPOT_CASES] + [
     {"name": "chain_out_3", "keys": "right*2 down*2 home down home down home down home down home down home down home down home down home down home down home down home down home down home down pgdn right*13 pgdn*2 down home*2 down home down home down home down home down home", "match": SCREEN},
     {"name": "chain_out_4", "keys": "down home down home down home down home down home down home down home down home*3 down home down home down home down home down home down home down home*2 up left down pgdn*2 left home down end down home*2 up*11 pgup*5", "match": SCREEN},
     {"name": "chain_out_area", "keys": "up*10", "match": SCREEN},
-    # A step west meets a random encounter in reach: four soldiers. Declining
-    # does not get away this time (r & 3 is 0), and the fight's questions
-    # follow.
+]
+
+# The chain's other branch from the walk out, its own sequence: a step west
+# meets a random encounter in reach, four soldiers. Declining does not get
+# away this time (r & 3 is 0), and the fight's questions follow.
+CHAIN_DEATH_CASES = [dict(case, compare=False) for case in CHAIN_CASES] + [
     {"name": "chain_enc", "keys": "home", "match": SCREEN},
     {"name": "chain_enc_no", "keys": "n", "match": SCREEN},
     {"name": "chain_enc_computer", "keys": "enter", "match": SCREEN},
@@ -824,7 +827,7 @@ CHAIN_CASES = [dict(case, compare=False) for case in SPOT_CASES] + [
 ]
 
 # The long unpoked run: its own tier (`--campaign`, ctest label campaign).
-CAMPAIGN = {"chain"}
+CAMPAIGN = {"chain", "chain_death"}
 
 SEQUENCES = [("town", CASES, FULL_CASES, []), ("training", TRAINING_CASES, [], []),
              ("quiz", QUIZ_CASES, [], ["--show-quiz"]), ("mission", MISSION_CASES, MISSION_FULL_CASES, []),
@@ -843,6 +846,7 @@ SEQUENCES = [("town", CASES, FULL_CASES, []), ("training", TRAINING_CASES, [], [
              ("raid", [], RAID_CASES, []),
              ("rest", [], REST_CASES, []),
              ("chain", [], CHAIN_CASES, []),
+             ("chain_death", [], CHAIN_DEATH_CASES, []),
              ("handover", [], HANDOVER_CASES, [])]
 
 # The feeder (tools/capture/snap.asm, docs/reference.md) hands over a key at

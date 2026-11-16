@@ -119,7 +119,6 @@ bool Town::random_encounter(KeySource& keys) {
         fight_ends();
         return true;
     }
-    log_.push_back("a random encounter in reach");
     question_waiting_ = true;
     // 2.3, 4-6: the attackers, in the box above the party box.
     print_id("fight.attackers");
@@ -143,6 +142,8 @@ bool Town::random_encounter(KeySource& keys) {
     print_id("fight.attackers_human");
     if (people != 1) print_id("ui.plural_s");
     print_id("ui.full_stop");  // 1000:2a7e
+    log_.push_back("a random encounter in reach: " + std::to_string(mechs) + " 'Mechs, " + std::to_string(people) +
+                   " people");
     text_.select_window(3);
     text_.clear_window();
     party_box_shown_ = false;

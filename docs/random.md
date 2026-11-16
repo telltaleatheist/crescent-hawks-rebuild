@@ -65,6 +65,14 @@ waits at a question, or how many steps they take before a fight, moves the seque
 different amount. With the same keys at the same moments, the game plays the same, as the demo
 shows.
 
+Outdoors, away from any town, the order of the draws does not depend on timing. Each tick draws
+one number (every 256th tick the money step draws three more), and nothing else draws between
+ticks, so the random encounters come in a fixed order:
+the same soldiers, from the same draws, whenever they come. Waiting only changes when the next one
+starts. Where the party stands decides whether it is in reach (docs/combat.md 2.3), and so whether
+it ends in a fight or only uses up its draws. A search of 64 walks out of the ruined town after the
+raid met the same three groups in reach every time: four soldiers, five, and one.
+
 ## Why the rebuild keeps it
 
 - **Faithful outcomes.** The original's rolls, from a fight's hits to a recruit's skills, come

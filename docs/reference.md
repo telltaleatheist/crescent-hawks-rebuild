@@ -200,7 +200,8 @@ encounters come up on the way (flag 24 is 0x3f), none in reach, so the soldiers 
 placed and the party walks on. One step west from there meets a fifth in reach: four soldiers
 ("Attacking force: 4 humans."). Declining doesn't evade them, the computer fights with no
 messages and no graphics, and Jason, alone on foot, is killed in round 5; the chain ends at the
-game-over box. `fourth` (long only) is mission 4 (flag 00
+game-over box. That branch is its own sequence, `chain_death` (campaign tier too), from the same
+captured prefix. `fourth` (long only) is mission 4 (flag 00
 poked to 4): no computer question (F:0090), the Locust flees at the first orders menu, the walk
 back, the verdict and the town. `raid` (long only) is mission 7 (flag 00 poked to 7), the
 Kurita raid: the computer question (only mission 4 skips it), then Begin Fight round after round
@@ -219,6 +220,13 @@ active and destroyed counts, headings, facings and frames, their orders, targets
 the figure drawer wrote for each (on screen, terrain, tile, the 'Mechs' tile above and half-row,
 screen place), the parked facings, where each is in its script (DG:01f6), the heat, the burning
 counts, DG:014a and the map marks).
+
+## Open items
+
+- **The new-game question after the game over** (`chain_death`, docs/town_loop.md step 7): the
+  original's capture after the key that closes the game-over box still shows the box, even with
+  `idle:2` after the key, so the question is not compared. To come back to when a new game from
+  there ("play again", Yes) is rebuilt.
 
 ## Findings
 
