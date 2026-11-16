@@ -187,7 +187,7 @@ public:
     const MapMarks& marks() const { return marks_; }
     // The original's bugs: kept by default, each fixable (game/fixes.h).
     void set_fixes(const Fixes& fixes) { fixes_ = fixes; }
-    // The fight went on past what is rebuilt (the orders, the rounds).
+    // The fight reached a step the rebuild stops at (logged; docs/combat.md).
     bool fight_unfinished() const { return fight_unfinished_; }
 
 private:

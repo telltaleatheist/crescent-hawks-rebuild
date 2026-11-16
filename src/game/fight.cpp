@@ -376,11 +376,10 @@ Combat Town::combat_rules() {
 }
 
 // BTECH.EXE 203b:056b..1481, the rounds with the computer in control
-// (docs/combat.md 2.5, 2.8, 2.12, 2.13).
+// (docs/combat.md 2.5, 2.8, 2.12, 2.13): with combat messages None and
+// combat graphics off; with either, the fight stops here.
 bool Town::fight_rounds(int kind, KeySource& keys) {
     if (messages_ != 0 || graphics_) {
-        // What the round shows is not rebuilt yet: only the fight with no
-        // messages and no graphics runs.
         log_.push_back("a fight with combat messages or graphics: not rebuilt");
         fight_unfinished_ = true;
         return false;

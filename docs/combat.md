@@ -135,6 +135,38 @@ Not rebuilt yet: what the round shows (combat messages above None, combat graphi
 player's orders, the Arena's spectator, the double agent, and what follows the fight (2.13 is
 done; 2.15 is not).
 
+**The cell window in a fight.** The planner's path (3.3) and the line of sight (3.6) read map
+cells from the 24x24-cell window P:07ad by index, as the townspeople do. The window and its
+corner index (P:09ed) are not moved with the party position: `1000:17bb` walks P:a44b / P:a44d
+there with the step routines `287f:158c` etc., which change only the area grids, at an area
+edge. The line of sight reloads both at the shooter itself (`287f:1314`, then `287f:1df8`, which
+sets P:09ed..09f1, at `1e31:1c24`), and the planner calls it for the figure it plans before it
+simulates the path, so both read the window around that figure. The rebuild reads the same
+cells from the map (`window_cell`); a dump of the window in the original after round 4 (the
+last line of sight then: figure 0's) holds exactly those cells. Row wrapping (an index past a
+row's end reads the next row) is the original's and is kept.
+
+**Where the rebuild stands in for memory it does not hold.** Both are logged; neither came up
+in mission 2.
+
+- *An index outside the window (below 0 or from 576 on).* The original reads the P: bytes next
+  to the buffer: before it the nine area-grid entries of the loaded blocks (P:07a4..07ac) and
+  other data, after it the corner words P:09ed..09f2 and other data. These are not map cells,
+  and the rebuild does not hold that part of P:. It counts such a cell as blocking, so a path
+  stops there and a line of sight ends unseen. Blocking also ends the line of sight's loop, which
+  in the original only ends when it reaches the target or a cell at or above DG:0150. A path
+  (12 half-cells at most) cannot leave the window; a line of sight at long range can (the figure
+  is 8-15 cells from the window's edges).
+- *A cell inside the window but outside the map file.* The original's window holds whatever the
+  area grids give there: a fixed block of a neighbouring map or a terrain block built by
+  `287f:11bb` (not read). The rebuild has no cells for those and counts them as blocking. The
+  town maps fill their area, so this needs a fight at an area edge.
+- *A 'Mech with no pilot fires (pilot byte ff).* The round reads the shooter's skill from
+  character 255 (the byte is not sign-extended: F:c614 + 0x11 x 255 + 4 + skill, F:d707 on),
+  past the 16 records. The rebuild uses skill 0. Enemy records copy their pilot byte from the
+  template (0, Jason) in mission 2; how a party 'Mech with nobody inside could reach a round is
+  not known.
+
 ### 1.3 The mission driver `17dc:0629(mode)`
 
 FUN_17dc_0629. A jump table at cs:086f by mode. All modes share a walking loop like the town's
@@ -961,7 +993,9 @@ sequence compares the scene with the original's, over the whole screen and the s
    and `1000:0e4b`, and cleared at a fight's start. With combat graphics off nothing draws the
    figures during the rounds, so in such a fight they keep their start values (0 for kinds
    1-3).
-3. The nine bytes P:07a4..07ac whose bit 0x80 blocks salvage.
+3. The nine bytes P:07a4..07ac whose bit 0x80 blocks salvage. In a fight's memory they are the
+   area-grid entries of the 3x3 blocks in the cell window (0x80 + block, rows 8 apart), so bit
+   0x80 would mean a fixed block; how salvage uses that is not read.
 4. The location rows: d = 0 gives the rear column, but three directions give the left-side column
    and two the front. Either our reading of the facing (F:396c) or of the direction (`287f:0971`,
    not read) is off, or the original is lopsided. To check in the running original.

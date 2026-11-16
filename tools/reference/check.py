@@ -20,6 +20,7 @@ Exit status: 0 all required rectangles match, 1 a mismatch, 77 skipped
 (no DOSBox-X, nasm or game folder: the check needs all three).
 """
 import argparse
+import concurrent.futures
 import os
 import shutil
 import subprocess
@@ -306,14 +307,25 @@ QUIZ_CASES = TRAINING_CASES[:5] + [
 # Training mission 2 fought by the computer, with no combat messages and no
 # combat graphics: after the three answers it runs on random draws alone.
 # With the computer fighting, the original asks once a round whether a key
-# is waiting (203b:1015). The feeder answers the 4th such question, so the
-# first capture is after round 4; each idle:1 after it is one more round.
-# chr counts the same questions as idle passes and stops at the first one
-# its script has no item for, so a capture after round n needs n - 1 passes:
-# the 2 check.py adds after a key, and chr:idle:1. A capture after the fight has ended is taken at "You should return to
-# base now.", where the original waits for a key (idle:99 lets the rest of
-# the rounds go by first).
-MISSION_CASES = TRAINING_CASES[:9] + [
+# is waiting (203b:1015). "arm:1" before the last answer has the feeder
+# answer the first such question, so the first capture is after round 1;
+# each idle:1 after it is one more round. chr asks the same question and
+# stops the fight at the first one its script has no item for; "arm:N"
+# gives it N - 1 passes after the key. A capture after the fight has ended
+# is taken at "You should return to base now.", where the original waits
+# for a key (idle:99 lets the rest of the rounds go by first). The training
+# cases before it are only captured: the training sequence compares them.
+MISSION_ROUNDS = [
+    {
+        # The state after round n (the screen is not drawn while they run).
+        "name": "mission_round_%d" % n,
+        "keys": "arm:1 n" if n == 1 else "idle:1",
+        "match": {},
+        "fight": True,
+    }
+    for n in range(1, 9)
+]
+MISSION_CASES = [dict(case, compare=False) for case in TRAINING_CASES[:9]] + [
     {
         # Yes: the combat messages menu, on Verbose.
         "name": "mission_messages",
@@ -326,17 +338,8 @@ MISSION_CASES = TRAINING_CASES[:9] + [
         "keys": "up*2 enter",
         "match": {"the panel": WHOLE_PANEL, "the map": WHOLE_MAP},
     },
-] + [
-    {
-        # No: the rounds. The state after round n (the screen is not drawn
-        # while they run).
-        "name": "mission_round_%d" % n,
-        "keys": "n chr:idle:1" if n == 4 else "idle:1",
-        "match": {},
-        "fight": True,
-    }
-    for n in range(4, 9)
-] + [
+] + MISSION_ROUNDS[:1]
+MISSION_FULL_CASES = MISSION_ROUNDS[1:] + [
     {
         # The fight is over: "You should return to base now."
         "name": "mission_end",
@@ -349,7 +352,7 @@ MISSION_CASES = TRAINING_CASES[:9] + [
 # Each sequence is one run of the original: (name, quick cases, --full
 # cases, chr's own options).
 SEQUENCES = [("town", CASES, FULL_CASES, []), ("training", TRAINING_CASES, [], []),
-             ("quiz", QUIZ_CASES, [], ["--show-quiz"]), ("mission", MISSION_CASES, [], [])]
+             ("quiz", QUIZ_CASES, [], ["--show-quiz"]), ("mission", MISSION_CASES, MISSION_FULL_CASES, [])]
 
 # The feeder (tools/capture/snap.asm, docs/reference.md) hands over a key at
 # every 4th poll of the keyboard. The main loop polls once a pass, and after
@@ -380,8 +383,8 @@ def original_token(k):
         return flag_poke(k)
     if k.startswith("orig:"):
         return k[len("orig:"):]
-    if k.startswith("chr:"):
-        return None
+    if k.startswith("arm:"):
+        return "@" + k
     return k
 
 
@@ -397,12 +400,13 @@ def chr_script(cases, upto):
     """The chr script for the case at index `upto`: every item so far."""
     items = []
     in_town = False
+    passes_after = None
     for case in cases[:upto + 1]:
         for k in expand(case["keys"]):
             if k.startswith("orig:"):
                 continue  # input only the original asks for (docs/reference.md)
-            if k.startswith("chr:"):
-                items.append(k[len("chr:"):])  # chr's count of passes only
+            if k.startswith("arm:"):
+                passes_after = int(k[len("arm:"):]) - 1  # for the next key only
                 continue
             if k.startswith("flag:"):
                 items.append("set:" + k[len("flag:"):])
@@ -413,7 +417,10 @@ def chr_script(cases, upto):
                 items.append("idle:%d" % FIRST_PASSES)
                 in_town = True
             elif in_town and not k.startswith("idle:"):
-                items.append("idle:%d" % PASSES_AFTER_KEY)
+                n = PASSES_AFTER_KEY if passes_after is None else passes_after
+                passes_after = None
+                if n > 0:
+                    items.append("idle:%d" % n)
     return " ".join(items) or "idle:1"
 
 
@@ -421,25 +428,28 @@ def original_script(cases):
     tokens = [START]
     for case in cases:
         if case.get("keys"):
-            keys = [original_token(k) for k in case["keys"].replace(",", " ").split()]
-            tokens.append(" ".join(k for k in keys if k is not None))
+            tokens.append(" ".join(original_token(k) for k in case["keys"].replace(",", " ").split()))
         tokens.append("@snap:" + case["name"])
     return " ".join(tokens)
 
 
 def run_sequence(a, sequence, cases, chr_options=()):
     """One run of the original through `cases`, then chr for each case.
-    True if every required rectangle and the state match."""
+    (True if every required rectangle and the state match, the report.)"""
+    report = []
+    say = report.append
     ref_dir = os.path.join(a.work, "original-" + sequence)
     finished, _ = run.run(a.game_dir, original_script(cases), ref_dir, timeout=900 if a.full else 240)
     if not finished:
-        print(f"the original did not reach the end of the {sequence} script")
-        return False
+        say(f"the original did not reach the end of the {sequence} script")
+        return False, report
 
     env = dict(os.environ, SDL_VIDEO_DRIVER="dummy", SDL_AUDIO_DRIVER="dummy")
     ok = True
     for i, case in enumerate(cases):
         name = case["name"]
+        if not case.get("compare", True):
+            continue  # compared by another sequence
         shot = os.path.join(a.work, name + ".bmp")
         out = subprocess.run([a.chr, "--game-dir", a.game_dir, "--data-dir", a.data_dir,
                               "--script", chr_script(cases, i), "--screenshot", shot,
@@ -450,26 +460,26 @@ def run_sequence(a, sequence, cases, chr_options=()):
         ref = compare.reference_pixels(os.path.join(ref_dir, name + ".bin"))
         ours = compare.bmp_pixels(shot)
         compare.write_diff(os.path.join(a.work, name + "-diff.png"), ref, ours)
-        print(f"== {name}")
+        say(f"== {name}")
         for region in ("panel", "play"):
             n = len(compare.compare(ref, ours, region))
-            print(f"  {region}: {n} pixels differ")
+            say(f"  {region}: {n} pixels differ")
         for label, rect in case["match"].items():
             n = len(compare.compare_rect(ref, ours, rect))
-            print(f"  {'ok  ' if n == 0 else 'FAIL'} {label}: {n} pixels differ")
+            say(f"  {'ok  ' if n == 0 else 'FAIL'} {label}: {n} pixels differ")
             ok = ok and n == 0
         if not case.get("state", True):
             ref_state = ours_state = []
         differ = [f"original: {r}\n         chr: {c}" for r, c in zip(ref_state, ours_state) if r != c]
         if len(ref_state) != len(ours_state):
             differ.append("different number of state lines")
-        print(f"  {'ok  ' if not differ else 'FAIL'} the game state: {len(differ)} lines differ")
+        say(f"  {'ok  ' if not differ else 'FAIL'} the game state: {len(differ)} lines differ")
         for d in differ:
-            print("    " + d)
+            say("    " + d)
         ok = ok and not differ
         for known in case.get("known", []):
-            print(f"  known: {known}")
-    return ok
+            say(f"  known: {known}")
+    return ok, report
 
 
 def main():
@@ -491,12 +501,19 @@ def main():
         return SKIP
 
     os.makedirs(a.work, exist_ok=True)
+    # The sequences are separate runs of the original, each in its own
+    # copy of the game folder (run.py), so they run side by side.
+    jobs = [(sequence, quick + (full if a.full else []), chr_options)
+            for sequence, quick, full, chr_options in SEQUENCES
+            if not a.sequence or sequence in a.sequence]
     ok = True
-    for sequence, quick, full, chr_options in SEQUENCES:
-        if a.sequence and sequence not in a.sequence:
-            continue
-        cases = quick + (full if a.full else [])
-        ok = run_sequence(a, sequence, cases, chr_options) and ok
+    with concurrent.futures.ThreadPoolExecutor(max_workers=len(jobs) or 1) as pool:
+        results = [pool.submit(run_sequence, a, sequence, cases, chr_options)
+                   for sequence, cases, chr_options in jobs]
+        for result in results:
+            passed, report = result.result()
+            print("\n".join(report), flush=True)
+            ok = ok and passed
     return 0 if ok else 1
 
 

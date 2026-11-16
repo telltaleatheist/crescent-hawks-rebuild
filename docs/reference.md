@@ -68,7 +68,9 @@ Key names are as for `chr --script`, plus `esc`, digits and `@snap:NAME`.
 `check.py` (ctest `reference_compare`) runs the cases in it: each lists the rectangles that must
 be identical and the differences still known, and the game state (random numbers, C-Bills, the
 townspeople's records) must be identical too. `--full` (ctest `reference_compare_full`, labelled
-`long`: `ctest -LE long` leaves it out) adds the long cases, about a minute and a half. It skips
+`long`: `ctest -LE long` leaves it out) adds the long cases. The sequences (below) run side by side, each in its own copy of the game
+folder, and their reports are printed in order: about 25 seconds for the quick cases and two
+minutes with `--full` on the Mac Studio. It skips
 (exit 77) without DOSBox-X, nasm or the game.
 
 ## The start-up, as captured
@@ -127,12 +129,15 @@ the named sequences.
 `mission` is training mission 2 fought by the computer, with no combat messages and no combat
 graphics (docs/combat.md 1.2.2). Once the three questions are answered nothing is drawn and no
 key is read until the fight ends; the only input is the "is a key waiting?" question the fight
-asks once a round (`203b:1015`, which would hand the fight back to the player). The feeder
-answers the 4th such question, so the first capture falls after round 4, and each `idle:1`
-after it is one more round. chr asks the same question once a round (`KeySource::poll`): an
-idle pass answers no, a key yes, and the end of the script stops the fight there, so a capture
-after round n needs n - 1 passes in chr's script. A key written `chr:KEY` goes to chr only (here
-`chr:idle:1`, the third pass). These cases compare the fight's tables too: a case with
+asks once a round (`203b:1015`, which would hand the fight back to the player). `arm:N` before a
+key sets the feeder's poll count when that key is read (run.py's `@arm:N`, SNAP's item 0FFFCh),
+so the Nth question after it is answered: `arm:1 n` puts the first capture after round 1, and
+each `idle:1` after it is one more round. chr asks the same question once a round
+(`KeySource::poll`): an idle pass answers no, a key yes, and the end of the script stops the
+fight there; `arm:N` gives chr N - 1 passes after the key instead of the usual 2. The quick
+cases end after round 1; `--full` adds rounds 2-8 and the end of the fight. The training
+cases at its start are captured but not compared (`"compare": False`): the `training` sequence
+compares them. These cases compare the fight's tables too: a case with
 `"fight": True` runs `chr --fight-state` and `state.py --fight` (the 24 figures' places,
 active and destroyed counts, headings, facings and frames, their orders, targets and paths, the
 heat, the burning counts, DG:014a and the map marks).
