@@ -14,18 +14,30 @@
 #pragma once
 
 #include <filesystem>
+#include <span>
 #include <string>
+
+#include "formats/exe_data.h"
 
 namespace chr::formats {
 
 // Bump when the files change shape or the import table gains pieces: a data
 // folder from an older import is imported again.
-inline constexpr int kImportVersion = 7;  // 2: the direction names; 3: "C-Bills:"; 4: the .BLD texts;
+// (A change to the import table alone needs no bump: import_table_hash.)
+inline constexpr int kImportVersion = 8;  // 2: the direction names; 3: "C-Bills:"; 4: the .BLD texts;
                                         // 5: the class and talk texts; 6: the start-up's;
-                                        // 7: the rule tables, 'Mech and weapon names, combat texts
+                                        // 7: the rule tables, 'Mech and weapon names, combat texts;
+                                        // 8: the table hash in import.json
 
 std::filesystem::path imported_text_path(const std::filesystem::path& data_dir);
 std::filesystem::path imported_font_path(const std::filesystem::path& data_dir);
+
+// A hash of the import table (OriginalExe::table()): every piece's kind,
+// ID, address, size and expected hash. import.json records it, and a data
+// folder imported with another table is imported again, so a piece added
+// to the table can't be missed by an older folder.
+std::string import_table_hash(std::span<const ExeSpan> table);
+std::string import_table_hash();
 
 enum class ImportState { Current, Missing, Outdated };
 ImportState import_state(const std::filesystem::path& data_dir);

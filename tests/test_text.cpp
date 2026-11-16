@@ -151,6 +151,31 @@ TEST(import_writes_text_and_font) {
     CHECK(formats::import_state(data) == formats::ImportState::Outdated);
     CHECK(formats::ensure_imported(dir, data));
     CHECK(formats::import_state(data) == formats::ImportState::Current);
+
+    // So is one made with another import table, at the same version.
+    const auto manifest_bytes = formats::read_file(data / "import.json");
+    std::string manifest(manifest_bytes.begin(), manifest_bytes.end());
+    const auto at = manifest.find(formats::import_table_hash());
+    CHECK(at != std::string::npos);
+    manifest.replace(at, 4, "0000");
+    std::filesystem::remove(data / "import.json");
+    {
+        std::ofstream(data / "import.json") << manifest;
+    }
+    CHECK(formats::import_state(data) == formats::ImportState::Outdated);
+}
+
+TEST(import_table_hash_follows_the_table) {
+    const auto table = formats::OriginalExe::table();
+    std::vector<formats::ExeSpan> more(table.begin(), table.end());
+    const auto before = formats::import_table_hash(more);
+    CHECK(before == formats::import_table_hash());
+    more.push_back({formats::ExeSpan::Kind::Text, "test.added", 0x46db, 0x0100, 4, "0000000000000000"});
+    CHECK(formats::import_table_hash(more) != before);
+    // Any field of a piece counts.
+    more.pop_back();
+    more.front().sha256 = "ffffffffffffffff";
+    CHECK(formats::import_table_hash(more) != before);
 }
 
 TEST(missing_import_says_how_to_import) {

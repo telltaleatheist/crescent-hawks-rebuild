@@ -27,7 +27,7 @@ bool has_extension(const std::string& name, const char* ext) {
 
 Image from_colour_numbers(const std::vector<std::uint8_t>& numbers, int width, int height,
                           const formats::Palette16& palette) {
-    Image image{width, height, width, height, {}};
+    Image image{width, height, width, height, {}, {}};
     image.rgba.resize(numbers.size() * 4);
     for (std::size_t i = 0; i < numbers.size(); ++i) {
         const auto& c = palette[numbers[i] & 0x0f];
@@ -95,7 +95,7 @@ std::optional<Image> OriginalAssets::image(const AssetId& id) {
             }
             const auto& bits = f->glyphs[id.index];
             Image glyph{f->width, f->height, f->width, f->height,
-                        std::vector<std::uint8_t>(bits.size() * 4, 0)};
+                        std::vector<std::uint8_t>(bits.size() * 4, 0), {}};
             for (std::size_t i = 0; i < bits.size(); ++i)
                 if (bits[i]) std::fill_n(glyph.rgba.begin() + std::ptrdiff_t(4 * i), 4, std::uint8_t(0xff));
             return glyph;

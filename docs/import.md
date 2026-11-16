@@ -19,7 +19,8 @@ user's application-data folder (on macOS `~/Library/Application Support/crescent
 
 ## What it writes
 
-    import.json          {"import_version": 7, "source": "BTECH.EXE DOS 1.03", "exe_sha256": ...}
+    import.json          {"import_version": 8, "source": "BTECH.EXE DOS 1.03", "exe_sha256": ...,
+                          "table_sha256": ...}
     text/english.json    {"texts": [{"id": ..., "address": "ssss:oooo", "text": ...}, ...]}
     font/font.txt        the font (docs/formats/font.md)
     rules/mechs.json     the 'Mech templates   } the rule tables built into the program,
@@ -32,6 +33,11 @@ be there. The names of the 'Mech templates and the weapons are texts too (`mech.
 `weapon.<n>`), read from inside the rule tables.
 
 `import.json` is written last, so an interrupted import counts as missing.
+
+chr imports again when `import.json` has another `import_version` (the files changed shape) or
+another `table_sha256`: a hash of the import table itself, every piece's kind, ID, address, size
+and expected hash (`import_table_hash`). A text ID added to the table is therefore imported into
+an older data folder without anyone remembering to bump the version.
 
 ## How it reads the program
 

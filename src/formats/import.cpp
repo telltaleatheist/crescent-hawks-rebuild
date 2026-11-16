@@ -1,6 +1,10 @@
 #include "formats/import.h"
 
 #include <cstdio>
+
+#include "formats/sha256.h"
+
+#include <cstdio>
 #include <fstream>
 
 #include "formats/bld.h"
@@ -35,6 +39,23 @@ void write_file(const fs::path& path, const std::string& contents) {
 fs::path imported_text_path(const fs::path& data_dir) { return data_dir / "text" / "english.json"; }
 fs::path imported_font_path(const fs::path& data_dir) { return data_dir / "font" / "font.txt"; }
 
+std::string import_table_hash(std::span<const ExeSpan> table) {
+    std::string all;
+    for (const auto& span : table) {
+        char line[96];
+        std::snprintf(line, sizeof line, "%d %04x:%04x %u ", static_cast<int>(span.kind), span.segment,
+                      span.offset, static_cast<unsigned>(span.size));
+        all += line;
+        all += span.name;
+        all += ' ';
+        all += span.sha256;
+        all += '\n';
+    }
+    return sha256_hex({reinterpret_cast<const std::uint8_t*>(all.data()), all.size()});
+}
+
+std::string import_table_hash() { return import_table_hash(OriginalExe::table()); }
+
 ImportState import_state(const fs::path& data_dir) {
     std::error_code ec;
     if (!fs::exists(manifest_path(data_dir), ec) || !fs::exists(imported_text_path(data_dir), ec) ||
@@ -47,6 +68,8 @@ ImportState import_state(const fs::path& data_dir) {
         const auto manifest = parse_json(std::string(bytes.begin(), bytes.end()));
         const auto* version = manifest.find("import_version");
         if (!version || version->number() != kImportVersion) return ImportState::Outdated;
+        const auto* table = manifest.find("table_sha256");
+        if (!table || table->string() != import_table_hash()) return ImportState::Outdated;
     } catch (const std::exception&) {
         return ImportState::Outdated;
     }
@@ -101,7 +124,8 @@ void import_original(const fs::path& game_dir, const fs::path& data_dir) {
     write_file(manifest_path(data_dir),
                "{\n  \"import_version\": " + std::to_string(kImportVersion) + ",\n  \"source\": " +
                    json_quote("BTECH.EXE " + std::string(kSupportedVersion)) + ",\n  \"exe_sha256\": " +
-                   json_quote(exe.sha256()) + "\n}\n");
+                   json_quote(exe.sha256()) + ",\n  \"table_sha256\": " + json_quote(import_table_hash()) +
+                   "\n}\n");
 }
 
 bool ensure_imported(const fs::path& game_dir, const fs::path& data_dir) {
