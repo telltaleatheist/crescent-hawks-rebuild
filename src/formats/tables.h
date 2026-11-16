@@ -120,6 +120,7 @@ struct Tables {
 
     // The terrain outside the towns (docs/wilderness.md).
     std::array<int, 256> world_heights{};        // 2c6c:0b0b: one height per area, 16 x 16
+    std::array<int, 256> area_maps{};            // 37e8:0030: each area's map number, 0 for none
     std::array<int, 1024> terrain_templates{};   // 2c6c:0c1d: 16 blocks of 8x8, one per neighbour mask
     std::array<int, 64> plain_block{};           // 2c6c:209d: the block every type-0x10 block is
     std::array<int, 32> mirror_east_west{};      // 2c6c:211d: a template byte with east and west swapped

@@ -123,13 +123,21 @@ TEST(mech_checks_two_cells_and_entrances_beside_it) {
     CHECK(take_step(map, 1, MapPosition{10, 12}, nobody, {0, 0}, no, *tables, terrain, mech, MapPosition{10, 12}).outcome == StepOutcome::Moved);
 }
 
-TEST(map_edge_is_leaving) {
+TEST(area_step_matches_a_fresh_area) {
+    // Stepping into the next area moves the grids over and makes the new
+    // row or column: the same grids as making all nine around the new area.
     const auto* tables = chrtest::tables();
     if (!tables) return chrtest::skip("no imported tables (set CHR_GAME_DIR)");
-    const auto map = open_map();
-    Answer no;
-    CHECK(take_step(map, 1, MapPosition{10, 0}, Party{}, {0, -1}, no, *tables, terrain_for(map, *tables), MechParty{}, MapPosition{10, 0}).outcome == StepOutcome::LeftMap);
-    CHECK(take_step(map, 1, MapPosition{31, 20}, Party{}, {1, 0}, no, *tables, terrain_for(map, *tables), MechParty{}, MapPosition{31, 20}).outcome == StepOutcome::LeftMap);
+    static const Fixes fixes;
+    struct Move { int dx, dy, area; };
+    for (const Move m : {Move{0, -1, 0xbc}, Move{0, 1, 0xdc}, Move{-1, 0, 0xcb}, Move{1, 0, 0xcd}}) {
+        Terrain stepped(*tables, fixes), fresh(*tables, fixes);
+        stepped.generate(0xcc);
+        stepped.step_area(m.dx, m.dy, m.area);
+        fresh.generate(m.area);
+        CHECK(stepped.grids() == fresh.grids());
+        CHECK(stepped.masks() == fresh.masks());
+    }
 }
 
 TEST(key_script_parses) {

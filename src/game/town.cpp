@@ -466,7 +466,9 @@ void Town::game_tick() {
         move_townspeople();
     }
     // The map and the figures are drawn again (DGROUP:014a is set in town),
-    // over any message box (1000:046e).
+    // over any message box (1000:046e), the window first built again at
+    // the party's place (287f:1314 at 1000:0480).
+    build_window();
     text_.forget(13, 0, kTextColumns - 13, kTextRows);
     draw_marks();
     record_party_places();
@@ -526,6 +528,23 @@ void Town::turn(int k, KeySource& keys) {
     }
 }
 
+// BTECH.EXE 1000:218f, its map loads after a move into the next area: for
+// each of the three new grids (P:09f3), the map of its area, if any, is
+// loaded into it (1000:2da8, 287f:1da8), from the area-to-map table
+// (37e8:0030, imported as tables.area_maps). The loads are not rebuilt yet
+// (docs/wilderness.md): none of the areas next to the town's has a map,
+// and a step that would need one is logged.
+void Town::queue_map_loads(const std::array<int, 3>& grids, int area) {
+    for (const int k : grids) {
+        const int a = (area - 0x11 + 16 * (k / 3) + k % 3) & 0xff;
+        if (tables_.area_maps[std::size_t(a)] != 0) {
+            char line[64];
+            std::snprintf(line, sizeof line, "area %02x into grid %d: its map load is not rebuilt", a, k);
+            log_.push_back(line);
+        }
+    }
+}
+
 // BTECH.EXE 1000:218f (Ghidra FUN_1000_218f)
 // The step check (1000:1c12) and the move. The characters walking are those
 // on foot (figures 4-11 active, F:4072); the 'Mechs those of figures 0-3
@@ -548,6 +567,13 @@ std::optional<StepResult> Town::step_party(Step step, KeySource& keys) {
     }
     // Without the game folder the place can't run, and the walk stops at it.
     if (r.entered && !game_dir_) return std::nullopt;
+    // 1000:218f moves y, then x; a move into the next area moves the grids
+    // over (287f:158c and the others) before the other axis.
+    const auto area_of = [](std::uint16_t x, std::uint16_t y) { return ((y >> 8) & 0xf0) | ((x >> 8) & 0x0f); };
+    if ((r.position.y ^ position_.y) & 0xff00)
+        queue_map_loads(terrain_.step_area(0, step.dy, area_of(position_.x, r.position.y)), area_of(position_.x, r.position.y));
+    if ((r.position.x ^ position_.x) & 0xff00)
+        queue_map_loads(terrain_.step_area(step.dx, 0, area_of(r.position.x, r.position.y)), area_of(r.position.x, r.position.y));
     position_ = r.position;
     char where[32];
     std::snprintf(where, sizeof where, " at %04x,%04x", position_.x, position_.y);
@@ -556,7 +582,6 @@ std::optional<StepResult> Town::step_party(Step step, KeySource& keys) {
     switch (r.outcome) {
     case StepOutcome::Moved: line += "moved"; break;
     case StepOutcome::Blocked: line += "blocked"; break;
-    case StepOutcome::LeftMap: line += "left the map"; break;
     case StepOutcome::TooDeep:
         open_message_box();
         text_.print(lookup(texts_, "walk.too_deep"));
@@ -564,12 +589,20 @@ std::optional<StepResult> Town::step_party(Step step, KeySource& keys) {
         break;
     }
     log_.push_back(line + where);
-    window_at_ = position_;  // 287f:1314 at the end of 1000:218f
+    build_window();  // 287f:1314 at the end of 1000:218f
+    return r;
+}
+
+// BTECH.EXE 287f:1314 (Ghidra FUN_287f_1314)
+// The cell window built at the party's place, over whatever the fight or a
+// map load left there.
+void Town::build_window() {
+    window_at_ = position_;
+    terrain_.release_window();
     if (window_stale_) {
         terrain_.map_changed();
         window_stale_ = false;
     }
-    return r;
 }
 
 }  // namespace chr::game

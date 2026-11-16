@@ -46,7 +46,6 @@ enum class StepOutcome {
     Moved,
     Blocked,    // a character would stand on a blocking tile
     TooDeep,    // the block it would enter is deep water ("The water is too deep that way.")
-    LeftMap,    // it would leave the map: the original walks on into the world (docs/movement.md)
 };
 
 // BTECH.EXE 1000:1c12 (Ghidra FUN_1000_1c12)
@@ -74,8 +73,8 @@ struct MechParty {
     std::array<formats::MapPosition, 4> at{};
 };
 
-// The characters (`party`) are checked against the map; the 'Mechs against
-// the cell window, as the original does for both.
+// The characters (`party`) and the 'Mechs are checked against the cell
+// window, as the original does; the map gives the entrances.
 // `from` and `mechs` are read again after an entrance's question, since the
 // place may have changed them. `window_at`: where the window was last built.
 StepResult take_step(const formats::MtpMap& map, int map_number, const formats::MapPosition& from,

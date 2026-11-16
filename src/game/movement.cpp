@@ -38,11 +38,6 @@ int blocking_tile(int map_number) { return map_number == 14 ? 0x21 : 0x55; }
 
 namespace {
 
-// Is the map's cell under this half-cell position inside the map?
-bool inside(const formats::MtpMap& map, int cell_x, int cell_y) {
-    return cell_x >= 0 && cell_y >= 0 && cell_x < map.width && cell_y < map.height;
-}
-
 // BTECH.EXE 287f:158c / 287f:163b / 287f:16e3 / 287f:17c5 (Ghidra FUN_287f_158c etc.)
 // One half-cell up, down, left or right. Past the edge of a 64x64-cell area
 // the position moves into the next area (the high byte's area number) and the
@@ -75,34 +70,42 @@ StepResult take_step(const formats::MtpMap& map, int map_number, const MapPositi
         result.position = from;
         return result;
     };
-    const int hx = from.half_cell_x(), hy = from.half_cell_y();
+    // The window is the one in the original's memory: as 287f:1314 last
+    // built it (or the fight or a map load left it), with the corner cell
+    // (P:09ed) of that place; the half-cells are the party's now. Both are
+    // read as each cell is, so a place entered on the way, which builds its
+    // own, is seen. A cell the rebuild does not hold blocks.
+    auto tile = [&](int index) {
+        index += view_corner_index(window_at);
+        if (index >= 0 && index < Terrain::kWindowCells * Terrain::kWindowCells)
+            return int(terrain.held_window(window_at).cells[std::size_t(index)]);
+        return terrain.window_cell(window_at, index).value_or(0xff);
+    };
 
     // Crossing into the next 8x8 block (16 half-cells) on either axis looks at
     // that block first: the block in the direction of the step, the diagonal
-    // one when both axes cross (table DGROUP:04a0 into the 3x3 blocks at
-    // 2c6c:07a4). A terrain block of type 0x0f is deep water.
+    // one when both axes cross. Its value in the window (P:07a4, mask OR
+    // entry) of 0x0f is a terrain block of type 0 whose four neighbours are
+    // all type 0: deep water. (DGROUP:04a0 turns the step's edges, up 8,
+    // down 4, left 2, right 1, into the block's index: the 3x3 order.)
     int bdx = 0, bdy = 0;
-    if (step.dy < 0 && (hy & 0xf) == 0) bdy = -1;
-    if (step.dy > 0 && (hy & 0xf) == 0xf) bdy = 1;
-    if (step.dx < 0 && (hx & 0xf) == 0) bdx = -1;
-    if (step.dx > 0 && (hx & 0xf) == 0xf) bdx = 1;
-    if (bdx != 0 || bdy != 0) {
-        const int bx = (hx >> 4) + bdx, by = (hy >> 4) + bdy;
-        // Inside the map every block is one of the map's own (never water);
-        // outside it the world's terrain decides (docs/movement.md).
-        if (!inside(map, bx * 8, by * 8)) {
-            return finish(StepOutcome::LeftMap);
-        }
-    }
+    if (step.dy < 0 && (from.y & 0xf) == 0) bdy = -1;
+    if (step.dy > 0 && (from.y & 0xf) == 0xf) bdy = 1;
+    if (step.dx < 0 && (from.x & 0xf) == 0) bdx = -1;
+    if (step.dx > 0 && (from.x & 0xf) == 0xf) bdx = 1;
+    if ((bdx != 0 || bdy != 0) && terrain.held_window(window_at).blocks[std::size_t((1 + bdy) * 3 + 1 + bdx)] == 0x0f)
+        return finish(StepOutcome::TooDeep);
 
     // Each character in turn: first an entrance under its new position, then
-    // the tile under its feet. A figure stands on half-cell (x + 1, y): the
-    // cell checked is the one holding that half-cell.
+    // the tile under its feet, read from the window as the 'Mechs' are.
     bool asked = false;  // F:d55c: one question per turn
     const int limit = blocking_tile(map_number);
     for (int i = 0; i < 8; ++i) {
         if (!party.present[i]) continue;
         const int fx = tables.formation_x[std::size_t(i)] + step.dx, fy = tables.formation_y[std::size_t(i)] + step.dy;
+        // The tile is read first (1000:1d9e), the entrances after: a place
+        // entered here leaves the tile as it was before the place.
+        const int under = tile(window_offset(from, fx, fy));
         if (!asked && map_number != 14) {  // ('Mech mode, map 14, has tile events instead)
             const std::uint16_t x = std::uint16_t(from.x + fx), y = std::uint16_t(from.y + fy);
             for (int e = 0; e < 12; ++e) {
@@ -113,11 +116,7 @@ StepResult take_step(const formats::MtpMap& map, int map_number, const MapPositi
                 break;
             }
         }
-        const int cx = (hx + fx + 1) >> 1, cy = (hy + fy) >> 1;
-        if (hx + fx + 1 < 0 || hy + fy < 0 || !inside(map, cx, cy)) {
-            return finish(StepOutcome::LeftMap);
-        }
-        if (map.cell(cx, cy) >= limit) {
+        if (under >= limit) {
             return finish(StepOutcome::Blocked);
         }
     }
@@ -127,10 +126,6 @@ StepResult take_step(const formats::MtpMap& map, int map_number, const MapPositi
     // the rebuild does not hold blocks. An entrance is matched on the
     // 'Mech's row at its x or one either side, and is asked about before
     // the 'Mech is found blocked.
-    // The window is the one 1000:218f last built (287f:1314), with its
-    // corner cell (P:09ed); the half-cells are the party's now.
-    const int corner = view_corner_index(window_at);
-    auto tile = [&](int index) { return terrain.window_cell(window_at, corner + index).value_or(0xff); };
     for (int m = 0; m < 4; ++m) {
         if (!mechs.present[std::size_t(m)]) continue;
         const int dx = tables.mech_step_x[std::size_t(m)] + step.dx, dy = tables.mech_step_y[std::size_t(m)] + step.dy;
@@ -153,7 +148,7 @@ StepResult take_step(const formats::MtpMap& map, int map_number, const MapPositi
                 break;
             }
         }
-        if (blocked) {
+            if (blocked) {
             return finish(StepOutcome::Blocked);
         }
     }

@@ -132,22 +132,40 @@ loads it, but never uses it.
 
 The step check (1000:1c12) reads P:07a4: a block of type 0 whose four neighbours are all type 0
 (0x0f) is deep water. 1000:4d57 and 203b:000a read its bit 0x80, a map block (combat.md 2.15).
+The step check reads its cells from the window too, so outdoors the party walks on the terrain
+(docs/movement.md).
+
+## Stepping into the next area: 287f:158c, 163b, 16e3, 17c5
+
+Each position step (`world.h` rebuilds the position part) that takes the low byte past 0 or 0x7f
+moves into the next area, and the grids with it, so grid 4 stays the party's own:
+
+| Step | The grids move | The new grids |
+|---|---|---|
+| up (158c) | down a row (P:0564..06e3 to P:05a4..07a3, copied from the end) | 0, 1, 2 |
+| down (163b) | up a row | 6, 7, 8 |
+| left (16e3) | right a column (row by row: 1 to 2, then 0 to 1) | 0, 3, 6 |
+| right (17c5) | left a column | 2, 5, 8 |
+
+The three new grids are made from the heights at `0x0afa + area` (that is, `world[area - 0x11]`
+for the top-left one) and on, as 104e makes them (18d8 copies the corner heights, 0bfb fills
+the lattice). Then the masks are rebuilt (1886), and the queue P:09f3 gets the three grids and
+P:09f6..09f8 their areas. The rebuild gives a step into the next area exactly the grids and masks
+of making all nine around the new area (`Terrain::step_area`, the unit test
+`area_step_matches_a_fresh_area`).
 
 ## Not rebuilt yet
 
-- The step check (1000:1c12, `movement.cpp`) still reads the map file, and a step off it leaves
-  the map (the outdoors are not rebuilt); its deep-water test on P:07a4 waits for them too.
-- The steps across an area's edge outdoors. The position steps (287f:158c up, 287f:17c5 right and
-  the others; `world.h` rebuilds their position part) also move the grids over by a row or a
-  column there, make the new row or column (287f:18d8 and 0bfb for its three grids) and rebuild
-  the masks.
-- The area-to-map table and the nine-map load (1000:3469, 1000:3edc), 1000:42c8, and
-  24d3:12db's `104e(0x89)`.
+- The queued map loads (P:09f3) after a step into the next area: the rebuild works out which of
+  the three new grids' areas have a map (`tables.area_maps`) and logs it. None of the areas next
+  to the town's has one.
+- The nine-map load (1000:3469, 1000:3edc), the two entries the save-game load changes,
+  1000:42c8, and 24d3:12db's `104e(0x89)`.
 
 What has been read of these so far:
 
 - **The area-to-map table** is a plain table in the program image, 37e8:0030, 256 bytes (one map
-  number per area, 0 for none). The save-game load (1000:32b3) changes two entries first, in
+  number per area, 0 for none), imported as `tables.area_maps`. The save-game load (1000:32b3) changes two entries first, in
   memory: area 0xcc becomes map 11 when F:d310 is set, area 0x34 map 12 when F:d33e is set. Area
   0x7d is map 3.
 - **The nine-map load** (1000:32b3 at 3469, 1000:3d40 at 3edc): `104e(area)`, then for each

@@ -143,12 +143,44 @@ void Terrain::generate(int area) {
     // Grid k is area + 16 (k / 3 - 1) + (k % 3 - 1), its corners the heights
     // of it, the next area east, south and south-east; no wrapping at the
     // world's edges.
-    for (int k = 0; k < kGrids; ++k) {
-        const int a = area - 0x11 + 16 * (k / 3) + k % 3;
-        const auto types = area_types(height(a), height(a + 1), height(a + 16), height(a + 17));
-        std::copy(types.begin(), types.end(), grids_.begin() + k * kGridBlocks);
-    }
+    for (int k = 0; k < kGrids; ++k) make_grid(k, area);
     link_blocks();
+}
+
+void Terrain::make_grid(int k, int area) {
+    const int a = area - 0x11 + 16 * (k / 3) + k % 3;
+    const auto types = area_types(height(a), height(a + 1), height(a + 16), height(a + 17));
+    std::copy(types.begin(), types.end(), grids_.begin() + k * kGridBlocks);
+}
+
+std::array<int, 3> Terrain::step_area(int dx, int dy, int area) {
+    built_.reset();
+    const auto copy = [&](int to, int from) {
+        std::copy_n(grids_.begin() + from * kGridBlocks, kGridBlocks, grids_.begin() + to * kGridBlocks);
+    };
+    std::array<int, 3> fresh{};
+    if (dy < 0) {
+        for (int k = kGrids - 1; k >= 3; --k) copy(k, k - 3);
+        fresh = {0, 1, 2};
+    } else if (dy > 0) {
+        for (int k = 0; k < 6; ++k) copy(k, k + 3);
+        fresh = {6, 7, 8};
+    } else if (dx < 0) {
+        for (int r = 0; r < 3; ++r) {
+            copy(3 * r + 2, 3 * r + 1);
+            copy(3 * r + 1, 3 * r);
+        }
+        fresh = {0, 3, 6};
+    } else {
+        for (int r = 0; r < 3; ++r) {
+            copy(3 * r, 3 * r + 1);
+            copy(3 * r + 1, 3 * r + 2);
+        }
+        fresh = {2, 5, 8};
+    }
+    for (const int k : fresh) make_grid(k, area);
+    link_blocks();
+    return fresh;
 }
 
 void Terrain::place_map(const formats::MtpMap& map, int grid) {

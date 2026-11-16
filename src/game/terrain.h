@@ -31,6 +31,16 @@ public:
     // its area's four corners, then their neighbour masks (287f:1886).
     void generate(int area);
 
+    // BTECH.EXE 287f:158c / 163b / 16e3 / 17c5 (Ghidra FUN_287f_158c etc.),
+    // the grids' part
+    // The party has stepped into the next area, `area` (0xYX), by one on
+    // one axis (dy -1 up, 1 down; dx -1 left, 1 right): the grids move over
+    // by a row or a column, the three new ones are made for the areas
+    // around `area` (287f:18d8, 0bfb), and the masks rebuilt (287f:1886).
+    // The three new grids are those the original queues for a map load
+    // (P:09f3, docs/wilderness.md).
+    std::array<int, 3> step_area(int dx, int dy, int area);
+
     // BTECH.EXE 1000:2da8 (Ghidra FUN_1000_2da8), the part that places the
     // map: its blocks go into grid `grid` at the block column and row the
     // map's header gives, numbered from kFirstMapBlock. The rest of the
@@ -122,6 +132,9 @@ private:
     // BTECH.EXE 287f:0bfb (Ghidra FUN_287f_0bfb)
     // One area's 8x8 terrain types from its four corner heights.
     std::array<std::uint8_t, kGridBlocks> area_types(int nw, int ne, int sw, int se) const;
+    // Grid k of the nine around `area` from its corner heights (no wrapping
+    // at the world's edges).
+    void make_grid(int k, int area);
 
     const formats::Tables& tables_;
     const Fixes& fixes_;

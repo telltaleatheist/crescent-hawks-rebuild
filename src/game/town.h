@@ -336,6 +336,8 @@ private:
     // game/training_quiz.cpp: the quiz's scene (--show-quiz).
     bool show_quiz(KeySource& keys);
     static constexpr int kQuizMenu = 0x25;
+    void build_window();
+    void queue_map_loads(const std::array<int, 3>& grids, int area);
     std::optional<StepResult> step_party(Step step, KeySource& keys);
     MechParty active_mechs() const;
     // Which of 'Mech records 0-3 exist (byte 0 not ff).

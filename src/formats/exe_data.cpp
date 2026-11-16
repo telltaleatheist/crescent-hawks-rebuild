@@ -105,6 +105,7 @@ constexpr std::array kDos103 = {
     ExeSpan{ExeSpan::Kind::Table, "tables.path_arrows", 0x46db, 0x3b06, 12, "a9eff4005e9a70e1"},
     // The terrain outside the towns (docs/wilderness.md):
     ExeSpan{ExeSpan::Kind::Table, "tables.world_heights", 0x2c6c, 0x0b0b, 256, "1ace38e0c5828f12"},
+    ExeSpan{ExeSpan::Kind::Table, "tables.area_maps", 0x37e8, 0x0030, 256, "c4fa392e7eb70166"},
     ExeSpan{ExeSpan::Kind::Table, "tables.terrain_templates", 0x2c6c, 0x0c1d, 1024, "c5cddf08c0924d94"},
     ExeSpan{ExeSpan::Kind::Table, "tables.plain_block", 0x2c6c, 0x209d, 64, "e3a878f25dc4ae8e"},
     ExeSpan{ExeSpan::Kind::Table, "tables.mirror_east_west", 0x2c6c, 0x211d, 32, "513e0371b0a58371"},

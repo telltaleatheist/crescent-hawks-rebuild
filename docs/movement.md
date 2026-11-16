@@ -45,10 +45,11 @@ It returns "blocked" or "free". In order:
 
 1. **Block edges.** If the step crosses into the next 8x8-cell block (16 half-cells) on either
    axis, the program looks at the block it would enter (the diagonal one if both axes cross),
-   using the 3x3 block types around the party. Type 0x0f is deep water: it opens the message box
-   (`24d3:17c6`), prints "The water is too deep that way." (`24d3:17ea`, which then pauses a
-   moment) and the step is blocked. On a town map every neighbouring block is the map's own, so
-   this only matters in the open world (not rebuilt yet).
+   using the window's nine block values (P:07a4, mask OR entry; DG:04a0 turns the edges crossed
+   into the index, in the plain 3x3 order). A value of 0x0f, a terrain block of type 0 whose four
+   neighbours are all type 0, is deep water: it opens the message box (`24d3:17c6`), prints "The
+   water is too deep that way." (`24d3:17ea`, which then pauses a moment) and the step is
+   blocked. A map block's value has bit 0x80 set, so this only happens outdoors.
 2. **Each character.** The party is up to eight characters, each at a fixed offset from the
    position (in half-cells): (0,0), (0,-1), (0,1), (1,0), (-1,0), (1,-1), (-1,1), (1,1). A new game
    has Jason alone, at (0,0). For each present character, with its position after the step:
@@ -57,9 +58,11 @@ It returns "blocked" or "free". In order:
      positions, the message box opens with "Will you enter the" + newline + the place's name +
      "?" and the yes/no question (`1000:1a13`, Yes picked first). Yes goes into the place
      (`17dc:0008`, not rebuilt yet). The check then carries on either way.
-   - **Tile.** A figure is drawn on half-cell (x+1, y), so the cell checked is the one holding
-     half-cell (x+1, y): cell ((x+1)/2, y/2). If that tile number is at least DG:0150 the step is
-     blocked. DG:0150 is 0x55 on every map but map 14, where it is 0x21 (`1000:2da8` sets it).
+   - **Tile.** Read first (`1000:1d9e`), before the entrance: the cell of the window under the
+     character's half-cell after the step, with the same arithmetic as the 'Mechs' (below). If
+     that tile number is at least DG:0150 the step is blocked. DG:0150 is 0x55 on every map but
+     map 14, where it is 0x21 (`1000:2da8` sets it). Outdoors the window holds terrain, so the
+     party walks on it as on the map.
    The characters are those with an active figure 4-11 (F:4072): `1000:051b` makes the figure of
    each character on foot active and clears the rest.
 3. **The 'Mechs.** Only when no character was blocked. For each active 'Mech figure 0-3 (F:406a,
@@ -76,12 +79,16 @@ It returns "blocked" or "free". In order:
 4. **Map 14** (F:d346 set): blocking tiles run the tile handlers (`1b5d:*`) instead. Not rebuilt.
 
 **After a place.** The question runs the place inside the check, and the check then goes on
-reading memory as the place left it. After the walking course, TRAINING.BLD's special 3 puts the
+reading memory as the place left it. The character's tile was read before the question, so it
+is the one from before the place. After the walking course, TRAINING.BLD's special 3 puts the
 party at (0x0c2e, 0xc076) and nothing has redrawn the figures yet, so the Locust's figure 0 is
-still active: the 'Mech part checks it against the window last built at the course's end (at the
-party's position then), and blocks the step that went in. The party stays where special 3 put
-it. The rebuild reads the position and the active 'Mechs again after a place, and keeps the
-window where the last step built it (`take_step`'s `window_at`).
+still active: the 'Mech part checks it against the window in memory (at the party's position
+then), and blocks the step that went in. The party stays where special 3 put it. Which window
+that is depends on what ran in the place. After a fight with no step since, it is the cells the
+fight's last redraw copied back (combat.md 1.2.1). After the mission's walk back to the door,
+it is the one the last step built (287f:1314 rebuilds every cell each time), and in mission 4's
+first try the step goes on. The rebuild reads the position, the active 'Mechs, the window and
+its corner again after a place (`take_step`'s `window_at`, `Terrain::held_window`).
 
 ## Moving (1000:218f)
 
@@ -89,16 +96,13 @@ If the step is free, the program moves y first, then x, one half-cell each (`287
 `287f:163b` down, `287f:16e3` left, `287f:17c5` right). If the low byte would leave 0..0x7f the
 position moves into the next area: the low byte wraps to 0x7f or 0, the high byte steps by one
 area, and the program shifts its grid of loaded areas and loads the maps it now needs between
-the two moves. At the edge of the 16x16-area world the position does not change.
+the two moves (docs/wilderness.md). At the edge of the 16x16-area world the position does not
+change.
 
 ## What the rebuild does differently, for now
 
-- Walking off a town map's edge returns `LeftMap` and the party stays put: the original walks on
-  into the surrounding area, which needs the world map (not rebuilt yet).
-- The deep-water check never fires on a town map, for the reason in step 1; `TooDeep` and its
-  message are wired up for when the world is rebuilt.
-- The characters' cells are read from the map file by position, not from the window: the same
-  cells on a town map. The 'Mechs' are read from the window.
+- A step into an area with a map logs that the map load is not rebuilt yet (docs/wilderness.md);
+  the areas next to the town's have none.
 - Saying yes to an entrance stops the walk (`Town::entered_place`): places are not rebuilt yet.
 - Only the party's figures are drawn: the map's objects, the townspeople and the 'Mechs are not
   rebuilt yet (docs/town_loop.md).
