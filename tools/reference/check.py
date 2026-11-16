@@ -73,15 +73,81 @@ CASES = [
         "keys": "up*5",
         "match": {"the panel": WHOLE_PANEL, "the map": WHOLE_MAP},
     },
+    {
+        # Yes: the Citadel (CITADEL.BLD, docs/scripts.md): its picture in the
+        # upper left box, its text and menu with the bar on the first item.
+        "name": "citadel_inside",
+        "keys": "y",
+        "match": {"the panel": WHOLE_PANEL, "the map": WHOLE_MAP},
+    },
+    {
+        # The first item: the sentry's text, a key, then Katrina's (with
+        # flag 00 clear), which sets flags 16 and 06.
+        "name": "citadel_katrina",
+        "keys": "enter enter",
+        "match": {"the panel": WHOLE_PANEL, "the map": WHOLE_MAP},
+    },
+    {
+        # Back at the menu, the bar where it was left; down to the Hall of
+        # Legends, its first exhibit.
+        "name": "citadel_hall",
+        "keys": "enter down enter",
+        "match": {"the panel": WHOLE_PANEL, "the map": WHOLE_MAP},
+    },
 ]
 
 # Run after CASES with --full, continuing from where they end.
 FULL_CASES = [
     {
-        # No, then 250 more ticks: the 257th runs the money step again (35
-        # to 50, the floor), and the fence is on frame 2.
+        # The Hall's last exhibit.
+        "name": "citadel_hall_end",
+        "keys": "enter*5",
+        "match": {"the panel": WHOLE_PANEL, "the map": WHOLE_MAP},
+    },
+    {
+        # The combat class: the welcome (the first time, flag 07).
+        "name": "citadel_class",
+        "keys": "enter down enter",
+        "match": {"the panel": WHOLE_PANEL, "the map": WHOLE_MAP},
+    },
+    {
+        # The courses with their prices (special 04), menu 9.
+        "name": "citadel_class_menu",
+        "keys": "enter",
+        "match": {"the panel": WHOLE_PANEL, "the map": WHOLE_MAP},
+    },
+    {
+        # The first course: 75 C-Bills, and Jason has 35 (special 05).
+        "name": "citadel_no_money",
+        "keys": "enter",
+        "match": {"the panel": WHOLE_PANEL, "the map": WHOLE_MAP},
+    },
+    {
+        # Talk to others (special 12, 17dc:17b9): who is inside the Citadel
+        # (nobody, at this point).
+        "name": "citadel_talk",
+        "keys": "enter down enter",
+        "match": {"the panel": WHOLE_PANEL, "the map": WHOLE_MAP},
+    },
+    {
+        # Nobody is inside at this point: a key goes back to the menu, the bar
+        # on "talk" where it was left.
+        "name": "citadel_talk_more",
+        "keys": "enter",
+        "match": {"the panel": WHOLE_PANEL, "the map": WHOLE_MAP},
+    },
+    {
+        # Leave: special 14, the upper box cleared, the panel drawn again,
+        # and the step goes on as after "no"; its game tick draws the map.
+        "name": "citadel_leave",
+        "keys": "down enter",
+        "match": {"the panel": WHOLE_PANEL, "the map": WHOLE_MAP},
+    },
+    {
+        # Out of the Citadel, then 250 more ticks: the 257th runs the money
+        # step again (35 to 50, the floor), and the fence is on frame 2.
         "name": "money_step",
-        "keys": "n idle:2753",
+        "keys": "idle:2753",
         "match": {"the panel": WHOLE_PANEL, "the map": WHOLE_MAP},
     },
     {

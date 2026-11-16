@@ -32,7 +32,7 @@ struct MtpMap {
     std::array<std::string, 16> places;     // 16-byte names, one per entry in `entrances`
     std::array<MapPosition, 16> entrances;  // walking onto one offers to enter that place
     std::array<MapPosition, 16> second_positions;  // a second table in the same form (use not known)
-    std::array<std::uint8_t, 16> unknown_16{};     // not yet traced
+    std::array<std::uint8_t, 16> place_scripts{};  // the .BLD (formats/bld.h) behind each entrance
     std::array<std::uint8_t, 8> start_shuffle{};   // picks people's starting places (1000:2da8)
 
     std::vector<std::uint8_t> blocks;  // width*height bytes, block after block

@@ -28,7 +28,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 1000:19dd | 0x119dd | `FUN_1000_19dd` | 22 |  | - |
 | 1000:19f3 | 0x119f3 | `FUN_1000_19f3` | 32 |  | - |
 | 1000:1a13 | 0x11a13 | `FUN_1000_1a13` | 234 | Yes/no question: Y/N answer, left/right pick, space/Enter accept; reprints the answer line each key | rebuilt |
-| 1000:1afd | 0x11afd | `FUN_1000_1afd` | 277 |  | - |
+| 1000:1afd | 0x11afd | `FUN_1000_1afd` | 277 | Shows one .ANM picture: its frames and delays (docs/formats/anm.md) | rebuilt |
 | 1000:1c12 | 0x11c12 | `FUN_1000_1c12` | 1405 | Can the party step by (dx, dy)? Deep water at a block edge; offers to enter a place at an entrance; blocks on tile >= DS:0150 | rebuilt |
 | 1000:218f | 0x1218f | `FUN_1000_218f` | 398 | Walking keys: arrows and Home/PgUp/End/PgDn to a step, checks it, moves y then x, loads areas crossed into | rebuilt |
 | 1000:231d | 0x1231d | `FUN_1000_231d` | 238 | After a key: a walking key moves the figures' walking scripts on | rebuilt |
@@ -57,7 +57,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 1000:4621 | 0x14621 | `FUN_1000_4621` | 134 | Load BTTLTECH.ICN as the map tile sheet | rebuilt |
 | 1000:46a7 | 0x146a7 | `FUN_1000_46a7` | 198 | Show the title screen (BTTITLE.CMP, with its palette) | read |
 | 1000:476d | 0x1476d | `FUN_1000_476d` | 330 |  | - |
-| 1000:48b7 | 0x148b7 | `FUN_1000_48b7` | 495 |  | - |
+| 1000:48b7 | 0x148b7 | `FUN_1000_48b7` | 495 | Shows place picture O<n>.ANM in the picture box, or not, by chance (docs/formats/anm.md) | rebuilt |
 | 1000:4aa6 | 0x14aa6 | `FUN_1000_4aa6` | 14 | Panel: a character's name and three bars (columns 9-11), the first with a red part | rebuilt |
 | 1000:4ab4 | 0x14ab4 | `FUN_1000_4ab4` | 269 |  | - |
 | 1000:4bc1 | 0x14bc1 | `FUN_1000_4bc1` | 235 | Panel: one bar, a yellow outline and a green fill from the bottom | rebuilt |
@@ -95,20 +95,20 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 
 | Address | Linear | Ghidra name | Span | Label | Status |
 |---|---|---|---|---|---|
-| 17dc:0008 | 0x17dc8 | `FUN_17dc_0008` | 440 | Enters a place: loads and runs its .BLD script, then puts the town screen back (docs/scripts.md) | read |
-| 17dc:01c0 | 0x17f80 | `FUN_17dc_01c0` | 1079 | The .BLD script interpreter: opcodes E4-FF (docs/scripts.md) | read |
-| 17dc:05f7 | 0x183b7 | `FUN_17dc_05f7` | 50 | Reads a script word (jump targets) | read |
+| 17dc:0008 | 0x17dc8 | `FUN_17dc_0008` | 440 | Enters a place: loads and runs its .BLD script, then puts the town screen back (docs/scripts.md) | rebuilt |
+| 17dc:01c0 | 0x17f80 | `FUN_17dc_01c0` | 1079 | The .BLD script interpreter: opcodes E4-FF (docs/scripts.md) | rebuilt |
+| 17dc:05f7 | 0x183b7 | `FUN_17dc_05f7` | 50 | Reads a script word (jump targets) | rebuilt |
 | 17dc:0629 | 0x183e9 | `FUN_17dc_0629` | 1824 |  | - |
 | 17dc:0d49 | 0x18b09 | `FUN_17dc_0d49` | 1538 |  | - |
 | 17dc:134b | 0x1910b | `FUN_17dc_134b` | 147 |  | - |
 | 17dc:13de | 0x1919e | `FUN_17dc_13de` | 520 |  | - |
 | 17dc:15e6 | 0x193a6 | `FUN_17dc_15e6` | 467 |  | - |
-| 17dc:17b9 | 0x19579 | `FUN_17dc_17b9` | 573 |  | - |
+| 17dc:17b9 | 0x19579 | `FUN_17dc_17b9` | 573 | Talk to others: who is inside, and where they go next (docs/scripts.md, special 12) | rebuilt |
 | 17dc:19f6 | 0x197b6 | `FUN_17dc_19f6` | 48 |  | - |
 | 17dc:1a26 | 0x197e6 | `FUN_17dc_1a26` | 283 |  | - |
 | 17dc:1b41 | 0x19901 | `FUN_17dc_1b41` | 346 |  | - |
 | 17dc:1c9b | 0x19a5b | `FUN_17dc_1c9b` | 149 |  | - |
-| 17dc:1d30 | 0x19af0 | `FUN_17dc_1d30` | 146 | Loads a place's .BLD and deciphers it (docs/formats/bld.md) | read |
+| 17dc:1d30 | 0x19af0 | `FUN_17dc_1d30` | 146 | Deciphers the loaded .BLD script (docs/formats/bld.md) | rebuilt |
 
 ## CODE_4: segment 19b8, 6,738 bytes
 
@@ -230,11 +230,11 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 
 | Address | Linear | Ghidra name | Span | Label | Status |
 |---|---|---|---|---|---|
-| 24d3:0004 | 0x24d34 | `FUN_24d3_0004` | 6082 | The scripts' special actions, F5 n (docs/scripts.md) | read |
+| 24d3:0004 | 0x24d34 | `FUN_24d3_0004` | 6082 | The script specials, F5 n (docs/scripts.md); 4, 5, 12 and 14 rebuilt | read |
 | 24d3:17c6 | 0x264f6 | `FUN_24d3_17c6` | 36 | Opens the message box over the map: window 7, cleared, frame style 0 | rebuilt |
 | 24d3:17ea | 0x2651a | `FUN_24d3_17ea` | 31 | Prints a message in the open box, waits a moment (273d:086a) | read |
-| 24d3:1809 | 0x26539 | `FUN_24d3_1809` | 21 |  | - |
-| 24d3:181e | 0x2654e | `FUN_24d3_181e` | 21 |  | - |
+| 24d3:1809 | 0x26539 | `FUN_24d3_1809` | 21 | Prints DGROUP:4f7e (special 5) | rebuilt |
+| 24d3:181e | 0x2654e | `FUN_24d3_181e` | 21 | Prints DGROUP:4fa0, a line end (talk) | rebuilt |
 
 ## CODE_13: segment 2656, 3,699 bytes
 
@@ -248,8 +248,8 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 2656:07cb | 0x26d2b | `FUN_2656_07cb` | 624 | Puts one line in the current window at the cursor; past the bottom scrolls the window up a row | rebuilt |
 | 2656:0a3b | 0x26f9b | `FUN_2656_0a3b` | 170 |  | - |
 | 2656:0ae5 | 0x27045 | `FUN_2656_0ae5` | 121 | Cuts N 8x8 cells from a picture, left to right from a cell position (frame pieces from BTBORDER.CMP) | rebuilt |
-| 2656:0b5e | 0x270be | `FUN_2656_0b5e` | 447 | A script menu: highlight bar, arrows, Enter (docs/scripts.md) | read |
-| 2656:0d1d | 0x2727d | `FUN_2656_0d1d` | 345 |  | - |
+| 2656:0b5e | 0x270be | `FUN_2656_0b5e` | 447 | A menu: the bar over the remembered item, arrows, Enter (docs/scripts.md) | rebuilt |
+| 2656:0d1d | 0x2727d | `FUN_2656_0d1d` | 345 | Maps keypad keys and letters to arrows, for menus | rebuilt |
 
 ## CODE_14: segment 273d, 2,172 bytes
 
@@ -328,7 +328,7 @@ read each one before taking it as such.
 | 287f:0260 | 0x28a50 | `FUN_287f_0260` | 179 | EGA: write a packed picture into the four planes at A800 | replaced |
 | 287f:0313 | 0x28b03 | `FUN_287f_0313` | 100 |  | replaced |
 | 287f:0377 | 0x28b67 | `FUN_287f_0377` | 507 | Draws a sprite on the EGA screen, colour 0 see-through | replaced |
-| 287f:0572 | 0x28d62 | `FUN_287f_0572` | 77 |  | replaced |
+| 287f:0572 | 0x28d62 | `FUN_287f_0572` | 77 | Converts an 88x88 picture to EGA planes | replaced |
 | 287f:05bf | 0x28daf | `FUN_287f_05bf` | 17 |  | replaced |
 | 287f:05d0 | 0x28dc0 | `FUN_287f_05d0` | 432 |  | replaced |
 | 287f:0780 | 0x28f70 | `FUN_287f_0780` | 289 |  | replaced |
@@ -379,7 +379,7 @@ read each one before taking it as such.
 | 287f:1da8 | 0x2a598 | `FUN_287f_1da8` | 19 |  | replaced |
 | 287f:1dbb | 0x2a5ab | `FUN_287f_1dbb` | 61 |  | replaced |
 | 287f:1df8 | 0x2a5e8 | `FUN_287f_1df8` | 63 |  | replaced |
-| 287f:1e37 | 0x2a627 | `FUN_287f_1e37` | 151 |  | replaced |
+| 287f:1e37 | 0x2a627 | `FUN_287f_1e37` | 151 | Blits a picture to the screen | replaced |
 | 287f:1ece | 0x2a6be | `FUN_287f_1ece` | 54 |  | replaced |
 | 287f:1f04 | 0x2a6f4 | `FUN_287f_1f04` | 77 |  | replaced |
 | 287f:1f51 | 0x2a741 | `FUN_287f_1f51` | 75 |  | replaced |
@@ -394,14 +394,14 @@ read each one before taking it as such.
 | 287f:22a5 | 0x2aa95 | `FUN_287f_22a5` | 83 |  | replaced |
 | 287f:22f8 | 0x2aae8 | `FUN_287f_22f8` | 112 | Unpack .CMP runs in row order | rebuilt |
 | 287f:2368 | 0x2ab58 | `FUN_287f_2368` | 132 | Unpack .CMP runs in column order | rebuilt |
-| 287f:23ec | 0x2abdc | `FUN_287f_23ec` | 112 |  | replaced |
+| 287f:23ec | 0x2abdc | `FUN_287f_23ec` | 112 | Decodes an .ANM frame: runs XORed over the last (docs/formats/anm.md) | replaced |
 | 287f:245c | 0x2ac4c | `FUN_287f_245c` | 123 | EGA: copy the A800 page to the screen at A000 (from its call site) | replaced |
 | 287f:24d7 | 0x2acc7 | `FUN_287f_24d7` | 645 |  | replaced |
 | 287f:275c | 0x2af4c | `FUN_287f_275c` | 332 |  | replaced |
 | 287f:28a8 | 0x2b098 | `FUN_287f_28a8` | 67 |  | replaced |
 | 287f:28eb | 0x2b0db | `FUN_287f_28eb` | 602 |  | replaced |
 | 287f:2b45 | 0x2b335 | `FUN_287f_2b45` | 66 |  | replaced |
-| 287f:2b87 | 0x2b377 | `FUN_287f_2b87` | 346 |  | replaced |
+| 287f:2b87 | 0x2b377 | `FUN_287f_2b87` | 346 | XORs a colour over a text row (the menu bar) | replaced |
 | 287f:2ce1 | 0x2b4d1 | `FUN_287f_2ce1` | 22 |  | replaced |
 | 287f:2cf7 | 0x2b4e7 | `FUN_287f_2cf7` | 109 | Widens the font for the CGA and Tandy drivers | replaced |
 | 287f:2d64 | 0x2b554 | `FUN_287f_2d64` | 30 |  | replaced |

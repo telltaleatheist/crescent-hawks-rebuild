@@ -22,6 +22,7 @@ endif()
 # It speaks in game terms and asset IDs (the goal of a later visual makeover as a mod).
 # Readers for the original's files, documented in docs/formats/. Standard C++ only.
 add_library(chrformats STATIC
+  src/formats/anm.cpp
   src/formats/bld.cpp
   src/formats/cells.cpp
   src/formats/cmp.cpp
@@ -46,6 +47,7 @@ add_library(chrgame STATIC
   src/game/map_view.cpp
   src/game/money.cpp
   src/game/movement.cpp
+  src/game/place.cpp
   src/game/random.cpp
   src/game/text.cpp
   src/game/text_provider.cpp
@@ -60,6 +62,7 @@ enable_testing()
 add_executable(chrtests
   tests/test_main.cpp
   tests/test_bld.cpp
+  tests/test_anm.cpp
   tests/test_cmp.cpp
   tests/test_maps.cpp
   tests/test_text.cpp

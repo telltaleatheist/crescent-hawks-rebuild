@@ -319,19 +319,21 @@ TEST(random_numbers) {
 TEST(money_step) {
     Random r({0x25, 0x13, 0x90});
     Money money;
-    CHECK(money_tick(money, false, r));  // runs on the first tick
-    CHECK(money.cbills == 35 && money.countdown == 0xff);
-    for (int i = 0; i < 255; ++i) CHECK(!money_tick(money, false, r));
-    CHECK(money_tick(money, false, r));
+    Flags flags = new_game_flags();
+    CHECK(money_tick(money, flags, false, r));  // runs on the first tick
+    CHECK(money.cbills == 35 && flags[flag::kMoneyCountdown] == 0xff);
+    for (int i = 0; i < 255; ++i) CHECK(!money_tick(money, flags, false, r));
+    CHECK(money_tick(money, flags, false, r));
     CHECK(money.cbills == 50);
-    for (int i = 0; i < 256; ++i) money_tick(money, false, r);
+    for (int i = 0; i < 256; ++i) money_tick(money, flags, false, r);
     CHECK(money.cbills == 50);  // at the floor: no more
     // Investments: x * 100 / rate on a gain, x * rate / 110 on a loss.
     Money m2;
     m2.cbills = 0;
     m2.invested = {9600, 9000, 20000};
     Random r2({0x25, 0x13, 0x90});  // draws 0xb5, 0x87, 0xf8: gains for the first two, a loss for the third
-    money_tick(m2, true, r2);
+    Flags f2 = new_game_flags();
+    money_tick(m2, f2, true, r2);
     CHECK(m2.invested[0] == 10000 && m2.invested[1] == 10000);
     CHECK(m2.invested[2] == 20000 * 48 / 110);
 }

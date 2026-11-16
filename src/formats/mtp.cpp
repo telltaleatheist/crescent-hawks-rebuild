@@ -53,7 +53,7 @@ MtpMap decode_mtp(std::span<const std::uint8_t> file) {
     for (auto& p : map.entrances) p.y = word(file, at), at += 2;
     for (auto& p : map.second_positions) p.x = word(file, at), at += 2;
     for (auto& p : map.second_positions) p.y = word(file, at), at += 2;
-    for (auto& b : map.unknown_16) b = file[at++];
+    for (auto& b : map.place_scripts) b = file[at++];
     for (auto& b : map.start_shuffle) b = file[at++];
     map.blocks.assign(file.begin() + std::ptrdiff_t(at), file.end());
     return map;

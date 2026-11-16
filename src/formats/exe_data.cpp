@@ -52,6 +52,42 @@ constexpr std::array kDos103 = {
     ExeSpan{ExeSpan::Kind::Text, "character.5", 0x46db, 0x00cd, 5},
     ExeSpan{ExeSpan::Kind::Text, "character.6", 0x46db, 0x00d2, 7},
     ExeSpan{ExeSpan::Kind::Text, "character.7", 0x46db, 0x00d9, 6},
+    // The places' special actions (docs/scripts.md). The combat class
+    // (24d3:02a5): the transcript, the five levels (pointers at DGROUP:4ea2)
+    // and the three subjects (4eb6).
+    ExeSpan{ExeSpan::Kind::Text, "course.transcript", 0x46db, 0x491a, 46},
+    ExeSpan{ExeSpan::Kind::Text, "course.level.0", 0x46db, 0x46dc, 21},
+    ExeSpan{ExeSpan::Kind::Text, "course.level.1", 0x46db, 0x46f1, 11},
+    ExeSpan{ExeSpan::Kind::Text, "course.level.2", 0x46db, 0x46fc, 10},
+    ExeSpan{ExeSpan::Kind::Text, "course.level.3", 0x46db, 0x4706, 7},
+    ExeSpan{ExeSpan::Kind::Text, "course.level.4", 0x46db, 0x470d, 15},
+    ExeSpan{ExeSpan::Kind::Text, "course.subject.0", 0x46db, 0x471c, 34},
+    ExeSpan{ExeSpan::Kind::Text, "course.subject.1", 0x46db, 0x473e, 42},
+    ExeSpan{ExeSpan::Kind::Text, "course.subject.2", 0x46db, 0x4768, 34},
+    ExeSpan{ExeSpan::Kind::Text, "course.maxed", 0x46db, 0x4948, 81},
+    ExeSpan{ExeSpan::Kind::Text, "course.no_money", 0x46db, 0x4999, 58},
+    ExeSpan{ExeSpan::Kind::Text, "course.no_money_end", 0x46db, 0x4f7e, 34},
+    // Talking to the townspeople inside (17dc:17b9); the reasons are by
+    // place (pointers at DGROUP:4e32).
+    ExeSpan{ExeSpan::Kind::Text, "talk.nobody", 0x46db, 0x16de, 48},
+    ExeSpan{ExeSpan::Kind::Text, "talk.you_see", 0x46db, 0x170e, 26},
+    ExeSpan{ExeSpan::Kind::Text, "talk.done", 0x46db, 0x1728, 5},
+    ExeSpan{ExeSpan::Kind::Text, "talk.hello", 0x46db, 0x172d, 52},
+    ExeSpan{ExeSpan::Kind::Text, "talk.going_to", 0x46db, 0x1761, 46},
+    ExeSpan{ExeSpan::Kind::Text, "talk.end", 0x46db, 0x178f, 2},
+    ExeSpan{ExeSpan::Kind::Text, "talk.line_end", 0x46db, 0x4fa0, 2},
+    ExeSpan{ExeSpan::Kind::Text, "talk.reason.0", 0x46db, 0x4375, 89},
+    ExeSpan{ExeSpan::Kind::Text, "talk.reason.1", 0x46db, 0x43ce, 51},
+    ExeSpan{ExeSpan::Kind::Text, "talk.reason.2", 0x46db, 0x4401, 78},
+    ExeSpan{ExeSpan::Kind::Text, "talk.reason.3", 0x46db, 0x444f, 18},
+    ExeSpan{ExeSpan::Kind::Text, "talk.reason.4", 0x46db, 0x4461, 32},
+    ExeSpan{ExeSpan::Kind::Text, "talk.reason.5", 0x46db, 0x4481, 56},
+    ExeSpan{ExeSpan::Kind::Text, "talk.reason.6", 0x46db, 0x44b9, 22},
+    ExeSpan{ExeSpan::Kind::Text, "talk.reason.7", 0x46db, 0x44cf, 8},
+    ExeSpan{ExeSpan::Kind::Text, "talk.reason.8", 0x46db, 0x44d7, 1},
+    ExeSpan{ExeSpan::Kind::Text, "talk.reason.9", 0x46db, 0x44d8, 14},
+    ExeSpan{ExeSpan::Kind::Text, "talk.reason.10", 0x46db, 0x44e6, 30},
+    ExeSpan{ExeSpan::Kind::Text, "talk.reason.11", 0x46db, 0x4504, 29},
 };
 
 constexpr std::uint16_t kLoadSegment = 0x1000;

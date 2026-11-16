@@ -8,12 +8,15 @@
 #include <array>
 #include <cstdint>
 #include <deque>
+#include <filesystem>
 #include <optional>
 #include <string>
 #include <vector>
 
+#include "formats/menus.h"
 #include "formats/mtp.h"
 #include "game/figures.h"
+#include "game/flags.h"
 #include "game/map_view.h"
 #include "game/money.h"
 #include "game/movement.h"
@@ -66,6 +69,15 @@ std::deque<ScriptItem> parse_key_script(const std::string& script);
 struct PanelStats {
     int b = 0, d = 0, c = 0;
     int byte15 = 0;
+    // Bytes 4-10: the seven skills (0-4). The combat class (docs/scripts.md,
+    // special 05) teaches the first three.
+    std::array<int, 7> skills{};
+};
+
+// A place's picture in the upper left box (1000:48b7): O<number>.ANM.
+struct PlacePicture {
+    int number = 0;
+    bool operator==(const PlacePicture&) const = default;
 };
 
 // A bar of the panel, beside a character's name (1000:4bc1): `value` pixels
@@ -118,11 +130,25 @@ public:
     const std::vector<std::string>& log() const { return log_; }
     // The script ended in the middle of the yes/no question.
     bool question_open() const { return question_open_; }
-    // The place the party went into (the walk stops there for now).
+    // The last place the party went into (its entrance number).
     std::optional<int> entered_place() const { return entered_place_; }
+    // The keys ran out inside a place, while its script waited for one.
+    bool place_open() const { return place_open_; }
+    // The place's picture, while one is shown (it shows as it ends: the
+    // asset {"O<n>.ANM", 0xffff}, docs/formats/anm.md).
+    std::optional<PlacePicture> picture() const { return picture_; }
+    // Where the player's .BLD files are. Without it the walk stops at an
+    // entrance after "yes", as before the places were rebuilt.
+    void set_game_dir(std::filesystem::path dir) { game_dir_ = std::move(dir); }
+    const Flags& flags() const { return flags_; }
+    const std::array<int, formats::kMenus.size()>& menu_last() const { return menu_last_; }
+    const std::array<PanelStats, 8>& stats() const { return stats_; }
 
 private:
     class Question;
+    // Nothing more happens: a question or a place waits for keys that ran
+    // out, or the walk stopped at a place it can't run.
+    bool stopped() const { return question_open_ || place_open_ || (entered_place_ && !game_dir_); }
     void turn(int key, KeySource& keys);
     // BTECH.EXE 1000:020a..050d (the main loop's game tick)
     void game_tick();
@@ -134,6 +160,18 @@ private:
     void open_message_box();
     // BTECH.EXE 1000:1a13 (Ghidra FUN_1000_1a13)
     std::optional<bool> yes_no(bool yes_first, KeySource& keys);
+
+    // The places (game/place.cpp, docs/scripts.md). Each returns false if
+    // the keys ran out while it waited for one (place_open_ is then set).
+    bool visit_place(int entrance, KeySource& keys);
+    bool run_script(int file, KeySource& keys);
+    std::optional<int> menu(int m, KeySource& keys);
+    bool special(int n, KeySource& keys);
+    bool talk(KeySource& keys);
+    void show_picture(int number, int mode);
+    std::optional<int> read_key(KeySource& keys);
+    void print_id(const std::string& id);
+    void count_members();
 
     const formats::MtpMap& map_;
     int map_number_;
@@ -149,7 +187,8 @@ private:
     Townspeople people_;
     PartyPlaces party_places_{};  // DGROUP:4004/4036 for figures 4-11
     Money money_;
-    bool outdoors_ = false;   // DGROUP:d310: false on a town map
+    // Outdoors (DGROUP:d310) is flag 04: clear on a town map.
+    bool outdoors() const { return flags_[flag::kOutdoors] != 0; }
     int countdown_ = 0;       // the main loop's [bp-1a]: 0 when it starts (1000:0016)
     std::uint8_t third_ = 0;  // DGROUP:57fe
     int phase_ = 0;           // DGROUP:5800
@@ -157,6 +196,15 @@ private:
     std::vector<std::string> log_;
     bool question_open_ = false;
     std::optional<int> entered_place_;
+    bool place_open_ = false;
+    Flags flags_ = new_game_flags();
+    // The menu table (385b:0092): the items count changes at run time (talk
+    // sets menu 20's), and each menu remembers its last item (+6).
+    std::array<formats::MenuRecord, formats::kMenus.size()> menus_ = formats::kMenus;
+    std::array<int, formats::kMenus.size()> menu_last_{};
+    std::optional<PlacePicture> picture_;
+    int place_number_ = 0;  // DGROUP:4584: the entrance last entered
+    std::optional<std::filesystem::path> game_dir_;
 };
 
 }  // namespace chr::game

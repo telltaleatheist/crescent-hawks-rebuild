@@ -19,7 +19,8 @@ namespace chr::formats {
 
 // Bump when the files change shape or the import table gains pieces: a data
 // folder from an older import is imported again.
-inline constexpr int kImportVersion = 4;  // 2: the direction names; 3: "C-Bills:"; 4: the .BLD texts
+inline constexpr int kImportVersion = 5;  // 2: the direction names; 3: "C-Bills:"; 4: the .BLD texts;
+                                        // 5: the class and talk texts
 
 std::filesystem::path imported_text_path(const std::filesystem::path& data_dir);
 std::filesystem::path imported_font_path(const std::filesystem::path& data_dir);

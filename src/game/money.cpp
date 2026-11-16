@@ -17,12 +17,12 @@ std::int32_t mul32(std::int32_t a, std::int32_t b) {
 
 }  // namespace
 
-bool money_tick(Money& money, bool outdoors, Random& random) {
-    if (money.countdown-- != 0) return false;
+bool money_tick(Money& money, Flags& flags, bool outdoors, Random& random) {
+    if (flags[flag::kMoneyCountdown]-- != 0) return false;
 
     const std::int32_t total = std::int32_t(std::uint32_t(money.invested[0]) + std::uint32_t(money.invested[1]) +
                                             std::uint32_t(money.invested[2]) + std::uint32_t(money.cbills));
-    const bool short_of_money = std::int32_t(money.floor) > total;
+    const bool short_of_money = flag_word(flags, flag::kMoneyFloor) > total;
     bool redraw = false;
     if (!outdoors) {
         if (short_of_money) money.cbills = std::int32_t(std::uint32_t(money.cbills) + 15);

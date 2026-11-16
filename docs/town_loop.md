@@ -31,11 +31,11 @@ the passes directly.
 
 In order (`1000:020a`..`050d`):
 
-1. Timers that count down when set (below, "Timers"). None is set in town at a new game.
+1. Timers that count down when set (below, "Timers"): flags 29 and 37.
 2. A random number (`287f:0bc0`), always. Outdoors (DS:d310 set), if it has none of the bits of
    DS:d330 and DS:d346 is clear, a fight starts (`203b:000a`). Not rebuilt yet; the draw is,
-   so the sequence stays in step.
-3. The money step, every 256th tick (DS:d323 counts down; it starts at 0, so the first tick
+   so the sequence stays in step. Then flags 1d, 14, 15 and 16 count down.
+3. The money step, every 256th tick (DS:d323, flag 17, counts down; it starts at 0, so the first tick
    runs it). Below.
 4. The countdown is set to 10.
 5. `1000:240b`: the animated tiles' next frame. Below.
@@ -48,26 +48,28 @@ In order (`1000:020a`..`050d`):
 
 ## Timers
 
-All in DGROUP(3892), all 0 in town at a new game (read from the original's memory), so none
-acts there yet. Addresses marked linear are byte offsets in the unpacked image (load segment
-0x1000). Rebuilt as far as the town needs: nothing; documented for later.
+These bytes are script flags (docs/scripts.md: flag f is DGROUP:d30c + f), so the places' scripts
+can set them. All are 0 at a new game. Addresses marked linear are byte offsets in the unpacked
+image (load segment 0x1000). Rebuilt in `Town::game_tick` (src/game/town.cpp), in the original's
+order; the call at the end of flag 37 is logged, not rebuilt (it belongs to the world map).
 
-| Byte | Each tick | Set by | Read by |
-|---|---|---|---|
-| d335 | down to 0 | 0x3f at 1c31:02d3 (after a panel redraw), 0 at linear 0x2160a | 1c31:001b returns at once while it is not 0 |
-| d343-d345 | while d343 is set, the 16-bit count d345:d344 goes down; d343 becomes "count not 0". At 0, if the party is within x 0x800-0xcff and y 0x6000-0xafff, `1d43:0c72(1)` | only the tick writes d343 (others by index) | 2da8: loading map 2 with d343 set calls `1d43:0c72(0)` |
-| d329 | down to 0 | by index (not found by address) | not found by address |
-| d320 | down to 0 | 0xff at linear 0x1d1f4 | linear 0x17e1c: a routine calls on (far 0c67:08a8 in the image) only when it is 0 |
-| d321, d322 | down to 0 | by index | by index |
+| Flag | Byte | Each tick | Set by | Read by |
+|---|---|---|---|---|
+| 29 | d335 | down to 0 | 0x3f at 1c31:02d3 (after a panel redraw), 0 at linear 0x2160a | 1c31:001b returns at once while it is not 0 |
+| 37-39 | d343-d345 | while d343 is set, the 16-bit count d345:d344 goes down; d343 becomes "count not 0". At 0, if the party is within x 0x800-0xcff and y 0x6000-0xafff, `1d43:0c72(1)` | only the tick writes d343 (others by index) | 2da8: loading map 2 with d343 set calls `1d43:0c72(0)` |
+| 1d | d329 | down to 0 | by index | by index |
+| 14 | d320 | down to 0 | 0xff at linear 0x1d1f4 | 17dc:0008: the training center's first-visit routine (1c67:08a8) runs only while it is 0 |
+| 15, 16 | d321, d322 | down to 0 | by index (CITADEL sets 16 to ff) | by index |
 
-`1d43:0c72` and the routines around d335 and d320 belong to the world map and the places,
-which are not rebuilt yet.
+The first three are counted down before the tick's random number, the last four after it
+(`1000:0213`..`0286`, then `02b6`..`02ed`).
 
 ## Money
 
 C-Bills are DS:d370 (32-bit). Three more 32-bit amounts at DS:d374, d378, d37c behave like
 investments. A new game (`1000:4e89`, `4e9c`) sets C-Bills to 20 and the three to 0; the floor,
 the word made of DS:d340 (high) and d33f (low) and read by `1000:29f5`, is 50 (`1000:4f70`).
+That word is flags 33-34, which the training center's script raises.
 
 The money step:
 

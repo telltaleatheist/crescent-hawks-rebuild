@@ -199,6 +199,13 @@ public:
             town_.question_open_ = true;
             return false;
         }
+        if (*answer) {
+            town_.entered_place_ = place;
+            town_.log_.push_back("entered place " + std::to_string(place) + " (" +
+                                 lookup(town_.texts_, place_text_id(town_.map_number_, place)) + ")");
+            // BTECH.EXE 17dc:0008 runs the place right here, inside the step.
+            if (town_.game_dir_) town_.visit_place(place, keys_);
+        }
         return *answer;
     }
 
@@ -224,7 +231,7 @@ void Town::draw_cbills() {
 }
 
 void Town::run(ScriptKeys& input) {
-    while (!question_open_ && !entered_place_) {
+    while (!stopped()) {
         const auto item = input.next_item();
         if (!item) break;
         if (item->idle > 0) {
@@ -236,14 +243,14 @@ void Town::run(ScriptKeys& input) {
 }
 
 void Town::idle_pass() {
-    if (question_open_ || entered_place_) return;
+    if (stopped()) return;
     if (--countdown_ < 0) game_tick();
 }
 
 void Town::key(int k, KeySource& more) {
-    if (question_open_ || entered_place_) return;
+    if (stopped()) return;
     turn(k, more);
-    if (question_open_ || entered_place_) return;
+    if (stopped()) return;
     // BTECH.EXE 1000:00fb: the figures' walking frames move on, then the key
     // half goes straight on to a game tick.
     animation_.key(k);
@@ -251,15 +258,30 @@ void Town::key(int k, KeySource& more) {
 }
 
 void Town::game_tick() {
-    // Timers that count down every tick when set (DGROUP:d335, d343-d345,
-    // d329, d320-d322): none is set in the town at the start of a game; their
-    // uses are not read yet.
-    // A random number is drawn every tick for the chance of an encounter
-    // (DGROUP:d330 masks it, 203b:000a starts the fight). Only outdoors,
-    // which is not rebuilt yet; the draw keeps the sequence in step.
+    // BTECH.EXE 1000:0213..0286: the timers (script flags, docs/scripts.md).
+    // Flag 29 counts down to 0.
+    auto count_down = [this](int f) {
+        if (flags_[std::size_t(f)] != 0) --flags_[std::size_t(f)];
+    };
+    count_down(0x29);
+    // Flag 37 says the word in flags 38-39 counts down. When it reaches 0
+    // with the party inside x 0800-0cff, y 6000-afff of the world, 1d43:0c72
+    // runs (not rebuilt: that region is outdoors, docs/town_loop.md).
+    if (flags_[0x37] != 0) {
+        const int word = (flag_word(flags_, 0x38) - 1) & 0xffff;
+        flags_[0x38] = std::uint8_t(word);
+        flags_[0x39] = std::uint8_t(word >> 8);
+        flags_[0x37] = std::uint8_t(flags_[0x38] | flags_[0x39]);
+        if (flags_[0x37] == 0 && position_.x >= 0x0800 && position_.x < 0x0d00 && position_.y >= 0x6000 &&
+            position_.y < 0xb000)
+            log_.push_back("timer 37 ran out in the region: 1d43:0c72 not rebuilt");
+    }
     const std::uint8_t r = random_.next();
     (void)r;  // outdoors, (r & DGROUP:d330) == 0 starts a fight: not rebuilt
-    if (money_tick(money_, outdoors_, random_)) draw_cbills();
+    // BTECH.EXE 1000:02b6..02ed: flags 1d, 14, 15 and 16 count down to 0
+    // (Katrina's text sets 16 to ff).
+    for (const int f : {0x1d, 0x14, 0x15, 0x16}) count_down(f);
+    if (money_tick(money_, flags_, outdoors(), random_)) draw_cbills();
     countdown_ = 10;
     if (tiles_animate(map_number_)) phase_ = (phase_ + 1) % 3;  // 1000:240b
     // Every third tick the townspeople move (1000:24c2).
@@ -293,18 +315,16 @@ void Town::turn(int k, KeySource& keys) {
     }
     Question question(*this, keys);
     const auto r = take_step(map_, map_number_, position_, party_, *step, question);
+    if (place_open_) {
+        log_.push_back("waiting in place " + std::to_string(*r.offered_place));
+        return;
+    }
     if (question_open_) {  // the original waits for the answer before anything else
         log_.push_back("asked to enter place " + std::to_string(*r.offered_place) + " (waiting)");
         return;
     }
-    if (r.entered) {
-        // BTECH.EXE 17dc:0008 (Ghidra FUN_17dc_0008) runs the place; not rebuilt
-        // yet, so the walk stops here.
-        entered_place_ = *r.offered_place;
-        log_.push_back("entered place " + std::to_string(*r.offered_place) + " (" +
-                       lookup(texts_, place_text_id(map_number_, *r.offered_place)) + ")");
-        return;
-    }
+    // Without the game folder the place can't run, and the walk stops at it.
+    if (r.entered && !game_dir_) return;
     position_ = r.position;
     char where[32];
     std::snprintf(where, sizeof where, " at %04x,%04x", position_.x, position_.y);

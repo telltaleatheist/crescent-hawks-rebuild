@@ -72,6 +72,11 @@ public:
     void forget(int col, int row, int width, int height);
     // Fills a rectangle of cells with one colour.
     void fill(int col, int row, int width, int height, int colour);
+    // BTECH.EXE 287f:2b87 (Ghidra FUN_287f_2b87)
+    // XORs `colour` into every pixel of a row of cells: the menus' highlight
+    // bar. The same call again takes it away. A cell's colours both change
+    // (a glyph's foreground and background, a fill's colour).
+    void xor_bar(int col, int row, int width, int colour);
 
     // The window's current colours: the yes/no question sets and restores them.
     void set_fg(int fg) { windows_[current_].fg = fg; }

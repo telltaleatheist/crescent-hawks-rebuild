@@ -253,4 +253,21 @@ std::string TextScreen::row_text(int row) const {
     return out;
 }
 
+void TextScreen::xor_bar(int col, int row, int width, int colour) {
+    if (row < 0 || row >= kTextRows) return;
+    for (int c = col; c < col + width && c < kTextColumns; ++c) {
+        if (c < 0) continue;
+        TextCell& cell = cells_[row * kTextColumns + c];
+        // An empty cell shows what is underneath (the map); the program
+        // never puts a bar there. As black under the bar, it would turn
+        // the colour itself.
+        if (cell.kind == TextCell::Kind::Empty) {
+            cell.kind = TextCell::Kind::Fill;
+            cell.bg = 0;
+        }
+        cell.fg = static_cast<std::uint8_t>((cell.fg ^ colour) & 0x0f);
+        cell.bg = static_cast<std::uint8_t>((cell.bg ^ colour) & 0x0f);
+    }
+}
+
 }  // namespace chr::game

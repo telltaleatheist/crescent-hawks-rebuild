@@ -104,6 +104,14 @@ void print_state(const chr::game::Town& town) {
     for (const auto& w : town.townspeople().walkers())
         std::printf("state walker %d at %04x %04x target %04x %04x route %02x wait %02x heading %d\n", i++,
                     w.at.x, w.at.y, w.target.x, w.target.y, w.route, w.wait, int(w.heading));
+    std::printf("state party %04x %04x\n", town.position().x, town.position().y);
+    std::printf("state flags ");
+    for (const auto f : town.flags()) std::printf("%02x", f);
+    std::printf("\nstate skills ");
+    for (const auto k : town.stats()[0].skills) std::printf("%02x", k);
+    std::printf("\nstate menus");
+    for (const auto last : town.menu_last()) std::printf(" %d", last);
+    std::printf("\n");
 }
 
 bool save_screenshot(SDL_Renderer* renderer, const std::string& path) {
@@ -256,6 +264,7 @@ int main(int argc, char** argv) {
         auto replay = [&]() -> bool {
             try {
                 town = std::make_unique<chr::game::Town>(map, options.map, start, texts);
+                town->set_game_dir(options.game_dir);
                 town->draw_panel();
                 chr::game::ScriptKeys source(keys);
                 town->run(source);
@@ -272,6 +281,7 @@ int main(int argc, char** argv) {
             } else if (!options.script.empty()) {
                 for (const auto& line : town->log()) std::printf("%s\n", line.c_str());
                 if (town->question_open()) std::printf("(waiting for an answer)\n");
+                if (town->place_open()) std::printf("(waiting in a place)\n");
             }
             if (options.state) print_state(*town);
         }
@@ -288,7 +298,7 @@ int main(int argc, char** argv) {
                 if (event.key.key == SDLK_ESCAPE) running = false;
                 if (const int k = key_code(event.key.key); k != 0 && town) {
                     keys.push_back({k, 0});
-                    if (town->question_open()) {
+                    if (town->question_open() || town->place_open()) {
                         replay();
                     } else {
                         chr::game::ScriptKeys none({});
@@ -299,7 +309,8 @@ int main(int argc, char** argv) {
             const Uint64 now = SDL_GetTicksNS();
             const int frames = clock.advance(double(now - last) / 1e9);
             last = now;
-            if (town && frames > 0 && !town->question_open() && options.screenshot.empty()) {
+            if (town && frames > 0 && !town->question_open() && !town->place_open() &&
+                options.screenshot.empty()) {
                 for (int i = 0; i < frames; ++i) town->idle_pass();
                 if (!keys.empty() && keys.back().idle > 0) keys.back().idle += frames;
                 else keys.push_back({0, frames});
@@ -312,6 +323,9 @@ int main(int argc, char** argv) {
                 drawn = chr::platform::draw_figures(renderer, view, town->figures()) && drawn;
                 drawn = chr::platform::draw_text(renderer, town->text(), palette) && drawn;
                 chr::platform::draw_bars(renderer, town->bars(), palette);
+                // A place's picture, in the upper left box (inside window 4).
+                if (const auto picture = town->picture())
+                    drawn = renderer.draw({"O" + std::to_string(picture->number) + ".ANM", 0xffff}, 8, 8) && drawn;
             } else {
                 drawn = renderer.draw(title, 0, 0);
             }

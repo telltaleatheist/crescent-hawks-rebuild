@@ -4,7 +4,8 @@
     state.py CAPTURE.bin
 
 Prints the same lines as `chr --state` (random numbers, C-Bills, the
-townspeople), from a capture with memory (tools/capture/snap.asm). The
+townspeople, the party's place, the script flags, Jason's skills and the
+menus' remembered items), from a capture with memory (tools/capture/snap.asm). The
 addresses are docs/townspeople.md's.
 """
 import struct
@@ -28,6 +29,11 @@ def original_state(path):
         lines.append("state walker %d at %04x %04x target %04x %04x route %02x wait %02x heading %d" % (
             i, m.word(xs, 0x4004 + 2 * (0x10 + i)), m.word(ys, 0x4036 + 2 * (0x10 + i)),
             m.word(far, rec + 4), m.word(far, rec + 6), m.byte(far, rec + 8), m.byte(far, rec + 9), heading))
+    lines.append("state party %04x %04x" % (m.word(m.word(m.ds, 0x538c), 0xa44b), m.word(m.word(m.ds, 0x538e), 0xa44d)))
+    lines.append("state flags " + m.read(far, 0xd30c, 0x64).hex())          # docs/scripts.md
+    lines.append("state skills " + m.read(far, 0xc614 + 4, 7).hex())       # Jason's record, bytes 4-10
+    menus = m.word(m.ds, 0x56de)                                            # the menu table, 385b:0092
+    lines.append("state menus " + " ".join("%d" % m.word(menus, 0x98 + 16 * i) for i in range(41)))
     return lines
 
 

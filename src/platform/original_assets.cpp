@@ -9,6 +9,7 @@
 #include "formats/game_files.h"
 #include "formats/icn.h"
 #include "formats/import.h"
+#include "formats/anm.h"
 #include "formats/palette.h"
 #include "formats/sprite_sheet.h"
 
@@ -148,6 +149,18 @@ std::optional<Image> OriginalAssets::image(const AssetId& id) {
             const auto pixels = tiles->tile(id.index);
             return from_colour_numbers({pixels.begin(), pixels.end()}, formats::kTileSize,
                                        formats::kTileSize, formats::standard_palette_ega());
+        }
+        if (has_extension(id.file, ".ANM")) {
+            // {"O17.ANM", k}: frame k of a place's picture, as shown.
+            // Frame 0xffff is the picture as it ends.
+            const auto anm = formats::read_anm(*path);
+            const std::size_t frame = id.index == 0xffff ? anm.frames.size() - 1 : id.index;
+            if (frame >= anm.frames.size()) {
+                last_error_ = to_string(id) + ": the picture has " + std::to_string(anm.frames.size()) + " frames";
+                return std::nullopt;
+            }
+            return from_colour_numbers(anm.frames[frame], formats::kAnmSize, formats::kAnmSize,
+                                       formats::standard_palette_ega());
         }
         last_error_ = to_string(id) + ": no reader for this file type yet";
     } catch (const std::exception& e) {
