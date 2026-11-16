@@ -235,16 +235,12 @@ bool Town::after_fight_steps(KeySource& keys) {
         bool pilot = false, free_slot = false;
         for (int c = 0; c < 8; ++c) {
             const auto& r = characters_[std::size_t(c)];
-            if (r[0] != 0xff && r[character::kSkills + 4] != 0 && r[character::kMech] >= character::kOnFoot) pilot = true;
+            if (r[character::kSkills + 4] != 0 && on_foot(c)) pilot = true;
         }
         for (int m = 0; m < 4; ++m) free_slot = free_slot || mechs_[std::size_t(m)][0] == 0xff;
         // Not among the town's blocks (a map block's value has bit 0x80).
         for (const auto b : encounter_blocks_) free_slot = free_slot && (b & 0x80) == 0;
-        if (pilot && free_slot) {
-            log_.push_back("salvage (15ab:04f9): not rebuilt");
-            fight_unfinished_ = true;
-            return false;
-        }
+        if (pilot && free_slot && !salvage(keys)) return false;
     }
     if (!loot(keys)) return false;
     flags_[0x29] = 0;
@@ -390,6 +386,128 @@ bool Town::repair(KeySource& keys) {
     print_id("after.scrap.end");
     if (!press_key(keys)) return false;
     money_.cbills += cash;
+    return true;
+}
+
+// BTECH.EXE 15ab:04f9 (Ghidra FUN_15ab_04f9)
+// Salvage after a fight (docs/combat.md 2.15): each party character on foot
+// who can pilot may have the best tech pick through the wrecks; a wreck
+// that can be saved goes to the first free 'Mech slot with that pilot.
+bool Town::salvage(KeySource& keys) {
+    int skill = 0, tech = 0;
+    for (int c = 0; c < 8; ++c) {
+        const auto& r = characters_[std::size_t(c)];
+        if (r[character::kName] == character::kEmpty) continue;
+        const int s = std::int8_t(r[character::kSkills + 5]);
+        if (skill < s) {
+            tech = c;
+            skill = s;
+        }
+    }
+    const auto name = [this](int c) {
+        print_id("character." + std::to_string(characters_[std::size_t(c)][character::kName]));
+    };
+    // A template whose last character stands for the 'Mech's first letter,
+    // then the rest of the record's name.
+    const auto template_text = [this](const std::string& id) {
+        std::string t = lookup(texts_, id);
+        if (!t.empty()) t.pop_back();
+        return t;
+    };
+    const auto first = [&](int slot) { return fixes_.fix_wreck_search ? (slot < 4 || slot >= 12) : true; };
+    for (int c = 0; c < 8; ++c) {
+        const auto& r = characters_[std::size_t(c)];
+        if (r[character::kName] == character::kEmpty || r[character::kSkills + 4] == 0 || !on_foot(c)) continue;
+        clear_window();
+        name(c);
+        print_id("after.salvage.question");
+        const auto yes = yes_no(true, keys);  // 1000:1a13(1)
+        if (!yes) {
+            place_open_ = true;
+            return false;
+        }
+        if (!*yes) continue;
+        clear_window();
+        name(tech);
+        print_id("after.salvage.inspecting");
+        hold_screen(120);  // 273d:0006(0x78)
+        bool stop = false;
+        while (true) {
+            // The pick: (r & 3) + 12 x (r & 1), then the first figure from
+            // there (0-15, wrapping) whose destroyed flag is set. Figures
+            // 4-11 are party people (bug 26); with no flag set it would
+            // never end.
+            int slot = int(random_.next() & 3);
+            slot += 12 * int(random_.next() & 1);
+            int tries = 0;
+            while (!(figs_.destroyed[std::size_t(slot)] && first(slot))) {
+                slot = (slot + 1) % 16;
+                if (++tries > 16) {
+                    log_.push_back("a wreck search with no wreck left: not rebuilt (it never ends)");
+                    fight_unfinished_ = true;
+                    return false;
+                }
+            }
+            figs_.destroyed[std::size_t(slot)] = false;
+            int left = 0;
+            for (int f = 0; f < 16; ++f) left += figs_.destroyed[std::size_t(f)] && first(f) ? 1 : 0;
+            const int m = slot >= 12 ? slot - 8 : slot;
+            if (m >= 8) {
+                log_.push_back("salvage of a killed party person's record past the 'Mech table: not rebuilt");
+                fight_unfinished_ = true;
+                return false;
+            }
+            const auto& wreck = mechs_[std::size_t(m)];
+            const int letter = combat_.wreck_letter[std::size_t(m)];
+            std::string rest;
+            for (int b = 1; b < 0x7d && wreck[std::size_t(b)] != 0; ++b) rest += char(wreck[std::size_t(b)]);
+            bool saved = false;
+            const bool beyond = wreck[0x75] == 3 || wreck[0x76] == 2 || wreck[0x1f] == 0;
+            if (!beyond || skill >= 4) {
+                name(tech);
+                std::string line = template_text("after.salvage.salvaging") + char(letter) + rest;
+                while (line.size() > 1 && line.back() == ' ') line.pop_back();
+                text_.print(line);
+                print_id("ui.full_stop");  // 1000:2a7e
+                saved = true;
+                for (int k = 0; k < 4; ++k) {
+                    auto& r = mechs_[std::size_t(k)];
+                    if (r[0] != 0xff) continue;
+                    for (int b = 1; b < 0x7d; ++b) r[std::size_t(b)] = mechs_[std::size_t(m)][std::size_t(b)];
+                    r[0] = std::uint8_t(letter);
+                    r[0x79] = std::uint8_t(c);
+                    characters_[std::size_t(c)][character::kMech] = std::uint8_t(k);
+                    // Bug 25: 0x92 for every letter but 'L'.
+                    figs_.sprite_base[std::size_t(k)] = r[0] == 'L' ? 0 : 0x92;
+                    if (fixes_.fix_salvage_sprite) {
+                        log_.push_back("the salvaged 'Mech's sprite base with the fix: not rebuilt");
+                        fight_unfinished_ = true;
+                        return false;
+                    }
+                    r[0x76] = 1;
+                    r[0x75] = 1;
+                    if (r[0x20] == 0) r[0x20] = 1;
+                    if (r[0x1f] == 0) r[0x1f] = 1;
+                    break;
+                }
+            } else {
+                text_.print(template_text("after.salvage.no_chance") + char(letter) + rest);
+            }
+            if (left == 0) {
+                stop = true;
+                saved = true;
+            }
+            if (!saved) continue;  // not salvageable: another pick, no key
+            if (!press_key(keys)) return false;  // 1000:2a4f
+            break;
+        }
+        if (stop) {
+            clear_window();
+            print_id("after.salvage.none_left");
+            if (!press_key(keys)) return false;
+            break;
+        }
+    }
     return true;
 }
 

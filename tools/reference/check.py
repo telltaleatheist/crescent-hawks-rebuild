@@ -890,8 +890,36 @@ CHAIN_REPAIR_POKED_CASES += [
     {"name": "chain_repair_back", "keys": "enter", "match": SCREEN},
 ]
 
+# Poked: chain_mech_poked, then after the soldiers a second party member,
+# Rex (character 1: name number 1, attributes, Piloting 2, on foot, hit
+# points; our own test values), and the walk on to the same Wasp and
+# soldier as chain_repair_poked. Rex fights on foot as figure 5. After the
+# fight he is a pilot without a 'Mech: Yes to salvage, and Jason, the only
+# one with Tech, salvages the Wasp into 'Mech record 1 for him (15ab:04f9).
+# Only the tail is compared.
+SALVAGE_POKES = " ".join(["char:1:00=01", "char:1:01=08", "char:1:02=09", "char:1:03=07",
+                          "char:1:08=02", "char:1:0c=08", "char:1:0f=50"])
+CHAIN_SALVAGE_POKED_CASES = [dict(case, compare=False) for case in CHAIN_MECH_POKED_CASES] + [
+    {"name": "chain_salvage_walk", "keys": "enter", "match": SCREEN, "compare": False},
+    {"name": "chain_salvage_poked", "keys": SALVAGE_POKES + " idle:1", "match": {}},
+    {"name": "chain_salvage_enc", "keys": "left*27", "match": SCREEN},
+    # As in chain_repair_poked: a key hands the fight back, then Begin
+    # Fight each round. With Rex on foot the scuffle box comes three rounds
+    # later.
+    {"name": "chain_salvage_round_1", "keys": "y y enter arm:1 n", "match": {}, "fight": True},
+    {"name": "chain_salvage_player", "keys": "enter", "match": SCREEN, "fight": True},
+    {"name": "chain_salvage_fled", "keys": "enter", "match": SCREEN, "fight": True},
+] + [{"name": "chain_salvage_key_%d" % n, "keys": "enter", "match": {}, "fight": True} for n in range(3, 16)] + [
+    {"name": "chain_salvage_over", "keys": "enter", "match": SCREEN},
+    {"name": "chain_salvage_question", "keys": "enter", "match": SCREEN},
+    {"name": "chain_salvage", "keys": "enter", "match": SCREEN},
+    {"name": "chain_salvage_none", "keys": "enter", "match": SCREEN},
+    {"name": "chain_salvage_back", "keys": "enter", "match": SCREEN},
+]
+
 # The long unpoked run: its own tier (`--campaign`, ctest label campaign).
-CAMPAIGN = {"chain", "chain_death", "chain_mech_poked", "chain_heal_poked", "chain_repair_poked"}
+CAMPAIGN = {"chain", "chain_death", "chain_mech_poked", "chain_heal_poked", "chain_repair_poked",
+            "chain_salvage_poked"}
 
 SEQUENCES = [("town", CASES, FULL_CASES, []), ("training", TRAINING_CASES, [], []),
              ("quiz", QUIZ_CASES, [], ["--show-quiz"]), ("mission", MISSION_CASES, MISSION_FULL_CASES, []),
@@ -914,6 +942,7 @@ SEQUENCES = [("town", CASES, FULL_CASES, []), ("training", TRAINING_CASES, [], [
              ("chain_mech_poked", [], CHAIN_MECH_POKED_CASES, []),
              ("chain_heal_poked", [], CHAIN_HEAL_POKED_CASES, []),
              ("chain_repair_poked", [], CHAIN_REPAIR_POKED_CASES, []),
+             ("chain_salvage_poked", [], CHAIN_SALVAGE_POKED_CASES, []),
              ("handover", [], HANDOVER_CASES, [])]
 
 # The feeder (tools/capture/snap.asm, docs/reference.md) hands over a key at

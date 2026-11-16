@@ -105,6 +105,6 @@ struct Figure {
 // after it: docs/town_loop.md.)
 std::vector<Figure> party_figures(const Terrain& terrain, formats::MapPosition position,
                                   const Party& party, const FigureAnimation& animation,
-                                  const formats::Tables& tables);
+                                  const formats::Tables& tables, const std::array<int, 8>& sprite_base);
 
 }  // namespace chr::game

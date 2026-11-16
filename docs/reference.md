@@ -218,7 +218,10 @@ the first fight to a Wasp and one soldier. The soldier runs (2.10), a key hands 
 the player, Begin Fight (Enter) runs each round with the computer still moving the Chameleon,
 the Wasp falls, and the repairs run. These values are our own test values too. On foot Jason
 loses to every group in reach, even with a poked rifle and the most hit points a byte allows, so
-no unpoked fight hurts him and lives. `fourth` (long only) is mission 4 (flag 00
+no unpoked fight hurts him and lives. `chain_salvage_poked` adds Rex as character 1 after the first
+fight (name number 1, attributes, Piloting 2, on foot, hit points; our own test values too) and
+walks to the same Wasp: Rex fights on foot as figure 5, and afterwards he is a pilot without a
+'Mech, so the salvage question comes, and Jason salvages the Wasp into record 1. `fourth` (long only) is mission 4 (flag 00
 poked to 4): no computer question (F:0090), the Locust flees at the first orders menu, the walk
 back, the verdict and the town. `raid` (long only) is mission 7 (flag 00 poked to 7), the
 Kurita raid: the computer question (only mission 4 skips it), then Begin Fight round after round
@@ -244,6 +247,13 @@ counts, DG:014a and the map marks).
   original's capture after the key that closes the game-over box still shows the box, even with
   `idle:2` after the key, so the question is not compared. To come back to when a new game from
   there ("play again", Yes) is rebuilt.
+- **A key ignored at "Some of the enemy humans have fled!"** (`chain_repair_poked`, docs/combat.md
+  2.10): with the computer fighting, `arm:1 n`, then `idle:1` (round 1 ends at the box), the
+  original never takes the next key (Enter): its captures after it still show the box, with the
+  same random state, while chr reads the key and plays on. The box waits through `273d:0259`, the
+  same blocking read that other boxes take keys at. The sequence goes round it by sending the key
+  before round 1 ends, which hands the fight back to the player, then Begin Fight each round.
+  Whether the feeder or the program drops the key is not known.
 
 ## Findings
 

@@ -361,6 +361,7 @@ private:
     bool anyone_hurt() const;
     bool heal(int doctor, KeySource& keys);
     bool repair(KeySource& keys);
+    bool salvage(KeySource& keys);
     int slot_location_structure(int m, int slot) const;
     std::optional<StepResult> step_party(Step step, KeySource& keys);
     MechParty active_mechs() const;
@@ -388,7 +389,13 @@ private:
     formats::MapPosition position_;
     const TextProvider& texts_;
     const formats::Tables& tables_;
-    Party party_;
+    // The party: characters 0-7 whose record is in use (byte 0, the name
+    // number, not ff), as the original tests it everywhere.
+    Party party() const {
+        Party p;
+        for (int i = 0; i < 8; ++i) p.present[std::size_t(i)] = characters_[std::size_t(i)][character::kName] != character::kEmpty;
+        return p;
+    }
     FigureAnimation animation_{tables_};
     TextScreen text_{tables_};
     Random random_ = Random::at_town_start();
@@ -430,6 +437,12 @@ private:
     // F:c614: the sixteen character records.
     std::array<CharacterRecord, 16> characters_ = new_game_characters();
     FightFigures figs_;
+    // F:d562: the characters' sprite bases (figures 4-11 of F:d55e).
+    std::array<int, 8> people_sprite_base() const {
+        std::array<int, 8> b{};
+        for (int i = 0; i < 8; ++i) b[std::size_t(i)] = figs_.sprite_base[std::size_t(4 + i)];
+        return b;
+    }
     CombatState combat_;
     MapMarks marks_;
     std::vector<Figure> drawn_marks_;  // what 1000:2a93 drew last

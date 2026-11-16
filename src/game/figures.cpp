@@ -18,10 +18,6 @@ namespace {
 constexpr int kScriptBase = 0x270;
 constexpr int character_script(int direction) { return 0x2b0 + 8 * direction; }  // DGROUP:027a
 
-// F:d562: each character's first sprite; Jason's from the new-game setup
-// at 1000:4f0f (docs/town_loop.md).
-constexpr std::array<int, 8> kSpriteBase = {0x96, 0x96, 0x96, 0x96, 0x96, 0x96, 0x96, 0x96};
-
 }  // namespace
 
 FigureAnimation::FigureAnimation(const formats::Tables& tables) : tables_(&tables) {
@@ -94,7 +90,7 @@ void FigureAnimation::key(int k, const std::array<bool, 4>& mechs) {
 
 std::vector<Figure> party_figures(const Terrain& terrain, formats::MapPosition position,
                                   const Party& party, const FigureAnimation& animation,
-                                  const formats::Tables& tables) {
+                                  const formats::Tables& tables, const std::array<int, 8>& sprite_base) {
     std::vector<Figure> figures;
     const int hx = position.half_cell_x(), hy = position.half_cell_y();
     const int parity = (position.y & 1) * 2 + (position.x & 1);
@@ -102,7 +98,7 @@ std::vector<Figure> party_figures(const Terrain& terrain, formats::MapPosition p
     for (int member = 0; member < 8; ++member) {
         if (!party.present[member]) continue;
         Figure f;
-        f.sprite = sprite(kSpriteBase[member] + animation.character_frame(member));
+        f.sprite = sprite(sprite_base[std::size_t(member)] + animation.character_frame(member));
         // DGROUP:02ae/02be put the k-th figure at the k-th formation offset
         // (DGROUP:0464/047c, imported: formation_x/y), one half-cell right of it.
         f.half_x = hx + tables.formation_x[std::size_t(k)] + 1;

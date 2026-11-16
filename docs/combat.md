@@ -383,8 +383,8 @@ Rebuilt (`Town::random_encounter`, `Town::place_encounter`, `Combat::reaches`,
 encounters out of reach, then one in reach (four soldiers against Jason alone on foot). Declining
 doesn't evade it, and the computer fights five rounds until Jason is killed (2.12, the game over
 in docs/town_loop.md). A won encounter's after-fight steps: loot and healing are rebuilt and
-compared (`chain_mech_poked`, `chain_heal_poked`); repairs and salvage are rebuilt as far as their
-tests.
+compared (`chain_mech_poked`, `chain_heal_poked`), and so are repairs and salvage
+(`chain_repair_poked`, `chain_salvage_poked`).
 
 Kinds 1-3 always fight.
 
@@ -741,7 +741,10 @@ flag is cleared. It can be salvaged unless (engine hits 3, or gyro hits 2, or he
 and S < 4. Salvaged: the first free party slot gets the record (first letter from F:323e),
 pilot = the character, engine and gyro hits = 1, centre torso and head structure at least 1,
 sprite base 0 for an 'L', else 0x92 (bug 25). Not salvageable: DG:102f, and a new pick. No wrecks
-left: DG:104c and it stops. See bug 26.
+left: DG:104c and it stops. See bug 26. Each salvaging message is the template's text without
+its last character, then the record's first letter (F:323e) and the rest of its name, then
+`1000:2a7e`; a salvaged wreck, or none left, waits for a key (`1000:2a4f`). One wreck at most per
+character: with wrecks left the loop goes on to the next character, with none it ends.
 
 **Loot** (`15ab:094b`, FUN_15ab_094b), always on this path. If any figure 4-11 or 16-23 is
 marked destroyed: "You dig through the soldiers' pockets and find" (DG:1085) a sum of (r & 0xf)

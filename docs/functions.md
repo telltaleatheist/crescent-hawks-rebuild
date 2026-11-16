@@ -78,7 +78,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | Address | Linear | Ghidra name | Span | Label | Status |
 |---|---|---|---|---|---|
 | 15ab:0002 | 0x15ab2 | `FUN_15ab_0002` | 1271 | After a fight: repairs from the wrecks and scrap money | rebuilt (an SRM 6 with `fix_weapon_count` off logs) |
-| 15ab:04f9 | 0x15fa9 | `FUN_15ab_04f9` | 1106 | After a fight: salvage a wreck for a pilot on foot | read |
+| 15ab:04f9 | 0x15fa9 | `FUN_15ab_04f9` | 1106 | After a fight: salvage a wreck for a pilot on foot | rebuilt |
 | 15ab:094b | 0x163fb | `FUN_15ab_094b` | 531 | After a fight: loot the beaten soldiers (C-Bills, a weapon swap; bug 27) | rebuilt (not `17dc:15e6`, a weapon offered to a party of two or more) |
 | 15ab:0b5e | 0x1660e | `FUN_15ab_0b5e` | 55 | Asks whether the computer fights for you (F:009e) | read |
 | 15ab:0b95 | 0x16645 | `FUN_15ab_0b95` | 250 |  | - |

@@ -194,7 +194,7 @@ bool Town::run_script(int file, KeySource& keys) {
         case formats::Op::IfSkill: {
             bool any = false;
             for (std::size_t i = 0; i < 8; ++i)
-                if (party_.present[i] && in.bytes[0] < character::kSkillCount && characters_[i][std::size_t(character::kSkills + in.bytes[0])] >= sbyte(pc + 2)) any = true;
+                if (party().present[i] && in.bytes[0] < character::kSkillCount && characters_[i][std::size_t(character::kSkills + in.bytes[0])] >= sbyte(pc + 2)) any = true;
             jump_if(any);
             break;
         }
@@ -344,7 +344,7 @@ bool Town::anyone_hurt() const {
 void Town::count_members() {
     int count = 0;
     for (std::size_t i = 1; i < 8; ++i)
-        if (party_.present[i]) ++count;
+        if (party().present[i]) ++count;
     flags_[flag::kMembers] = static_cast<std::uint8_t>(count);
 }
 

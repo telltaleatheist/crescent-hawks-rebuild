@@ -173,4 +173,7 @@ moves the 'Mechs' scripts on too, when there are any; that part is not rebuilt y
 `1527:0044` cuts MECHSHAP.CMP into the sprite table at start-up with `273d:070a` (slot, column
 of 8 pixels, pixel row, width in columns, height). The full list is `formats/sprite_sheet.cpp`.
 The EGA drawer (`287f:0377`) treats colour 0 as see-through. The party's 8x8 people are row 32
-(slots 0xa6..0xb9); row 24 has red ones, row 40 grey ones.
+(slots 0xa6..0xb9); row 24 has red ones, row 40 grey ones. A person's slot is its sprite base
+(F:d55e + figure, so F:d562 + character) plus its frame. The new-game setup gives Jason 0x96, row 32;
+the other characters' bases start at 0, so any other party member on foot is drawn from row 24 (red)
+until something sets theirs.

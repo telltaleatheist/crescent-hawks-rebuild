@@ -163,6 +163,9 @@ Town::Town(const formats::MtpMap& map, int map_number, formats::MapPosition star
     : map_(map), map_number_(map_number), tile_sheet_(tile_sheet_for_map(map_number)),
       position_(start), texts_(texts), tables_(tables) {
     window_at_ = start;
+    // F:d562 (figure 4's sprite base): Jason's people from the new-game
+    // setup (1000:4f0f); the other characters' stay 0, MECHSHAP.CMP's red row.
+    figs_.sprite_base[4] = 0x96;
     load_terrain();
     people_ = Townspeople::place(map_, map_number_, random_, tables_);
     // One more random number between the map load and the main loop
@@ -187,7 +190,7 @@ void Town::record_party_places() {
     party_places_ = {};
     int k = 0;
     for (int member = 0; member < 8; ++member) {
-        if (!party_.present[member] || !on_foot(member)) continue;
+        if (!party().present[member] || !on_foot(member)) continue;
         const formats::MapPosition at{move_x(position_.x, tables_.formation_x[std::size_t(k)]),
                                       move_y(position_.y, tables_.formation_y[std::size_t(k)])};
         party_places_[std::size_t(k)] = at;
@@ -251,9 +254,9 @@ std::vector<Figure> Town::figures() const {
     if (frozen_) return frozen_->figures;
     auto all = drawn_marks_;
     // Characters in a 'Mech are drawn as their 'Mech, below.
-    Party walking = party_;
+    Party walking = party();
     for (int i = 0; i < 8; ++i) walking.present[std::size_t(i)] = walking.present[std::size_t(i)] && on_foot(i);
-    const auto party = party_figures(terrain_, position_, walking, animation_, tables_);
+    const auto party = party_figures(terrain_, position_, walking, animation_, tables_, people_sprite_base());
     all.insert(all.end(), party.begin(), party.end());
     const auto people = people_.figures(map_, position_, animation_);
     all.insert(all.end(), people.begin(), people.end());
@@ -272,7 +275,7 @@ std::vector<StatBar> Town::bars() const {
     if (!party_box_shown_) return bars;  // the party box was cleared (a fight's questions)
     int line = 0;
     for (int i = 0; i < 8 && line < 4; ++i) {
-        if (!party_.present[i]) continue;
+        if (!party().present[i]) continue;
         const auto& c = characters_[std::size_t(i)];
         const int row = 14 + 2 * line;
         const int b = c[character::kB];
@@ -295,7 +298,7 @@ void Town::draw_panel(bool clear) {
     // rows apart, with their bars (bars()).
     int line = 0;
     for (int i = 0; i < 8 && line < 4; ++i) {
-        if (!party_.present[i]) continue;
+        if (!party().present[i]) continue;
         text_.put_text(lookup(texts_, "character." + std::to_string(i)), 1, 14 + 2 * line, 15, 0);
         ++line;
     }
@@ -629,7 +632,7 @@ void Town::run_map_loads() {
 // game now waits in a question or a place.
 std::optional<StepResult> Town::step_party(Step step, KeySource& keys) {
     Question question(*this, keys);
-    Party walking = party_;
+    Party walking = party();
     for (int i = 0; i < 8; ++i) walking.present[std::size_t(i)] = walking.present[std::size_t(i)] && on_foot(i);
     step_mechs_ = active_mechs();
     const auto r = take_step(map_, map_number_, position_, walking, step, question, tables_, terrain_, step_mechs_,

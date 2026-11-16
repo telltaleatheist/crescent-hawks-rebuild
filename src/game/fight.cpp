@@ -33,7 +33,7 @@ int mech_sink(int tile, int quarters) {
 
 bool Town::on_foot(int character) const {
     const auto& c = characters_[std::size_t(character)];
-    return c[character::kName] != character::kEmpty && c[character::kMech] >= character::kOnFoot;
+    return c[character::kName] != character::kEmpty && std::int8_t(c[character::kMech]) >= character::kOnFoot;
 }
 
 // BTECH.EXE 1000:051b (Ghidra FUN_1000_051b), as drawn during special 1's
@@ -42,11 +42,11 @@ bool Town::on_foot(int character) const {
 // the 'Mechs drawn), 24x24 with its foot cell two half-cells below its
 // top. Afterwards the 'Mechs' places are recorded as figures 0-3.
 std::vector<Figure> Town::walk_in_figures() {
-    Party walking = party_;
+    Party walking = party();
     for (int i = 0; i < 8; ++i) walking.present[std::size_t(i)] = walking.present[std::size_t(i)] && on_foot(i);
     draw_marks();
     auto all = drawn_marks_;
-    const auto party = party_figures(terrain_, position_, walking, animation_, tables_);
+    const auto party = party_figures(terrain_, position_, walking, animation_, tables_, people_sprite_base());
     all.insert(all.end(), party.begin(), party.end());
     const auto people = people_.figures(map_, position_, animation_);
     all.insert(all.end(), people.begin(), people.end());
@@ -124,7 +124,8 @@ std::vector<Figure> Town::fight_figures_drawn(bool marks) {
             c.screen_x[std::size_t(f)] = (col & 0x7f) << 3;
             c.screen_y[std::size_t(f)] = rm << 3;
             Figure fig;
-            fig.sprite = sprite((figs_.sprite_base[std::size_t(f)] + animation_.frame(f)) & 0xff);
+            // A 16-bit sum: 0xfe + a frame reaches row 40's grey people.
+            fig.sprite = sprite(figs_.sprite_base[std::size_t(f)] + animation_.frame(f));
             fig.half_x = formats::MapPosition{fx, fy}.half_cell_x() + 1;
             fig.half_y = formats::MapPosition{fx, fy}.half_cell_y();
             fig.sink = sink;
