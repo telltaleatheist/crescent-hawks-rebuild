@@ -378,12 +378,38 @@ DRAWN_CASES = [dict(case, compare=False) for case in MISSION_CASES[:11]] + DRAWN
 DRAWN_FULL_CASES = DRAWN_ROUNDS[1:] + [dict(MISSION_FULL_CASES[-1], name="drawn_end")]
 BRIEF_CASES, BRIEF_FULL_CASES = messages_cases("brief", "up enter")
 
+# The same mission fought by the player, Verbose messages and graphics on:
+# Begin Fight with no orders, round after round, so the party stands and
+# the enemy comes on (docs/combat.md 2.6). Each capture is the next round's
+# orders menu. Then Flee: escaped, "You should return to base now.";
+# not, "You do not escape!" and "Press a key.", both waiting for a key.
+ORDERS_ROUNDS = [
+    {
+        "name": "orders_round_%d" % n,
+        "keys": "enter",
+        "match": {"the panel": WHOLE_PANEL, "the map": WHOLE_MAP},
+        "fight": True,
+    }
+    for n in range(1, 9)
+]
+ORDERS_CASES = [dict(case, compare=False) for case in TRAINING_CASES[:11]] + [
+    dict(TRAINING_CASES[11], name="orders_menu", fight=True)] + ORDERS_ROUNDS[:1]
+ORDERS_FULL_CASES = ORDERS_ROUNDS[1:] + [
+    {
+        "name": "orders_flee",
+        "keys": "up enter",
+        "match": {"the panel": WHOLE_PANEL, "the map": WHOLE_MAP},
+        "fight": True,
+    },
+]
+
 # Each sequence is one run of the original: (name, quick cases, --full
 # cases, chr's own options).
 SEQUENCES = [("town", CASES, FULL_CASES, []), ("training", TRAINING_CASES, [], []),
              ("quiz", QUIZ_CASES, [], ["--show-quiz"]), ("mission", MISSION_CASES, MISSION_FULL_CASES, []),
              ("verbose", VERBOSE_CASES, VERBOSE_FULL_CASES, []), ("drawn", DRAWN_CASES, DRAWN_FULL_CASES, []),
-             ("brief", [], BRIEF_CASES + BRIEF_FULL_CASES, [])]
+             ("brief", [], BRIEF_CASES + BRIEF_FULL_CASES, []),
+             ("orders", ORDERS_CASES, ORDERS_FULL_CASES, [])]
 
 # The feeder (tools/capture/snap.asm, docs/reference.md) hands over a key at
 # every 4th poll of the keyboard. The main loop polls once a pass, and after

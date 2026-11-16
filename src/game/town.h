@@ -243,10 +243,16 @@ private:
     bool run_mission(int mode, KeySource& keys);
     void place_mission(int mechs, int people);
     bool fight(int kind, KeySource& keys);
-    bool orders_menu(KeySource& keys);
-    // 203b:056b..1037 with the computer fighting for the party: the rounds
-    // until one side is beaten, then the fight's ending.
+    // The orders menu: 0 Begin Fight, 1 Flee; nothing when the keys ran
+    // out or an order is chosen that the rebuild stops at.
+    std::optional<int> orders_menu(Combat& combat, KeySource& keys);
+    void show_unit(Combat& combat, int fig, bool redraw);
+    // The rounds, the party's side ordered by the player or planned by the
+    // computer, until the fight ends; then its ending.
     bool fight_rounds(int kind, KeySource& keys);
+    bool press_key(KeySource& keys);
+    // 273d:06c3: the page made the screen over the map's columns.
+    void show_page();
     Combat combat_rules();
     // game/training_quiz.cpp: the quiz's scene (--show-quiz).
     bool show_quiz(KeySource& keys);
@@ -316,6 +322,9 @@ private:
     int messages_ = 2;       // DG:2e38: combat messages (0 none, 1 brief, 2 verbose)
     bool graphics_ = true;   // DG:2e3a: see combat graphics
     bool computer_ = false;  // F:009e: the computer fights for you
+    bool no_computer_order_ = false;  // F:0090: no Computer order (missions 4-7)
+    bool raid_ = false;               // F:3772: the Kurita raid
+    int path_end_col_ = 0, path_end_row_ = 0;  // F:3778/377a: the cell where the shown path ends
     std::optional<Frozen> frozen_;  // the map as the screen shows it
     // With combat graphics: the page drawn but not shown yet, the sprites on
     // it and on the screen, the line pixels on the screen; and every moment

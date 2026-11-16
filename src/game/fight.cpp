@@ -1,7 +1,7 @@
-// A training mission from the 'Mech choice to the orders menu (docs/combat.md,
-// "Training missions"): special 1 walks the chosen 'Mech in, the mission
-// driver places the enemy, and the fight asks its three questions and shows
-// the orders menu for the first unit.
+// A training mission (docs/combat.md 1.2 and 2): special 1 walks the chosen
+// 'Mech in, the mission driver places the enemy, and the fight asks its
+// three questions and runs its rounds, the party's side ordered by the
+// player or fought by the computer.
 #include <algorithm>
 
 #include "game/fight.h"
@@ -334,12 +334,7 @@ bool Town::fight(int kind, KeySource& keys) {
         return false;
     }
     graphics_ = *graphics;
-    if (computer_) return fight_rounds(kind, keys);
-    // The round (203b:056b): units without a place drop out.
-    for (int f = 0; f < 12; ++f)
-        if (figs_.active[std::size_t(f)] != 0 && (figs_.x[std::size_t(f)] == 0xffff || figs_.y[std::size_t(f)] == 0xffff))
-            figs_.active[std::size_t(f)] = 0;
-    return orders_menu(keys);
+    return fight_rounds(kind, keys);
 }
 
 // BTECH.EXE 15ab:18e8 (Ghidra FUN_15ab_18e8), for a 'Mech: its pilot's
@@ -360,47 +355,121 @@ void Town::print_unit_heading(int fig) {
     log_.push_back("a 'Mech record with no template's name");
 }
 
-// BTECH.EXE 203b:14c3 (Ghidra FUN_203b_14c3), up to its menu: the first
-// active unit's heading in the upper box, the view moved onto it and
-// drawn with the fight's figures and a box on the unit, and the orders
-// menu with the bar on Begin Fight.
-bool Town::orders_menu(KeySource& keys) {
-    int fig = -1;
-    for (int f = 0; f < 12 && fig < 0; ++f)
-        if (figs_.active[std::size_t(f)] != 0) fig = f;
-    if (fig < 0 || fig >= 4) {
-        log_.push_back("orders for a unit on foot: not rebuilt");
+// BTECH.EXE 203b:14c3 (Ghidra FUN_203b_14c3)
+// The orders menu, from the first active party unit: its heading and its
+// screen, then the menu, until Begin Fight or Flee. The bar starts on Begin
+// Fight when the menu is entered and then stays where it was left.
+std::optional<int> Town::orders_menu(Combat& combat, KeySource& keys) {
+    const auto stop = [this](const std::string& what) {
+        log_.push_back(what + ": not rebuilt");
         fight_unfinished_ = true;
+        return std::optional<int>{};
+    };
+    int fig = 0;
+    while (fig < 12 && figs_.active[std::size_t(fig)] == 0) ++fig;
+    if (fig == 12) return stop("orders with no party unit");
+    if (no_computer_order_) figs_.computer[std::size_t(fig)] = false;
+    bool entered = true;
+    for (;;) {
+        if (fig >= 4) return stop("orders for a unit on foot");
+        text_.select_window(4);
+        text_.clear_window();
+        print_unit_heading(fig);
+        text_.set_fg(15);
+        if (figs_.computer[std::size_t(fig)]) {
+            print_id("orders.computer_moving");
+            return stop("the computer's plan on the orders screen");  // 1e31:03ab(fig, 1)
+        }
+        show_unit(combat, fig, true);
+        text_.select_window(3);
+        text_.clear_window();
+        text_.set_fg(15);
+        const bool mech = fig < 4;
+        print_id(mech ? "orders.menu_mech" : "orders.menu_person");  // DG:3a6f, DG:3abc
+        const int items = mech ? 10 : 8;
+        menus_[3].items = items;
+        if (entered) menu_last_[3] = items - 1;
+        entered = false;
+        const auto chosen = menu(3, keys);
+        if (!chosen) return std::nullopt;
+        const int c = *chosen;
+        if (c >= items - 2) return c == items - 2 ? 1 : 0;
+        if ((mech && c < 3) || (!mech && c == 0)) return stop("the move order");  // 203b:1c1f
+        if (!mech && c == 1) {
+            // Clear Moves: the orders deleted, the computer's control off.
+            combat_.orders[std::size_t(fig)].fill(0xff);
+            figs_.computer[std::size_t(fig)] = false;
+            show_unit(combat, fig, false);
+        }
+        if (mech && c == 4) return stop("the kick order");                                  // 203b:2231
+        if (((mech && c == 5) || (!mech && c == 3)) && !no_computer_order_) return stop("the Computer order");
+        if ((mech && c == 3) || (!mech && c == 2)) return stop("the weapons order");       // 1d43:0004
+        if ((mech && c == 6) || (!mech && c == 4)) return stop("the scan");                // 203b:2591
+        if (c == items - 3) {
+            // Next Unit: the next active party unit, 11 wrapping to 0, the
+            // bar on Next Unit in its menu.
+            do fig = (fig + 1) % 12;
+            while (figs_.active[std::size_t(fig)] == 0);
+            menu_last_[3] = fig < 4 ? 7 : 5;
+        }
+    }
+}
+
+// BTECH.EXE 203b:1774 (Ghidra FUN_203b_1774)
+// Unit `fig` on the orders screen: with `redraw` the view moved onto it and
+// drawn with the fight's figures; the page shown, a box XORed over the unit
+// (3x3 cells for a 'Mech, one for a person) and, for a party unit, its
+// path worked out from its orders and drawn as arrows from its cell.
+void Town::show_unit(Combat& combat, int fig, bool redraw) {
+    if (redraw) {
+        position_ = {figs_.x[std::size_t(fig)], figs_.y[std::size_t(fig)]};  // 1000:17bb
+        page_ = Frozen{live_view(), fight_figures_drawn()};                  // 287f:1314, 18ef, 1000:0e4b
+        page_sprites_.clear();
+    }
+    show_page();
+    const bool mech = fig < 4 || (fig >= 12 && fig < 16);
+    boxes_ = {mech ? XorBox{25, 10, 3, 3, 15} : XorBox{26, 12, 1, 1, 15}};  // 287f:2b87 per row
+    if (fig >= 12) return;
+    if (fig < 4) combat.mech_mp(fig, std::int8_t(combat_.orders[std::size_t(fig)][0]));  // 203b:22bc
+    else combat.person_mp(fig);                                                         // 203b:2474
+    combat.simulate_path(fig);
+    int col = 0x1a, row = 0x0c;
+    const auto& path = combat_.paths[std::size_t(fig)];
+    for (int i = 0; i + 1 < CombatState::kPathBytes && path[std::size_t(i)] != 2; i += 2) {
+        const int dx = path[std::size_t(i)], dy = path[std::size_t(i + 1)];
+        col += dx;
+        row += dy;
+        const char glyph = char(tables_.path_arrows[std::size_t((dy + 1) * 4 + dx + 1)]);
+        text_.put_text(std::string_view(&glyph, 1), col, row, 15, 0);  // 273d:00d5
+    }
+    path_end_col_ = col;
+    path_end_row_ = row;
+}
+
+// BTECH.EXE 1000:2a4f (Ghidra FUN_1000_2a4f)
+// "Press a key." in the current window, and a key.
+bool Town::press_key(KeySource& keys) {
+    print_id("ui.press_key");
+    if (!read_key(keys)) {
+        place_open_ = true;
         return false;
     }
-    text_.select_window(4);
-    text_.clear_window();
-    print_unit_heading(fig);
-    // 203b:1774: 1000:17bb walks the party's position onto the unit, the
-    // view is drawn there (287f:1314, 18ef), the figures (1000:0e4b), the
-    // map columns copied to the screen (273d:06c3), and a 3x3-cell box
-    // XORed in colour 15 over the 'Mech in the middle of the view.
-    position_ = {figs_.x[std::size_t(fig)], figs_.y[std::size_t(fig)]};
-    frozen_ = Frozen{live_view(), fight_figures_drawn()};
+    return true;
+}
+
+// BTECH.EXE 273d:06c3 (Ghidra FUN_273d_06c3)
+// The page's map columns (13-39) copied to the screen: whatever text, line
+// or box was there is gone.
+void Town::show_page() {
+    if (page_) frozen_ = page_;
+    screen_sprites_ = page_sprites_;
+    screen_pixels_.clear();
+    boxes_.clear();
     text_.forget(13, 0, kTextColumns - 13, kTextRows);
-    boxes_ = {XorBox{25, 10, 3, 3, 15}};
-    // The orders (DG:3a6f), menu record 3 with ten items, the bar on the
-    // last (Begin Fight) each time.
-    text_.select_window(3);
-    text_.clear_window();
-    text_.set_fg(15);
-    print_id("orders.menu_mech");
-    menus_[3].items = 10;
-    menu_last_[3] = 9;
-    const auto order = menu(3, keys);
-    if (!order) return false;
-    log_.push_back("order " + std::to_string(*order) + ": not rebuilt");
-    fight_unfinished_ = true;
-    return false;
 }
 
 void Town::hold_screen(int frames) {
-    events_.push_back({Shown{view(), figures(), screen_sprites_, screen_pixels_, text_, picture_}, frames, -1});
+    events_.push_back({Shown{view(), figures(), screen_sprites_, screen_pixels_, text_, boxes_, picture_}, frames, -1});
 }
 
 Combat Town::combat_rules() {
@@ -426,12 +495,7 @@ Combat Town::combat_rules() {
         page_sprites_.clear();
     };
     hooks.show = [this](int frames) {
-        // 273d:06c3 copies the page's map columns (13-39) to the screen:
-        // whatever text was there is gone.
-        if (page_) frozen_ = page_;
-        screen_sprites_ = page_sprites_;
-        screen_pixels_.clear();
-        text_.forget(13, 0, kTextColumns - 13, kTextRows);
+        show_page();
         hold_screen(frames);
     };
     hooks.hold = [this](int frames) { hold_screen(frames); };
@@ -449,23 +513,75 @@ Combat Town::combat_rules() {
                   random_, combat_, marks_, *rules_, tables_, fixes_, messages_, graphics_, std::move(hooks));
 }
 
-// BTECH.EXE 203b:056b..1481, the rounds with the computer in control
-// (docs/combat.md 2.5, 2.8, 2.12, 2.13).
+// BTECH.EXE 203b:056b..1481, the rounds (docs/combat.md 2.5-2.8, 2.12,
+// 2.13).
 bool Town::fight_rounds(int kind, KeySource& keys) {
     Combat combat = combat_rules();
     bool over = false;
     while (!over) {
         const formats::MapPosition start = position_;
         combat_.person_ran = false;
-        // 203b:1482(0): the computer plans the party.
-        combat.plan_side(0);
-        if (combat_.person_ran) {
-            // A party person met a 'Mech: with no party 'Mech left, the
-            // party may run (r & 3).
-            bool no_mech = true;
-            for (int m = 0; m < 4; ++m)
-                if (mechs_[std::size_t(m)][0] != 0xff) no_mech = false;
-            if (no_mech && (random_.next() & 3) != 0) over = true;
+        if (!computer_) {
+            // The player's side: units without a place drop out, every
+            // party unit's path is reset, and the orders menu.
+            for (int f = 0; f < 12; ++f) {
+                if (figs_.active[std::size_t(f)] == 0) continue;
+                if (figs_.x[std::size_t(f)] == 0xffff || figs_.y[std::size_t(f)] == 0xffff)
+                    figs_.active[std::size_t(f)] = 0;
+                combat_.paths[std::size_t(f)].fill(2);
+            }
+            const auto chosen = orders_menu(combat, keys);
+            if (!chosen) return false;
+            int fled = *chosen;
+            // In the raid, figure 0 outside the box around the way out has
+            // escaped (2), whatever was chosen.
+            if (raid_) {
+                const int x = std::int16_t(figs_.x[0]);
+                const std::uint16_t y = figs_.y[0];
+                if (y >= 0xd000 || x >= 0x0d00 || y < 0xb07f || x < 0x0b7f) fled = 2;
+            }
+            if (fled != 0) {
+                // 2.7: Flee escapes on r & 3 not 0.
+                if (fled != 2) fled = (random_.next() & 3) != 0 ? 1 : 0;
+                text_.select_window(3);
+                text_.clear_window();
+                if (kind >= 2) fled = 0;
+                if (raid_ && fled != 2) {
+                    print_id("fight.no_escape_jenners");
+                    fled = 0;
+                    if (!press_key(keys)) return false;
+                } else if (fled == 0) {
+                    print_id("fight.no_escape");
+                    if (!press_key(keys)) return false;
+                } else if (kind > 0) {
+                    combat_.person_ran = true;  // the mission is failed
+                }
+            }
+            over = fled != 0;
+            // Each party unit in slot order: the computer's plan, or the
+            // path of its orders when the orders screen has not worked it out.
+            for (int f = 0; f < 12 && !over; ++f) {
+                if (figs_.active[std::size_t(f)] == 0) continue;
+                if (figs_.computer[std::size_t(f)]) {
+                    combat.plan(f);  // 1e31:03ab(f, 0)
+                } else if (combat_.paths[std::size_t(f)][0] == 2 && combat_.orders[std::size_t(f)][0] != 0xff) {
+                    position_ = {figs_.x[std::size_t(f)], figs_.y[std::size_t(f)]};  // 1000:17bb
+                    if (f < 4) combat.mech_mp(f, std::int8_t(combat_.orders[std::size_t(f)][0]));
+                    else combat.person_mp(f);
+                    combat.simulate_path(f);
+                }
+            }
+        } else {
+            // 203b:1482(0): the computer plans the party.
+            combat.plan_side(0);
+            if (combat_.person_ran) {
+                // A party person met a 'Mech: with no party 'Mech left, the
+                // party may run (r & 3).
+                bool no_mech = true;
+                for (int m = 0; m < 4; ++m)
+                    if (mechs_[std::size_t(m)][0] != 0xff) no_mech = false;
+                if (no_mech && (random_.next() & 3) != 0) over = true;
+            }
         }
         if (!over) {
             position_ = start;
@@ -491,20 +607,16 @@ bool Town::fight_rounds(int kind, KeySource& keys) {
             if (!combat_.fight_on) over = true;
         }
         // With the computer in control a waiting key hands the party back
-        // to the player (273d:002f, no demo playing), and is thrown away.
-        const auto waiting = keys.poll();
-        if (!waiting) {
-            place_open_ = true;  // the keys ran out between rounds
-            poll_open_ = true;
-            return false;
-        }
-        if (*waiting) {
-            computer_ = false;
-            if (!over) {
-                log_.push_back("the player takes over the fight: not rebuilt");
-                fight_unfinished_ = true;
+        // to the player (273d:002f, no demo playing), and is thrown away:
+        // the orders menu comes next round.
+        if (computer_) {
+            const auto waiting = keys.poll();
+            if (!waiting) {
+                place_open_ = true;  // the keys ran out between rounds
+                poll_open_ = true;
                 return false;
             }
+            if (*waiting) computer_ = false;
         }
     }
 

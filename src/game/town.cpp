@@ -199,6 +199,13 @@ void Town::open_message_box() {
     text_.select_window(7);
     text_.clear_window();
     text_.frame(0);
+    // The box and its frame are drawn over whatever was on the screen,
+    // the orders screen's XORed box too.
+    const auto& w = text_.window();
+    std::erase_if(boxes_, [&](const XorBox& b) {
+        return b.col >= w.x - 1 && b.row >= w.y - 1 && b.col + b.width <= w.x + w.width + 1 &&
+               b.row + b.height <= w.y + w.height + 1;
+    });
 }
 
 std::optional<bool> Town::yes_no(bool yes_first, KeySource& keys) {

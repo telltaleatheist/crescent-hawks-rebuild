@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "game/asset_id.h"
+#include "game/fight.h"
 #include "game/figures.h"
 #include "game/map_view.h"
 #include "game/text.h"
@@ -36,14 +37,15 @@ struct ShownPixel {
 };
 
 // The screen at one moment: the view and its figures as last shown, the
-// sprites drawn over them, the line pixels plotted on top, the text, and
-// the place picture.
+// sprites drawn over them, the line pixels plotted on top, the text, the
+// boxes XORed over the map, and the place picture.
 struct Shown {
     MapView view;
     std::vector<Figure> figures;
     std::vector<ShownSprite> sprites;
     std::vector<ShownPixel> pixels;
     TextScreen text;
+    std::vector<XorBox> boxes;
     std::optional<PlacePicture> picture;
 };
 

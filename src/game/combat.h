@@ -96,7 +96,8 @@ struct CombatState {
     std::array<std::uint8_t, 8> burning{};               // F:d576: rounds left
     std::array<std::uint8_t, 8> wreck_letter{};          // F:323e: a destroyed record's first byte
     bool fight_on = true;        // DG:014a: 0 when the leader is killed
-    bool person_ran = false;     // F:3992: a party person was planned against a 'Mech
+    bool person_ran = false;     // F:3992: the party fled (kinds 1-3), or a party person was planned
+                                 // against a 'Mech
     bool enemy_people_ran = false;  // F:374c
     bool spectator = false;      // F:e48e: the Arena's spectator (figure 13)
 };

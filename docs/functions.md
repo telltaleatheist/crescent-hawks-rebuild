@@ -40,7 +40,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 1000:2913 | 0x12913 | `FUN_1000_2913` | 226 |  | - |
 | 1000:29f5 | 0x129f5 | `FUN_1000_29f5` | 54 | The money floor: word F:d340/d33f | rebuilt |
 | 1000:2a2b | 0x12a2b | `FUN_1000_2a2b` | 36 | Empties the keyboard buffer (unless playing back recorded keys) | read |
-| 1000:2a4f | 0x12a4f | `FUN_1000_2a4f` | 26 |  | - |
+| 1000:2a4f | 0x12a4f | `FUN_1000_2a4f` | 26 | "Press a key." (DG:050d) and a key | rebuilt |
 | 1000:2a69 | 0x12a69 | `FUN_1000_2a69` | 21 |  | - |
 | 1000:2a7e | 0x12a7e | `FUN_1000_2a7e` | 21 |  | - |
 | 1000:2a93 | 0x12a93 | `FUN_1000_2a93` | 445 | Draws the map objects (up to 64), toggling sprites 0x7c/0x7d | read |
@@ -202,8 +202,8 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 |---|---|---|---|---|---|
 | 203b:000a | 0x203ba | `FUN_203b_000a` | 5240 | The fight: set-up, engage question, the round loop, the end, the after-fight steps (docs/combat.md) | read |
 | 203b:1482 | 0x21832 | `FUN_203b_1482` | 65 |  | - |
-| 203b:14c3 | 0x21873 | `FUN_203b_14c3` | 689 | The player's orders menu for each unit; 1 = flee | read |
-| 203b:1774 | 0x21b24 | `FUN_203b_1774` | 455 |  | - |
+| 203b:14c3 | 0x21873 | `FUN_203b_14c3` | 689 | The player's orders menu for each unit; 1 = flee | rebuilt in part (Begin Fight, Flee, Next Unit, Clear Moves) |
+| 203b:1774 | 0x21b24 | `FUN_203b_1774` | 455 | A unit on the orders screen: the view on it, the box, its path as arrows | rebuilt |
 | 203b:193b | 0x21ceb | `FUN_203b_193b` | 740 | A figure's path from its orders, and its movement cost | rebuilt |
 | 203b:1c1f | 0x21fcf | `FUN_203b_1c1f` | 1554 |  | - |
 | 203b:2231 | 0x225e1 | `FUN_203b_2231` | 139 |  | - |

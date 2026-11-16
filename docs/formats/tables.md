@@ -63,6 +63,7 @@ word); anything else is refused, and the game asks for a new import.
 | `muzzle` | DG:2d28 | 48 bytes | a line shot's start by direction, x then y: a 'Mech, a 'Mech with the other sprite set, a person |
 | `line_steps` | DG:41dc | 32 bytes | by octant (1e31:1ea2): the straight step's x and y, then the diagonal step's |
 | `person_quarters` | DG:0372 | 4 words | by parity, the tile bits of a person's cell (1000:0e4b) |
+| `path_arrows` | DG:3b06 | 12 bytes | by (dy + 1) x 4 + dx + 1, the glyph of a step of the path the orders screen shows (203b:1774) |
 | `path_quarters` | DG:3b12 | 4 bytes | by the half-cell's parity, the tile bits that make a path step cost more (203b:193b) |
 | `leg_actuator_bit`, `_keep` | DG:316a/3172 | 8 bytes each | by a d6, a leg actuator a critical hit takes out, and the mask that clears it (1e31:11ab) |
 | `arm_actuator_bit`, `_keep` | DG:317a/3182 | 8 bytes each | the same for an arm |

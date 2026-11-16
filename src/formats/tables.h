@@ -111,6 +111,9 @@ struct Tables {
                                              // a 'Mech, a 'Mech with the other sprites, a person
     std::array<int, 0x20> line_steps{};      // DG:41dc: by octant, the straight step's x and y, the diagonal's
 
+    // The orders screen (docs/combat.md 2.6).
+    std::array<int, 12> path_arrows{};       // DG:3b06: by (dy + 1) 4 + dx + 1, a shown path step's glyph
+
     bool operator==(const Tables&) const = default;
 };
 

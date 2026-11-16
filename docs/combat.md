@@ -112,9 +112,8 @@ and the 'Mech sprites' outline is number 1, so it turns 14 where a black 0 turns
 works the box out from the colour numbers of the tiles and figures under it
 (`platform::draw_xor_box`).
 
-Not rebuilt yet on this stretch: `0d49`'s enemy people (its second count) and `0e4b`'s people
-(figures 4-11 and 16-23), which mission 2 never has. Past the orders menu the fight stops
-(`Town::fight_unfinished`).
+Not rebuilt yet on this stretch: `0d49`'s enemy people (its second count), which mission 2 never
+has. The orders menu itself is in 2.6.
 
 ### 1.2.2 Mission 2 fought by the computer (rebuilt)
 
@@ -152,7 +151,8 @@ machines of the day each probably took several display frames. The platform hold
 sounds are recorded but not played yet (no sound is rebuilt). A story picture is held 50 frames
 at its last frame.
 
-Not rebuilt yet: the sounds, the player's orders, the Arena's spectator, the double agent, and what follows the fight (2.13 is
+Not rebuilt yet: the sounds, the player's orders other than Begin Fight, Flee and Next Unit
+(2.6), the Arena's spectator, the double agent, and what follows the fight (2.13 is
 done; 2.15 is not).
 
 **The cell window in a fight.** The planner's path (3.3) and the line of sight (3.6) read map
@@ -404,8 +404,33 @@ instead.
 - **Scan** (`203b:2591`): a person cannot see enemy 'Mechs while any is active; a 'Mech whose
   sensors are destroyed (byte 0x77 = 2) cannot scan 'Mechs.
 
-The path shown for a figure (`203b:1774`) is drawn from the simulated steps as arrow glyphs.
-Enemy paths are never drawn.
+The menu's loop, as rebuilt (`Town::orders_menu`): each pass prints the unit's heading in
+window 4 (`15ab:18e8`), then either "The computer is moving" (DG:3a42) and the planner with show
+(a unit under F:3994) or the unit's screen (`203b:1774`), then the menu in window 3: ten items for a
+'Mech (DG:3a6f), eight on foot (DG:3abc). The bar goes on Begin Fight only on the menu's first pass
+in a round; after that it stays on the item last chosen. Next Unit puts it back on Next Unit
+(item 7, or 5 on foot) for the next unit. With F:0090 set, the first unit loses computer control
+on entry, and Computer does nothing.
+
+The unit's screen (`203b:1774(fig, redraw)`):
+- With redraw, the view is moved onto the unit (`1000:17bb`) and drawn with the fight's figures
+  (`287f:1314`, `18ef`, `1000:0e4b`). Clear Moves shows it again without redrawing.
+- The page is copied to the screen (`273d:06c3`), and a box is XORed in colour 15 over the
+  unit, row by row (`287f:2b87`): 3x3 cells from (25, 10) for a 'Mech, the one cell (26, 12) for a
+  person.
+- For a party unit its movement points are worked out from the type of its first order
+  (`203b:22bc`, or `2474` on foot) and its path simulated (`203b:193b`). Then each step (dx, dy) of
+  the path is drawn from the cell (26, 12) on, as the glyph DG:3b06[(dy + 1) x 4 + dx + 1] in
+  colour 15 on 0 (`273d:00d5`), until a step of 2. The cell where it ends goes to F:3778/377a.
+- Enemy paths are never drawn.
+- F:b782 = 1 (not read yet).
+
+After the menu, the player's side (`203b:059b..07ce`): every party unit with orders whose path
+is still unworked (its first step 2) has its movement points and path worked out at its own
+position; a unit under the computer is planned (`1e31:03ab(fig, 0)`).
+
+The `orders` reference sequence fights mission 2 with Begin Fight and no orders for eight rounds,
+then flees, matching the original's screen and state at each menu.
 
 ### 2.7 Fleeing
 
@@ -415,7 +440,8 @@ Enemy paths are never drawn.
 - The raid: choosing Flee gives "You cannot escape these Jenners!" (DG:3497). Instead, if figure
   0 is outside the box x 0x0b7f-0x0cff, y 0xb07f-0xcfff at the orders step, the party escapes
   (value 2) without a draw.
-- Failed: "You do not escape!" (DG:34b8) and the round goes on.
+- Failed: window 3 is cleared, "You do not escape!" (DG:34b8), "Press a key." (DG:050d, `1000:2a4f`)
+  and a key; the round goes on. Kinds 2 and 3 always end here, after the draw.
 - Escaped in kinds 1-3: F:3992 = 1 (the mission is failed).
 - Computer control with no party 'Mech left: r & 3 (2.5).
 

@@ -98,6 +98,7 @@ constexpr std::array kDos103 = {
     ExeSpan{ExeSpan::Kind::Table, "tables.person_quarters", 0x46db, 0x0372, 8, "7a1284cf4c84ce54"},
     ExeSpan{ExeSpan::Kind::Table, "tables.muzzle", 0x46db, 0x2d28, 0x30, "e5f4d337ac08ca39"},
     ExeSpan{ExeSpan::Kind::Table, "tables.line_steps", 0x46db, 0x41dc, 0x20, "b5d668490f6227c0"},
+    ExeSpan{ExeSpan::Kind::Table, "tables.path_arrows", 0x46db, 0x3b06, 12, "a9eff4005e9a70e1"},
     ExeSpan{ExeSpan::Kind::Table, "rules.quiz_answers", 0x46db, 0x28ec, 20, "3fe5abf0257c084c"},
     // Text the game shows. The names are the text IDs (docs/text.md): a
     // text provider hands them out, and an override file can replace them.
@@ -118,6 +119,7 @@ constexpr std::array kDos103 = {
     ExeSpan{ExeSpan::Kind::Text, "walk.direction.northwest", 0x46db, 0x00a7, 11, "f7ec95a44795bfc9"},
     // 1000:1a13, the yes/no answer line, with Yes or with No picked:
     ExeSpan{ExeSpan::Kind::Text, "ui.answer_yes_picked", 0x46db, 0x03ee, 16, "ab37bd17e5401171"},
+    ExeSpan{ExeSpan::Kind::Text, "ui.press_key", 0x46db, 0x050d, 14, "787e88186eb252b3"},  // 1000:2a4f
     ExeSpan{ExeSpan::Kind::Text, "ui.answer_no_picked", 0x46db, 0x03fe, 18, "b0ed7f20a54135c7"},
     // 1000:4cac, the heading over the party box's three bar columns:
     ExeSpan{ExeSpan::Kind::Text, "panel.party_heading", 0x46db, 0x0aca, 4, "1b1faf746e0d0bb8"},

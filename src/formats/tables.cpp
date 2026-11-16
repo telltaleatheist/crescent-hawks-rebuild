@@ -84,6 +84,7 @@ const std::vector<Flat>& flat_tables() {
         {"person_quarters", 0x46db, 0x0372, Element::U16, [](Tables& t) { return all(t.person_quarters); }},
         {"muzzle", 0x46db, 0x2d28, Element::S8, [](Tables& t) { return all(t.muzzle); }},
         {"line_steps", 0x46db, 0x41dc, Element::S8, [](Tables& t) { return all(t.line_steps); }},
+        {"path_arrows", 0x46db, 0x3b06, Element::U8, [](Tables& t) { return all(t.path_arrows); }},
     };
     return kFlat;
 }

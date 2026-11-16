@@ -503,6 +503,8 @@ int main(int argc, char** argv) {
                 drawn = chr::platform::draw_shot_marks(renderer, shown.sprites, shown.pixels, palette) && drawn;
                 drawn = chr::platform::draw_text(renderer, shown.text, palette) && drawn;
                 chr::platform::draw_bars(renderer, town->bars(), palette);
+                for (const auto& box : shown.boxes)
+                    drawn = chr::platform::draw_xor_box(renderer, shown.view, shown.figures, box, palette) && drawn;
                 if (shown.picture)
                     drawn = renderer.draw({"O" + std::to_string(shown.picture->number) + ".ANM", 0xffff}, 8, 8) && drawn;
             } else if (town) {
