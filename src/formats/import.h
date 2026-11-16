@@ -21,13 +21,10 @@
 
 namespace chr::formats {
 
-// Bump when the files change shape or the import table gains pieces: a data
-// folder from an older import is imported again.
-// (A change to the import table alone needs no bump: import_table_hash.)
-inline constexpr int kImportVersion = 9;  // 2: the direction names; 3: "C-Bills:"; 4: the .BLD texts;
-                                        // 5: the class and talk texts; 6: the start-up's;
-                                        // 7: the rule tables, 'Mech and weapon names, combat texts;
-                                        // 8: the table hash in import.json; 9: rules/quiz.json
+// The shape of the imported files (docs/import.md has each version). A data
+// folder from another version, or imported with another import table
+// (import_table_hash), is imported again.
+inline constexpr int kImportVersion = 9;
 
 std::filesystem::path imported_text_path(const std::filesystem::path& data_dir);
 std::filesystem::path imported_font_path(const std::filesystem::path& data_dir);

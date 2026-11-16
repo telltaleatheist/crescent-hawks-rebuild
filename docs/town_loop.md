@@ -110,6 +110,10 @@ bits; s0 shifts right taking t's low bit at the top; the result is s0 XOR s1. Th
 04 03 02; `1000:522c` sets 25 13 90, but only before the demo plays (docs/startup.md). `1000:a9de` seeds it from F:d456 x 0x187 in a
 wait loop not traced yet. Rebuilt in `src/game/random.cpp`.
 
+In a new game one more number is drawn between the map load (the townspeople's placing) and
+the main loop's first pass. Comparing the original's memory shows the draw; the code that
+makes it has not been found yet.
+
 ## The panel
 
 `1000:4cac` draws the party box (window 3): for each of the first four characters present,
@@ -136,7 +140,9 @@ party. For each of the 8 characters present (byte 0 of its record not 0xff, byte
 8), the k-th one drawn goes at the k-th formation place: screen (DG:02ae[k], DG:02be[k]),
 which is the party's half-cell plus the formation offset (docs/movement.md) plus one half-cell
 right. Its sprite slot is its base (F:d562; Jason's is 0x96, from the new game at `1000:4f0f`)
-plus its walking frame (F:409a). Then the townspeople (0x10-0x17) and the 'Mechs; not rebuilt.
+plus its walking frame (F:409a). Only Jason's base is known so far; the others are set when
+characters join the party (not rebuilt yet). Then the townspeople (0x10-0x17,
+docs/townspeople.md) and the 'Mechs (docs/combat.md 1.2.1, rebuilt for special 1's walk-in).
 
 Sinking: the tile under the figure (the cell holding its half-cell) means water in that quarter
 if it is below 0xf6, its high nibble below 3, and it has any of the bits that DG:0332 gives for
@@ -150,7 +156,8 @@ character last walked another way, its script starts over at that direction's. A
 codes: 0xfd n records direction n, 0xfe n jumps back n bytes, 0xff holds. The characters' are
 four frames per direction: north 0x18-0x1b, the east side 0x14-0x17, south 0x10-0x13, the west
 side 0x1c-0x1f. A new game starts everyone on the south script without stepping through it:
-frame 0x10. A key that asks a question gets its frame only after the answer.
+frame 0x10. A key that asks a question gets its frame only after the answer. `1000:231d`
+moves the 'Mechs' scripts on too, when there are any; that part is not rebuilt yet.
 
 ## Sprites
 

@@ -40,6 +40,10 @@ another `table_sha256`: a hash of the import table itself, every piece's kind, I
 and expected hash (`import_table_hash`). A text ID added to the table is therefore imported into
 an older data folder without anyone remembering to bump the version.
 
+The versions: 2 the direction names; 3 "C-Bills:"; 4 the .BLD texts; 5 the class and talk texts;
+6 the start-up's; 7 the rule tables, the 'Mech and weapon names, the combat texts; 8 the table
+hash in `import.json`; 9 `rules/quiz.json`.
+
 ## How it reads the program
 
 `src/formats/exepack.cpp` unpacks BTECH.EXE in memory, with the same steps as

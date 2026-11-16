@@ -4,7 +4,7 @@
 // --map N it skips the start-up and begins on map N.
 //
 //   chr [--game-dir DIR] [--data-dir DIR] [--import] [--map N] [--script KEYS]
-//       [--text FILE] [--screenshot FILE.bmp]
+//       [--text FILE] [--screenshot FILE.bmp] [--state] [--show-quiz]
 //
 // The game's text and font are imported once from the player's BTECH.EXE
 // into the data folder (--data-dir, else CHR_DATA_DIR, else the user's
@@ -142,8 +142,7 @@ bool save_screenshot(SDL_Renderer* renderer, const std::string& path) {
 }
 
 // Map `number` and where the party starts on it: the new-game start for
-// map 1; for the others (reached from elsewhere in the game, not yet
-// rebuilt) the map's middle.
+// map 1, the map's middle for the others.
 bool load_map(const std::filesystem::path& game_dir, int number, chr::formats::MtpMap& map,
               chr::formats::MapPosition& start) {
     const std::string name = "MAP" + std::to_string(number) + ".MTP";
@@ -282,8 +281,7 @@ int main(int argc, char** argv) {
             std::fprintf(stderr, "chr: %s\n", e.what());
             status = 1;
         }
-        // The rule tables, for a fight (missing in an old data folder: the
-        // fight then stops where it would begin).
+        // The rule tables, for a fight and the quiz scene.
         std::optional<chr::formats::Rules> rules;
         try {
             rules = chr::formats::read_rules(options.data_dir);

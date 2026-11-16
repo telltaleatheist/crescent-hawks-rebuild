@@ -64,13 +64,11 @@ bool Town::visit_place(int entrance, KeySource& keys) {
     place_number_ = entrance;
     int file = entrance;
     if (entrance != 0x12 && entrance < 0x16) file = map_.place_scripts[std::size_t(entrance)];
-    // 1000:28cc names the game disk the files are on; there are no disks here.
-    // Entrance 0, the training center, first runs the quiz 1c67:08a8 while
-    // flag 14 is clear and no demo plays (F:3938, F:458c; the rebuild has no
-    // demo yet). A failed quiz sets flag 14 to ff, and so does TRAINING.BLD
-    // as each mission starts; the town's ticks count it down. The rebuild
-    // has no check and cannot fail. By default it makes the quiz's draws and
-    // shows nothing; with --show-quiz it shows the scene (game/training_quiz.cpp).
+    // 1000:28cc asks for the game disk; there are no disks. Entrance 0 first
+    // runs the training center's quiz, 1c67:08a8, while flag 14 is clear and
+    // no demo plays (F:3938, F:458c). It has no check here (docs/rules.md,
+    // rule 3; docs/combat.md 7): its draws are made, and with --show-quiz its
+    // scene is shown.
     if (entrance == 0 && flags_[flag::kQuizLock] == 0) {
         if (show_quiz_ && rules_) {
             if (!show_quiz(keys)) return false;
@@ -79,16 +77,13 @@ bool Town::visit_place(int entrance, KeySource& keys) {
             log_.push_back("training quiz: parts " + std::to_string(parts[0]) + " " + std::to_string(parts[1]) +
                            " " + std::to_string(parts[2]) + " (not shown)");
         }
-        // The quiz's last steps are still seen: 1c67:0b40 redraws the panel
-        // with the party box cleared, then clears the box above it.
+        // 1c67:0b40: the panel, the party box cleared, then the box above it.
         draw_panel(true);
         text_.clear_window();
     }
     if (!run_script(file, keys)) return false;
     // Special 14 after every visit.
     count_members();
-    // The follow-on places (the garage and the second barracks into
-    // VIEWDISK) need flags no rebuilt place sets yet (docs/scripts.md).
     text_.select_window(kPanelPictureWindow);
     text_.clear_window();
     picture_.reset();
@@ -202,8 +197,7 @@ bool Town::run_script(int file, KeySource& keys) {
         }
         case formats::Op::IfFlagD450:
         case formats::Op::IfFlagD451:
-            // F:d450 / d451, set by specials not rebuilt yet (UnBattletech
-            // names them "training complete" and a milestone); 0 in a new game.
+            // F:d450 / d451 (docs/scripts.md, "Not rebuilt yet").
             jump_if(false);
             break;
         case formats::Op::IfRandom:
@@ -226,10 +220,10 @@ bool Town::run_script(int file, KeySource& keys) {
             show_picture(sbyte(pc + 1), sbyte(pc + 2));
             break;
         case formats::Op::Sound:
-            // 1000:19bf: a sound effect (with sound on); not rebuilt yet.
+            // 1000:19bf: a sound effect, with sound on (docs/scripts.md).
             break;
         case formats::Op::NewMember:
-            // 19b8:0d58: not rebuilt yet (no rebuilt place reaches it).
+            // 19b8:0d58: a new member joins (docs/scripts.md).
             log_.push_back("new member: not rebuilt");
             break;
         }
@@ -366,8 +360,7 @@ bool Town::talk(KeySource& keys) {
     flags_[flag::kLetOutDone] = 0;
     text_.clear_window();
     if (flags_[flag::kOutdoors] != 0) {
-        // Outdoors: one of eight rumours (DGROUP:4e5e) at random. Not
-        // reachable yet; the draw is kept.
+        // Outdoors: one of eight rumours (DGROUP:4e5e) at random (docs/scripts.md).
         random_.next();
         log_.push_back("talk outdoors: not rebuilt");
         return read_key(keys).has_value();

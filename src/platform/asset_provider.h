@@ -1,7 +1,7 @@
-// The asset-provider seam (the goal of a later visual makeover as a mod). The renderer asks a provider
+// The asset-provider seam (for a visual makeover as a mod). The renderer asks a provider
 // for the picture behind an asset ID and never reads the original's formats
 // itself. The default provider (original_assets.h) decodes the player's own
-// files; a later mod provider can answer any ID with new art at any
+// files; a mod provider can answer any ID with new art at any
 // resolution. No SDL types here, so a provider can be written without them.
 #pragma once
 

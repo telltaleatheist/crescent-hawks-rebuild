@@ -195,8 +195,8 @@ TEST(start_up_screens_and_questions) {
     Map1 m5;
     play("enter enter enter", town, m5);
     CHECK(!town->start_up_open() && town->log().back() == "new game");
-    // No, then no again: a new game too. No, then yes: loading is not
-    // rebuilt, so a new game starts all the same.
+    // No, then no again: a new game too. No, then yes: a new game as well
+    // (loading a saved game: docs/startup.md).
     Map1 m6;
     play("enter enter n", town, m6);
     CHECK(town->start_up_open());
@@ -313,8 +313,7 @@ TEST(map1_game_ticks_and_money) {
     CHECK(town->text().row_text(23).substr(1, 3) == "35 ");
     CHECK(town->text().cell(1, 23).fg == 10);
 
-    // Tick n comes at pass 1 + 11(n - 1): 257 ticks after 2817 passes, as in
-    // the original (checked with the reference rig).
+    // Tick n comes at pass 1 + 11(n - 1): 257 ticks after 2817 passes.
     std::unique_ptr<Town> town2;
     Map1 m2;
     if (!play_map1("idle:2816", town2, m2)) return;
@@ -374,8 +373,7 @@ TEST(map1_panel_bars) {
 }
 
 TEST(random_numbers) {
-    // From the state 25 13 90 (an instruction-by-instruction model of
-    // 287f:0bc0 gives the same).
+    // From the state 25 13 90.
     Random r({0x25, 0x13, 0x90});
     const int expected[] = {0xb5, 0x87, 0xf8, 0x8b, 0xab, 0x88, 0x7e, 0x4b, 0xcd, 0xb7, 0xf9, 0xb9};
     for (const int e : expected) CHECK(r.next() == e);

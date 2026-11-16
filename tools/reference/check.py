@@ -209,9 +209,7 @@ FULL_CASES = [
 
 # Training mission 2 (docs/combat.md), a separate run from a new game.
 # POKED: flag 00 = 2 and flag 13 = 1 stand in for passing missions 0-1 and
-# resting in the barracks (BARRACKS.BLD +0247), which the rebuild cannot do
-# yet (docs/reference.md, "Test aids"). When (e) rebuilds those missions, a
-# long case reaches this point with keys alone.
+# resting in the barracks (BARRACKS.BLD +0247); docs/reference.md, "Test aids".
 TO_TRAINING_CENTER = ("end*2 left*12 end*2 left*2 end*12 left*2 end down*6 end*2 down*6 end*3 "
                       "left*2 end down*2 end*6 down*49 pgdn right*19 pgup*4")
 TRAINING_CASES = [dict(case, name="training_" + case["name"]) for case in CASES[:4]] + [
@@ -320,8 +318,8 @@ PASSES_AFTER_KEY = 2
 
 # A test aid in a case's keys: "flag:NN=VV" (hex) sets a flag in both
 # programs at that point: a test poke in the original (run.py, data only)
-# and set:NN=VV in chr. It stands in for play not rebuilt yet, and a case
-# that uses one says so and what it stands in for (docs/reference.md).
+# and set:NN=VV in chr. A case that uses one says so and what play it stands
+# in for (docs/reference.md).
 FLAGS_AT = 0xD30C  # F:d30c, the flags
 
 

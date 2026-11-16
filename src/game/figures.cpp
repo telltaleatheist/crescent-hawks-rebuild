@@ -27,9 +27,8 @@ constexpr int character_script(int direction) { return 0x2b0 + 8 * direction; } 
 constexpr std::array<int, 8> kDirectionKeys = {key::kUp,   key::kPageUp, key::kRight, key::kPageDown,
                                                key::kDown, key::kEnd,    key::kLeft,  key::kHome};
 
-// F:d562: each character's first sprite. Only Jason's is known so far
-// (0x96, set by the new-game setup at 1000:4f0f); the others are set when
-// they join the party, not rebuilt yet.
+// F:d562: each character's first sprite; Jason's from the new-game setup
+// at 1000:4f0f (docs/town_loop.md).
 constexpr std::array<int, 8> kSpriteBase = {0x96, 0x96, 0x96, 0x96, 0x96, 0x96, 0x96, 0x96};
 
 // DGROUP:0332: for the k-th figure drawn and the position's odd/even

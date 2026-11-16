@@ -17,8 +17,7 @@ struct MenuRecord {
 
 // BTECH.EXE 385b:0092, 41 records of 16 bytes: first row, width, items, the
 // last item chosen (+6, state, starts at 0 and is not kept here), colour,
-// highlight, two unused words. Layout data, kept in C++ with its address
-// until the tables move to data files (docs/import.md).
+// highlight, two unused words.
 inline constexpr std::array<MenuRecord, 41> kMenus = {{
     {2, 38, 20, 15, 14},  {0, 25, 8, 15, 14},  {0, 0, 0, 0, 0},     {0, 11, 11, 15, 14},
     {1, 25, 5, 0, 14},    {1, 10, 1, 15, 14},  {2, 25, 2, 15, 14},  {1, 25, 3, 15, 14},

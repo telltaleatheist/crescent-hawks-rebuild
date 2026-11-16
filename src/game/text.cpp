@@ -143,7 +143,7 @@ void TextScreen::put_line(std::string& line, bool newline) {
         put_text(line, w.x, w.y + w.height - 1, w.fg, w.bg);
         if (!newline) {
             // Without a line break the cursor stays after the text on the
-            // bottom row, as above (the move log's "\rSouth" relies on it).
+            // bottom row, as above.
             w.row = w.height - 1;
             w.col = length;
             if (w.col < w.width) {

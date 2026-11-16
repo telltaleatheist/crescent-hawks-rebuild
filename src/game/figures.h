@@ -33,8 +33,8 @@ public:
     // BTECH.EXE 1000:231d (Ghidra FUN_1000_231d)
     // Called by the main loop after every key. A walking key moves each
     // character (present or not) to the next frame of that direction's
-    // script, starting the script over if it walked another way before.
-    // ('Mechs too, when there are any: not rebuilt yet.)
+    // script, starting the script over if it walked another way before
+    // (the 'Mechs' part: docs/town_loop.md).
     void key(int key);
 
     // A person walking `direction` (0-7, N first, clockwise): starts that
@@ -84,7 +84,7 @@ struct Figure {
 // character's own slot). Its sprite is its base (F:d562) plus its
 // animation frame. In shallow water a figure sinks 2 rows, in deeper water
 // 4. (The map's objects, the townspeople and the 'Mechs come before and
-// after it in the original: not rebuilt yet.)
+// after it: docs/town_loop.md.)
 std::vector<Figure> party_figures(const formats::MtpMap& map, formats::MapPosition position,
                                   const Party& party, const FigureAnimation& animation);
 

@@ -112,6 +112,10 @@ and the 'Mech sprites' outline is number 1, so it turns 14 where a black 0 turns
 works the box out from the colour numbers of the tiles and figures under it
 (`platform::draw_xor_box`).
 
+Not rebuilt yet on this stretch: `0d49`'s enemy people (its second count) and `0e4b`'s people
+(figures 4-11 and 16-23), which mission 2 never has. Past the orders menu the fight stops
+(`Town::fight_unfinished`).
+
 ### 1.3 The mission driver `17dc:0629(mode)`
 
 FUN_17dc_0629. A jump table at cs:086f by mode. All modes share a walking loop like the town's

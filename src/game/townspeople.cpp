@@ -47,17 +47,12 @@ int tile_at(const formats::MtpMap& map, MapPosition p) {
 
 }  // namespace
 
-// BTECH.EXE 1e31:023c..02a6, the tile a person would step onto, as the
-// original finds it: not in the map but in the 24x24-cell window that
-// 287f:1314 fills with the 3x3 blocks around the party's block (P:07ad), at
-// the view's corner cell P:09ed plus the place relative to the view
-// (1000:2689: x - party x + 0x1a, y - party y + 0x0c, across area edges as
-// the original). Rows are 24 cells, so a place past the window's right or
-// left edge reads the next or the previous row's cell instead: a person
-// far to the side of the party can be stopped by a cell that is not where
-// it steps (docs/townspeople.md). An index outside the window would read
-// whatever follows or precedes it in memory; the rebuild reads the real
-// cell there and says so in `outside`.
+// BTECH.EXE 1e31:023c..02a6
+// The tile a person would step onto, read from the 24x24-cell window
+// around the party (P:07ad, filled by 287f:1314) at the view's corner cell
+// P:09ed plus the place relative to the view (1000:2689); docs/townspeople.md.
+// Past the window itself the original reads other memory; the rebuild reads
+// the real cell and sets `outside`.
 int window_tile(const formats::MtpMap& map, MapPosition party, MapPosition next, bool& outside) {
     int rel_x = wrap16(next.x - party.x);
     if (rel_x < -0x80) rel_x += 0x80;
@@ -148,9 +143,8 @@ void Townspeople::move(const formats::MtpMap& map, MapPosition party, const Part
     }
 }
 
-// BTECH.EXE 1e31:0006 (Ghidra FUN_1e31_0006), for a person (it also moves
-// the 'Mechs, which need a second free cell beside the first, and others:
-// not rebuilt).
+// BTECH.EXE 1e31:0006 (Ghidra FUN_1e31_0006), for a person (it moves the
+// 'Mechs and others too: docs/townspeople.md).
 // Turns one eighth toward the target (unless already facing it), then tries
 // eight directions, turning by kTurns from the end each time (straight on
 // first); takes the first one onto a cell that does not block (tile below

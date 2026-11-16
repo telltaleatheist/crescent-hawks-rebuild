@@ -51,9 +51,8 @@ bool Town::run_start_up(ScriptKeys& input) {
         }
     }
     if (stage_ == Stage::Title) {
-        // 1000:476d plays the title's tune (WWOODBT.SIF) until a key. If the
-        // tune ends first, the demo plays (DEMOFILE): neither is rebuilt, so
-        // the title waits for a key.
+        // 1000:476d plays the title's tune (WWOODBT.SIF) until a key; if the
+        // tune ends first, the demo plays (DEMOFILE). docs/startup.md.
         if (!input.next()) return false;
         log_.push_back("title");
         stage_ = Stage::Question;
@@ -67,7 +66,7 @@ bool Town::run_start_up(ScriptKeys& input) {
         print_id("intro.load_old_game");
         const auto load = yes_no(true, input);
         if (!load) return false;
-        // 1000:32b3 loads a saved game: not rebuilt, so a new game starts.
+        // 1000:32b3 loads a saved game (docs/startup.md).
         if (*load) log_.push_back("load a saved game: not rebuilt, a new game starts");
     }
     log_.push_back("new game");

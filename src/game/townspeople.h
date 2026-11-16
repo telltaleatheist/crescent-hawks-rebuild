@@ -72,8 +72,8 @@ public:
     // never near the party). With the fix it comes out on the next round.
     bool fix_lost_walker = false;
 
-    // F:d57e: set when a person found another figure on its target.
-    // Read elsewhere (cleared at 2000:1e3b), not rebuilt yet.
+    // F:d57e: set when a person found another figure on its target
+    // (cleared at 2000:1e3b).
     bool target_taken = false;
 
     // Set when a person's step looked outside the original's cell window,

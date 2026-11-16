@@ -61,7 +61,7 @@ StepResult take_step(const formats::MtpMap& map, int map_number, MapPosition fro
     if (bdx != 0 || bdy != 0) {
         const int bx = (hx >> 4) + bdx, by = (hy >> 4) + bdy;
         // Inside the map every block is one of the map's own (never water);
-        // outside it the world's terrain decides, which is not rebuilt yet.
+        // outside it the world's terrain decides (docs/movement.md).
         if (!inside(map, bx * 8, by * 8)) {
             result.outcome = StepOutcome::LeftMap;
             return result;

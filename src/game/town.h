@@ -66,16 +66,14 @@ private:
 // optional "*N" repeat. Names: up down left right home end pgup pgdn (the
 // keypad diagonals), space enter, a single character such as y or n, or
 // idle:N for N passes of the main loop without a key, or set:NN=VV (hex) to
-// set flag NN to VV at that point: a test aid standing in for play not yet
-// rebuilt, matching the rig's test poke (docs/reference.md). Only the town's
-// main loop takes a set: item; a question or the start-up refuses one.
+// set flag NN to VV at that point (a test aid, docs/reference.md). Only the
+// town's main loop takes a set: item; a question or the start-up refuses one.
 // Throws std::invalid_argument naming the bad token.
 std::deque<ScriptItem> parse_key_script(const std::string& script);
 
 // A character's panel numbers: the three bars under the heading "BDC"
 // (bytes 1, 2 and 3 of its 17-byte record at F:c614) and byte 15, which
-// the first bar's warning part is measured from. What they mean is not
-// read yet.
+// the first bar's warning part is measured from (docs/town_loop.md).
 struct PanelStats {
     int b = 0, d = 0, c = 0;
     int byte15 = 0;
@@ -161,7 +159,7 @@ public:
     // asset {"O<n>.ANM", 0xffff}, docs/formats/anm.md).
     std::optional<PlacePicture> picture() const { return picture_; }
     // Where the player's .BLD files are. Without it the walk stops at an
-    // entrance after "yes", as before the places were rebuilt.
+    // entrance after "yes".
     void set_game_dir(std::filesystem::path dir) { game_dir_ = std::move(dir); }
     const Flags& flags() const { return flags_; }
     // A test aid (--set-flag): set flag `f` to `v` when the town starts.

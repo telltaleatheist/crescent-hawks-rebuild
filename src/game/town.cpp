@@ -100,9 +100,8 @@ Town::Town(const formats::MtpMap& map, int map_number, formats::MapPosition star
     : map_(map), map_number_(map_number), tile_sheet_(tile_sheet_for_map(map_number)),
       position_(start), texts_(texts) {
     people_ = Townspeople::place(map_, map_number_, random_);
-    // One more random number is drawn between the map load and the first
-    // pass of the main loop in a new game (found by comparing the original's
-    // memory; where is not located yet).
+    // One more random number between the map load and the main loop
+    // (docs/town_loop.md, "Random numbers").
     random_.next();
     record_party_places();
 }
@@ -309,7 +308,7 @@ void Town::game_tick() {
     count_down(0x29);
     // Flag 37 says the word in flags 38-39 counts down. When it reaches 0
     // with the party inside x 0800-0cff, y 6000-afff of the world, 1d43:0c72
-    // runs (not rebuilt: that region is outdoors, docs/town_loop.md).
+    // runs (docs/town_loop.md).
     if (flags_[0x37] != 0) {
         const int word = (flag_word(flags_, 0x38) - 1) & 0xffff;
         flags_[0x38] = std::uint8_t(word);
@@ -320,9 +319,8 @@ void Town::game_tick() {
             log_.push_back("timer 37 ran out in the region: 1d43:0c72 not rebuilt");
     }
     const std::uint8_t r = random_.next();
-    (void)r;  // outdoors, (r & F:d330) == 0 starts a fight: not rebuilt
-    // BTECH.EXE 1000:02b6..02ed: flags 1d, 14, 15 and 16 count down to 0
-    // (Katrina's text sets 16 to ff).
+    (void)r;  // outdoors, (r & F:d330) == 0 starts a fight (docs/town_loop.md)
+    // BTECH.EXE 1000:02b6..02ed: flags 1d, 14, 15 and 16 count down to 0.
     for (const int f : {0x1d, 0x14, 0x15, 0x16}) count_down(f);
     if (money_tick(money_, flags_, outdoors(), random_)) draw_cbills();
     countdown_ = 10;

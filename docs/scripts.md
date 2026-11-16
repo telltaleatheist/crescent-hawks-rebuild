@@ -181,9 +181,14 @@ Special 05's texts are imported from BTECH.EXE as `course.*` (docs/import.md).
 
 ## Not rebuilt yet
 
-- **EB/EC** read F:d451 and d450, which nothing rebuilt sets yet; the rebuild never jumps.
+- **EB/EC** read F:d451 and d450, which nothing rebuilt sets yet (0 in a new game); the
+  rebuild never jumps. UnBattletech names them "training complete" and a milestone.
 - **E4** (sound) and **E9** (new member) do nothing but log.
-- The specials other than 4, 5, 12 and 14.
+- The specials other than 1, 4, 5, 12 and 14.
+- Talk outdoors (`17dc:17b9`): one of eight rumours (DGROUP:4e5e) at random. No rebuilt place
+  is outdoors; the rebuild makes the draw and logs it.
+- The follow-on places (the garage, and the second barracks into VIEWDISK) need flags that no
+  rebuilt place sets yet.
 
 ## Other descriptions
 

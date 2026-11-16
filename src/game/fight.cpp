@@ -1,8 +1,7 @@
 // A training mission from the 'Mech choice to the orders menu (docs/combat.md,
 // "Training missions"): special 1 walks the chosen 'Mech in, the mission
 // driver places the enemy, and the fight asks its three questions and shows
-// the orders menu for the first unit. What follows (the orders, the rounds,
-// the results) is not rebuilt yet: the fight stops at the menu.
+// the orders menu for the first unit.
 #include <algorithm>
 
 #include "game/fight.h"
@@ -84,9 +83,9 @@ std::vector<Figure> Town::walk_in_figures() {
 }
 
 // BTECH.EXE 1000:0e4b (Ghidra FUN_1000_0e4b)
-// The fight's figure drawer: every figure from its own place. People
-// (figures 4-11 and 16-23) are not rebuilt yet; the 'Mechs (0-3, 12-15)
-// that are in view are drawn top to bottom, 24x24, sinking in water.
+// The fight's figure drawer: every figure from its own place, the 'Mechs
+// (0-3, 12-15) in view top to bottom, 24x24, sinking in water. (The people,
+// figures 4-11 and 16-23: docs/combat.md.)
 std::vector<Figure> Town::fight_figures_drawn() const {
     struct Drawn {
         Figure figure;
@@ -182,7 +181,7 @@ bool Town::run_mission(int mode, KeySource& keys) {
 
 // BTECH.EXE 17dc:0d49 (Ghidra FUN_17dc_0d49), for a training mission (no
 // bit 0x80 in either count): `mechs` enemy Locusts in records 4 on, as
-// figures 12 on, and `people` enemy people (not rebuilt yet).
+// figures 12 on, and `people` enemy people.
 void Town::place_mission(int mechs, int people) {
     figs_.computer[0] = false;
     // The townspeople keep their places in their records; every figure is

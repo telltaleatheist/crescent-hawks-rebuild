@@ -41,7 +41,7 @@ enum class StepOutcome {
     Moved,
     Blocked,    // a character would stand on a blocking tile
     TooDeep,    // the block it would enter is deep water ("The water is too deep that way.")
-    LeftMap,    // it would leave the map: the original walks on into the world, not rebuilt yet
+    LeftMap,    // it would leave the map: the original walks on into the world (docs/movement.md)
 };
 
 // BTECH.EXE 1000:1c12 (Ghidra FUN_1000_1c12)

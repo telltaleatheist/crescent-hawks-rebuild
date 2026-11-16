@@ -3,7 +3,7 @@
 // A .BLD file is a 16-bit length and that many bytes of enciphered script.
 // The script is bytecode: an opcode byte (E4-FF) and its operands, with the
 // place's text inline after the print opcode. This reads and deciphers a
-// file and decodes its instructions; the interpreter is game/place_script.
+// file and decodes its instructions; the interpreter is game/place.cpp.
 #pragma once
 
 #include <array>
