@@ -95,9 +95,9 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 
 | Address | Linear | Ghidra name | Span | Label | Status |
 |---|---|---|---|---|---|
-| 17dc:0008 | 0x17dc8 | `FUN_17dc_0008` | 440 | Goes into place N of the current map (called after yes to 'Will you enter...') | - |
-| 17dc:01c0 | 0x17f80 | `FUN_17dc_01c0` | 1079 |  | - |
-| 17dc:05f7 | 0x183b7 | `FUN_17dc_05f7` | 50 |  | - |
+| 17dc:0008 | 0x17dc8 | `FUN_17dc_0008` | 440 | Enters a place: loads and runs its .BLD script, then puts the town screen back (docs/scripts.md) | read |
+| 17dc:01c0 | 0x17f80 | `FUN_17dc_01c0` | 1079 | The .BLD script interpreter: opcodes E4-FF (docs/scripts.md) | read |
+| 17dc:05f7 | 0x183b7 | `FUN_17dc_05f7` | 50 | Reads a script word (jump targets) | read |
 | 17dc:0629 | 0x183e9 | `FUN_17dc_0629` | 1824 |  | - |
 | 17dc:0d49 | 0x18b09 | `FUN_17dc_0d49` | 1538 |  | - |
 | 17dc:134b | 0x1910b | `FUN_17dc_134b` | 147 |  | - |
@@ -108,7 +108,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 17dc:1a26 | 0x197e6 | `FUN_17dc_1a26` | 283 |  | - |
 | 17dc:1b41 | 0x19901 | `FUN_17dc_1b41` | 346 |  | - |
 | 17dc:1c9b | 0x19a5b | `FUN_17dc_1c9b` | 149 |  | - |
-| 17dc:1d30 | 0x19af0 | `FUN_17dc_1d30` | 146 |  | - |
+| 17dc:1d30 | 0x19af0 | `FUN_17dc_1d30` | 146 | Loads a place's .BLD and deciphers it (docs/formats/bld.md) | read |
 
 ## CODE_4: segment 19b8, 6,738 bytes
 
@@ -116,7 +116,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 |---|---|---|---|---|---|
 | 19b8:080a | 0x1a38a | `FUN_19b8_080a` | 283 |  | - |
 | 19b8:0925 | 0x1a4a5 | `FUN_19b8_0925` | 1075 |  | - |
-| 19b8:0d58 | 0x1a8d8 | `FUN_19b8_0d58` | 758 |  | - |
+| 19b8:0d58 | 0x1a8d8 | `FUN_19b8_0d58` | 758 | A new party member joins (script E9) | read |
 | 19b8:104e | 0x1abce | `FUN_19b8_104e` | 817 |  | - |
 | 19b8:137f | 0x1aeff | `FUN_19b8_137f` | 194 |  | - |
 | 19b8:1441 | 0x1afc1 | `FUN_19b8_1441` | 238 |  | - |
@@ -230,7 +230,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 
 | Address | Linear | Ghidra name | Span | Label | Status |
 |---|---|---|---|---|---|
-| 24d3:0004 | 0x24d34 | `FUN_24d3_0004` | 6082 |  | - |
+| 24d3:0004 | 0x24d34 | `FUN_24d3_0004` | 6082 | The scripts' special actions, F5 n (docs/scripts.md) | read |
 | 24d3:17c6 | 0x264f6 | `FUN_24d3_17c6` | 36 | Opens the message box over the map: window 7, cleared, frame style 0 | rebuilt |
 | 24d3:17ea | 0x2651a | `FUN_24d3_17ea` | 31 | Prints a message in the open box, waits a moment (273d:086a) | read |
 | 24d3:1809 | 0x26539 | `FUN_24d3_1809` | 21 |  | - |
@@ -248,7 +248,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 2656:07cb | 0x26d2b | `FUN_2656_07cb` | 624 | Puts one line in the current window at the cursor; past the bottom scrolls the window up a row | rebuilt |
 | 2656:0a3b | 0x26f9b | `FUN_2656_0a3b` | 170 |  | - |
 | 2656:0ae5 | 0x27045 | `FUN_2656_0ae5` | 121 | Cuts N 8x8 cells from a picture, left to right from a cell position (frame pieces from BTBORDER.CMP) | rebuilt |
-| 2656:0b5e | 0x270be | `FUN_2656_0b5e` | 447 |  | - |
+| 2656:0b5e | 0x270be | `FUN_2656_0b5e` | 447 | A script menu: highlight bar, arrows, Enter (docs/scripts.md) | read |
 | 2656:0d1d | 0x2727d | `FUN_2656_0d1d` | 345 |  | - |
 
 ## CODE_14: segment 273d, 2,172 bytes
@@ -267,7 +267,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 273d:049d | 0x2786d | `FUN_273d_049d` | 136 | Unpack a loaded .CMP by its type byte (CGA: reduce to 4 colours) | rebuilt |
 | 273d:0525 | 0x278f5 | `FUN_273d_0525` | 151 | Set the 16-colour palette for the chosen display | rebuilt |
 | 273d:05bc | 0x2798c | `FUN_273d_05bc` | 127 |  | - |
-| 273d:063b | 0x27a0b | `FUN_273d_063b` | 136 | Load a .CMP: 2-byte length, then the body (asks for the disk on failure) | rebuilt |
+| 273d:063b | 0x27a0b | `FUN_273d_063b` | 136 | Reads a length-prefixed file (.BLD) into a buffer; asks for the disk if missing | read |
 | 273d:06c3 | 0x27a93 | `FUN_273d_06c3` | 71 |  | - |
 | 273d:070a | 0x27ada | `FUN_273d_070a` | 266 | Cuts a rectangle of a picture into a sprite slot | rebuilt |
 | 273d:0814 | 0x27be4 | `FUN_273d_0814` | 86 |  | - |

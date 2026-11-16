@@ -1,7 +1,9 @@
 #include "formats/import.h"
 
+#include <cstdio>
 #include <fstream>
 
+#include "formats/bld.h"
 #include "formats/cmp.h"  // FormatError
 #include "formats/exe_data.h"
 #include "formats/font_file.h"
@@ -61,6 +63,21 @@ void import_original(const fs::path& game_dir, const fs::path& data_dir) {
         first = false;
         text += "    {\"id\": " + json_quote(span.name) + ", \"address\": " +
                 json_quote(OriginalExe::address(span)) + ", \"text\": " + json_quote(exe.text(span.name)) + "}";
+    }
+    // The places' texts, from the player's .BLD files: every text a script
+    // can print, found by walking the script from its start.
+    for (const auto file : kBldFiles) {
+        const std::string name = std::string(file) + ".BLD";
+        const auto path = find_game_file(game_dir, name);
+        if (!path) throw FormatError(name + " is missing from " + game_dir.string());
+        const auto script = read_bld(*path);
+        for (const auto& [at, in] : walk(script)) {
+            if (in.op != Op::Print) continue;
+            char address[16];
+            std::snprintf(address, sizeof address, "+%04x", at + 1);
+            text += ",\n    {\"id\": " + json_quote(bld_text_id(file, at)) + ", \"address\": " +
+                    json_quote(name + address) + ", \"text\": " + json_quote(in.text) + "}";
+        }
     }
     text += "\n  ]\n}\n";
 

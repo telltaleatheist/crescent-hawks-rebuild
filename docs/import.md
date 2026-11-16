@@ -19,9 +19,13 @@ user's application-data folder (on macOS `~/Library/Application Support/crescent
 
 ## What it writes
 
-    import.json          {"import_version": 1, "source": "BTECH.EXE DOS 1.03", "exe_sha256": ...}
+    import.json          {"import_version": 4, "source": "BTECH.EXE DOS 1.03", "exe_sha256": ...}
     text/english.json    {"texts": [{"id": ..., "address": "ssss:oooo", "text": ...}, ...]}
     font/font.txt        the font (docs/formats/font.md)
+
+The places' texts come from the player's .BLD files (docs/formats/bld.md): every text a script
+can print, as `bld.<file>.<offset>` with the address `FILE.BLD+offset`. All 26 .BLD files must
+be there.
 
 `import.json` is written last, so an interrupted import counts as missing.
 

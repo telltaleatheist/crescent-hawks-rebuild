@@ -3,7 +3,8 @@
 // data folder, never in the repo:
 //
 //   import.json          what was imported, by which import version
-//   text/english.json    every text: id, its address in the program, text
+//   text/english.json    every text: id, its address in the program (or a
+//                        .BLD file), text
 //   font/font.txt        the font (formats/font_file.h)
 //
 // From then on the game reads only those files; the program is needed only
@@ -18,7 +19,7 @@ namespace chr::formats {
 
 // Bump when the files change shape or the import table gains pieces: a data
 // folder from an older import is imported again.
-inline constexpr int kImportVersion = 3;  // 2: the direction names; 3: "C-Bills:"
+inline constexpr int kImportVersion = 4;  // 2: the direction names; 3: "C-Bills:"; 4: the .BLD texts
 
 std::filesystem::path imported_text_path(const std::filesystem::path& data_dir);
 std::filesystem::path imported_font_path(const std::filesystem::path& data_dir);
