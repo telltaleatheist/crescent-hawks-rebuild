@@ -197,7 +197,10 @@ covers the orders screen's XORed box (a third fix: the box went on showing over 
 then in the ruined town, outdoors (flag 04). It walks out north, 244 steps found by a search in
 chr, into area 0xbc: the grids move a row and the new area's terrain is drawn. Four random
 encounters come up on the way (flag 24 is 0x3f), none in reach, so the soldiers are rolled and
-placed and the party walks on. `fourth` (long only) is mission 4 (flag 00
+placed and the party walks on. One step west from there meets a fifth in reach: four soldiers
+("Attacking force: 4 humans."). Declining doesn't evade them, the computer fights with no
+messages and no graphics, and Jason, alone on foot, is killed in round 5; the chain ends at the
+game-over box. `fourth` (long only) is mission 4 (flag 00
 poked to 4): no computer question (F:0090), the Locust flees at the first orders menu, the walk
 back, the verdict and the town. `raid` (long only) is mission 7 (flag 00 poked to 7), the
 Kurita raid: the computer question (only mission 4 skips it), then Begin Fight round after round

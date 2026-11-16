@@ -391,6 +391,25 @@ void Town::draw_cbills() {
     text_.select_window(previous);
 }
 
+// BTECH.EXE 1000:17bb (Ghidra FUN_1000_17bb)
+// The party position walked to `to` a cell at a time, up or down first, then
+// left or right, each step through 287f:158c / 163b / 16e3 / 17c5, so the
+// grids move over at each area edge. Their map loads are only queued (P:09f3):
+// the queue is worked through by the next 1000:218f.
+void Town::walk_position(formats::MapPosition to) {
+    const auto area_of = [](std::uint16_t x, std::uint16_t y) { return ((y >> 8) & 0xf0) | ((x >> 8) & 0x0f); };
+    const auto step = [&](int dx, int dy) {
+        const formats::MapPosition next{dx ? step_x(position_.x, dx) : position_.x, dy ? step_y(position_.y, dy) : position_.y};
+        if (area_of(next.x, next.y) != area_of(position_.x, position_.y))
+            terrain_.step_area(dx, dy, area_of(next.x, next.y));
+        position_ = next;
+    };
+    while (to.y < position_.y) step(0, -1);
+    while (to.y > position_.y) step(0, 1);
+    while (to.x < position_.x) step(-1, 0);
+    while (to.x > position_.x) step(1, 0);
+}
+
 void Town::run(ScriptKeys& input) {
     if (stage_ != Stage::Town && !run_start_up(input)) {
         start_up_open_ = true;
@@ -408,16 +427,20 @@ void Town::run(ScriptKeys& input) {
             flags_[std::size_t(item->set_flag)] = std::uint8_t(item->set_value);
             log_.push_back("test aid: flag " + std::to_string(item->set_flag) + " set");
         } else if (item->idle > 0) {
-            for (int i = 0; i < item->idle; ++i) idle_pass();
+            // A question asked in a pass waits for a key: the rest of the
+            // wait is spent there, not in the main loop.
+            question_waiting_ = false;
+            for (int i = 0; i < item->idle && !stopped() && !question_waiting_; ++i) idle_pass(&input);
+            question_waiting_ = false;
         } else {
             key(item->key, input);
         }
     }
 }
 
-void Town::idle_pass() {
+void Town::idle_pass(KeySource* keys) {
     if (stopped()) return;
-    if (--countdown_ < 0) game_tick();
+    if (--countdown_ < 0) game_tick(keys);
 }
 
 void Town::key(int k, KeySource& more) {
@@ -431,10 +454,10 @@ void Town::key(int k, KeySource& more) {
     // BTECH.EXE 1000:00fb: the figures' walking frames move on, then the key
     // half goes straight on to a game tick.
     animation_.key(k, mech_records());
-    game_tick();
+    game_tick(&more);
 }
 
-void Town::game_tick() {
+void Town::game_tick(KeySource* keys) {
     // BTECH.EXE 1000:0213..0286: the timers (script flags, docs/scripts.md).
     // Flag 29 counts down to 0.
     auto count_down = [this](int f) {
@@ -457,7 +480,10 @@ void Town::game_tick() {
     // encounter (docs/combat.md 1.1), unless F:d346.
     const std::uint8_t r = random_.next();
     if (outdoors() && (r & flags_[0x24]) == 0 && flags_[0x3a] == 0) {
-        random_encounter();
+        // A tick without keys (an idle pass in the window) has none to give
+        // the encounter's questions: it waits there for the next key.
+        ScriptKeys none({});
+        random_encounter(keys ? *keys : none);
         if (stopped()) return;
     }
     // BTECH.EXE 1000:02b6..02ed: flags 1d, 14, 15 and 16 count down to 0.
@@ -470,14 +496,53 @@ void Town::game_tick() {
         third_ = 0;
         move_townspeople();
     }
+    // With the leader killed in a fight (DG:014a is 0) the game is over
+    // (1000:04a4).
+    if (!combat_.fight_on) {
+        ScriptKeys none({});
+        game_over(keys ? *keys : none);
+        return;
+    }
     // The map and the figures are drawn again (DGROUP:014a is set in town),
     // over any message box (1000:046e), the window first built again at
     // the party's place (287f:1314 at 1000:0480).
+    if (encounter_frozen_) {
+        frozen_.reset();
+        encounter_frozen_ = false;
+    }
     build_window();
     text_.forget(13, 0, kTextColumns - 13, kTextRows);
     draw_marks();
     record_party_places();
+    if (outdoors() && !frozen_) last_drawn_ = Frozen{live_view(), figures()};
     ++ticks_;
+}
+
+// BTECH.EXE 1000:04a4..050d, the main loop's game over when the leader was
+// killed: a message box naming him (Jason's record gone, or the other),
+// a key, then "a new game?" with Yes first.
+void Town::game_over(KeySource& keys) {
+    open_message_box();  // 14d3:17c6
+    print_id(characters_[0][0] == 0xff ? "over.leader.0" : "over.leader.1");
+    print_id("over.killed");  // 14d3:17ea
+    if (!read_key(keys)) {
+        place_open_ = true;
+        return;
+    }
+    clear_window();
+    print_id("over.new_game");
+    const auto again = yes_no(true, keys);  // 1000:1a13(1)
+    if (!again) {
+        place_open_ = true;
+        return;
+    }
+    if (*again) {
+        log_.push_back("a new game after the game over: not rebuilt");
+        fight_unfinished_ = true;
+        return;
+    }
+    log_.push_back("the game is over: quit");
+    quit_ = true;  // DG:0152
 }
 
 namespace {

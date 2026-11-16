@@ -363,16 +363,25 @@ The party is placed from the saved position each time.
    that starts at the target counts as not reached. Afterwards (`203b:2aa3`) the view walks
    back to the place it left and the window is built there again. No: no fight.
 3. With no enemy present or none reachable: no fight; the view goes back (2.12), and the
-   townspeople come back (2.13). That much is rebuilt (`Town::random_encounter`,
-   `Town::place_encounter`, `Combat::reaches`), checked by the rig on a walk out of the town
-   after the raid with four encounters out of reach. A fight that does take place is not
-   rebuilt yet.
+   townspeople come back (2.13).
+
+The encounter comes at the game tick's step 2, before the tick draws the map (docs/town_loop.md),
+so the screen (and the page) still shows the map as the previous tick drew it, from before the
+step that started the encounter. Nothing draws the map again until a later tick, unless the
+fight's graphics or orders screen do.
 4. "Attacking force:" (DG:3402), the number of enemy 'Mechs with " 'Mech" / "s" if more than
    one and " and", then always the number of enemy people placed with " human" and "s" unless
    it is 1 (so "0 humans").
 5. "Engage in combat?" (DG:3428), yes/no, default yes.
 6. Declined: one r; r & 3 not 0 (3 in 4) evades (no fight, 2.12). Otherwise "You did not evade
    them!" (DG:343a), a key, and the fight goes on.
+
+Rebuilt (`Town::random_encounter`, `Town::place_encounter`, `Combat::reaches`,
+`Town::encounter_end`). The rig checks it on the walk out of the town after the raid: four
+encounters out of reach, then one in reach (four soldiers against Jason alone on foot). Declining
+doesn't evade it, and the computer fights five rounds until Jason is killed (2.12, the game over
+in docs/town_loop.md). A won encounter's after-fight steps are rebuilt as far as their tests;
+repairs, salvage, loot and healing themselves are not rebuilt yet.
 
 Kinds 1-3 always fight.
 
@@ -632,6 +641,12 @@ another block than the place says. Nothing visible depends on it; the rig compar
 shows after the raid's map load, when the saved cells differ from the fresh ones.
 
 ### 2.12 After the loop
+
+A walk of the party position to a place (`1000:17bb`: the returns below, and every "the view
+moves to a figure" in this document) goes a cell at a time, up or down first, then across,
+through the four step functions. So a figure in the next area moves the nine grids over and back
+(docs/wilderness.md, "Stepping into the next area"), and the cell window last built stays in
+memory as it was (rebuilt, `Town::walk_position`).
 
 - **No fight** (kind 0 with no enemy or none reachable): the view goes back to the entry
   position (`203b:2aa3`).

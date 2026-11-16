@@ -154,6 +154,8 @@ void Terrain::make_grid(int k, int area) {
 }
 
 std::array<int, 3> Terrain::step_area(int dx, int dy, int area) {
+    // The cell window stays as it was built until 287f:1314 builds it again.
+    hold_window();
     built_.reset();
     const auto copy = [&](int to, int from) {
         std::copy_n(grids_.begin() + from * kGridBlocks, kGridBlocks, grids_.begin() + to * kGridBlocks);

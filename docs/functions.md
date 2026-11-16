@@ -20,7 +20,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 1000:051b | 0x1051b | `FUN_1000_051b` | 2352 | Draws the figures: map objects (2a93), the party (walking frame, sinking in water), the townspeople in view, 'Mechs; records the party's places | rebuilt |
 | 1000:0e4b | 0x10e4b | `FUN_1000_0e4b` | 2279 | The fight's figure drawer: the map's marks (2a93), people, then 'Mechs top to bottom; writes on screen, screen place, tile, sink (docs/combat.md 3.14) | rebuilt |
 | 1000:1732 | 0x11732 | `FUN_1000_1732` | 137 | Runs a figure's walking script to its next frame (0xfd direction, 0xfe jump back, 0xff hold) | rebuilt |
-| 1000:17bb | 0x117bb | `FUN_1000_17bb` | 92 |  | - |
+| 1000:17bb | 0x117bb | `FUN_1000_17bb` | 92 | The party position walked to a place a cell at a time (y first) through the area steps | rebuilt |
 | 1000:1817 | 0x11817 | `FUN_1000_1817` | 88 |  | - |
 | 1000:186f | 0x1186f | `FUN_1000_186f` | 172 |  | - |
 | 1000:191b | 0x1191b | `FUN_1000_191b` | 164 | Moves the party position by (dx, dy) half-cells, across area edges | rebuilt |
@@ -214,7 +214,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 203b:2591 | 0x22941 | `FUN_203b_2591` | 428 | Scan Unit: Friends / Enemies / Cancel, then the scan list | rebuilt |
 | 203b:273d | 0x22aed | `FUN_203b_273d` | 140 |  | - |
 | 203b:27c9 | 0x22b79 | `FUN_203b_27c9` | 108 |  | - |
-| 203b:2835 | 0x22be5 | `FUN_203b_2835` | 166 |  | - |
+| 203b:2835 | 0x22be5 | `FUN_203b_2835` | 166 | After an encounter: the nine areas' maps loaded again where a grid's first entry isn't 0x90, then the masks | read |
 | 203b:28db | 0x22c8b | `FUN_203b_28db` | 456 | Can Jason reach the first enemy: 30 steps of 1e31:0006 in mode 0x80 (docs/combat.md 2.3) | rebuilt |
 | 203b:2aa3 | 0x22e53 | `FUN_203b_2aa3` | 57 | The view walked back to a place (1000:17bb) and the window built there | rebuilt |
 

@@ -155,6 +155,16 @@ P:09f6..09f8 their areas. The rebuild gives a step into the next area exactly th
 of making all nine around the new area (`Terrain::step_area`, the unit test
 `area_step_matches_a_fresh_area`).
 
+A step into the next area doesn't touch the cell window (P:07ad) or its block values: they stay
+as the last `1314` built them, in whatever grid was 4 then, until the next `1314`. A fight's
+walk to a figure in the next area and back (`1000:17bb`, docs/combat.md 2.12) shows it: the
+window last built there, with the town's map blocks, is still in memory once the grids have
+moved back. The rebuild holds the window across the step (`Terrain::hold_window`).
+
+`1000:17bb` doesn't work through the queue; it is left for the next `218f`, whose loop takes
+the entries that are not ff. Whether a queue a fight leaves behind ever loads a map has not been
+seen: no area next to the ones walked so far has one.
+
 ## Not rebuilt yet
 
 - The queued map loads (P:09f3) after a step into the next area: the rebuild works out which of

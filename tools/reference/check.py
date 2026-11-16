@@ -807,6 +807,20 @@ CHAIN_CASES = [dict(case, compare=False) for case in SPOT_CASES] + [
     {"name": "chain_out_3", "keys": "right*2 down*2 home down home down home down home down home down home down home down home down home down home down home down home down home down home down pgdn right*13 pgdn*2 down home*2 down home down home down home down home down home", "match": SCREEN},
     {"name": "chain_out_4", "keys": "down home down home down home down home down home down home down home down home*3 down home down home down home down home down home down home down home*2 up left down pgdn*2 left home down end down home*2 up*11 pgup*5", "match": SCREEN},
     {"name": "chain_out_area", "keys": "up*10", "match": SCREEN},
+    # A step west meets a random encounter in reach: four soldiers. Declining
+    # does not get away this time (r & 3 is 0), and the fight's questions
+    # follow.
+    {"name": "chain_enc", "keys": "home", "match": SCREEN},
+    {"name": "chain_enc_no", "keys": "n", "match": SCREEN},
+    {"name": "chain_enc_computer", "keys": "enter", "match": SCREEN},
+    # The computer fights (Yes), no combat messages, no combat graphics,
+    # then round after round as in MISSION_ROUNDS. Jason, alone on foot,
+    # is killed in round 5: the game is over (DG:014a is 0), a box and a
+    # key. The question after the key is not compared: the original's
+    # capture after Enter still shows the box.
+] + [{"name": "chain_enc_round_%d" % n, "keys": "y enter arm:1 n" if n == 1 else "idle:1", "match": {}, "fight": True}
+     for n in range(1, 6)] + [
+    {"name": "chain_enc_over", "keys": "idle:1", "match": SCREEN},
 ]
 
 # The long unpoked run: its own tier (`--campaign`, ctest label campaign).

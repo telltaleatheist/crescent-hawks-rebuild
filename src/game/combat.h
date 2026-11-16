@@ -131,6 +131,9 @@ public:
         std::function<void(int x, int y, int colour)> pixel;
         std::function<void(int n)> sound;
         std::function<void(bool shown)> draw_view;
+        // 1000:17bb: the party position walked to a place a cell at a time,
+        // the grids moving at each area edge. Unset: the position is set.
+        std::function<void(formats::MapPosition to)> walk;
         std::function<void(int number, int mode)> picture;
         std::function<void(const std::vector<std::string>& ids)> print;
         std::function<void()> select_box;
@@ -266,6 +269,10 @@ private:
     const Fixes& fixes_;
     int messages_;
     bool graphics_;
+    void walk(formats::MapPosition to) {
+        if (hooks_.walk) hooks_.walk(to);
+        else party_ = to;
+    }
     Hooks hooks_;
 
     // Working values the original keeps in F:, between functions.

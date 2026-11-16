@@ -511,7 +511,7 @@ void Combat::simulate_path(int f) {
 
 void Combat::plan(int f) {
     const MapPosition saved = party_;
-    party_ = {figs_.x[std::size_t(f)], figs_.y[std::size_t(f)]};  // 1000:17bb
+    walk({figs_.x[std::size_t(f)], figs_.y[std::size_t(f)]});  // 1000:17bb
     auto& orders = s_.orders[std::size_t(f)];
     orders.fill(0xff);
     const bool enemy = f >= 12;
@@ -655,7 +655,7 @@ void Combat::plan(int f) {
         if (flags_[0x27] != 0 && flags_[0x25] + 4 == f) targets[0] = 0xff;
     }
     simulate_path(f);
-    party_ = saved;  // 1000:17bb
+    walk(saved);  // 1000:17bb
 }
 
 void Combat::plan_side(int first) {
@@ -1020,7 +1020,7 @@ void Combat::sound(int n) const {
 
 void Combat::redraw(bool after_movement) {
     const int v = view_figure();
-    party_ = {figs_.x[std::size_t(v)], figs_.y[std::size_t(v)]};  // 1000:17bb
+    walk({figs_.x[std::size_t(v)], figs_.y[std::size_t(v)]});  // 1000:17bb
     if (graphics_) {
         if (after_movement) terrain_.save_cells(party_);  // 287f:1314, 1ece
         else terrain_.restore_cells();
@@ -1240,7 +1240,7 @@ bool Combat::fire(int s, int slot, bool mission, const std::array<std::int8_t, 2
     }
     int dir = direction_toward(party_, {figs_.x[std::size_t(t)], figs_.y[std::size_t(t)]}, tables_);
     if (dir == -1) dir = 0;
-    party_ = {figs_.x[std::size_t(s)], figs_.y[std::size_t(s)]};  // 1000:17bb
+    walk({figs_.x[std::size_t(s)], figs_.y[std::size_t(s)]});  // 1000:17bb
     const bool sight = line_of_sight(s, t, figs_.x[std::size_t(t)], figs_.y[std::size_t(t)]);
     if (sight) {
         const auto& wr = weapon_record(w);
@@ -1393,7 +1393,7 @@ void Combat::round(bool mission) {
             }
         }
     }
-    if (s_.fight_on) party_ = saved;  // 1000:17bb
+    if (s_.fight_on) walk(saved);  // 1000:17bb
     if (s_.fight_on) end_round(moved);
 }
 

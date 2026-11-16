@@ -143,7 +143,7 @@ public:
     // BTECH.EXE 1000:01f4..020a (the main loop's idle half)
     // One pass of the main loop without a key: it waits a frame, and every
     // 11th pass since the last game tick (the first pass included) runs one.
-    void idle_pass();
+    void idle_pass(KeySource* keys = nullptr);
 
     formats::MapPosition position() const { return position_; }
     // The map as it shows now, animated tiles in their current frame (or as
@@ -238,7 +238,7 @@ private:
     // Nothing more happens: a question or a place waits for keys that ran
     // out, or the walk stopped at a place it can't run.
     bool stopped() const {
-        return question_open_ || place_open_ || start_up_open_ || fight_unfinished_ ||
+        return question_open_ || place_open_ || start_up_open_ || fight_unfinished_ || quit_ ||
                (entered_place_ && !game_dir_);
     }
     // The start-up's screens, in order (game/startup.cpp).
@@ -248,7 +248,11 @@ private:
     void new_game_screen();
     void turn(int key, KeySource& keys);
     // BTECH.EXE 1000:020a..050d (the main loop's game tick)
-    void game_tick();
+    void game_tick(KeySource* keys);
+    void game_over(KeySource& keys);
+    void walk_position(formats::MapPosition to);
+    bool quit_ = false;
+    bool question_waiting_ = false;
     void record_party_places();
     // The map at the party's position now.
     MapView live_view() const;
@@ -309,8 +313,14 @@ private:
     void place_mission(int mechs, int people);
     bool fight(int kind, KeySource& keys);
     void fight_ends();
-    void random_encounter();
+    bool random_encounter(KeySource& keys);
     bool place_encounter();
+    bool encounter_end(bool fought, KeySource& keys);
+    void reload_areas();
+    bool after_fight_steps(KeySource& keys);
+    bool loot(KeySource& keys);
+    formats::MapPosition encounter_entry_;
+    std::array<std::uint8_t, 9> encounter_blocks_{};
     // The orders menu: 0 Begin Fight, 1 Flee; nothing when the keys ran
     // out or an order is chosen that the rebuild stops at.
     std::optional<int> orders_menu(Combat& combat, KeySource& keys);
@@ -423,6 +433,8 @@ private:
     bool raid_ = false;               // F:3772: the Kurita raid
     int path_end_col_ = 0, path_end_row_ = 0;  // F:3778/377a: the cell where the shown path ends
     std::optional<Frozen> frozen_;  // the map as the screen shows it
+    std::optional<Frozen> last_drawn_;
+    bool encounter_frozen_ = false;  // frozen_ is the encounter's: the tick's drawing ends it  // the map as the last tick drew it, outdoors
     // With combat graphics: the page drawn but not shown yet, the sprites on
     // it and on the screen, the line pixels on the screen; and every moment
     // shown so far (game/shown.h).

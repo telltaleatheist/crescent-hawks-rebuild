@@ -143,6 +143,12 @@ constexpr std::array kDos103 = {
     // 1000:1a13, the yes/no answer line, with Yes or with No picked:
     ExeSpan{ExeSpan::Kind::Text, "ui.answer_yes_picked", 0x46db, 0x03ee, 16, "ab37bd17e5401171"},
     ExeSpan{ExeSpan::Kind::Text, "ui.press_key", 0x46db, 0x050d, 14, "787e88186eb252b3"},  // 1000:2a4f
+    ExeSpan{ExeSpan::Kind::Text, "over.leader.0", 0x46db, 0x00f1, 6, "99c40d29b9ee0f3b"},  // 1000:04bc
+    ExeSpan{ExeSpan::Kind::Text, "over.leader.1", 0x46db, 0x00f7, 4, "fd2ca94a5886fb2b"},
+    ExeSpan{ExeSpan::Kind::Text, "over.killed", 0x46db, 0x00fb, 52, "573910d52bc952e9"},
+    ExeSpan{ExeSpan::Kind::Text, "over.new_game", 0x46db, 0x012f, 27, "febca21abb92bace"},
+    ExeSpan{ExeSpan::Kind::Text, "ui.plural_s", 0x46db, 0x051b, 2, "28a3d6d537e5d509"},    // 1000:2a69
+    ExeSpan{ExeSpan::Kind::Text, "ui.full_stop", 0x46db, 0x051d, 2, "075d3ddf5a3a826e"},   // 1000:2a7e
     ExeSpan{ExeSpan::Kind::Text, "ui.answer_no_picked", 0x46db, 0x03fe, 18, "b0ed7f20a54135c7"},
     // 1000:4cac, the heading over the party box's three bar columns:
     ExeSpan{ExeSpan::Kind::Text, "panel.party_heading", 0x46db, 0x0aca, 4, "1b1faf746e0d0bb8"},

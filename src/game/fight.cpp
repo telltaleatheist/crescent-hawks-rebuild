@@ -303,10 +303,12 @@ void Town::place_mission(int mechs, int people) {
 }
 
 // BTECH.EXE 203b:000a (Ghidra FUN_203b_000a), a fight of kind 1 (a training
-// mission) up to its first orders menu: the party's 'Mechs placed around
-// the party, then three questions in the party box.
+// mission) or 0 (a random encounter) up to its first orders menu: for kind 1
+// the party's 'Mechs placed around the party (kind 0 has placed its figures
+// already, random_encounter), then three questions in the party box.
 bool Town::fight(int kind, KeySource& keys) {
     const formats::MapPosition at = position_;
+    if (kind != 0) {
     // 2.1: every figure's path ends at once, no targets, no orders; the
     // 'Mechs cool; the computer moves no party figure.
     for (int f = 0; f < CombatState::kFigures; ++f) {
@@ -330,6 +332,7 @@ bool Town::fight(int kind, KeySource& keys) {
     }
     for (int c = 0; c < 8; ++c)
         if (on_foot(c)) log_.push_back("a character on foot in a fight: not rebuilt");
+    }
 
     // F:009e = 0; then 15ab:0b5e: "Do you want the computer to fight for
     // you?" with F:009e as the default, so always No; not asked with
@@ -475,7 +478,7 @@ void Town::plan_shown(Combat& combat, int fig) {
     const auto saved = position_;
     combat.plan(fig);
     show_unit(combat, fig, true);
-    position_ = saved;  // 1000:17bb
+    walk_position(saved);  // 1000:17bb
 }
 
 // BTECH.EXE 203b:1774 (Ghidra FUN_203b_1774)
@@ -485,7 +488,7 @@ void Town::plan_shown(Combat& combat, int fig) {
 // path worked out from its orders and drawn as arrows from its cell.
 void Town::show_unit(Combat& combat, int fig, bool redraw) {
     if (redraw) {
-        position_ = {figs_.x[std::size_t(fig)], figs_.y[std::size_t(fig)]};  // 1000:17bb
+        walk_position({figs_.x[std::size_t(fig)], figs_.y[std::size_t(fig)]});  // 1000:17bb
         page_ = Frozen{live_view(), fight_figures_drawn()};                  // 287f:1314, 18ef, 1000:0e4b
         page_sprites_.clear();
     }
@@ -891,7 +894,7 @@ bool Town::pick_target(Combat& combat, int fig, int w, int slot, KeySource& keys
                 text_.fill(1, 9, 10, 1, 0);
             }
             text_.set_cursor(0, 7);
-            position_ = {figs_.x[std::size_t(fig)], figs_.y[std::size_t(fig)]};  // 1000:17bb
+            walk_position({figs_.x[std::size_t(fig)], figs_.y[std::size_t(fig)]});  // 1000:17bb
             print_id("weapons.range." + std::to_string(combat.range_band(t, w)));
             print_id("pick.blank");
             text_.select_window(3);
@@ -1118,6 +1121,7 @@ Combat Town::combat_rules() {
         text_.select_window(4);
         text_.clear_window();
     };
+    hooks.walk = [this](formats::MapPosition to) { walk_position(to); };
     hooks.draw_view = [this](bool shown) {
         if (!shown) {
             fight_figures_drawn(false);  // the fix's unshown drawing: not in the original
@@ -1226,7 +1230,7 @@ bool Town::fight_rounds(int kind, KeySource& keys) {
                 if (figs_.computer[std::size_t(f)]) {
                     combat.plan(f);  // 1e31:03ab(f, 0)
                 } else if (combat_.paths[std::size_t(f)][0] == 2 && combat_.orders[std::size_t(f)][0] != 0xff) {
-                    position_ = {figs_.x[std::size_t(f)], figs_.y[std::size_t(f)]};  // 1000:17bb
+                    walk_position({figs_.x[std::size_t(f)], figs_.y[std::size_t(f)]});  // 1000:17bb
                     if (f < 4) combat.mech_mp(f, std::int8_t(combat_.orders[std::size_t(f)][0]));
                     else combat.person_mp(f);
                     combat.simulate_path(f);
@@ -1302,6 +1306,8 @@ bool Town::fight_rounds(int kind, KeySource& keys) {
             place_open_ = true;
             return false;
         }
+    } else if (kind == 0) {
+        return encounter_end(fled_how == 0, keys);
     } else if (kind != 1) {
         log_.push_back("the ending of a fight of kind " + std::to_string(kind) + ": not rebuilt");
         fight_unfinished_ = true;
