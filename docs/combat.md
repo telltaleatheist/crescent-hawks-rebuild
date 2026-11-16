@@ -781,11 +781,39 @@ building, 0x80 / 0x81 a wreck (two sprite sets). The ring is probably the map ob
 ### 3.14 After the shot: kills, wrecks, pictures
 
 `22e8:12c7` (FUN_22e8_12c7):
-- **Presentation** (only when DG:2e3a is set and DG:014a): the shooter's fire pose, the shot (a
-  missile sprite for the missiles, a line for the lasers and PPC, clipped to the map window), the
-  hit reaction, sounds (`1000:19bf`, only with sound on), an explosion on a hit by weapon 7 or
-  above. On a hit, for some weapons, a place picture (`1000:48b7(n, 0)`, one draw): 1 for missiles
-  at a 'Mech, 4 or 7 for a party 'Mech's lasers, 3 for an enemy hitting figure 0.
+- **Presentation** (only when DG:2e3a, combat graphics, is set and DG:014a). Arguments: shooter
+  s, target t, weapon w, direction d (shooter to target), hit, killed, destroyed, character c.
+  1. The view's centre is Jason's figure (F:c620, his 'Mech slot; a value above 7 means on foot,
+     figure 4).
+  2. The shooter's fire pose: a figure script (F:01f6 + 4s) from a table by direction: a 'Mech
+     DG:2d58 (the Kick DG:2d98), or DG:2d78 / DG:2db8 when its sprite set F:d55e + s is not 0;
+     a person DG:3ff8 + 0x20 w + 4d. Its facing F:396c + s, unless ff, is parked in F:45b6 + s,
+     and a 'Mech's walking frame (F:409a + s) is kept to be put back at the end.
+  3. The target's reaction, only on a hit and not for the missiles (w 0x0a-0x0b at a 'Mech,
+     0x19-0x1f): the script DG:2e3c, its facing parked likewise.
+  4. Until the shooter's script reaches its end (ff): both figures take their next frame
+     (`1000:1732`), and if the shooter is on screen (F:42f6 + s, set by the figure drawer) the
+     view is redrawn (`1e31:1f09`), shown (`273d:06c3`) and held 5 frames (`273d:0006(5)`).
+  5. A sound by weapon (`1000:19bf`): w 0-2: 0x0d; 3: 5; 4-6: 0x0b; 7-8: 6; 9, 0x13-0x17: 3.
+  6. The shot itself, when either figure is on screen. Kind 1, the missiles (w 0x0a-0x0b and
+     0x19-0x1f, sound 1 first): a sprite (frames from `1000:1732` + 0x68, script DG:2dd8 + 4d)
+     moved along the line four pixels a step, each step drawn (`1e31:1f73`) and shown (on the CGA
+     only every fourth). Kinds 2 (w 0x0c-0x0d) and 3 (w 0x0f-0x12, the lasers and the PPC): the
+     line plotted pixel by pixel (`273d:031c`), from the figures' screen places (F:324c / F:327c
+     + 2s, or worked out by `1e31:1df8` for one off screen) moved by 3 and by a muzzle offset by
+     direction (DG:2d28/2d30 a 'Mech, 2d38/2d40 with the other sprite set, 2d48/2d50 a person),
+     the target's 8 higher for a 'Mech, clipped to the map window (x 0x68-0x13f, y 0-199); the
+     steps from DG:41dc-41f4 by the octant (`1e31:1ea2`). The line's colour: kind 2 14 (10 for
+     an enemy person), kind 3 12 for a party shooter and 5 for an enemy (on the CGA 3 and 2).
+     Then a sound: 9 after kind 2, 2 after kind 3.
+  7. A miss: the view is redrawn. A hit: sound 4; for a weapon above 6 with the target on
+     screen, an explosion (script DG:41d8, frames + 0xfa, drawn over the target until its end),
+     5 frames held, and a place picture (`1000:48b7(n, 0)`, one draw) if the weapon calls for
+     one: 1 for the missiles at a 'Mech, 4 (7 with the other sprite set) for a party figure's
+     lasers or PPC, 3 for an enemy's when the target is figure 0 and the shooter's sprite set is
+     not 0.
+  8. A 'Mech shooter's walking frame is put back. At the very end of the function, F:396c + s =
+     ff (the facing is read from F:45b6 + s from then on, 3.9).
 - **A person killed**: "Killed him!" (DG:41fc); destroyed, inactive, the record emptied, a body
   mark 0x7e; every target byte aimed at him cleared. Character 0 or 1: DG:014a = 0, the fight ends
   at once (open question 6).
@@ -949,6 +977,7 @@ mistake; "quirk" means it may be intended.
 | 33 | Jason's 'Mech destroyed in a mission stops all movement only when the damage ended exactly in the head or centre torso, not when it overflowed. | `22e8:000c` | `fix_stop_on_loss` |
 | 34 | Only ten ammunition bytes: an 11th weapon would use the walking MP byte as its ammunition. No template has more than nine weapons. | `1e31:10a2`, `22e8:000c` | none |
 | 35 | The end of the round caps heat at 30 for party record a only, whichever record it heated: an enemy 'Mech's heat climbs past 30 (and its MP stays 0 only at exactly 30, 3.2). | `1e31:0c63` | `fix_enemy_heat_cap` |
+| 36 | The terrain under a figure (F:32ae, F:3750, F:45ce, F:4554: to-hit, water cooling, fire, the missed-shot mark) is written only by the figure drawers (`1000:051b`, `1000:0e4b`). In a fight they run only for the combat graphics (the round's redraw and the shot's presentation) or the Arena's spectator, so with combat graphics off the terrain has no effect at all. Quirk. | `22e8:000c`, `22e8:12c7` | none yet |
 
 The switches are `game/fixes.h`. Each is off by default, except where the original reads or
 writes memory the rebuild does not hold, or never returns: bugs 2, 17, 18, 21, 23, 26 and 32
