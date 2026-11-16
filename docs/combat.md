@@ -832,9 +832,15 @@ mistake; "quirk" means it may be intended.
 | 33 | Jason's 'Mech destroyed in a mission stops all movement only when the damage ended exactly in the head or centre torso, not when it overflowed. | `22e8:000c` | `fix_stop_on_loss` |
 | 34 | Only ten ammunition bytes: an 11th weapon would use the walking MP byte as its ammunition. No template has more than nine weapons. | `1e31:10a2`, `22e8:000c` | none |
 
+The switches are `game/fixes.h`. Each is off by default, except where the original reads or
+writes memory the rebuild does not hold, or never returns: bugs 2, 17, 18, 21, 23, 26, 29 and 32
+take the fixed path by default and log it. Bug 5 is kept, but the first shot of a session (whose
+flag the original leaves uninitialised) counts as "missed" and is logged. Bugs 12, 15, 28, 30 and
+34 have no switch, nor does the unreachable encounter-table path (DG:13e2).
+
 ## 7. The copy-protection check
 
-`1c67:08a8` (FUN_1c67_08a8) runs on entering the training center (place 0) while flag 14 is 0 and
+`1c67:08a8` (FUN_1c67_08a8) runs on entering the training center (entrance 0) while flag 14 is 0 and
 no demo plays (docs/scripts.md, "Entering a place"). It is the original's copy protection: a quiz
 against the 'Mech pictures in the manual.
 
@@ -848,11 +854,21 @@ against the 'Mech pictures in the manual.
    entered.
 4. The panel is redrawn.
 
+A pass sets nothing, so the quiz is asked on every visit; after a failure flag 14 counts down
+from ff in the town's ticks and the quiz comes back when it reaches 0.
+
 **The copy we read is modified here.** In the BTECH.EXE we read, this check has been altered so
 that it always passes. That is not the original's behaviour, so this page describes the check as
 the program was built and nothing here relies on the altered copy. Following docs/rules.md (rule 3),
-the rebuild has no protection check; how it presents this scene (the information in our own
-words) is still to be decided.
+the rebuild has no protection check and nothing in it can fail.
+
+**The draws are kept.** The original picks the three pictures (step 2) before it compares any
+answer, so the draws are the same whether the player passes or fails. The rebuild makes them on
+each visit while flag 14 is 0 (`game/training_quiz.h`, `draw_quiz_pictures`) and shows nothing for
+now; how the scene looks (for example the stats pictures with the answer given in our own words)
+is still to be decided. The original also waits for input here (a key after the message, then three menu
+answers), which the rebuild does not, so a rig script that enters the training center must leave
+them out on the rebuild's side.
 
 ## 8. Open questions
 
