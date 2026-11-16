@@ -1,0 +1,86 @@
+# Text on the screen
+
+The program writes all its text and box frames into a 40x25 grid of 8x8-pixel cells (the
+320x200 screen). Rebuilt in `src/game/text.{h,cpp}`; drawn by `src/platform/text_layer.cpp`.
+The game logic only says which glyph or frame piece goes in a cell, in which colours; the
+renderer looks each one up by asset ID (`{"FONT", c}`, `{"BTBORDER.CMP:8x8", n}`), so a
+makeover can replace the font and the frames.
+
+## Text windows
+
+A table of 16-byte records at 385b:0000 describes the windows: x, y, width,
+height (in cells), foreground and background colour, and the cursor's column and row.
+`2656:0281` selects a window (keeping the old one's colours and cursor), `2656:0388` clears it.
+
+| # | x | y | w | h | colours | used for |
+|---|---|---|---|---|---|---|
+| 0 | 0 | 0 | 40 | 25 | 15 on 0 | whole screen |
+| 1 | 14 | 15 | 25 | 9 | 15 on 0 | |
+| 2 | 1 | 1 | 38 | 23 | 15 on 0 | |
+| 3 | 1 | 13 | 11 | 11 | 15 on 0 | panel, party box |
+| 4 | 1 | 1 | 11 | 11 | 15 on 0 | panel, upper box |
+| 5 | 10 | 1 | 29 | 16 | 15 on 0 | |
+| 6 | 14 | 1 | 25 | 23 | 15 on 0 | new-game text |
+| 7 | 14 | 10 | 25 | 5 | 15 on 0 | message box over the map |
+| 8 | 0 | 0 | 16 | 25 | 15 on 0 | |
+| 9 | 1 | 2 | 38 | 20 | 0 on 15, column 14 | |
+| 10 | 0 | 0 | 25 | 8 | 0 on 15, column 14 | |
+
+## Frames (2656:0004)
+
+A frame goes one cell outside the current window. Each style is a list of frame pieces: the
+four corners (top-left, top-right, bottom-left, bottom-right), then the top, left, right and
+bottom edges, each a run of pieces ended by 0xff that repeats along the edge (`2656:01e7`).
+The pieces are the 8 cells the start-up cuts from the top-left of BTBORDER.CMP (docs/formats/font.md).
+
+| Style | Corners | Top | Left | Right | Bottom |
+|---|---|---|---|---|---|
+| 0, 1, 2 | 0 1 6 7 | 4 | 5 | 5 | 4 |
+| 3 | 2 3 6 7 | 4 | 5 | 5 | 4 |
+| 4 | 0 1 2 3 | 4 | 5 | 5 | 4 |
+
+The panel (`1000:4cac`) frames window 3 with style 3 and window 4 with style 4, so the two boxes
+share the middle bar: 13 cells, 104 pixels wide, beside the 216-pixel map.
+
+## The printer (2656:03f5)
+
+Prints a piece of text into the current window, word-wrapped, a word at a time. The text uses
+these bytes:
+
+| Byte | Meaning |
+|---|---|
+| top bit set | the last character (the rest of the byte is the character) |
+| 0x00 | end |
+| 0x0d | new line |
+| 0x02 n | background colour n |
+| 0x06 n | foreground colour n |
+| 0x09 n | cursor to column n (column 0 if n is past the width) |
+| 0x13 n | spaces up to column n, counted from the cursor |
+
+A word that does not fit goes on the next line, leading spaces dropped; a word as wide as the
+window is broken. Each line goes out through `2656:07cb`: below the last row it scrolls the
+window up a row, clears the bottom row to colour 0 and writes there.
+
+`273d:00d5` writes a string at a cell position without wrapping (the panel's names).
+
+## The yes/no question (1000:1a13)
+
+Prints a new line and then "Yes No" with the picked answer in black on yellow (colour 0 on 14).
+Y or N answer at once; left picks Yes, right picks No; space or Enter accept the pick. After
+every key the line is printed again over itself. The window's foreground colour is put back at
+the end.
+
+## Messages
+
+`24d3:17c6` opens the message box: window 7, cleared, frame style 0. The texts the walk uses:
+
+| DS offset | Text |
+|---|---|
+| 0x0410 | The water is too deep that way. |
+| 0x0430, 0x0444 | Will you enter the (new line) *place*? |
+| 0x03ee, 0x03fe | the yes/no answer line, Yes or No picked |
+| 0x0aca | BDC (the panel's heading over the three bar columns 9-11) |
+| 0x00b2-0x00d9 | the eight characters' names, Jason first |
+
+The rebuild reads these from the player's BTECH.EXE (`formats/exe_data.h`); it does not carry
+them.

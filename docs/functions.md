@@ -15,9 +15,9 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 |---|---|---|---|---|---|
 | 1000:0000 | 0x10000 | `switchD_1000:f462::caseD_6` | 45 |  | - |
 | 1000:002d | 0x1002d | `FUN_1000_002d` | 142 |  | - |
-| 1000:00bb | 0x100bb | `FUN_1000_00bb` | 313 |  | - |
+| 1000:00bb | 0x100bb | `FUN_1000_00bb` | 313 | Main loop: one turn per key; redraws the map, figures and panel each turn; resets the one-question-per-turn flag | read |
 | 1000:01f4 | 0x101f4 | `FUN_1000_01f4` | 807 |  | - |
-| 1000:051b | 0x1051b | `FUN_1000_051b` | 2352 |  | - |
+| 1000:051b | 0x1051b | `FUN_1000_051b` | 2352 | Draws the party's figures on the map (leader at half-cell X+1, Y); sets which of the 8 characters are present | read |
 | 1000:0e4b | 0x10e4b | `FUN_1000_0e4b` | 2279 |  | - |
 | 1000:1732 | 0x11732 | `FUN_1000_1732` | 137 |  | - |
 | 1000:17bb | 0x117bb | `FUN_1000_17bb` | 92 |  | - |
@@ -27,10 +27,10 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 1000:19bf | 0x119bf | `FUN_1000_19bf` | 30 |  | - |
 | 1000:19dd | 0x119dd | `FUN_1000_19dd` | 22 |  | - |
 | 1000:19f3 | 0x119f3 | `FUN_1000_19f3` | 32 |  | - |
-| 1000:1a13 | 0x11a13 | `FUN_1000_1a13` | 234 |  | - |
+| 1000:1a13 | 0x11a13 | `FUN_1000_1a13` | 234 | Yes/no question: Y/N answer, left/right pick, space/Enter accept; reprints the answer line each key | rebuilt |
 | 1000:1afd | 0x11afd | `FUN_1000_1afd` | 277 |  | - |
-| 1000:1c12 | 0x11c12 | `FUN_1000_1c12` | 1405 | Can the party step by (dx, dy)? Blocks on tile >= DS:0150; offers to enter a place at an entrance | read |
-| 1000:218f | 0x1218f | `FUN_1000_218f` | 398 |  | - |
+| 1000:1c12 | 0x11c12 | `FUN_1000_1c12` | 1405 | Can the party step by (dx, dy)? Deep water at a block edge; offers to enter a place at an entrance; blocks on tile >= DS:0150 | rebuilt |
+| 1000:218f | 0x1218f | `FUN_1000_218f` | 398 | Walking keys: arrows and Home/PgUp/End/PgDn to a step, checks it, moves y then x, loads areas crossed into | rebuilt |
 | 1000:231d | 0x1231d | `FUN_1000_231d` | 238 |  | - |
 | 1000:240b | 0x1240b | `FUN_1000_240b` | 183 |  | - |
 | 1000:24c2 | 0x124c2 | `FUN_1000_24c2` | 933 |  | - |
@@ -58,13 +58,13 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 1000:46a7 | 0x146a7 | `FUN_1000_46a7` | 198 | Show the title screen (BTTITLE.CMP, with its palette) | read |
 | 1000:476d | 0x1476d | `FUN_1000_476d` | 330 |  | - |
 | 1000:48b7 | 0x148b7 | `FUN_1000_48b7` | 495 |  | - |
-| 1000:4aa6 | 0x14aa6 | `FUN_1000_4aa6` | 14 |  | - |
+| 1000:4aa6 | 0x14aa6 | `FUN_1000_4aa6` | 14 | One party line in the panel: name, then three bars in columns 9-11 | read |
 | 1000:4ab4 | 0x14ab4 | `FUN_1000_4ab4` | 269 |  | - |
 | 1000:4bc1 | 0x14bc1 | `FUN_1000_4bc1` | 235 |  | - |
-| 1000:4cac | 0x14cac | `FUN_1000_4cac` | 171 |  | - |
+| 1000:4cac | 0x14cac | `FUN_1000_4cac` | 171 | The left panel: party box (window 3, frame style 3, 'BDC' heading, up to 4 names) and the box above (window 4, style 4) | rebuilt |
 | 1000:4d57 | 0x14d57 | `FUN_1000_4d57` | 112 |  | - |
 | 1000:4dc7 | 0x14dc7 | `FUN_1000_4dc7` | 769 | New game: reset the party, load map 1 into area 4, set the start position | read |
-| 1000:50c8 | 0x150c8 | `FUN_1000_50c8` | 434 |  | - |
+| 1000:50c8 | 0x150c8 | `FUN_1000_50c8` | 434 | New game: copyright text in window 6, 'first time playing?' and 'load a saved game?' questions | read |
 
 ## CODE_1: segment 1527, 2,104 bytes
 
@@ -95,7 +95,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 
 | Address | Linear | Ghidra name | Span | Label | Status |
 |---|---|---|---|---|---|
-| 17dc:0008 | 0x17dc8 | `FUN_17dc_0008` | 440 |  | - |
+| 17dc:0008 | 0x17dc8 | `FUN_17dc_0008` | 440 | Goes into place N of the current map (called after yes to 'Will you enter...') | - |
 | 17dc:01c0 | 0x17f80 | `FUN_17dc_01c0` | 1079 |  | - |
 | 17dc:05f7 | 0x183b7 | `FUN_17dc_05f7` | 50 |  | - |
 | 17dc:0629 | 0x183e9 | `FUN_17dc_0629` | 1824 |  | - |
@@ -231,8 +231,8 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | Address | Linear | Ghidra name | Span | Label | Status |
 |---|---|---|---|---|---|
 | 24d3:0004 | 0x24d34 | `FUN_24d3_0004` | 6082 |  | - |
-| 24d3:17c6 | 0x264f6 | `FUN_24d3_17c6` | 36 |  | - |
-| 24d3:17ea | 0x2651a | `FUN_24d3_17ea` | 31 |  | - |
+| 24d3:17c6 | 0x264f6 | `FUN_24d3_17c6` | 36 | Opens the message box over the map: window 7, cleared, frame style 0 | rebuilt |
+| 24d3:17ea | 0x2651a | `FUN_24d3_17ea` | 31 | Prints a message in the open box, waits a moment (273d:086a) | read |
 | 24d3:1809 | 0x26539 | `FUN_24d3_1809` | 21 |  | - |
 | 24d3:181e | 0x2654e | `FUN_24d3_181e` | 21 |  | - |
 
@@ -240,14 +240,14 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 
 | Address | Linear | Ghidra name | Span | Label | Status |
 |---|---|---|---|---|---|
-| 2656:0004 | 0x26564 | `FUN_2656_0004` | 483 |  | - |
-| 2656:01e7 | 0x26747 | `FUN_2656_01e7` | 154 |  | - |
-| 2656:0281 | 0x267e1 | `FUN_2656_0281` | 263 |  | - |
-| 2656:0388 | 0x268e8 | `FUN_2656_0388` | 109 |  | - |
-| 2656:03f5 | 0x26955 | `FUN_2656_03f5` | 982 |  | - |
-| 2656:07cb | 0x26d2b | `FUN_2656_07cb` | 624 |  | - |
+| 2656:0004 | 0x26564 | `FUN_2656_0004` | 483 | Frame around the current window, one cell outside it, from a style table of corner and edge pieces | rebuilt |
+| 2656:01e7 | 0x26747 | `FUN_2656_01e7` | 154 | One frame edge: repeats a run of pieces (ended by 0xff) along a row or column | rebuilt |
+| 2656:0281 | 0x267e1 | `FUN_2656_0281` | 263 | Selects text window N, keeping the old window's colours and cursor | rebuilt |
+| 2656:0388 | 0x268e8 | `FUN_2656_0388` | 109 | Clears the current window to its background colour, cursor to the corner | rebuilt |
+| 2656:03f5 | 0x26955 | `FUN_2656_03f5` | 982 | Text printer: word wrap into the current window; codes 0d newline, 02 bg, 06 fg, 09 column, 13 pad; top bit ends | rebuilt |
+| 2656:07cb | 0x26d2b | `FUN_2656_07cb` | 624 | Puts one line in the current window at the cursor; past the bottom scrolls the window up a row | rebuilt |
 | 2656:0a3b | 0x26f9b | `FUN_2656_0a3b` | 170 |  | - |
-| 2656:0ae5 | 0x27045 | `FUN_2656_0ae5` | 121 |  | - |
+| 2656:0ae5 | 0x27045 | `FUN_2656_0ae5` | 121 | Cuts N 8x8 cells from a picture, left to right from a cell position (frame pieces from BTBORDER.CMP) | rebuilt |
 | 2656:0b5e | 0x270be | `FUN_2656_0b5e` | 447 |  | - |
 | 2656:0d1d | 0x2727d | `FUN_2656_0d1d` | 345 |  | - |
 
@@ -259,7 +259,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 273d:002f | 0x273ff | `FUN_273d_002f` | 36 |  | - |
 | 273d:0053 | 0x27423 | `FUN_273d_0053` | 51 |  | - |
 | 273d:0086 | 0x27456 | `FUN_273d_0086` | 79 | Copy a picture buffer to the screen (by display) | replaced |
-| 273d:00d5 | 0x274a5 | `FUN_273d_00d5` | 294 |  | - |
+| 273d:00d5 | 0x274a5 | `FUN_273d_00d5` | 294 | Writes a string straight onto the screen at (column, row) in two colours with the 8x8 font | rebuilt |
 | 273d:01fb | 0x275cb | `FUN_273d_01fb` | 94 |  | - |
 | 273d:0259 | 0x27629 | `FUN_273d_0259` | 195 |  | - |
 | 273d:031c | 0x276ec | `FUN_273d_031c` | 207 |  | - |
@@ -271,7 +271,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 273d:06c3 | 0x27a93 | `FUN_273d_06c3` | 71 |  | - |
 | 273d:070a | 0x27ada | `FUN_273d_070a` | 266 |  | - |
 | 273d:0814 | 0x27be4 | `FUN_273d_0814` | 86 |  | - |
-| 273d:086a | 0x27c3a | `FUN_273d_086a` | 24 |  | - |
+| 273d:086a | 0x27c3a | `FUN_273d_086a` | 24 | Short pause after a message, then flushes the keyboard | read |
 
 ## CODE_15: segment 27c5, 2,155 bytes
 
@@ -357,10 +357,10 @@ read each one before taking it as such.
 | 287f:1303 | 0x29af3 | `FUN_287f_1303` | 17 |  | replaced |
 | 287f:1314 | 0x29b04 | `FUN_287f_1314` | 197 | Set the view position and fetch the 3x3 blocks around it into the cell window | rebuilt |
 | 287f:13d9 | 0x29bc9 | `FUN_287f_13d9` | 435 | Copy one block into the cell window (remap terrain tiles, mirror, or copy as is) | rebuilt |
-| 287f:158c | 0x29d7c | `FUN_287f_158c` | 175 |  | replaced |
-| 287f:163b | 0x29e2b | `FUN_287f_163b` | 168 |  | replaced |
-| 287f:16e3 | 0x29ed3 | `FUN_287f_16e3` | 226 |  | replaced |
-| 287f:17c5 | 0x29fb5 | `FUN_287f_17c5` | 193 |  | replaced |
+| 287f:158c | 0x29d7c | `FUN_287f_158c` | 175 | Position one half-cell up; into the area above at the edge (not past the world's) | rebuilt |
+| 287f:163b | 0x29e2b | `FUN_287f_163b` | 168 | Position one half-cell down; into the area below at the edge | rebuilt |
+| 287f:16e3 | 0x29ed3 | `FUN_287f_16e3` | 226 | Position one half-cell left; into the area to the left at the edge | rebuilt |
+| 287f:17c5 | 0x29fb5 | `FUN_287f_17c5` | 193 | Position one half-cell right; into the area to the right at the edge | rebuilt |
 | 287f:1886 | 0x2a076 | `FUN_287f_1886` | 82 | Build the block grids for all nine areas (calls 11bb nine times) | read |
 | 287f:18d8 | 0x2a0c8 | `FUN_287f_18d8` | 23 |  | replaced |
 | 287f:18ef | 0x2a0df | `FUN_287f_18ef` | 441 | Draw the map view: 13x12 tiles plus half tiles at the edges | rebuilt |
@@ -388,9 +388,9 @@ read each one before taking it as such.
 | 287f:1fbe | 0x2a7ae | `FUN_287f_1fbe` | 80 |  | replaced |
 | 287f:200e | 0x2a7fe | `FUN_287f_200e` | 281 | Copy a packed picture to CGA, Tandy or MCGA screen memory | replaced |
 | 287f:2127 | 0x2a917 | `FUN_287f_2127` | 129 |  | replaced |
-| 287f:21a8 | 0x2a998 | `FUN_287f_21a8` | 97 |  | replaced |
-| 287f:2209 | 0x2a9f9 | `FUN_287f_2209` | 72 |  | replaced |
-| 287f:2251 | 0x2aa41 | `FUN_287f_2251` | 84 |  | replaced |
+| 287f:21a8 | 0x2a998 | `FUN_287f_21a8` | 97 | Draws one font character on Tandy | replaced |
+| 287f:2209 | 0x2a9f9 | `FUN_287f_2209` | 72 | Draws one font character on CGA | replaced |
+| 287f:2251 | 0x2aa41 | `FUN_287f_2251` | 84 | Draws one font character on EGA | replaced |
 | 287f:22a5 | 0x2aa95 | `FUN_287f_22a5` | 83 |  | replaced |
 | 287f:22f8 | 0x2aae8 | `FUN_287f_22f8` | 112 | Unpack .CMP runs in row order | rebuilt |
 | 287f:2368 | 0x2ab58 | `FUN_287f_2368` | 132 | Unpack .CMP runs in column order | rebuilt |
@@ -403,7 +403,7 @@ read each one before taking it as such.
 | 287f:2b45 | 0x2b335 | `FUN_287f_2b45` | 66 |  | replaced |
 | 287f:2b87 | 0x2b377 | `FUN_287f_2b87` | 346 |  | replaced |
 | 287f:2ce1 | 0x2b4d1 | `FUN_287f_2ce1` | 22 |  | replaced |
-| 287f:2cf7 | 0x2b4e7 | `FUN_287f_2cf7` | 109 |  | replaced |
+| 287f:2cf7 | 0x2b4e7 | `FUN_287f_2cf7` | 109 | Widens the font for the CGA and Tandy drivers | replaced |
 | 287f:2d64 | 0x2b554 | `FUN_287f_2d64` | 30 |  | replaced |
 | 287f:2d82 | 0x2b572 | `entry` | 402 |  | replaced |
 | 287f:2f14 | 0x2b704 | `FUN_287f_2f14` | 94 |  | replaced |
