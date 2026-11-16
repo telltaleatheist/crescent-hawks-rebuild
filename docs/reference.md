@@ -94,7 +94,8 @@ Some cases need game state that play would take long to reach, or that the rebui
 yet (a training mission past the first two, before those missions are rebuilt). For those a case
 can set a flag in both programs at the same point of the script: `flag:NN=VV` (hex) in a case's
 keys in `check.py`. `mech:R:BB=VV` (hex) likewise writes byte BB of 'Mech record R (F:c724 +
-0x7d R + BB), for damage that no case can cause yet.
+0x7d R + BB), for damage that no case can cause yet. Both check.py and chr refuse anything
+outside the eight records (R 0-7, BB below 0x7d, so F:c724-cb0b).
 
 - **The original:** run.py's `@poke:SEG:OFFSET=BYTES` (here `@poke:F:d30c+NN=VV`). SNAP writes the
   bytes into the running copy's memory in DOSBox-X at that point; nothing is written to the

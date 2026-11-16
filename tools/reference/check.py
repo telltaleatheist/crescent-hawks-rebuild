@@ -549,6 +549,20 @@ def flag_poke(token):
 RECORDS_AT = 0xC724  # F:c724, the eight 'Mech records (docs/formats/mech.md)
 
 
+def mech_poke(token):
+    """The original's poke for a mech:R:BB=VV token: one byte inside the
+    eight 'Mech records, nothing else."""
+    try:
+        record, _, rest = token[len("mech:"):].partition(":")
+        byte, _, value = rest.partition("=")
+        r, b, v = int(record, 16), int(byte, 16), int(value, 16)
+    except ValueError:
+        raise ValueError(f"bad record poke {token!r}: use mech:R:BB=VV (hex)")
+    if not (0 <= r < 8 and 0 <= b < 0x7d and 0 <= v <= 0xff):
+        raise ValueError(f"refused record poke {token!r}: record 0-7, byte below 7d, value one byte")
+    return "@poke:F:%04x=%02x" % (RECORDS_AT + 0x7d * r + b, v)
+
+
 def original_token(k):
     """A case's key as the original's script has it: flag: is a poke, and
     orig: marks input that only the original asks for (the training quiz,
@@ -556,9 +570,7 @@ def original_token(k):
     if k.startswith("flag:"):
         return flag_poke(k)
     if k.startswith("mech:"):
-        record, _, rest = k[len("mech:"):].partition(":")
-        byte, _, value = rest.partition("=")
-        return "@poke:F:%04x=%02x" % (RECORDS_AT + 0x7d * int(record, 16) + int(byte, 16), int(value, 16))
+        return mech_poke(k)
     if k.startswith("orig:"):
         return k[len("orig:"):]
     if k.startswith("arm:"):
