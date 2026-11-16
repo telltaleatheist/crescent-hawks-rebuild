@@ -3,10 +3,15 @@
 // program rather than in a data file), each piece by name with its place in
 // the unpacked program. Only the importer (formats/import.h) reads the
 // program; the game reads what it wrote. We never ship any of it
-// (docs/rules.md, rule 1). The program is checked by its SHA-256 first, so a
-// different version fails cleanly instead of handing back the wrong bytes.
-// Other versions are added on purpose, when someone has one, with their own
-// table.
+// (docs/rules.md, rule 1).
+//
+// How a copy is accepted: first its layout (the EXEPACK unpack, the size,
+// the header and relocation table, the entry point), so the addresses mean
+// what the table says; then every piece the rebuild imports, each against
+// its own hash. Bytes the rebuild does not import are not checked, so copies
+// that differ only there are accepted. A copy that fails names the pieces
+// that differ instead of handing back the wrong bytes. Other versions are
+// added on purpose, when someone has one, with their own table.
 #pragma once
 
 #include <cstdint>
@@ -27,18 +32,29 @@ struct ExeSpan {
     std::uint16_t segment;
     std::uint16_t offset;
     std::uint16_t size;
+    std::string_view sha256;  // the first 16 hex digits of the piece's SHA-256
 };
 
 // The version we support: DOS 1.03, unpacked SHA-256 below.
 inline constexpr std::string_view kSupportedVersion = "DOS 1.03";
-inline constexpr std::string_view kSupportedUnpackedSha256 =
-    "056b40670a95c4a4e56f7dda405dc0e2f3c98fcb530ed72f476d374051abd16d";
+
+// The unpacked DOS 1.03 program's layout. The header (with the relocation
+// table) is hashed whole: it has no game logic, only where things go.
+struct ExeLayout {
+    std::size_t size;
+    std::uint16_t relocations, header_paragraphs;
+    std::uint16_t cs, ip, ss, sp;
+    std::string_view header_sha256;  // first 16 hex digits
+};
+inline constexpr ExeLayout kDos103Layout = {260528, 3292, 832, 0x187f, 0x2d82, 0x3c5e, 0x0800, "0054271f61ff947d"};
 
 class OriginalExe {
 public:
     // Unpacks and checks `packed` (the BTECH.EXE file). Throws FormatError
     // naming the supported version if it is not that program.
     explicit OriginalExe(std::span<const std::uint8_t> packed);
+    // The same checks on a program already unpacked (for tests).
+    static OriginalExe from_unpacked(std::vector<std::uint8_t> unpacked);
     static OriginalExe load(const std::filesystem::path& game_dir);
 
     // Where a piece is, "ssss:oooo", for the imported files.
@@ -55,8 +71,12 @@ public:
     static std::string text_of(std::span<const std::uint8_t> bytes);
 
     static std::span<const ExeSpan> table();
+    // The SHA-256 of the unpacked program (for the import's manifest).
+    std::string sha256() const;
 
 private:
+    OriginalExe() = default;
+    void check();
     std::vector<std::uint8_t> unpacked_;
     std::size_t image_start_ = 0;  // where the load image starts in unpacked_
 };

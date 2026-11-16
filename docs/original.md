@@ -7,6 +7,11 @@ drivers are in the one executable.
 
 ## Files
 
+The hashes are of the copy this project was studied on. They are not how
+the rebuild accepts a player's copy (docs/import.md, "How it reads the
+program"): a copy that differs only in bytes the rebuild never imports is
+accepted.
+
 | File | Size | SHA-256 |
 |---|---|---|
 | `BTECH.EXE` (as shipped, EXEPACK-packed) | 152,429 | `15a1712682cf1fe50ca9e6a68a4b31d3bef7912401915edf7bb6242be193562a` |

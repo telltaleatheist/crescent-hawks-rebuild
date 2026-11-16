@@ -101,7 +101,7 @@ void import_original(const fs::path& game_dir, const fs::path& data_dir) {
     write_file(manifest_path(data_dir),
                "{\n  \"import_version\": " + std::to_string(kImportVersion) + ",\n  \"source\": " +
                    json_quote("BTECH.EXE " + std::string(kSupportedVersion)) + ",\n  \"exe_sha256\": " +
-                   json_quote(kSupportedUnpackedSha256) + "\n}\n");
+                   json_quote(exe.sha256()) + "\n}\n");
 }
 
 bool ensure_imported(const fs::path& game_dir, const fs::path& data_dir) {

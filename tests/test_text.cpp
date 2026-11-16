@@ -95,7 +95,7 @@ TEST(exe_unpacks_like_the_tool_and_has_the_font) {
     CHECK(path.has_value());
     if (!path) return;
     const auto unpacked = formats::unexepack(formats::read_file(*path));
-    CHECK(formats::sha256_hex(unpacked) == formats::kSupportedUnpackedSha256);
+    CHECK(unpacked.size() == formats::kDos103Layout.size);
     const auto exe = formats::OriginalExe::load(dir);
     CHECK(exe.get("font").size() == 1024);
     CHECK(exe.text("walk.too_deep") == "The water is too deep that way.");
@@ -203,4 +203,50 @@ TEST(text_overrides_replace_ids) {
     }
     CHECK(threw);
     CHECK(formats::json_quote("a\r\x06\"") == R"("a\r\u0006\"")");
+}
+
+// The copy check: a change inside a piece the rebuild imports is refused and
+// named; a change anywhere else (here the first code byte, which no piece
+// covers) is accepted, so a copy that differs only outside them imports.
+TEST(exe_check_names_changed_pieces_and_ignores_the_rest) {
+    const auto dir = chrtest::game_dir();
+    if (dir.empty()) {
+        chrtest::skip("no game folder (set CHR_GAME_DIR)");
+        return;
+    }
+    const auto path = formats::find_game_file(dir, "BTECH.EXE");
+    const auto unpacked = formats::unexepack(formats::read_file(*path));
+    const std::size_t image = std::size_t(formats::kDos103Layout.header_paragraphs) * 16;
+
+    auto outside = unpacked;
+    outside[image] ^= 0xff;  // 1000:0000
+    bool accepted = true;
+    try {
+        formats::OriginalExe::from_unpacked(outside);
+    } catch (const formats::FormatError&) {
+        accepted = false;
+    }
+    CHECK(accepted);
+
+    const auto& span = formats::OriginalExe::table()[1];  // the first table after the font
+    auto inside = unpacked;
+    inside[image + std::size_t(span.segment - 0x1000) * 16 + span.offset] ^= 0xff;
+    std::string message;
+    try {
+        formats::OriginalExe::from_unpacked(inside);
+    } catch (const formats::FormatError& e) {
+        message = e.what();
+    }
+    CHECK(message.find(std::string(span.name)) != std::string::npos);
+    CHECK(message.find("1 of the pieces") != std::string::npos);
+
+    auto layout = unpacked;
+    layout[6] ^= 1;  // the relocation count
+    bool refused = false;
+    try {
+        formats::OriginalExe::from_unpacked(layout);
+    } catch (const formats::FormatError& e) {
+        refused = std::string(e.what()).find("layout") != std::string::npos;
+    }
+    CHECK(refused);
 }

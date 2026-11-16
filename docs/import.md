@@ -36,7 +36,19 @@ be there. The names of the 'Mech templates and the weapons are texts too (`mech.
 ## How it reads the program
 
 `src/formats/exepack.cpp` unpacks BTECH.EXE in memory, with the same steps as
-`tools/unexepack.py`. The result's SHA-256 must be the DOS 1.03 program's (056b4067...).
+`tools/unexepack.py`. The importer then accepts the copy in two steps:
+
+1. **The layout.** The unpacked program must have DOS 1.03's size, relocation count, header size,
+   entry point and stack, and its header (with the relocation table) must hash to DOS 1.03's. Then
+   every address in the import table means what the table says.
+2. **The pieces.** Each piece in the import table (the font, every text, every rule table) carries
+   the first 16 hex digits of its own SHA-256, and each must match. A copy that fails is refused
+   with a message naming the pieces that differ.
+
+Bytes the rebuild does not import are not checked, so a copy of DOS 1.03 that differs from ours
+only elsewhere imports cleanly. The whole-file hash in docs/original.md describes the copy this
+project was studied on; it is not used to accept a copy. `import.json` records the player's own
+copy's SHA-256.
 `src/formats/exe_data.cpp` holds the import table: each piece's name (for text, its text ID),
 segment:offset and length. The repo ships that table, never the text or the tables' values. A text is read the way the
 printer reads it (docs/text.md): it ends at a NUL that is not a code's argument, or after a byte
