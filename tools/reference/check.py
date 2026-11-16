@@ -371,9 +371,11 @@ VERBOSE_CASES, VERBOSE_FULL_CASES = messages_cases("verbose", "enter")
 # figures' terrain and screen places (docs/combat.md 3.14, quirk 36). The
 # state is compared, not the screen.
 DRAWN_ROUNDS = [dict(case, name=case["name"].replace("mission", "drawn"),
-                     keys="arm:1 y" if n == 1 else case["keys"]) for n, case in enumerate(MISSION_ROUNDS, 1)]
+                     keys="arm:1 y" if n == 1 else case["keys"],
+                     match={"the panel": WHOLE_PANEL, "the map": WHOLE_MAP})
+                for n, case in enumerate(MISSION_ROUNDS, 1)]
 DRAWN_CASES = [dict(case, compare=False) for case in MISSION_CASES[:11]] + DRAWN_ROUNDS[:1]
-DRAWN_FULL_CASES = DRAWN_ROUNDS[1:] + [dict(MISSION_FULL_CASES[-1], name="drawn_end", match={})]
+DRAWN_FULL_CASES = DRAWN_ROUNDS[1:] + [dict(MISSION_FULL_CASES[-1], name="drawn_end")]
 BRIEF_CASES, BRIEF_FULL_CASES = messages_cases("brief", "up enter")
 
 # Each sequence is one run of the original: (name, quick cases, --full

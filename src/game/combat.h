@@ -112,8 +112,17 @@ public:
     // the view and the figures drawn at the party's place (287f:18ef,
     // 1000:0e4b) with the tiles' next frame (1000:240b), or with `shown`
     // false only the drawer's writes (fix_terrain_without_graphics);
-    // picture: 1000:48b7.
+    // picture: 1000:48b7. With combat graphics: show: the page drawn so
+    // far made the screen (273d:06c3) and held `frames` (273d:0006); hold:
+    // the screen as it is held; sprite: a sprite slot drawn on the page at a
+    // screen point (1e31:1f73); pixel: a colour plotted on the screen
+    // (273d:031c); sound: 1000:19bf.
     struct Hooks {
+        std::function<void(int frames)> show;
+        std::function<void(int frames)> hold;
+        std::function<void(int slot, int x, int y)> sprite;
+        std::function<void(int x, int y, int colour)> pixel;
+        std::function<void(int n)> sound;
         std::function<void(bool shown)> draw_view;
         std::function<void(int number, int mode)> picture;
         std::function<void(const std::vector<std::string>& ids)> print;
@@ -208,6 +217,8 @@ private:
     // The view redrawn around Jason's figure (1000:17bb, then draw_view):
     // 22e8:000c's after the movement, 1e31:1f09 during a shot.
     void redraw();
+    void show(int frames) const;
+    void sound(int n) const;
     // BTECH.EXE 1e31:0c63 (Ghidra FUN_1e31_0c63)
     void end_round(const std::array<std::int8_t, 24>& moved);
     // BTECH.EXE 1c67:0d7e (Ghidra FUN_1c67_0d7e): every path zeroed.

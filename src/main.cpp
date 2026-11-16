@@ -14,13 +14,15 @@
 // translation.
 // --script plays a key sequence first ("up*5 y", "idle:40", see
 // game/town.h) and prints what each key did. --screenshot renders one frame
-// to the file without opening a window. In a window the town runs at the
+// to the file without opening a window; with --event N, the screen of the
+// N-th thing the logic showed (game/shown.h), and --events lists them. In a window the town runs at the
 // original's pace, one main-loop pass per display frame of a VGA card
 // (game/clock.h).
 //
 // The game folder is --game-dir, else the CHR_GAME_DIR environment variable,
 // else the folder set when the program was built.
 
+#include <algorithm>
 #include <cstdio>
 #include <deque>
 #include <memory>
@@ -59,6 +61,8 @@ struct Options {
     bool import = false;
     bool state = false;      // print the game state after the script
     bool fight_state = false;  // with it, the fight's tables
+    int event = -1;            // --event N
+    bool list_events = false;
     bool show_quiz = false;  // show the training center's quiz (no check)
     int map = 0;             // 0: the start-up, then map 1
     // A test aid: flags set as the town starts (--set-flag NN=VV, hex).
@@ -92,6 +96,10 @@ bool parse(int argc, char** argv, Options& options) {
             options.screenshot = argv[++i];
         } else if (arg == "--state") {
             options.state = true;
+        } else if (arg == "--event" && i + 1 < argc) {
+            options.event = std::atoi(argv[++i]);
+        } else if (arg == "--events") {
+            options.list_events = true;
         } else if (arg == "--fight-state") {
             options.state = options.fight_state = true;
         } else if (arg == "--show-quiz") {
@@ -107,7 +115,7 @@ bool parse(int argc, char** argv, Options& options) {
             }
         } else {
             std::fprintf(stderr, "usage: chr [--game-dir DIR] [--data-dir DIR] [--import] [--map N] [--script KEYS]\n"
-                         "           [--text FILE] [--screenshot FILE.bmp] [--state] [--show-quiz]\n"
+                         "           [--text FILE] [--screenshot FILE.bmp] [--event N] [--events] [--state] [--show-quiz]\n"
                          "  --show-quiz: show the training center's quiz (no check: the right part is\n"
                          "           picked and any answer goes on); by default it is skipped\n"
                          "  test aids (docs/reference.md): [--set-flag NN=VV] sets a flag (hex) as the town\n"
@@ -387,7 +395,35 @@ int main(int argc, char** argv) {
             }
             if (options.state) print_state(*town);
             if (options.fight_state) print_fight_state(*town);
+            if (options.list_events) {
+                for (const auto& e : town->events()) {
+                    if (!e.screen) std::printf("event sound %d\n", e.sound);
+                    else std::printf("event screen %d frames, %zu sprites, %zu pixels%s\n", e.frames,
+                                     e.screen->sprites.size(), e.screen->pixels.size(), e.screen->picture ? ", a picture" : "");
+                }
+            }
         }
+
+        // What the logic showed while it ran on (game/shown.h) is played
+        // when it stops: `played` events are done, the current one has been
+        // up `held` frames. Keys pressed meanwhile wait until the end; then
+        // the logic resumes with them. The script's own are not played.
+        std::size_t played = town ? town->events().size() : 0;
+        if (town && options.event >= 0 && std::size_t(options.event) < played) played = std::size_t(options.event);
+        int held = 0;
+        bool keys_meanwhile = false;
+        const auto playing = [&] { return town && played < town->events().size(); };
+        const auto resume = [&] {
+            if (keys_meanwhile) {
+                keys_meanwhile = false;
+                replay();
+            } else if (town && town->poll_open()) {
+                // 203b:1015 asked whether a key is waiting: none was.
+                if (!keys.empty() && keys.back().idle > 0) ++keys.back().idle;
+                else keys.push_back({0, 1});
+                replay();
+            }
+        };
 
         bool running = status == 0;
         bool reported = false;
@@ -399,7 +435,10 @@ int main(int argc, char** argv) {
                 if (event.type == SDL_EVENT_QUIT) running = false;
                 if (event.type != SDL_EVENT_KEY_DOWN) continue;
                 if (event.key.key == SDLK_ESCAPE) running = false;
-                if (const int k = key_code(event.key.key); k != 0 && town) {
+                if (const int k = key_code(event.key.key); k != 0 && town && playing()) {
+                    keys.push_back({k, 0});
+                    keys_meanwhile = true;
+                } else if (k != 0 && town) {
                     keys.push_back({k, 0});
                     if (town->question_open() || town->place_open() || town->start_up_open()) {
                         replay();
@@ -412,7 +451,23 @@ int main(int argc, char** argv) {
             const Uint64 now = SDL_GetTicksNS();
             const int frames = clock.advance(double(now - last) / 1e9);
             last = now;
-            if (town && frames > 0 && town->start_up_open() && town->full_screen() == chr::assets::kInfocomLogo &&
+            if (playing() && options.screenshot.empty()) {
+                held += frames;
+                const auto& events = town->events();
+                while (played < events.size()) {
+                    // A sound takes no time; a screen at least one frame.
+                    const int cost = events[played].screen ? std::max(1, events[played].frames) : 0;
+                    if (held < cost) break;
+                    held -= cost;
+                    ++played;
+                }
+                if (played == events.size()) {
+                    held = 0;
+                    resume();
+                }
+            } else if (town && options.screenshot.empty() && town->poll_open()) {
+                resume();
+            } else if (town && frames > 0 && town->start_up_open() && town->full_screen() == chr::assets::kInfocomLogo &&
                 options.screenshot.empty()) {
                 // The Infocom screen goes by itself after a while: time is
                 // input there too.
@@ -432,10 +487,20 @@ int main(int argc, char** argv) {
             } else if (const auto quiz = town ? town->quiz() : std::nullopt) {
                 drawn = chr::platform::draw_quiz(renderer, *quiz, palette);
                 drawn = chr::platform::draw_text(renderer, town->text(), palette) && drawn;
+            } else if (playing() && town->events()[played].screen) {
+                const auto& shown = *town->events()[played].screen;
+                drawn = chr::platform::draw_map(renderer, shown.view);
+                drawn = chr::platform::draw_figures(renderer, shown.view, shown.figures) && drawn;
+                drawn = chr::platform::draw_shot_marks(renderer, shown.sprites, shown.pixels, palette) && drawn;
+                drawn = chr::platform::draw_text(renderer, shown.text, palette) && drawn;
+                chr::platform::draw_bars(renderer, town->bars(), palette);
+                if (shown.picture)
+                    drawn = renderer.draw({"O" + std::to_string(shown.picture->number) + ".ANM", 0xffff}, 8, 8) && drawn;
             } else if (town) {
                 const auto view = town->view();
                 drawn = chr::platform::draw_map(renderer, view);
                 drawn = chr::platform::draw_figures(renderer, view, town->figures()) && drawn;
+                drawn = chr::platform::draw_shot_marks(renderer, town->sprites(), town->pixels(), palette) && drawn;
                 drawn = chr::platform::draw_text(renderer, town->text(), palette) && drawn;
                 chr::platform::draw_bars(renderer, town->bars(), palette);
                 for (const auto& box : town->boxes())

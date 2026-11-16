@@ -385,9 +385,13 @@ void Town::show_picture(int number, int mode) {
     if (mode == 2) show = true;
     if (!show) return;
     // The frames play with their delays (formats/anm.h); the picture then
-    // stays as its last frame shows it. Mode 0 (a story picture) waits 60
-    // ticks after and clears the box again.
+    // stays as its last frame shows it. Mode 0 (a story picture) waits 50
+    // frames after it (none for picture 8) and clears the box again.
     if (mode == 0) {
+        if (number != 0) {
+            picture_ = PlacePicture{number};
+            hold_screen(number == 8 ? 0 : 50);
+        }
         text_.select_window(kPanelPictureWindow);
         text_.clear_window();
         picture_.reset();

@@ -134,17 +134,23 @@ until it is destroyed.
 The townspeople's headings are figures 16-23's headings (one table, F:3920), so a fight starts
 from and leaves behind the walkers' headings.
 
-The pauses after a shot (3.8) are not timed: the town's logic runs a fight through to its next
-question at once, so a player sees each round's last line only. The state does not depend on
-them.
+The logic runs a fight on to its next stop at once (the round's poll, docs/resuming.md) and
+records what the screen showed on the way: every page shown with how long it was held, the
+line pixels, the sounds, and the pause after each shot's message (3.8, 12 x DG:015e frames). The
+platform plays them back at the original's pace (`src/game/shown.h`, `main.cpp`) and then
+resumes the fight; a key pressed meanwhile is what the next poll sees.
 
 With combat graphics on, everything the shots' graphics change is rebuilt (3.14): the poses'
 frames and scripts, the parked facings, and the drawer's terrain at every redraw, which changes
-the fight's outcome (quirk 36: in the `drawn` run Jason's Locust starts in water). What the
-graphics show is not: chr does not draw or sound the poses, missiles, lines, explosions or
-pictures yet (the pictures' random draws are made).
+the fight's outcome (quirk 36: in the `drawn` run Jason's Locust starts in water). So is what
+they show: the round's redraw, the poses, the missiles, the lines, the explosions and the
+pictures, matched pixel for pixel at the end of every round by the `drawn` sequence. Steps the
+original shows without a wait (a missile's or an explosion's) are held one display frame each:
+the original's pace there was the machine's speed. A line is shown whole once plotted. The
+sounds are recorded but not played yet (no sound is rebuilt). A story picture is held 50 frames
+at its last frame.
 
-Not rebuilt yet: the shots' graphics on screen, the player's orders, the Arena's spectator, the double agent, and what follows the fight (2.13 is
+Not rebuilt yet: the sounds, the player's orders, the Arena's spectator, the double agent, and what follows the fight (2.13 is
 done; 2.15 is not).
 
 **The cell window in a fight.** The planner's path (3.3) and the line of sight (3.6) read map

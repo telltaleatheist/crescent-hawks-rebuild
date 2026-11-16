@@ -9,6 +9,7 @@
 #include "game/fight.h"
 #include "game/figures.h"
 #include "game/map_view.h"
+#include "game/shown.h"
 #include "platform/renderer.h"
 
 namespace chr::platform {
@@ -46,5 +47,12 @@ bool draw_figures(Renderer& renderer, const game::MapView& view, const std::vect
 bool draw_xor_box(Renderer& renderer, const game::MapView& view, const std::vector<game::Figure>& figures,
                   const game::XorBox& box, const formats::Palette16& palette,
                   const MapLayout& layout = kOriginalMapLayout);
+
+// A shot's sprites and line pixels over the map. Their places are points of
+// the original's 320x200 screen, moved and scaled with the map's window.
+// False if any sprite couldn't be drawn.
+bool draw_shot_marks(Renderer& renderer, const std::vector<game::ShownSprite>& sprites,
+                     const std::vector<game::ShownPixel>& pixels, const formats::Palette16& palette,
+                     const MapLayout& layout = kOriginalMapLayout);
 
 }  // namespace chr::platform

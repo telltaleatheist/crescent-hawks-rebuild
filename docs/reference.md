@@ -138,8 +138,9 @@ fight there; `arm:N` gives chr N - 1 passes after the key instead of the usual 2
 cases end after round 1; `--full` adds rounds 2-8 and the end of the fight. `verbose` is the
 same fight with combat messages Verbose (graphics still off), so every capture compares the last
 shot's line in window 4 too; its quick case is round 1 as well. `brief` (messages Brief) is
-long only. `drawn` is the fight with no messages and combat graphics on: the state only,
-since chr does not show the shots yet; round 1 quick, the rest long. The training
+long only. `drawn` is the fight with no messages and combat graphics on: the screen at each
+round's end shows the last of the shots' graphics; round 1 quick, the rest long. `chr --events`
+lists what the logic showed on the way, and `--event N --screenshot F` renders the N-th. The training
 cases at its start are captured but not compared (`"compare": False`): the `training` sequence
 compares them. These cases compare the fight's tables too: a case with
 `"fight": True` runs `chr --fight-state` and `state.py --fight` (the 24 figures' places,

@@ -399,6 +399,10 @@ bool Town::orders_menu(KeySource& keys) {
     return false;
 }
 
+void Town::hold_screen(int frames) {
+    events_.push_back({Shown{view(), figures(), screen_sprites_, screen_pixels_, text_, picture_}, frames, -1});
+}
+
 Combat Town::combat_rules() {
     Combat::Hooks hooks;
     hooks.print = [this](const std::vector<std::string>& ids) {
@@ -418,9 +422,26 @@ Combat Town::combat_rules() {
             return;
         }
         if (tiles_animate(map_number_)) phase_ = (phase_ + 1) % 3;  // 1000:240b
-        frozen_ = Frozen{live_view(), fight_figures_drawn()};
+        page_ = Frozen{live_view(), fight_figures_drawn()};
+        page_sprites_.clear();
     };
+    hooks.show = [this](int frames) {
+        // 273d:06c3 copies the page's map columns (13-39) to the screen:
+        // whatever text was there is gone.
+        if (page_) frozen_ = page_;
+        screen_sprites_ = page_sprites_;
+        screen_pixels_.clear();
+        text_.forget(13, 0, kTextColumns - 13, kTextRows);
+        hold_screen(frames);
+    };
+    hooks.hold = [this](int frames) { hold_screen(frames); };
+    hooks.sprite = [this](int slot, int x, int y) { page_sprites_.push_back({sprite(slot), x, y}); };
+    hooks.pixel = [this](int x, int y, int colour) { screen_pixels_.push_back({x, y, colour}); };
+    hooks.sound = [this](int n) { events_.push_back({std::nullopt, 0, n}); };
     hooks.picture = [this](int number, int mode) { show_picture(number, mode); };
+    // 1e31:1dcc: 12 frames for each step of the message speed (DG:015e);
+    // from 5 up it waits for a key instead (docs/combat.md 3.8).
+    hooks.pause = [this] { hold_screen(12 * message_speed_); };
     hooks.log = [this](const std::string& line) {
         if (log_.empty() || log_.back() != line) log_.push_back(line);
     };
@@ -474,6 +495,7 @@ bool Town::fight_rounds(int kind, KeySource& keys) {
         const auto waiting = keys.poll();
         if (!waiting) {
             place_open_ = true;  // the keys ran out between rounds
+            poll_open_ = true;
             return false;
         }
         if (*waiting) {

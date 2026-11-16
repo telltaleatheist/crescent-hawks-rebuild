@@ -99,4 +99,23 @@ bool draw_xor_box(Renderer& renderer, const game::MapView& view, const std::vect
     return true;
 }
 
+bool draw_shot_marks(Renderer& renderer, const std::vector<game::ShownSprite>& sprites,
+                     const std::vector<game::ShownPixel>& pixels, const formats::Palette16& palette,
+                     const MapLayout& layout) {
+    const auto& o = kOriginalMapLayout.viewport;
+    const auto& v = layout.viewport;
+    const auto at_x = [&](int x) { return v.x + (x - o.x) * v.width / o.width; };
+    const auto at_y = [&](int y) { return v.y + (y - o.y) * v.height / o.height; };
+    renderer.clip(v.x, v.y, v.width, v.height);
+    bool all = true;
+    for (const auto& s : sprites) all = renderer.draw(s.sprite, at_x(s.x), at_y(s.y)) && all;
+    const int w = std::max(1, v.width / o.width), h = std::max(1, v.height / o.height);
+    for (const auto& p : pixels) {
+        const auto& c = palette[std::size_t(p.colour & 15)];
+        renderer.fill(at_x(p.x), at_y(p.y), w, h, c.r, c.g, c.b);
+    }
+    renderer.clear_clip();
+    return all;
+}
+
 }  // namespace chr::platform

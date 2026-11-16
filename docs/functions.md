@@ -193,7 +193,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 1e31:1df8 | 0x20108 | `FUN_1e31_1df8` | 170 | A place's text cell in the view centred on another, half-cell by half-cell (into F:e486/e488) | rebuilt |
 | 1e31:1ea2 | 0x201b2 | `FUN_1e31_1ea2` | 103 | A line's octant from its y and x differences | rebuilt |
 | 1e31:1f09 | 0x20219 | `FUN_1e31_1f09` | 106 | The shot's redraw: the saved cell window back, the view onto Jason, tiles' frame, view and figures | rebuilt (not shown) |
-| 1e31:1f73 | 0x20283 | `FUN_1e31_1f73` | 108 |  | - |
+| 1e31:1f73 | 0x20283 | `FUN_1e31_1f73` | 108 | A sprite slot drawn on the off-screen page at a screen point (missile, explosion) | rebuilt |
 | 1e31:1fdf | 0x202ef | `FUN_1e31_1fdf` | 203 | Panel: "C-Bills:" and the amount in green, in window 3 | rebuilt |
 
 ## CODE_10: segment 203b, 10,962 bytes
@@ -223,7 +223,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | Address | Linear | Ghidra name | Span | Label | Status |
 |---|---|---|---|---|---|
 | 22e8:000c | 0x22e8c | `FUN_22e8_000c` | 4795 | One combat round: 12 phases of moving and firing; to-hit, location, damage (docs/combat.md) | rebuilt |
-| 22e8:12c7 | 0x24147 | `FUN_22e8_12c7` | 2943 | A shot's animation and sound; kills, wrecks, the leader's death | rebuilt in part |
+| 22e8:12c7 | 0x24147 | `FUN_22e8_12c7` | 2943 | A shot's animation and sound; kills, wrecks, the leader's death | rebuilt (sounds recorded, not played; the spectator in part) |
 | 22e8:1e46 | 0x24cc6 | `FUN_22e8_1e46` | 110 |  | - |
 
 ## CODE_12: segment 24d3, 6,191 bytes
@@ -262,13 +262,13 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 273d:00d5 | 0x274a5 | `FUN_273d_00d5` | 294 | Writes a string straight onto the screen at (column, row) in two colours with the 8x8 font | rebuilt |
 | 273d:01fb | 0x275cb | `FUN_273d_01fb` | 94 |  | - |
 | 273d:0259 | 0x27629 | `FUN_273d_0259` | 195 | Reads a key (287f:0b8a), or plays one back from / records one into the key buffer (F:3938, F:458c) | read |
-| 273d:031c | 0x276ec | `FUN_273d_031c` | 207 |  | - |
+| 273d:031c | 0x276ec | `FUN_273d_031c` | 207 | A horizontal or vertical line (here a point) in a colour, clipped to the screen, on the visible screen | rebuilt (a line shot's pixels) |
 | 273d:03eb | 0x277bb | `FUN_273d_03eb` | 178 |  | - |
 | 273d:049d | 0x2786d | `FUN_273d_049d` | 136 | Unpack a loaded .CMP by its type byte (CGA: reduce to 4 colours) | rebuilt |
 | 273d:0525 | 0x278f5 | `FUN_273d_0525` | 151 | Set the 16-colour palette for the chosen display | rebuilt |
 | 273d:05bc | 0x2798c | `FUN_273d_05bc` | 127 |  | - |
 | 273d:063b | 0x27a0b | `FUN_273d_063b` | 136 | Reads a length-prefixed file (.BLD) into a buffer; asks for the disk if missing | read |
-| 273d:06c3 | 0x27a93 | `FUN_273d_06c3` | 71 |  | - |
+| 273d:06c3 | 0x27a93 | `FUN_273d_06c3` | 71 | The off-screen page's map columns copied to the screen | rebuilt |
 | 273d:070a | 0x27ada | `FUN_273d_070a` | 266 | Cuts a rectangle of a picture into a sprite slot | rebuilt |
 | 273d:0814 | 0x27be4 | `FUN_273d_0814` | 86 |  | - |
 | 273d:086a | 0x27c3a | `FUN_273d_086a` | 24 | Short pause after a message, then flushes the keyboard | read |

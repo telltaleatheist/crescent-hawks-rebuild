@@ -28,6 +28,7 @@
 #include "game/movement.h"
 #include "game/random.h"
 #include "game/records.h"
+#include "game/shown.h"
 #include "game/townspeople.h"
 #include "game/text.h"
 #include "game/text_provider.h"
@@ -79,12 +80,6 @@ private:
 // town's main loop takes a set: item; a question or the start-up refuses one.
 // Throws std::invalid_argument naming the bad token.
 std::deque<ScriptItem> parse_key_script(const std::string& script);
-
-// A place's picture in the upper left box (1000:48b7): O<number>.ANM.
-struct PlacePicture {
-    int number = 0;
-    bool operator==(const PlacePicture&) const = default;
-};
 
 // A bar of the panel, beside a character's name (1000:4bc1): `value` pixels
 // of 12 filled from the bottom, the top `warning` of them in another colour.
@@ -150,6 +145,14 @@ public:
     const std::vector<std::string>& log() const { return log_; }
     // The script ended in the middle of the yes/no question.
     bool question_open() const { return question_open_; }
+    // Stopped at a computer-fought fight's once-a-round "is a key waiting?"
+    // (203b:1015): an idle pass answers no.
+    bool poll_open() const { return poll_open_; }
+    // What the screen showed while the logic ran (game/shown.h), and the
+    // sprites and line pixels it shows now over the map.
+    const std::vector<ShownEvent>& events() const { return events_; }
+    const std::vector<ShownSprite>& sprites() const { return screen_sprites_; }
+    const std::vector<ShownPixel>& pixels() const { return screen_pixels_; }
     // The last place the party went into (its entrance number).
     std::optional<int> entered_place() const { return entered_place_; }
     // The keys ran out inside a place, while its script waited for one.
@@ -227,6 +230,8 @@ private:
     bool special(int n, KeySource& keys);
     bool talk(KeySource& keys);
     void show_picture(int number, int mode);
+    // The screen as it is, held `frames` display frames (an event).
+    void hold_screen(int frames);
     std::optional<int> read_key(KeySource& keys);
     void print_id(const std::string& id);
     void count_members();
@@ -311,7 +316,16 @@ private:
     int messages_ = 2;       // DG:2e38: combat messages (0 none, 1 brief, 2 verbose)
     bool graphics_ = true;   // DG:2e3a: see combat graphics
     bool computer_ = false;  // F:009e: the computer fights for you
-    std::optional<Frozen> frozen_;
+    std::optional<Frozen> frozen_;  // the map as the screen shows it
+    // With combat graphics: the page drawn but not shown yet, the sprites on
+    // it and on the screen, the line pixels on the screen; and every moment
+    // shown so far (game/shown.h).
+    std::optional<Frozen> page_;
+    std::vector<ShownSprite> page_sprites_, screen_sprites_;
+    std::vector<ShownPixel> screen_pixels_;
+    std::vector<ShownEvent> events_;
+    int message_speed_ = 2;  // DG:015e
+    bool poll_open_ = false;
     std::vector<XorBox> boxes_;
     bool party_box_shown_ = true;
     bool fight_unfinished_ = false;

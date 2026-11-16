@@ -997,6 +997,14 @@ int Combat::view_figure() const {
     return m < 8 ? m : 4;
 }
 
+void Combat::show(int frames) const {
+    if (hooks_.show) hooks_.show(frames);
+}
+
+void Combat::sound(int n) const {
+    if (hooks_.sound) hooks_.sound(n);
+}
+
 void Combat::redraw() {
     const int v = view_figure();
     party_ = {figs_.x[std::size_t(v)], figs_.y[std::size_t(v)]};  // 1000:17bb
@@ -1039,17 +1047,31 @@ void Combat::present(int s, int t, int w, int dir) {
     while (!animation_.at_end(s)) {
         animation_.advance(s);  // 1000:1732
         if (reaction) animation_.advance(t);
-        if (s_.on_screen[su]) redraw();  // 1e31:1f09, shown (273d:06c3), 5 frames
+        if (s_.on_screen[su]) {
+            redraw();  // 1e31:1f09
+            show(5);   // 273d:06c3, 273d:0006(5)
+        }
     }
+    // 1000:19bf by weapon.
+    if (w < 3) sound(0x0d);
+    if (w == 0x17 || w == 9 || (w >= 0x13 && w <= 0x16)) sound(3);
+    if (w == 3) sound(5);
+    if (w == 7 || w == 8) sound(6);
+    if (w >= 4 && w <= 6) sound(0x0b);
     // The shot: kind 1 a missile flies, 2 and 3 a line is drawn.
-    int kind = 0;
+    int kind = 0, colour = 0;
     if (w == 0x0a || w == 0x0b || (w >= 0x19 && w <= 0x1f)) kind = 1;
-    if (w == 0x0c || w == 0x0d) kind = 2;
+    if (w == 0x0c || w == 0x0d) {
+        kind = 2;
+        colour = s >= 16 ? 10 : 14;  // (on the CGA 3)
+    }
     if (w >= 0x0f && w <= 0x12) {
         kind = 3;
+        colour = s < 12 ? 12 : 5;  // (on the CGA 2)
         if (s < 12) picture = other ? 7 : 4;
         else if (t == 0 && other) picture = 3;
     }
+    if (kind == 1) sound(1);
     if (kind != 0 && (s_.on_screen[su] || s_.on_screen[tu])) {
         const auto place = [&](int f) {
             if (s_.on_screen[std::size_t(f)]) return std::pair{s_.screen_x[std::size_t(f)], s_.screen_y[std::size_t(f)]};
@@ -1086,8 +1108,15 @@ void Combat::present(int s, int t, int w, int dir) {
                 }
                 const bool inside = sx >= 0x68 && sx < 0x140 && sy >= 0 && sy < 200;
                 if (kind == 1) {
-                    animation_.run(missile);  // frame + 0x68
-                    if (inside) redraw();     // then the missile (1e31:1f73), shown
+                    const int frame = animation_.run(missile) + 0x68;
+                    if (inside) {
+                        // (On the Tandy only every fourth step is drawn.)
+                        redraw();
+                        if (hooks_.sprite) hooks_.sprite(frame, sx, sy);  // 1e31:1f73
+                        show(0);
+                    }
+                } else if (inside && hooks_.pixel) {
+                    hooks_.pixel(sx, sy, colour);  // 273d:031c
                 }
                 if (sx != tx) sx += step_x;
                 if (sy != ty) sy += step_y;
@@ -1098,17 +1127,26 @@ void Combat::present(int s, int t, int w, int dir) {
                     error += major;
                 }
             }
+            if (kind != 1 && hooks_.hold) hooks_.hold(0);  // the line, as plotted
         }
+        if (kind != 1) sound(kind == 2 ? 9 : 2);
     }
     if (!hit_) {
-        redraw();
-    } else if (w > 6 && s_.on_screen[tu]) {
-        int explosion = formats::Tables::kExplosionScript;  // figure 0x18's script
-        while (animation_.script_byte(explosion) != 0xff) {
-            animation_.run(explosion);  // frame + 0xfa, over the target
-            redraw();
+        redraw();  // not shown: the line stays on screen
+    } else {
+        sound(4);
+        if (w > 6 && s_.on_screen[tu]) {
+            int explosion = formats::Tables::kExplosionScript;  // figure 0x18's script
+            const int ex = s_.screen_x[tu], ey = s_.screen_y[tu] - (is_mech(t) ? 8 : 0);
+            while (animation_.script_byte(explosion) != 0xff) {
+                const int frame = animation_.run(explosion) + 0xfa;
+                redraw();
+                if (hooks_.sprite) hooks_.sprite(frame, ex, ey);
+                show(0);
+            }
+            if (hooks_.hold) hooks_.hold(5);
+            if (picture != 0 && hooks_.picture) hooks_.picture(picture, 0);
         }
-        if (picture != 0 && hooks_.picture) hooks_.picture(picture, 0);
     }
     if (is_mech(s)) animation_.set_frame(s, kept);
 }
@@ -1315,7 +1353,10 @@ void Combat::round(bool mission) {
             }
             party_ = before;
         }
-        if (any && (graphics_ || fixes_.fix_terrain_without_graphics)) redraw();
+        if (any && (graphics_ || fixes_.fix_terrain_without_graphics)) {
+            redraw();
+            if (graphics_) show(0);  // 273d:06c3
+        }
         // Firing: each figure's first slot that fires ends its turn.
         for (int f = 0; f < 24; ++f) {
             if (!s_.fight_on || figs_.active[std::size_t(f)] == 0) continue;
