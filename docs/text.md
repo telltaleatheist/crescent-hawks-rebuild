@@ -112,3 +112,76 @@ table in `src/formats/exe_data.cpp` gives each one's address:
 The question "Will you enter the Citadel?" is `walk.enter_question` + `map1.place.1` +
 `walk.enter_question_end`. The yes/no keys are still Y and N whatever the language (to be made
 data with the input layer).
+
+## Interface text and imported text (proposal, for review)
+
+Owen's rule (2026-11-15): generic interface text may ship in a default text file in the repo,
+layered under the import. Story, dialogue, descriptions and every .BLD text stay imported only.
+This list says which IDs go where. Nothing has moved yet.
+
+**The rule used.** *Interface* covers menus, prompts and questions, labels and headings, the
+small pieces a message is built from (punctuation, line breaks, "uses a", "on"), and messages
+about the controls or a rule's state (out of ammo, overheated, can't kick). *Imported only*
+covers names (people, places, 'Mechs, weapons, armour, 'Mech parts), story and dialogue,
+narration of what happened, descriptions and flavour, and the original's own notices.
+
+### Interface: may ship in the repo default (149 IDs)
+
+| IDs | Count | What |
+|---|---|---|
+| walk.too_deep, walk.enter_question, walk.enter_question_end, walk.direction.* | 11 | walking messages, the move log |
+| ui.answer_yes_picked, ui.answer_no_picked | 2 | the yes/no line |
+| panel.party_heading, panel.cbills_label | 2 | panel labels |
+| intro.first_time, intro.load_old_game | 2 | the start-up's two questions |
+| talk.nobody, talk.you_see, talk.done, talk.end, talk.line_end | 5 | the talk menu's frame and pieces |
+| after.repair.break, after.scrap.plural, after.scrap.end, after.salvage.question, after.loot.swap_question, after.loot.swap_for, after.loot.swap_end | 7 | the questions after a fight and their pieces |
+| fight.computer_question, fight.engage, fight.attackers, fight.attackers_mech, fight.attackers_and, fight.attackers_human | 6 | the encounter's questions and the attackers line |
+| orders.* (with orders.mode.0-2), options.* | 28 | the orders menus, movement messages, the combat options |
+| scan.* | 11 | the Scan browser |
+| unit.possessive, unit.weapon_armour, unit.ruined, unit.none | 4 | the unit panel's labels |
+| weapons.* (with weapons.range.0-3), pick.*, destroyed.* | 34 | the Use Weapons screen, the target picker, a 'Mech destroyed |
+| shot.* but shot.squashed, shot.arena_damaged, shot.urbanmechs | 26 | the pieces of a shot's message, hit and miss, critical, kill |
+| location.0-10 | 11 | the hit locations, as labels |
+
+### Imported only (602 IDs)
+
+| IDs | Count | Why |
+|---|---|---|
+| bld.* | 424 | the places' scripts: story and dialogue (all .BLD text) |
+| mapN.place.E, mapN.person.P | - | names from the map files, read from the player's .MTP at run time (not in the import) |
+| character.0-7 | 8 | names |
+| mech.*, weapon.0-32, armour.0-5, quiz.part.0-19 | 67 | names of 'Mechs, weapons, armour and parts |
+| quiz.message, quiz.question | 2 | the quiz scene, which belongs to the copy protection and the manual |
+| intro.notice.0-3 | 4 | the original's trademark and copyright notice: ours would not be theirs |
+| course.* | 12 | the teacher's dialogue |
+| talk.hello, talk.going_to, talk.reason.0-11 | 14 | the townspeople's dialogue |
+| after.* but the seven above | 11 | narration: repairs, scrap, salvage, loot |
+| unit.suspicious | 1 | the double agent's clue (story) |
+| fight.* but the six above | 35 | the encounter descriptions, the double agent's story, how a fight ended |
+| shot.squashed, shot.arena_damaged, shot.urbanmechs | 3 | narration of story events |
+| condition.0-10 | 11 | a person's condition, as flavour descriptions |
+| mission.* | 10 | the training missions' story |
+
+### Borderline: your call
+
+- **location.0-10**: rule terms (the record sheet's hit locations), but BattleTech's own terms.
+  Proposed: interface.
+- **fight.not_evaded, fight.no_escape, fight.eluded, fight.eluded_2, fight.some_fled,
+  fight.all_fled, fight.return**: plain outcome messages, but they narrate. Proposed: imported.
+- **destroyed.mech, destroyed.eject, shot.killed**: combat feedback with a little narration.
+  Proposed: interface.
+- **talk.nobody, intro.load_old_game**: whole sentences, but about the game's own controls.
+  Proposed: interface.
+
+### How it would work (once the list is agreed)
+
+- The repo gains `data/text/interface.json` (id, address, text), holding exactly the
+  interface IDs above, in the original's words as the import writes them. A translation or a
+  makeover can start from it without the player's files.
+- Layers: the override files, then the import, then the repo default. The import still wins
+  wherever it has an ID.
+- Tests: every ID in the default file is on the interface list (a hand-kept list in the test,
+  so a story text can't slip in), and, with the game folder, each text equals the imported one.
+- The rest of this document quotes only interface texts. The window and frame tables above
+  are values now imported into `tables.json` (formats/tables.md); the proposal is to replace them
+  with the layout description alone.
