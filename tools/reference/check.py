@@ -726,6 +726,20 @@ CHAIN_CASES = [dict(case, compare=False) for case in SPOT_CASES] + [
     {"name": "chain_people_walk", "keys": "enter home*13 left home*2 up*4 right down pgup down pgup down pgup down pgup*2 up*5 home*12 left*30", "match": SCREEN},
     {"name": "chain_people_in_town", "keys": "enter", "match": SCREEN},
     {"name": "chain_people_walk_on", "keys": "down", "match": SCREEN},
+    # Mission 4: no computer question; the Locust flees at the first orders
+    # menu, as in `fourth`.
+    {"name": "chain_fourth_waited", "keys": "idle:2900 up*5", "match": SCREEN},
+    {"name": "chain_fourth_greeting", "keys": "y orig:enter*4", "match": SCREEN},
+    {"name": "chain_fourth_briefing", "keys": "y", "match": SCREEN},
+    {"name": "chain_fourth_mech_menu", "keys": "enter", "match": SCREEN},
+    {"name": "chain_fourth_messages", "keys": "enter", "match": SCREEN},
+    {"name": "chain_fourth_graphics", "keys": "up*2 enter", "match": SCREEN},
+    {"name": "chain_fourth_orders", "keys": "enter", "match": SCREEN, "fight": True},
+    {"name": "chain_fourth_fled", "keys": "up enter", "match": SCREEN, "fight": True},
+    {"name": "chain_fourth_walk", "keys": "enter home*3", "match": SCREEN},
+    {"name": "chain_fourth_over", "keys": "left", "match": SCREEN},
+    {"name": "chain_fourth_in_town", "keys": "enter", "match": SCREEN},
+    {"name": "chain_fourth_walk_on", "keys": "down", "match": SCREEN},
 ]
 
 # The long unpoked run: its own tier (`--campaign`, ctest label campaign).
