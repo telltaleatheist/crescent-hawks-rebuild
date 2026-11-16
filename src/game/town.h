@@ -213,6 +213,9 @@ public:
     }
     const CombatState& combat() const { return combat_; }
     const MapMarks& marks() const { return marks_; }
+    // DGROUP:57fe and 5802: the townspeople move by these.
+    int town_ticks() const { return third_; }
+    int mission_ticks() const { return mission_ticks_; }
     // The original's bugs: kept by default, each fixable (game/fixes.h).
     void set_fixes(const Fixes& fixes) {
         fixes_ = fixes;
@@ -289,6 +292,9 @@ private:
     };
     bool mission_walk(MissionWalk& w, KeySource& keys);
     void mission_tick();
+    void mission_draw();
+    void draw_marks();
+    void party_to_jason();
     bool mission_step_done(MissionWalk& w, KeySource& keys);
     void mission_results(const MissionWalk& w);
     void move_townspeople();
@@ -394,6 +400,7 @@ private:
     FightFigures figs_;
     CombatState combat_;
     MapMarks marks_;
+    std::vector<Figure> drawn_marks_;  // what 1000:2a93 drew last
     Fixes fixes_;
     Terrain terrain_{tables_, fixes_};
     // The terrain as the map load leaves it (1000:4dc7: 287f:104e for the

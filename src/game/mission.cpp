@@ -4,6 +4,8 @@
 #include "game/tile_animation.h"
 #include "game/town.h"
 
+#include <cstdio>
+
 namespace chr::game {
 
 namespace {
@@ -73,11 +75,17 @@ bool Town::run_mission(int mode, KeySource& keys) {
         auto& target = mechs_[4];
         target[0x24] = target[0x25] = 0;
         for (int b = 0x27; b <= 0x32; ++b) target[std::size_t(b)] = 0;
-        return fight(1, keys);
+        if (!fight(1, keys)) return false;
+        party_to_jason();
+        w.done = true;
+        break;
     }
     case 3:
         place_mission(0, (random_.next() & 3) + 3);
-        return fight(1, keys);
+        if (!fight(1, keys)) return false;
+        party_to_jason();
+        w.done = true;
+        break;
     default:
         log_.push_back("mission " + std::to_string(mode) + ": not rebuilt");
         fight_unfinished_ = true;
@@ -137,10 +145,39 @@ void Town::mission_tick() {
     if (tiles_animate(map_number_)) phase_ = (phase_ + 1) % 3;
     if (++mission_ticks_ == 1) move_townspeople();
     mission_ticks_ &= 3;
+    mission_draw();
+}
+
+// 287f:18ef, 1000:051b, 273d:06c3: the map and the figures drawn.
+void Town::mission_draw() {
     const auto figures = walk_in_figures();
     record_party_places();
     text_.forget(13, 0, kTextColumns - 13, kTextRows);
     frozen_ = Frozen{live_view(), figures};
+}
+
+// BTECH.EXE 17dc:134b (Ghidra FUN_17dc_134b)
+// After a fight the party stands where Jason's figure is: his 'Mech's
+// (figure 0, two half-cells down, into the next area if that crosses its
+// edge) or his own (figure 4) when he is on foot. The window is built
+// there and the map drawn.
+void Town::party_to_jason() {
+    if (characters_[0][character::kMech] != character::kOnFoot) {
+        std::uint16_t y = std::uint16_t(figs_.y[0] + 2);
+        if (y & 0x80) y = std::uint16_t(y + 0x0f80);
+        position_ = {figs_.x[0], y};
+    } else {
+        position_ = {figs_.x[4], figs_.y[4]};
+    }
+    window_at_ = position_;  // 287f:1314
+    if (window_stale_) {
+        terrain_.map_changed();
+        window_stale_ = false;
+    }
+    char where[32];
+    std::snprintf(where, sizeof where, "back at %04x,%04x", position_.x, position_.y);
+    log_.push_back(where);
+    mission_draw();
 }
 
 // What each mode checks after a tick.
@@ -202,6 +239,23 @@ void Town::mission_results(const MissionWalk& w) {
         break;
     }
     default:
+        if (w.mode > 7) break;
+        // Modes 2-7: passed when Jason's 'Mech is still there and nobody
+        // fled (F:3992).
+        if (mechs_[0][0] != 0xff && !combat_.person_ran) flags_[flag::kPassed] = 1;
+        if (w.mode > 4) {
+            // Gunnery, then Piloting: + r & 1 each, the draw only below 4.
+            for (int s : {3, 4}) {
+                auto& skill = characters_[0][std::size_t(character::kSkills + s)];
+                if (skill < 4) skill = std::uint8_t(skill + (random_.next() & 1));
+            }
+        }
+        if (raid_) {
+            // Outdoors now (flag 04); flag 05 if the 'Mech came through.
+            flags_[flag::kOutdoors] = 1;
+            if (mechs_[0][0] != 0xff) flags_[flag::kRaidMech] = 1;
+        }
+        raid_ = false;
         break;
     }
     // The town's own drawing takes over again.

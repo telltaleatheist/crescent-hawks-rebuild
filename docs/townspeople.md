@@ -116,7 +116,5 @@ party walks over them; a person only steps around the party. Space opens the com
 
 ## Not rebuilt
 
-- `1000:2a93`: the map's objects (up to 64, F:d457 sprite, d497 area, d4d7 x, d517 y;
-  sprites 0x7c/0x7d swap each drawing). All empty in town at a new game.
 - The 'Mechs' figures (0-3, 12-15): none in town at a new game.
 - What a saved game restores (DGROUP:014c set skips the placing).

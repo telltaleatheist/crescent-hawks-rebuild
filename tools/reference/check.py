@@ -349,6 +349,14 @@ MISSION_FULL_CASES = MISSION_ROUNDS[1:] + [
         "match": {"the panel": WHOLE_PANEL, "the map": WHOLE_MAP},
         "fight": True,
     },
+    # A key: the party is put where Jason's 'Mech stands (17dc:134b) and
+    # the mission's walk begins; back to the door it ends, and the script
+    # goes on; a key, and the town. The way back was found with chr's step
+    # check.
+    {"name": "mission_walk", "keys": "enter home*8", "match": {"the panel": WHOLE_PANEL, "the map": WHOLE_MAP}},
+    {"name": "mission_over", "keys": "home*8 left*30", "match": {"the panel": WHOLE_PANEL, "the map": WHOLE_MAP}},
+    {"name": "mission_in_town", "keys": "enter", "match": {"the panel": WHOLE_PANEL, "the map": WHOLE_MAP}},
+    {"name": "mission_walk_on", "keys": "down", "match": {"the panel": WHOLE_PANEL, "the map": WHOLE_MAP}},
 ]
 
 # The same fight with combat messages on (graphics still off): every shot's

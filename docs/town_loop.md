@@ -135,7 +135,9 @@ docs/townspeople.md.
 
 ## The party's figures
 
-`1000:051b` draws the map's objects first (`1000:2a93`, up to 64; not rebuilt), then the
+`1000:051b` draws the map's marks first (`1000:2a93`: each of the 64 in view, at its place as a
+person is placed, its code the sprite; a fire, 0x7c or 0x7d, changes to the other each time it is
+drawn), then the
 party. For each of the 8 characters present (byte 0 of its record not 0xff, byte 12 at least
 8), the k-th one drawn goes at the k-th formation place: screen (DG:02ae[k], DG:02be[k]),
 which is the party's half-cell plus the formation offset (docs/movement.md) plus one half-cell

@@ -44,7 +44,10 @@ bool Town::on_foot(int character) const {
 std::vector<Figure> Town::walk_in_figures() {
     Party walking = party_;
     for (int i = 0; i < 8; ++i) walking.present[std::size_t(i)] = walking.present[std::size_t(i)] && on_foot(i);
-    auto all = party_figures(terrain_, position_, walking, animation_, tables_);
+    draw_marks();
+    auto all = drawn_marks_;
+    const auto party = party_figures(terrain_, position_, walking, animation_, tables_);
+    all.insert(all.end(), party.begin(), party.end());
     const auto people = people_.figures(map_, position_, animation_);
     all.insert(all.end(), people.begin(), people.end());
     const bool odd_x = position_.x & 1, odd_y = position_.y & 1;
@@ -1254,15 +1257,16 @@ bool Town::fight_rounds(int kind, KeySource& keys) {
     std::array<std::int8_t, 8> headings{};
     for (int i = 0; i < 8; ++i) headings[std::size_t(i)] = figs_.heading[std::size_t(16 + i)];
     people_.back_from_fight(headings);
+    townspeople_away_ = false;
     for (int i = 0; i < 8; ++i) {
         figs_.x[std::size_t(16 + i)] = people_.walkers()[std::size_t(i)].at.x;
         figs_.y[std::size_t(16 + i)] = people_.walkers()[std::size_t(i)].at.y;
+        // F:397c + i and F:396c + i: figures 16-23 and 0-7 face no way.
+        animation_.set_direction(16 + i, -1);
         animation_.set_direction(i, -1);
         animation_.set_frame(16 + i, 0x10);
     }
-    log_.push_back("the fight is over: what follows it is not rebuilt");
-    fight_unfinished_ = true;
-    return false;
+    return true;
 }
 
 }  // namespace chr::game

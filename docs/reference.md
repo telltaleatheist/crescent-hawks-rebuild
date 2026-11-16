@@ -49,7 +49,8 @@ segment (DS when it last asked DOS whether a key was waiting), so the game's sta
 back: `tools/reference/memory.py CAPTURE ds:4fc0:3 "[538a]:d370:4"` prints bytes, where
 `[538a]` is the segment whose number is the word at DG:538a, as the game reaches its far data.
 `state.py CAPTURE` prints the state the rig compares, in the form `chr --state` prints it: the
-random numbers, C-Bills, the townspeople, the party's place, the flags, Jason's skills, the 16
+random numbers, C-Bills, the townspeople's two tick counters (DG:57fe, the town's; DG:5802, a
+mission walk's), the townspeople, the party's place, the flags, Jason's skills, the 16
 character records and 8 'Mech records byte for byte, the menus' remembered items, the terrain
 generator's noise table and the nine area grids (docs/wilderness.md). When the script ends SNAP writes SNAPEND.TXT and `run.py` kills DOSBox-X. Nothing
 depends on the clock or on how fast the host is: two runs of the same script give byte-identical
@@ -145,7 +146,9 @@ so the Nth question after it is answered: `arm:1 n` puts the first capture after
 each `idle:1` after it is one more round. chr asks the same question once a round
 (`KeySource::poll`): an idle pass answers no, a key yes, and the end of the script stops the
 fight there; `arm:N` gives chr N - 1 passes after the key instead of the usual 2. The quick
-cases end after round 1; `--full` adds rounds 2-8 and the end of the fight. `verbose` is the
+cases end after round 1; `--full` adds rounds 2-8 and the end of the fight, then a key: the party
+on Jason's 'Mech (17dc:134b) and the mission's walk, with the target's wreck drawn (its mark),
+back to the door (a way found with chr's step check), the script's verdict, and the town. `verbose` is the
 same fight with combat messages Verbose (graphics still off), so every capture compares the last
 shot's line in window 4 too; its quick case is round 1 as well. `brief` (messages Brief) is
 long only. `drawn` is the fight with no messages and combat graphics on: the screen at each

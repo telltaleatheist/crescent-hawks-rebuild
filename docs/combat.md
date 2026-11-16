@@ -192,8 +192,8 @@ sight at long range can (the figure is 8-15 cells from the window's edges).
 
 FUN_17dc_0629. A jump table at cs:086f by mode. All modes share a walking loop like the town's
 (a key is a step, `1000:218f`; with no key the tiles animate and the townspeople move) and the
-results step at 0bf2. Rebuilt: modes 0-3 and the walk (`game/mission.cpp`); in modes 2 and
-3 the rebuild stops after the fight (2.15), so their walk back is not reached yet.
+results step at 0bf2. Rebuilt: modes 0-3 and the walk (`game/mission.cpp`), and the results of
+modes 2-7.
 
 **The walk** (0883..0bef). Each pass, first: with the party back at the training center's door
 (x <= 0x0c3c, 0xc049 <= y <= 0xc04f) the mission ends if its task is done ([bp-2]); if not, the
@@ -229,7 +229,10 @@ The results step (all modes): flag 01 (F:d30d) = 0 first.
   reused the script buffer.
 
 After a fight in modes 2-8, `17dc:134b` puts the party position on figure 0, or on figure 4 when
-Jason is on foot (F:c620 = 8), and redraws.
+Jason is on foot (F:c620 = 8), and redraws: the window built there, the map and the figures
+drawn. Figure 0's y is taken 2 half-cells down (its formation place is 2 above the party's), into
+the next area when that passes the area's edge (y & 0x80: + 0x0f80). The task is then done, and
+the walk takes the party back to the door (`Town::party_to_jason`).
 
 ### 1.4 Opponent set-up `17dc:0d49(a, b)`
 
@@ -611,7 +614,14 @@ lines at once when the fight ends. Before the second line, place picture O2 is s
 ### 2.13 Always last
 
 For every kind, the townspeople's positions are put back from their records; F:397c + i and
-F:396c + i (i 0-7) = ff; the frame of figures 16-23 = 0x10.
+F:396c + i (i 0-7) = ff, that is the facing of figures 16-23 and of figures 0-7; the frame of
+figures 16-23 = 0x10. The facing stays ff through a mission's walk afterwards: the walk moves the
+townspeople with `1000:24c2`, which sets a facing only for a walker near the party, and the
+first town tick after it starts their walking scripts afresh.
+
+Kinds 1 and 2 skip the after-fight steps (2.15): 203b:1051 goes on to them only for kinds 0 and 3.
+For kind 1 the ending is "You should return to base now." (DG:398b) and a key, unless the raid
+(F:3772) or the fight is over without it (DG:014a = 0).
 
 ### 2.14 What the fight writes back
 

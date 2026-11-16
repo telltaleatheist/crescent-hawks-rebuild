@@ -216,9 +216,37 @@ MapView Town::live_view() const {
     return view;
 }
 
+// BTECH.EXE 1000:2a93 (Ghidra FUN_1000_2a93)
+// The map's marks (wrecks, bodies, fires: docs/combat.md 3.13) in view, in
+// ring order, each as its code's sprite at its own place, placed as the
+// people are. A fire drawn changes to its other frame (code 0x7c <-> 0x7d)
+// for the next drawing.
+void Town::draw_marks() {
+    drawn_marks_.clear();
+    const std::uint16_t px = position_.x, py = position_.y;
+    const int party_area = ((px | py) >> 8) & 0xff;
+    for (auto& m : marks_.marks) {
+        const std::uint16_t x = std::uint16_t(m.x | ((m.area & 0x0f) << 8));
+        const std::uint16_t y = std::uint16_t(m.y | ((m.area & 0xf0) << 8));
+        const int col = std::int16_t(std::uint16_t(x - px + 0x1a));
+        const int row = std::int16_t(std::uint16_t(y - py + 0x0c));
+        const bool off_x = (party_area & 0x0f) == (m.area & 0x0f) && (col < 0x0d || col > 0x27);
+        const bool off_y = (party_area & 0xf0) == (m.area & 0xf0) && (row < 0 || row > 0x18);
+        if (col < -0x73 || col > 0xa7 || row < -0x0f80 || row > 0x0f98 || off_x || off_y) continue;
+        Figure f;
+        f.sprite = sprite(m.code);
+        f.half_x = formats::MapPosition{x, y}.half_cell_x() + 1;
+        f.half_y = formats::MapPosition{x, y}.half_cell_y();
+        drawn_marks_.push_back(f);
+        if ((m.code & 0x7e) == 0x7c) m.code ^= 1;
+    }
+}
+
 std::vector<Figure> Town::figures() const {
     if (frozen_) return frozen_->figures;
-    auto all = party_figures(terrain_, position_, party_, animation_, tables_);
+    auto all = drawn_marks_;
+    const auto party = party_figures(terrain_, position_, party_, animation_, tables_);
+    all.insert(all.end(), party.begin(), party.end());
     const auto people = people_.figures(map_, position_, animation_);
     all.insert(all.end(), people.begin(), people.end());
     return all;
@@ -424,6 +452,7 @@ void Town::game_tick() {
     // The map and the figures are drawn again (DGROUP:014a is set in town),
     // over any message box (1000:046e).
     text_.forget(13, 0, kTextColumns - 13, kTextRows);
+    draw_marks();
     record_party_places();
     ++ticks_;
 }

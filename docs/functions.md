@@ -17,7 +17,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 1000:002d | 0x1002d | `FUN_1000_002d` | 142 | Main loop, key half: reads a key, flushes, steps, logs the direction, walking frames (231d), then a game tick (docs/town_loop.md) | rebuilt |
 | 1000:00bb | 0x100bb | `FUN_1000_00bb` | 313 | Main loop: one turn per key; redraws the map, figures and panel each turn; resets the one-question-per-turn flag | read |
 | 1000:01f4 | 0x101f4 | `FUN_1000_01f4` | 807 | Main loop, idle half: waits one display frame (273d:0006); every 11 passes a game tick: timers, random, money, tile animation 240b, 24c2 every third, redraw (docs/town_loop.md) | rebuilt |
-| 1000:051b | 0x1051b | `FUN_1000_051b` | 2352 | Draws the figures: map objects (2a93), the party (walking frame, sinking in water), the townspeople in view, 'Mechs; records the party's places (party and townspeople rebuilt) | rebuilt |
+| 1000:051b | 0x1051b | `FUN_1000_051b` | 2352 | Draws the figures: map objects (2a93), the party (walking frame, sinking in water), the townspeople in view, 'Mechs; records the party's places | rebuilt |
 | 1000:0e4b | 0x10e4b | `FUN_1000_0e4b` | 2279 | The fight's figure drawer: people, then 'Mechs top to bottom; writes on screen, screen place, tile, sink (docs/combat.md 3.14) | rebuilt |
 | 1000:1732 | 0x11732 | `FUN_1000_1732` | 137 | Runs a figure's walking script to its next frame (0xfd direction, 0xfe jump back, 0xff hold) | rebuilt |
 | 1000:17bb | 0x117bb | `FUN_1000_17bb` | 92 |  | - |
@@ -43,7 +43,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 1000:2a4f | 0x12a4f | `FUN_1000_2a4f` | 26 | "Press a key." (DG:050d) and a key | rebuilt |
 | 1000:2a69 | 0x12a69 | `FUN_1000_2a69` | 21 |  | - |
 | 1000:2a7e | 0x12a7e | `FUN_1000_2a7e` | 21 |  | - |
-| 1000:2a93 | 0x12a93 | `FUN_1000_2a93` | 445 | Draws the map objects (up to 64), toggling sprites 0x7c/0x7d | read |
+| 1000:2a93 | 0x12a93 | `FUN_1000_2a93` | 445 | Draws the map's marks in view (the 64-place ring, docs/combat.md 3.13), toggling a fire's sprite 0x7c/0x7d each drawing | rebuilt |
 | 1000:2c50 | 0x12c50 | `FUN_1000_2c50` | 344 | Space: the command menu | read |
 | 1000:2da8 | 0x12da8 | `FUN_1000_2da8` | 1123 | Loads MAP<n>.MTP into a grid (its blocks 0x90 on, docs/wilderness.md); blocking tile; for a new game places the 8 townspeople (8 random numbers) | read |
 | 1000:320b | 0x1320b | `FUN_1000_320b` | 168 | Loads ANIMATE.ICN into the animation buffer | read |
@@ -100,7 +100,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 17dc:05f7 | 0x183b7 | `FUN_17dc_05f7` | 50 | Reads a script word (jump targets) | rebuilt |
 | 17dc:0629 | 0x183e9 | `FUN_17dc_0629` | 1824 | Scene driver: training missions 0-7, the arena (8), the jail break (9); results in flag 01 (docs/combat.md); modes 0-3 and the walk rebuilt | rebuilt (in part) |
 | 17dc:0d49 | 0x18b09 | `FUN_17dc_0d49` | 1538 | Sets up the opponents: enemy pilots and 'Mechs from templates, difficulty armour cut (docs/combat.md) | read |
-| 17dc:134b | 0x1910b | `FUN_17dc_134b` | 147 | Puts the party at figure 0 (or 4) after a fight and redraws | read |
+| 17dc:134b | 0x1910b | `FUN_17dc_134b` | 147 | Puts the party at figure 0 (or 4) after a fight and redraws | rebuilt |
 | 17dc:13de | 0x1919e | `FUN_17dc_13de` | 520 |  | - |
 | 17dc:15e6 | 0x193a6 | `FUN_17dc_15e6` | 467 |  | - |
 | 17dc:17b9 | 0x19579 | `FUN_17dc_17b9` | 573 | Talk to others: who is inside, and where they go next (docs/scripts.md, special 12) | rebuilt |
