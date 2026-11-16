@@ -1087,7 +1087,8 @@ the planner is deterministic.**
 
 ## 5. Every random draw, in order
 
-Draws are r unless written d6 or 2d6 (each of those is one or more raw draws).
+Draws are r unless written d6 or 2d6 (each of those is one or more raw draws). The generator and the game's other draws are in
+docs/random.md.
 
 **Before a random encounter**: the game tick's r (1.1).
 

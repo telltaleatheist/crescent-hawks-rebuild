@@ -104,11 +104,7 @@ the frame's picture.
 
 ## Random numbers
 
-`287f:0bc0` keeps 3 bytes at DG:4fc0 (s0, s1, s2). Each call: s2 shifts left taking bit 1 of
-s0, s1 shifts left taking s2's old top bit; t = (s0 >> 2) - s0 - (1 - s1's old top bit) in 8
-bits; s0 shifts right taking t's low bit at the top; the result is s0 XOR s1. The image starts
-04 03 02; `1000:522c` sets 25 13 90, but only before the demo plays (docs/startup.md). `1000:a9de` seeds it from F:d456 x 0x187 in a
-wait loop not traced yet. Rebuilt in `src/game/random.cpp`.
+The generator (`287f:0bc0`), its seeds and every place that draws are in docs/random.md.
 
 In a new game one more number is drawn between the map load (the townspeople's placing) and
 the main loop's first pass. Comparing the original's memory shows the draw; the code that

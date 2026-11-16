@@ -24,8 +24,9 @@ block in the store, 0x80 + n for block n, so the map's blocks are 0x90 onwards.
 
 ## The noise table
 
-Start-up (1000:50c8) draws the first 256 random numbers (287f:0bc0, from the program image's state
-04 03 02) into P:09fb, before anything else draws one (docs/startup.md). Nothing writes it again.
+Start-up (1000:50c8) draws the first 256 random numbers into P:09fb, before anything else draws
+one, from the fixed image state, so the terrain is the same for every player (docs/random.md).
+Nothing writes it again.
 The rebuild computes it the same way (`Terrain::start_up_noise`); the rig compares it with the
 original's memory in every case (`state noise`).
 

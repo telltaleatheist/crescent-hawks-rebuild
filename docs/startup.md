@@ -13,8 +13,7 @@ with the original by the rig's `start_*` cases (docs/reference.md): all match pi
    one `273d:0006` wait each, or until a key (`273d:002f`, which only looks).
 3. **The title** (`1000:46a7`): BTTITLE.CMP with its palette.
 4. **`1000:50c8`**, the rest of the start-up:
-   - 256 random numbers fill a table at P:09fb (counted in the town's random state,
-     docs/townspeople.md);
+   - 256 random numbers fill a table at P:09fb, the wilderness noise (docs/random.md);
    - `1000:320b` loads ANIMATE.ICN and BTTLTECH.ICN for later (nothing shows);
    - `1000:476d` plays the title's tune, WWOODBT.SIF, until a key or the tune's end.
    - **A key:** the keyboard is emptied, `1000:4dc7` starts a new game (the party, map 1, the
@@ -24,7 +23,7 @@ with the original by the rig's `start_*` cases (docs/reference.md): all match pi
      - No: `intro.load_old_game` and Yes/No again. Yes loads a saved game (`1000:32b3`), No
        goes to the town as after Yes.
    - **No key by the tune's end:** the demo. The keyboard is replaced by DEMOFILE's recorded
-     keys, the random numbers are set to 25 13 90, and the main loop runs with them
+     keys, the random numbers are set to 25 13 90 (docs/random.md), and the main loop runs with them
      (`1000:0000(1)`). Afterwards the title is shown again and the loop repeats.
 
 ## In the rebuild

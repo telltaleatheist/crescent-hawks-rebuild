@@ -33,7 +33,7 @@ placed, and it then walks to `shuffle[r & 7]`.
 The random numbers before that, in a new game: 256 at start-up (`1000:50c8` fills a table at
 P:09fb), 8 in the new-game setup (`1000:4f41`: for each of figures 0-3 and 12-15,
 sprite base 0x92 if the number is odd), then the 8 here, then one more before the main loop's
-first pass that is not located yet. The image starts the generator at 04 03 02.
+first pass that is not located yet. The image starts the generator at 04 03 02 (docs/random.md).
 
 ## Every third game tick (1000:24c2)
 
