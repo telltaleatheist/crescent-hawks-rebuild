@@ -81,8 +81,61 @@ int Combat::window(int index) const {
     return *cell < 0 ? 0xff : *cell;
 }
 
-void Combat::print(const std::string& id) const {
-    if (messages_ != 0 && hooks_.print) hooks_.print(id);
+void Combat::print(const std::vector<std::string>& ids) const {
+    if (messages_ != 0 && hooks_.print) hooks_.print(ids);
+}
+
+void Combat::set_fg(int colour) const {
+    if (hooks_.set_fg) hooks_.set_fg(colour);
+}
+
+std::string Combat::name_id(int c) const {
+    if (c < 0 || c > 15) {
+        note("a name of a character past the records");
+        return "character.0";
+    }
+    return "character." + std::to_string(int(std::int8_t(characters_[std::size_t(c)][character::kName])));
+}
+
+void Combat::shot_line(int s, int t, int w, int c) {
+    const bool full = messages_ == 2, kick = w == weapon::kKick;
+    if (messages_ != 0 && hooks_.clear_box) hooks_.clear_box();
+    set_fg(15);
+    if (s < 12) {
+        if (full) print({name_id(c)});
+        if (s < 4) {
+            if (full) print({"shot.party_mech"});
+            if (kick) print({messages_ == 1 ? "shot.party_kick" : "shot.party_kicks"});
+            else if (full) print({"shot.party_uses"});
+        } else if (full) {
+            print({"shot.party_person_uses"});
+        }
+    } else {
+        set_fg(14);
+        if (full) print({"shot.enemy"});
+        if (s < 16) {
+            if (full) print({"shot.enemy_mech"});
+            if (kick) print({messages_ == 1 ? "shot.enemy_kick" : "shot.enemy_kicks"});
+            else if (full) print({"shot.enemy_uses"});
+        } else if (full) {
+            print({"shot.enemy_human_uses"});
+        }
+    }
+    if (!kick) print({formats::weapon_text_id(w)});
+    if (full) print({"shot.on"});
+    if (!full) return;
+    if (t < 12) {
+        std::vector<std::string> line;
+        if (t < 4) line = {name_id(mechs_[std::size_t(t)][mech::kPilot]), "shot.target_mech"};
+        else line = {name_id(t - 4)};
+        line.push_back("shot.target_end");
+        print(line);
+    } else if (s_.spectator && t == 13) {
+        print({"shot.target_spectator"});
+    } else {
+        print({"shot.target_enemy"});
+        print({t < 16 ? "shot.target_enemy_mech" : "shot.target_enemy_human"});
+    }
 }
 
 void Combat::note(const std::string& line) const {
@@ -275,9 +328,8 @@ bool Combat::place_taken(int f, bool squash) {
         if (std::abs(middle - linear_x(figs_.x[std::size_t(p)])) >= 2) continue;
         const int c = character_of(p);
         if (hooks_.clear_box) hooks_.clear_box();
-        if (p < 12) print("character." + std::to_string(characters_[std::size_t(c)][character::kName]));
-        else print("shot.enemy_human");
-        print("shot.squashed");
+        print({p < 12 ? name_id(c) : "shot.enemy_human"});
+        print({"shot.squashed"});
         if (hooks_.pause) {
             hooks_.pause();
             if (c < 8) hooks_.pause();
@@ -601,8 +653,8 @@ void Combat::critical(int m, int location) {
     if (roll >= 8) count = ((roll - 8) >> 1) + 1;
     else if (fixes_.fix_critical_count) count = 0;  // bug 3
     if (messages_ != 0 && count != 0) {
-        if (hooks_.clear_box) hooks_.clear_box();
-        print("shot.critical");
+        if (hooks_.select_box) hooks_.select_box();
+        print({"shot.critical"});
         critical_hit_ = true;
     }
     const int part = location - mech::kStructure;
@@ -734,12 +786,13 @@ void Combat::destroy_mech(int f) {
     if (s_.spectator && (m == 4 || m == 5)) note("the Arena's spectator destroyed: not rebuilt");
     critical_hit_ = false;
     arm_off_ = false;
-    if (hooks_.clear_box) hooks_.clear_box();
-    if (!(s_.spectator && f == 13)) print("destroyed.mech");
+    if (hooks_.select_box) hooks_.select_box();
+    set_fg(10);  // 1000:28a2
+    if (!(s_.spectator && f == 13)) print({"destroyed.mech"});
     if (m < 4) {
         // A party 'Mech: its crew ejects at its place, the second a
         // half-cell right.
-        if (hooks_.print) hooks_.print("destroyed.eject");  // 2656:03f5: whatever the message level
+        if (hooks_.print) hooks_.print({"destroyed.eject"});  // 2656:03f5: whatever the message level
         for (const int seat : {mech::kPilot, mech::kSecond}) {
             const int c = r[std::size_t(seat)];
             if (c == 0xff) continue;
@@ -750,6 +803,7 @@ void Combat::destroy_mech(int f) {
         }
         if (hooks_.pause) hooks_.pause();
     }
+    set_fg(15);  // F:37fe
 }
 
 void Combat::fire_check(int t, int dx, int dy) {
@@ -789,6 +843,7 @@ void Combat::damage_mech(int s, int t, int w, int dir, int to_hit, bool mission,
         if (at >= 77) note("a cluster column past the table");
     }
     if (two_d6(random_) < to_hit) {
+        print({"shot.mech_missed"});
         damage = 0;
         if (s_.terrain[std::size_t(t)] != 0 && ((w > 0x0f && w < 0x13) || w == weapon::kInferno) &&
             s_.tile[std::size_t(t)] > 0x0f && s_.tile[std::size_t(t)] < 0x40)
@@ -799,7 +854,8 @@ void Combat::damage_mech(int s, int t, int w, int dir, int to_hit, bool mission,
             marks_.add(0x7f, figs_.x[std::size_t(t)], y);
         }
     } else {
-        print("shot.location." + std::to_string(location - mech::kArmour));  // 1e31:1b8f
+        print({"shot.mech_hit"});
+        print({"location." + std::to_string(location - mech::kArmour), "shot.location_end"});  // 1e31:1b8f
     }
     while (damage != 0 && r[0] != 0xff) {
         if (w == weapon::kInferno) {
@@ -856,9 +912,9 @@ void Combat::damage_person(int t, int w, int to_hit, bool& killed) {
         if (s_.terrain[std::size_t(t)] != 0 && ((w > 0x0f && w < 0x13) || w == weapon::kInferno) &&
             s_.tile[std::size_t(t)] > 0x0f && s_.tile[std::size_t(t)] < 0x40)
             fire_check(t, -1, 0);
-        print("shot.missed_person");
+        print({"shot.person_missed"});
     } else {
-        print("shot.hit_person");
+        print({"shot.person_hit"});
     }
     for (; shots != 0; --shots) {
         if (fixes_.fix_person_damage) damage = first;  // bug 4
@@ -881,7 +937,7 @@ void Combat::damage_person(int t, int w, int to_hit, bool& killed) {
 
 void Combat::after_shot(int t, bool killed, bool destroyed, int c) {
     if (killed) {
-        print("shot.killed");
+        print({"shot.killed"});
         figs_.destroyed[std::size_t(t)] = true;
         figs_.active[std::size_t(t)] = 0;
         characters_[std::size_t(c)][character::kName] = character::kEmpty;
@@ -1009,7 +1065,7 @@ bool Combat::fire(int s, int slot, bool mission, const std::array<std::int8_t, 2
                 if (heat > 23) ++to_hit;
             }
         }
-        if (messages_ != 0) note("combat messages: the shot's line is not rebuilt");
+        shot_line(s, t, w, shooter);
         if (shooter < 0 || shooter > 15) {
             // A 'Mech with no pilot: the original reads past the records.
             note("a shot by a 'Mech with no pilot: skill 0");

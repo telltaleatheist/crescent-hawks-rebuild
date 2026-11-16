@@ -118,11 +118,12 @@ Not rebuilt yet on this stretch: `0d49`'s enemy people (its second count) and `0
 
 ### 1.2.2 Mission 2 fought by the computer (rebuilt)
 
-With "Should the computer fight?" answered Yes, combat messages None and combat graphics No, the
-whole fight runs from random draws alone: the planner (section 4), the rounds (section 3) and
+With "Should the computer fight?" answered Yes and combat graphics No, at every combat messages
+level, the whole fight runs from random draws alone: the planner (section 4), the rounds (section 3) and
 the end tests (2.8), up to "You should return to base now." (2.12). Rebuilt in
 `src/game/combat.cpp` (the rules) and `Town::fight_rounds` (the loop), and matched on the
-original by the rig's `mission` sequence (docs/reference.md): the state after rounds 4 to 8 and
+original by the rig's `mission`, `verbose` and `brief` sequences (docs/reference.md): the
+screen (with messages on, every shot's line in window 4, 3.8) and the state after rounds 4 to 8 and
 at the end, every figure's place, heading, facing and frame, the orders, targets, paths, heat
 and map marks, and both 'Mech records byte for byte. In it the party's Locust shoots the enemy
 Locust (which has no weapons, no ammunition and no hips, so it creeps 1 half-cell a round)
@@ -131,8 +132,11 @@ until it is destroyed.
 The townspeople's headings are figures 16-23's headings (one table, F:3920), so a fight starts
 from and leaves behind the walkers' headings.
 
-Not rebuilt yet: what the round shows (combat messages above None, combat graphics), the
-player's orders, the Arena's spectator, the double agent, and what follows the fight (2.13 is
+The pauses after a shot (3.8) are not timed: the town's logic runs a fight through to its next
+question at once, so a player sees each round's last line only. The state does not depend on
+them.
+
+Not rebuilt yet: the combat graphics, the player's orders, the Arena's spectator, the double agent, and what follows the fight (2.13 is
 done; 2.15 is not).
 
 **The cell window in a fight.** The planner's path (3.3) and the line of sight (3.6) read map
@@ -649,13 +653,34 @@ question 8).
 
 ### 3.8 Combat messages
 
-Before the result, with DG:2e38 above 0, window 4 is cleared and a line is built: who fires
-(name and "'s Mech", or "An enemy" + "human" / "Mech"), "kicks" or "uses a" + the weapon, " on ",
-and the target (name, "an enemy Mech." / "human.", or "a spectator."). Level 1 (Brief) prints
-only some parts: the weapon name, or "Kick". Texts DG:3e44 to DG:3ec0, all through `1e31:1dab`
-(prints only when DG:2e38 is set). Then "Hit!" / "Missed!" (people: DG:3ed6 / DG:3ecd) or
-"Hit " + the location name (DG:3ee7, names at DG:3242 / DG:324e) / "Missed!" (DG:3ede).
+`1e31:1dab` prints a text into the current window only when DG:2e38 (the combat messages level:
+0 None, 1 Brief, 2 Verbose) is not 0. Some pieces are first copied into a buffer (DG:0012) and
+printed as one string, which matters for the word wrap. The line, before the skill is taken
+off the to-hit number:
+
+1. With messages on: window 4 is made current and cleared (`2656:0281(4)`, `2656:0388`).
+2. The colour (F:37fe) is 15 for a party shooter, 14 for an enemy, whatever the level.
+3. The shooter. Verbose only, except the Kick:
+   - a party 'Mech: its pilot's name, "'s Mech" (DG:3e44), then "uses a" (DG:3e58), or for the
+     Kick the buffer "kicks" (DG:3e4d; Brief: "Kick", DG:3e53), at both levels;
+   - a party person: the name, "uses a" (DG:3e60);
+   - an enemy: "An enemy" (DG:3e69), then "Mech" (DG:3e81) and "uses a" (DG:3e87) or the Kick's
+     buffer (DG:3e8f / DG:3e95), or "human uses a" (DG:3e73).
+4. The weapon's name (its record's first bytes), unless it is the Kick: at both levels.
+5. Verbose only: " on " (DG:3e9a) and the target: a party 'Mech, its pilot's name and "'s Mech"
+   (DG:3e9f) and "." (DG:3ea7) in one buffer; a party person, the name and "."; an enemy, "an
+   enemy" (DG:3ea9) and "Mech." / "human." (DG:3eb3 / DG:3eb9); the Arena's spectator, "a
+   spectator." (DG:3ec0) instead.
+6. The result, at both levels: a 'Mech target "Missed!" (DG:3ede), or "Hit " (DG:3ee7) and then
+   `1e31:1b8f`'s buffer, the location's name (found through DG:3242, names at DG:324e) and "."
+   (DG:3240); a person "Missed!" (DG:3ecd) or "Hit!" (DG:3ed6). A personal weapon at a 'Mech
+   prints nothing (bug 5).
+7. A critical hit (3.12) makes window 4 current without clearing it and adds "Critical!"
+   (DG:315e) after the line. A 'Mech destroyed (3.14) does the same with light green (colour 10,
+   `1000:28a2`) and "Mech is destroyed!" (DG:2b6d), then the colour goes back to 15.
+
 `1e31:1dcc` pauses after a shot: 12 x DG:015e frames, or until a key when DG:015e is 5 or more.
+Whatever the level, so a fight with messages None pauses as long.
 
 ### 3.9 The hit location
 

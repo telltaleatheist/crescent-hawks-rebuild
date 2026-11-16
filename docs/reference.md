@@ -135,7 +135,10 @@ so the Nth question after it is answered: `arm:1 n` puts the first capture after
 each `idle:1` after it is one more round. chr asks the same question once a round
 (`KeySource::poll`): an idle pass answers no, a key yes, and the end of the script stops the
 fight there; `arm:N` gives chr N - 1 passes after the key instead of the usual 2. The quick
-cases end after round 1; `--full` adds rounds 2-8 and the end of the fight. The training
+cases end after round 1; `--full` adds rounds 2-8 and the end of the fight. `verbose` is the
+same fight with combat messages Verbose (graphics still off), so every capture compares the last
+shot's line in window 4 too; its quick case is round 1 as well. `brief` (messages Brief) is
+long only. The training
 cases at its start are captured but not compared (`"compare": False`): the `training` sequence
 compares them. These cases compare the fight's tables too: a case with
 `"fight": True` runs `chr --fight-state` and `state.py --fight` (the 24 figures' places,

@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <functional>
 #include <string>
+#include <vector>
 
 #include "formats/mtp.h"
 #include "formats/rules.h"
@@ -99,12 +100,17 @@ struct CombatState {
 
 class Combat {
 public:
-    // What a fight shows (and only shows): texts for 1e31:1dab (it prints
-    // only with messages on, DG:2e38), the window 4 clear and the pause
-    // 1e31:1dcc.
+    // What a fight shows (and only shows). print: the texts of the IDs
+    // joined into one string and printed into the current window
+    // (2656:03f5; pieces the original copies into its buffer DG:0012 come
+    // as one call); select_box: window 4 made current; clear_box: and
+    // cleared; set_fg:
+    // the current window's colour (F:37fe); pause: 1e31:1dcc.
     struct Hooks {
-        std::function<void(const std::string& id)> print;
+        std::function<void(const std::vector<std::string>& ids)> print;
+        std::function<void()> select_box;
         std::function<void()> clear_box;
+        std::function<void(int colour)> set_fg;
         std::function<void()> pause;
         std::function<void(const std::string&)> log;
     };
@@ -190,7 +196,14 @@ private:
     void end_round(const std::array<std::int8_t, 24>& moved);
     // BTECH.EXE 1c67:0d7e (Ghidra FUN_1c67_0d7e): every path zeroed.
     void stop_everyone();
-    void print(const std::string& id) const;
+    // BTECH.EXE 1e31:1dab (Ghidra FUN_1e31_1dab): prints only with combat
+    // messages on (DG:2e38).
+    void print(const std::vector<std::string>& ids) const;
+    void set_fg(int colour) const;
+    // The shot's line (22e8:000c, docs/combat.md 3.8).
+    void shot_line(int s, int t, int w, int c);
+    // A character's name ("character." + its name byte).
+    std::string name_id(int c) const;
     void note(const std::string& line) const;
 
     const formats::MtpMap& map_;

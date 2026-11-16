@@ -363,7 +363,13 @@ bool Town::orders_menu(KeySource& keys) {
 
 Combat Town::combat_rules() {
     Combat::Hooks hooks;
-    hooks.print = [this](const std::string& id) { print_id(id); };
+    hooks.print = [this](const std::vector<std::string>& ids) {
+        std::string line;
+        for (const auto& id : ids) line += lookup(texts_, id);
+        text_.print(line);
+    };
+    hooks.set_fg = [this](int colour) { text_.set_fg(colour); };
+    hooks.select_box = [this] { text_.select_window(4); };
     hooks.clear_box = [this] {
         text_.select_window(4);
         text_.clear_window();
@@ -376,11 +382,11 @@ Combat Town::combat_rules() {
 }
 
 // BTECH.EXE 203b:056b..1481, the rounds with the computer in control
-// (docs/combat.md 2.5, 2.8, 2.12, 2.13): with combat messages None and
-// combat graphics off; with either, the fight stops here.
+// (docs/combat.md 2.5, 2.8, 2.12, 2.13), with combat graphics off; with
+// them on, the fight stops here.
 bool Town::fight_rounds(int kind, KeySource& keys) {
-    if (messages_ != 0 || graphics_) {
-        log_.push_back("a fight with combat messages or graphics: not rebuilt");
+    if (graphics_) {
+        log_.push_back("a fight with combat graphics: not rebuilt");
         fight_unfinished_ = true;
         return false;
     }

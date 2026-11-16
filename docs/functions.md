@@ -186,10 +186,10 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 1e31:163e | 0x1f94e | `FUN_1e31_163e` | 109 |  | - |
 | 1e31:16ab | 0x1f9bb | `FUN_1e31_16ab` | 1177 | Is a place taken? Party characters, townspeople, 'Mechs (3 half-cells); 'Mechs also crush (not rebuilt) | rebuilt |
 | 1e31:1b44 | 0x1fe54 | `FUN_1e31_1b44` | 75 |  | - |
-| 1e31:1b8f | 0x1fe9f | `FUN_1e31_1b8f` | 111 |  | - |
+| 1e31:1b8f | 0x1fe9f | `FUN_1e31_1b8f` | 111 | Prints a hit location's name and "." as one string (docs/combat.md 3.8) | rebuilt |
 | 1e31:1bfe | 0x1ff0e | `FUN_1e31_1bfe` | 429 |  | - |
-| 1e31:1dab | 0x200bb | `FUN_1e31_1dab` | 33 |  | - |
-| 1e31:1dcc | 0x200dc | `FUN_1e31_1dcc` | 44 |  | - |
+| 1e31:1dab | 0x200bb | `FUN_1e31_1dab` | 33 | Prints a text into the current window when combat messages are on (DG:2e38) (docs/combat.md 3.8) | rebuilt |
+| 1e31:1dcc | 0x200dc | `FUN_1e31_1dcc` | 44 | The pause after a shot: 12 x DG:015e frames, or a key from 5 on (docs/combat.md 3.8) | rebuilt in part |
 | 1e31:1df8 | 0x20108 | `FUN_1e31_1df8` | 170 |  | - |
 | 1e31:1ea2 | 0x201b2 | `FUN_1e31_1ea2` | 103 |  | - |
 | 1e31:1f09 | 0x20219 | `FUN_1e31_1f09` | 106 |  | - |

@@ -349,10 +349,30 @@ MISSION_FULL_CASES = MISSION_ROUNDS[1:] + [
     },
 ]
 
+# The same fight with combat messages on (graphics still off): every shot's
+# line in window 4, so each capture compares the last shot's text too.
+def messages_cases(level, keys):
+    """The mission with combat messages `level` ("verbose", "brief"):
+    `keys` picks it in the messages menu. (quick cases, long cases)"""
+    question = dict(MISSION_CASES[11 - 2], name=level + "_messages")
+    graphics = {"name": level + "_graphics", "keys": keys,
+                "match": {"the panel": WHOLE_PANEL, "the map": WHOLE_MAP}}
+    rounds = [dict(case, name=case["name"].replace("mission", level),
+                   match={"the panel": WHOLE_PANEL, "the map": WHOLE_MAP}) for case in MISSION_ROUNDS]
+    end = dict(MISSION_FULL_CASES[-1], name=level + "_end")
+    prefix = MISSION_CASES[:9]
+    return prefix + [question, graphics] + rounds[:1], rounds[1:] + [end]
+
+
+VERBOSE_CASES, VERBOSE_FULL_CASES = messages_cases("verbose", "enter")
+BRIEF_CASES, BRIEF_FULL_CASES = messages_cases("brief", "up enter")
+
 # Each sequence is one run of the original: (name, quick cases, --full
 # cases, chr's own options).
 SEQUENCES = [("town", CASES, FULL_CASES, []), ("training", TRAINING_CASES, [], []),
-             ("quiz", QUIZ_CASES, [], ["--show-quiz"]), ("mission", MISSION_CASES, MISSION_FULL_CASES, [])]
+             ("quiz", QUIZ_CASES, [], ["--show-quiz"]), ("mission", MISSION_CASES, MISSION_FULL_CASES, []),
+             ("verbose", VERBOSE_CASES, VERBOSE_FULL_CASES, []),
+             ("brief", [], BRIEF_CASES + BRIEF_FULL_CASES, [])]
 
 # The feeder (tools/capture/snap.asm, docs/reference.md) hands over a key at
 # every 4th poll of the keyboard. The main loop polls once a pass, and after
