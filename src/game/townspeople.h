@@ -61,8 +61,10 @@ public:
     // Where the 'Mech figures (0-3, 12-15) stand, for the next moves: each
     // keeps townspeople off three half-cells of its row.
     void set_mech_places(const std::array<formats::MapPosition, 8>& places) { mech_places_ = places; }
+    // `keep_first_inside` is F:d339 (flag 2d): the first person, if
+    // inside, has its count set to ff before it counts down.
     void move(const formats::MtpMap& map, const Terrain& terrain, formats::MapPosition party, const PartyPlaces& party_places,
-              FigureAnimation& animation, Random& random, std::span<bool, 8> near);
+              FigureAnimation& animation, Random& random, std::span<bool, 8> near, bool keep_first_inside);
 
     // BTECH.EXE 1000:051b (Ghidra FUN_1000_051b), the townspeople's part.
     // The people out walking that are in view, in order.

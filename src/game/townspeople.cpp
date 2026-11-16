@@ -109,13 +109,13 @@ void Townspeople::place_during_fight(const formats::MtpMap& map, int map_number,
 }
 
 void Townspeople::move(const formats::MtpMap& map, const Terrain& terrain, MapPosition party, const PartyPlaces& party_places,
-                       FigureAnimation& animation, Random& random, std::span<bool, 8> near) {
+                       FigureAnimation& animation, Random& random, std::span<bool, 8> near, bool keep_first_inside) {
     for (int i = 0; i < 8; ++i) {
         auto& w = walkers_[std::size_t(i)];
         const int f = kFirstWalker + i;
         near[std::size_t(i)] = false;
         if (w.wait != 0) {
-            // (F:d339 keeps the first person inside: not set in town.)
+            if (i == 0 && keep_first_inside) w.wait = 0xff;  // 1000:24f6
             if (--w.wait == 0) w.at = map.entrances[std::size_t(w.route >> 4)];
             continue;
         }

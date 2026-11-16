@@ -758,6 +758,30 @@ CHAIN_CASES = [dict(case, compare=False) for case in SPOT_CASES] + [
     {"name": "chain_win_over", "keys": "left*5", "match": SCREEN},
     {"name": "chain_win_in_town", "keys": "enter", "match": SCREEN},
     {"name": "chain_win_walk_on", "keys": "down", "match": SCREEN},
+    # Mission 5, two 'Mechs, by orders in the Chameleon. Fewer weapons, or
+    # it overheats: the two Medium Lasers and the Machine Guns on figure 12,
+    # one waypoint. 12 falls in round 8; the first Medium Laser is gone by
+    # then, so the other three go on 13 with a waypoint south, where it can
+    # be seen; 13 falls in round 15.
+    {"name": "chain_five_waited", "keys": "idle:2900 up*5", "match": SCREEN},
+    {"name": "chain_five_greeting", "keys": "y orig:enter*4", "match": SCREEN},
+    {"name": "chain_five_briefing", "keys": "y", "match": SCREEN},
+    {"name": "chain_five_mech_menu", "keys": "enter", "match": SCREEN},
+    {"name": "chain_five_computer", "keys": "enter", "match": SCREEN},
+    {"name": "chain_five_messages", "keys": "n", "match": SCREEN},
+    {"name": "chain_five_graphics", "keys": "enter", "match": SCREEN},
+    {"name": "chain_five_orders", "keys": "n", "match": SCREEN, "fight": True},
+    {"name": "chain_five_weapons", "keys": "up*6 enter up*9 enter enter down down down down enter enter down down down enter enter down enter enter down enter", "match": SCREEN, "fight": True},
+    {"name": "chain_five_walk", "keys": "enter pgdn*4 right*4 enter", "match": SCREEN, "fight": True},
+    {"name": "chain_five_round_1", "keys": "down*9 enter", "match": SCREEN, "fight": True},
+] + [{"name": "chain_five_round_%d" % n, "keys": "enter", "match": SCREEN, "fight": True} for n in range(2, 9)] + [
+    {"name": "chain_five_round_9", "keys": "up*6 enter up*9 down*4 enter enter down*3 enter enter down enter enter down enter enter down*4 enter down*9 enter", "match": SCREEN, "fight": True},
+] + [{"name": "chain_five_round_%d" % n, "keys": "enter", "match": SCREEN, "fight": True} for n in range(10, 16)] + [
+    {"name": "chain_five_end", "keys": "idle:99", "match": SCREEN, "fight": True},
+    {"name": "chain_five_walk_back", "keys": "enter home*11", "match": SCREEN},
+    {"name": "chain_five_over", "keys": "left", "match": SCREEN},
+    {"name": "chain_five_in_town", "keys": "enter", "match": SCREEN},
+    {"name": "chain_five_walk_on", "keys": "down", "match": SCREEN},
 ]
 
 # The long unpoked run: its own tier (`--campaign`, ctest label campaign).

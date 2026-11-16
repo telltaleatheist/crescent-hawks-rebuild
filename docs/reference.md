@@ -180,7 +180,13 @@ The window it compares is the one chr holds, which after the spot's cell is put 
 tile 0x50 until the next step, as the original's does. `chain` (campaign tier only) goes on from `spot`,
 still without a poke: flag 14 runs down again, the third mission's first try (flag 13 is 0: the
 commandant and special 3), the Barracks and back as in `rest` (one step east first, as the
-handback leaves the party a cell west of `rest`'s), the quiz again and the briefing, then the third mission in the Wasp with the computer fighting: the shell falls in round 16, the walk back, the verdict (passed) and the town; then mission 3 the same way (the last soldier falls in round 13), passed; then mission 4, where the Locust flees at the first orders menu: the walk back and the verdict (not passed); then mission 4 again, won by orders: the Wasp loses a fair fight with the Locust (both sides agree), so the Chameleon, every weapon ordered on the Locust and one waypoint; the Locust falls in round 6, then the walk back and the verdict (passed). `fourth` (long only) is mission 4 (flag 00
+handback leaves the party a cell west of `rest`'s), the quiz again and the briefing, then the third mission in the Wasp with the computer fighting: the shell falls in round 16, the walk back, the verdict (passed) and the town; then mission 3 the same way (the last soldier falls in round 13), passed; then mission 4, where the Locust flees at the first orders menu: the walk back and the verdict (not passed); then mission 4 again, won by orders: the Wasp loses a fair fight with the Locust (both sides agree), so the Chameleon, every weapon ordered on the Locust and one waypoint; the Locust falls in round 6, then the walk back and the verdict (passed); then the next mission,
+two 'Mechs, by orders in the Chameleon: two Medium Lasers and the Machine Guns on figure 12 (all
+nine overheat it) and one waypoint; 12 falls in round 8, the remaining three weapons go on 13 with a
+waypoint south where it can be seen, and 13 falls in round 15; the walk back and the verdict
+(passed). This run found two differences, both fixed: special 43's townsperson stays inside while
+flag 2d is set, and the fight's figure drawer draws the map's marks (a fire changes frame each
+drawing). `fourth` (long only) is mission 4 (flag 00
 poked to 4): no computer question (F:0090), the Locust flees at the first orders menu, the walk
 back, the verdict and the town. `raid` (long only) is mission 7 (flag 00 poked to 7), the
 Kurita raid: the computer question (only mission 4 skips it), then Begin Fight round after round

@@ -74,12 +74,13 @@ std::vector<Figure> Town::walk_in_figures() {
 }
 
 // BTECH.EXE 1000:0e4b (Ghidra FUN_1000_0e4b)
-// The fight's figure drawer: the people (figures 4-11, 16-23) in slot
+// The fight's figure drawer: the map's marks (1000:2a93, which turns a
+// fire to its other frame), the people (figures 4-11, 16-23) in slot
 // order, then the 'Mechs (0-3, 12-15) in view top to bottom, each from its
 // own place relative to the view. On the way it writes what the fight
 // later reads about each figure drawn (docs/combat.md 3.14, quirk 36): on
 // screen, its screen place, the tile under it and how deep it stands.
-std::vector<Figure> Town::fight_figures_drawn() {
+std::vector<Figure> Town::fight_figures_drawn(bool marks) {
     auto& c = combat_;
     const std::uint16_t px = position_.x, py = position_.y;
     const int corner = view_corner_index(position_);
@@ -87,6 +88,10 @@ std::vector<Figure> Town::fight_figures_drawn() {
     const bool level = flags_[0x3a] == 0;  // F:d346
     c.on_screen.fill(false);
     std::vector<Figure> out;
+    if (marks) {
+        draw_marks();
+        out = drawn_marks_;
+    }
     for (const int base : {4, 16}) {
         for (int f = base; f < base + 8; ++f) {
             const auto fx = figs_.x[std::size_t(f)], fy = figs_.y[std::size_t(f)];
@@ -1123,7 +1128,7 @@ Combat Town::combat_rules() {
     };
     hooks.draw_view = [this](bool shown) {
         if (!shown) {
-            fight_figures_drawn();
+            fight_figures_drawn(false);  // the fix's unshown drawing: not in the original
             return;
         }
         if (tiles_animate(map_number_)) phase_ = (phase_ + 1) % 3;  // 1000:240b

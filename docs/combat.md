@@ -997,7 +997,7 @@ building, 0x80 / 0x81 a wreck (two sprite sets). The ring is probably the map ob
   ends at its place worked out from Jason's (`1e31:1df8`); it is drawn only when either is on
   screen, and not at all when the two are within 8 pixels.
 
-  **The figure drawer** (`1000:0e4b`), for every figure in view (people, then 'Mechs): F:42f6
+  **The figure drawer** (`1000:0e4b`) first draws the map's marks (`1000:2a93`, a fire changing frame), then for every figure in view (people, then 'Mechs): F:42f6
   (on screen, all 24 cleared first; in the town F:42f6 + i is townsperson i's "near the party"
   flag, `1000:24c2`), F:324c / 327c (its pixel place), F:3750 (the tile under it), F:32ae (the
   rows it sinks: a person 2, 4 in deep water; a 'Mech 8, 16), and for a 'Mech F:45ce (the tile
@@ -1269,9 +1269,9 @@ sequence compares the scene with the original's, over the whole screen and the s
     by the rig: the `raid` sequence ends with the Locust destroyed.
 17. Mission 6 choosing the raid (its one r, the raid if r & 1) is rebuilt but not compared: the
     `raid` sequence pokes flag 00 to 7, which is always the raid.
-18. Special 43 (scripts.md) is rebuilt from the code but not compared: it follows a won mission 5,
-    and the rig has no key sequence yet that destroys the Locust by orders (mission 5 alone has no
-    computer, 1.3).
+18. Answered: special 43 (scripts.md) is compared in the campaign run (`chain`, docs/reference.md),
+    which wins mission 5 by orders. Its walker stays inside while flag 2d is set
+    (docs/townspeople.md).
 
 ## Functions
 

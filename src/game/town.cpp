@@ -485,7 +485,8 @@ void Town::move_townspeople() {
         mechs[std::size_t(4 + m)] = {figs_.x[std::size_t(12 + m)], figs_.y[std::size_t(12 + m)]};
     }
     people_.set_mech_places(mechs);
-    people_.move(map_, terrain_, position_, party_places_, animation_, random_, std::span(combat_.on_screen).first<8>());
+    people_.move(map_, terrain_, position_, party_places_, animation_, random_, std::span(combat_.on_screen).first<8>(),
+                 flags_[flag::kLetOut] != 0);
     if (people_.outside_window) {
         people_.outside_window = false;
         log_.push_back("a person's step looked outside the cell window: read the map instead");

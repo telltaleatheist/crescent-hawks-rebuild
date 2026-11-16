@@ -40,8 +40,10 @@ first pass that is not located yet. The image starts the generator at 04 03 02.
 For each person in turn:
 
 - Inside (+9 not 0): the count goes down; at 0 the person comes out at its last entrance
-  (position = entrance[+8 >> 4]). (If F:d339 is set, the first person's count is set
-  to 0xff first, so it stays in. It is clear in town; what sets it is not read yet.)
+  (position = entrance[+8 >> 4]). If F:d339 (flag 2d) is set, the first person's count is set
+  to 0xff first, so it stays in (at 0xfe). TRAINING.BLD sets flag 2d when mission 5 is won,
+  with special 43, which puts the first person in the Lounge; talking to others there lets it
+  out (docs/scripts.md).
 - Out: only if it is near the party does it move. Near means, comparing the words as plain
   numbers, x above (party x & 0x0f70) - 16 and below (party x | 0x0f) + 16, and the same for y
   with 0xf070; the sums step across area edges like a position (`1000:191b`). So people far

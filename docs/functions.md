@@ -18,7 +18,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 1000:00bb | 0x100bb | `FUN_1000_00bb` | 313 | Main loop: one turn per key; redraws the map, figures and panel each turn; resets the one-question-per-turn flag | read |
 | 1000:01f4 | 0x101f4 | `FUN_1000_01f4` | 807 | Main loop, idle half: waits one display frame (273d:0006); every 11 passes a game tick: timers, random, money, tile animation 240b, 24c2 every third, redraw (docs/town_loop.md) | rebuilt |
 | 1000:051b | 0x1051b | `FUN_1000_051b` | 2352 | Draws the figures: map objects (2a93), the party (walking frame, sinking in water), the townspeople in view, 'Mechs; records the party's places | rebuilt |
-| 1000:0e4b | 0x10e4b | `FUN_1000_0e4b` | 2279 | The fight's figure drawer: people, then 'Mechs top to bottom; writes on screen, screen place, tile, sink (docs/combat.md 3.14) | rebuilt |
+| 1000:0e4b | 0x10e4b | `FUN_1000_0e4b` | 2279 | The fight's figure drawer: the map's marks (2a93), people, then 'Mechs top to bottom; writes on screen, screen place, tile, sink (docs/combat.md 3.14) | rebuilt |
 | 1000:1732 | 0x11732 | `FUN_1000_1732` | 137 | Runs a figure's walking script to its next frame (0xfd direction, 0xfe jump back, 0xff hold) | rebuilt |
 | 1000:17bb | 0x117bb | `FUN_1000_17bb` | 92 |  | - |
 | 1000:1817 | 0x11817 | `FUN_1000_1817` | 88 |  | - |
