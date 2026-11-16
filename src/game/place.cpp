@@ -10,6 +10,7 @@
 #include "formats/game_files.h"
 #include "game/movement.h"
 #include "game/town.h"
+#include "game/training_quiz.h"
 
 namespace chr::game {
 
@@ -64,8 +65,17 @@ bool Town::visit_place(int entrance, KeySource& keys) {
     int file = entrance;
     if (entrance != 0x12 && entrance < 0x16) file = map_.place_scripts[std::size_t(entrance)];
     // 1000:28cc names the game disk the files are on; there are no disks here.
-    // Script 0, the training center, first runs 1c67:08a8 while flag 14 is
-    // clear (not rebuilt: the training missions, docs/scripts.md).
+    // Entrance 0, the training center, first runs the quiz 1c67:08a8 while
+    // flag 14 is clear and no demo plays (F:3938, F:458c; the rebuild has no
+    // demo yet). Only a failed quiz sets flag 14, so
+    // the original asks on every visit until then. The rebuild has no check
+    // and cannot fail; it makes the quiz's draws and shows nothing yet.
+    if (entrance == 0 && flags_[flag::kQuizLock] == 0) {
+        const auto pictures = draw_quiz_pictures(random_);
+        log_.push_back("training quiz: pictures " + std::to_string(pictures[0]) + " " +
+                       std::to_string(pictures[1]) + " " + std::to_string(pictures[2]) +
+                       " (not shown)");
+    }
     if (!run_script(file, keys)) return false;
     // Special 14 after every visit.
     count_members();

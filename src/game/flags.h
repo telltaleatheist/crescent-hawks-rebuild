@@ -19,6 +19,7 @@ inline constexpr int kEnrolled = 0x09;        // d315: special 05's answer
 inline constexpr int kInPlace = 0x0a;         // d316: set on entering a place
 inline constexpr int kPlace = 0x0d;           // d319: which place, for talking
 inline constexpr int kMembers = 0x0e;         // d31a: members besides Jason (special 14)
+inline constexpr int kQuizLock = 0x14;        // d320: set ff by a failed training quiz, counts down
 inline constexpr int kMoneyCountdown = 0x17;  // d323: the money step runs when it passes 0
 inline constexpr int kLetOut = 0x2d;          // d339
 inline constexpr int kLetOutDone = 0x2e;      // d33a

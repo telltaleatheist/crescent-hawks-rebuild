@@ -54,6 +54,7 @@ add_library(chrgame STATIC
   src/game/text_provider.cpp
   src/game/town.cpp
   src/game/townspeople.cpp
+  src/game/training_quiz.cpp
 )
 target_include_directories(chrgame PUBLIC src)
 target_link_libraries(chrgame PUBLIC chrformats)
@@ -64,6 +65,7 @@ add_executable(chrtests
   tests/test_main.cpp
   tests/test_bld.cpp
   tests/test_anm.cpp
+  tests/test_quiz.cpp
   tests/test_cmp.cpp
   tests/test_maps.cpp
   tests/test_text.cpp

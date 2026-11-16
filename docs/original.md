@@ -14,9 +14,11 @@ drivers are in the one executable.
 | `$VERIFY.EXE` | 16,281 | `b410e7135dc48523452dfd14f2288a1374f9d26f6774337a554190811e1a856d` |
 
 Our copy's `BTECH.EXE` is dated 1998, while every other file is from 1988.
-It may have been modified after release. That is not yet checked. Until it
-is, treat any difference from the 1988 logic, such as the code-key check, as
-open.
+**It is not a pristine 1.03: its copy-protection check has been altered** so
+that the training center's quiz always passes (docs/combat.md, "The
+copy-protection check"). The reference rig's results hold for everything
+except that one branch. Nothing else in it is known to differ from the
+release; treat any other surprise in it as open until checked.
 
 The data files are 26 `.BLD` (buildings and their scripts), 15 `.MTP`
 (maps), 22 `.ANM` (animations), 5 `.ICN` and 7 `.CMP` (graphics),
