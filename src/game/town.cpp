@@ -250,10 +250,16 @@ void Town::draw_marks() {
 std::vector<Figure> Town::figures() const {
     if (frozen_) return frozen_->figures;
     auto all = drawn_marks_;
-    const auto party = party_figures(terrain_, position_, party_, animation_, tables_);
+    // Characters in a 'Mech are drawn as their 'Mech, below.
+    Party walking = party_;
+    for (int i = 0; i < 8; ++i) walking.present[std::size_t(i)] = walking.present[std::size_t(i)] && on_foot(i);
+    const auto party = party_figures(terrain_, position_, walking, animation_, tables_);
     all.insert(all.end(), party.begin(), party.end());
     const auto people = people_.figures(map_, position_, animation_);
     all.insert(all.end(), people.begin(), people.end());
+    int k = 0;
+    for (int m = 0; m < 4; ++m)
+        if (mechs_[std::size_t(m)][0] != 0xff) all.push_back(party_mech_figure(m, k++));
     return all;
 }
 

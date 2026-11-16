@@ -205,7 +205,13 @@ placed and the party walks on. One step west from there meets a fifth in reach: 
 ("Attacking force: 4 humans."). Declining doesn't evade them, the computer fights with no
 messages and no graphics, and Jason, alone on foot, is killed in round 5; the chain ends at the
 game-over box. That branch is its own sequence, `chain_death` (campaign tier too), from the same
-captured prefix. `fourth` (long only) is mission 4 (flag 00
+captured prefix. `chain_mech_poked` (campaign tier) branches from the same prefix after the
+fourth walk out: Jason is poked into a 'Mech (the raid's wrecked Chameleon, record 0, gets a first
+letter, armour 0x20 in every location, structure 0x10, working left actuators; character 0 byte
+0x0c = 0). Those are our own test values, not the template's: they only make a working 'Mech for
+the rebuild to be checked against. With a 'Mech in the party the encounter draws change; he walks
+west to the first group in reach, five soldiers, and the computer fights them through the end of
+the fight (2.10, 2.15). `fourth` (long only) is mission 4 (flag 00
 poked to 4): no computer question (F:0090), the Locust flees at the first orders menu, the walk
 back, the verdict and the town. `raid` (long only) is mission 7 (flag 00 poked to 7), the
 Kurita raid: the computer question (only mission 4 skips it), then Begin Fight round after round

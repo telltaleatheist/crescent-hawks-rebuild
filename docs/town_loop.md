@@ -148,7 +148,10 @@ which is the party's half-cell plus the formation offset (docs/movement.md) plus
 right. Its sprite slot is its base (F:d562; Jason's is 0x96, from the new game at `1000:4f0f`)
 plus its walking frame (F:409a). Only Jason's base is known so far; the others are set when
 characters join the party (not rebuilt yet). Then the townspeople (0x10-0x17,
-docs/townspeople.md) and the 'Mechs (docs/combat.md 1.2.1, rebuilt for special 1's walk-in).
+docs/townspeople.md) and the 'Mechs (docs/combat.md 1.2.1): each party 'Mech record 0-3 that is
+not empty, at the k-th 'Mech place. So a character in a 'Mech is not drawn as a person; the party
+shows as its 'Mech, on every map, in town or out. Rebuilt for every drawing (`Town::figures`,
+`Town::party_mech_figure`).
 
 Sinking: the tile under the figure (the cell holding its half-cell) means water in that quarter
 if it is below 0xf6, its high nibble below 3, and it has any of the bits that DG:0332 gives for

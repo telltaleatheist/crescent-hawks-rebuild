@@ -269,10 +269,68 @@ bool Town::after_fight_steps(KeySource& keys) {
 
 // BTECH.EXE 15ab:094b (Ghidra FUN_15ab_094b)
 bool Town::loot(KeySource& keys) {
-    (void)keys;
-    log_.push_back("loot (15ab:094b): not rebuilt");
-    fight_unfinished_ = true;
-    return false;
+    // Character record r's byte b as the original reads it: records past
+    // the sixteen run on into the 'Mech records (F:c724).
+    const auto record_byte = [this](int r, int b) -> int {
+        if (r < 16) return characters_[std::size_t(r)][std::size_t(b)];
+        const int at = (r - 16) * 0x11 + b;
+        return mechs_[std::size_t(at / 0x7d)][std::size_t(at % 0x7d)];
+    };
+    bool anyone = false, weapons = false;
+    int beaten = 0;
+    for (int s = 4; s < 12; ++s) {
+        if (figs_.destroyed[std::size_t(s)] || figs_.destroyed[std::size_t(s + 12)]) anyone = true;
+        if (!figs_.destroyed[std::size_t(s + 12)]) continue;
+        // Bug 27: character s + 12, not s + 4 (enemy person s + 12 is
+        // character s + 4).
+        if (record_byte(fixes_.fix_loot_index ? s + 4 : s + 12, character::kWeapon) != 0) weapons = true;
+        ++beaten;
+    }
+    if (!anyone) return true;
+    text_.select_window(1);
+    clear_window();
+    text_.frame(0);
+    print_id("after.loot.pockets");
+    int cash = 0;
+    for (int n = 0; n < beaten; ++n) cash += (random_.next() & 0x0f) + 3;
+    cash = std::max(cash, 2);
+    text_.set_fg(10);  // 1000:28a2
+    text_.print(std::to_string(cash));  // 273d:0053
+    text_.set_fg(15);
+    print_id("after.loot.cash");
+    money_.cbills += cash;  // F:d370, not redrawn here
+    if (weapons) print_id("after.loot.weapons");
+    print_id("ui.full_stop");  // 1000:2a7e
+    if (!read_key(keys)) {  // 273d:086a, 273d:0259
+        place_open_ = true;
+        return false;
+    }
+    if (!weapons) return true;
+    for (int p = 0; p < 8; ++p) {
+        if (!figs_.destroyed[std::size_t(16 + p)]) continue;
+        const int found = std::int8_t(characters_[std::size_t(8 + p)][character::kWeapon]);
+        if (characters_[1][0] != 0xff) {
+            log_.push_back("a found weapon offered to the party (17dc:15e6): not rebuilt");
+            fight_unfinished_ = true;
+            return false;
+        }
+        // Jason alone: a swap for his own weapon.
+        clear_window();
+        if (found == 0) continue;
+        const int own = std::int8_t(characters_[0][character::kWeapon]);
+        print_id("after.loot.swap_question");
+        print_id(formats::weapon_text_id(own));
+        print_id("after.loot.swap_for");
+        print_id(formats::weapon_text_id(found));
+        print_id("after.loot.swap_end");
+        const auto swap = yes_no(false, keys);  // 1000:1a13(0)
+        if (!swap) {
+            place_open_ = true;
+            return false;
+        }
+        if (*swap) characters_[0][character::kWeapon] = std::uint8_t(found);
+    }
+    return true;
 }
 
 // BTECH.EXE 15ab:0d3d (Ghidra FUN_15ab_0d3d)

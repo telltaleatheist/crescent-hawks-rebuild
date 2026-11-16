@@ -50,19 +50,11 @@ std::vector<Figure> Town::walk_in_figures() {
     all.insert(all.end(), party.begin(), party.end());
     const auto people = people_.figures(map_, position_, animation_);
     all.insert(all.end(), people.begin(), people.end());
-    const bool odd_x = position_.x & 1, odd_y = position_.y & 1;
     int k = 0;
     for (int m = 0; m < 4; ++m) {
         if (mechs_[std::size_t(m)][0] == 0xff) continue;
-        Figure f;
-        f.sprite = sprite(figs_.sprite_base[std::size_t(m)] + animation_.frame(m));
-        f.half_x = position_.half_cell_x() + tables_.mech_formation_x[std::size_t(k)];
-        f.half_y = position_.half_cell_y() + tables_.mech_formation_y[std::size_t(k)] - 2;
-        const int index = view_corner_index(position_) + tables_.mech_cell[std::size_t(k)] +
-                          (odd_x ? tables_.mech_cell_odd_x[std::size_t(k)] : 0) + (odd_y ? tables_.mech_cell_odd_y[std::size_t(k)] : 0);
-        const int quarters = tables_.mech_water[std::size_t(k)] ^ (odd_y ? 5 : 0);
-        // F:32ae + m: the rows it sinks, 0 on a map with tile events (F:d346).
-        f.sink = flags_[flag::kTileEvents] != 0 ? 0 : mech_sink(window_cell(terrain_, position_, index).value_or(-1), quarters);
+        const Figure f = party_mech_figure(m, k);
+        // F:32ae + m: the rows it sinks.
         combat_.terrain[std::size_t(m)] = std::int8_t(f.sink);
         all.push_back(f);
         figs_.x[std::size_t(k)] = move_x(position_.x, tables_.mech_formation_x[std::size_t(k)]);
@@ -71,6 +63,23 @@ std::vector<Figure> Town::walk_in_figures() {
         ++k;
     }
     return all;
+}
+
+// BTECH.EXE 1000:051b, the 'Mechs' part (0x9fe..0xbc6): 'Mech record m
+// drawn at the k-th 'Mech place around the party (k counts the 'Mechs
+// drawn), 24x24 with its foot cell two half-cells below its top, sunk by
+// the water at its foot cell (none on a map with tile events, F:d346).
+Figure Town::party_mech_figure(int m, int k) const {
+    const bool odd_x = position_.x & 1, odd_y = position_.y & 1;
+    Figure f;
+    f.sprite = sprite(figs_.sprite_base[std::size_t(m)] + animation_.frame(m));
+    f.half_x = position_.half_cell_x() + tables_.mech_formation_x[std::size_t(k)];
+    f.half_y = position_.half_cell_y() + tables_.mech_formation_y[std::size_t(k)] - 2;
+    const int index = view_corner_index(position_) + tables_.mech_cell[std::size_t(k)] +
+                      (odd_x ? tables_.mech_cell_odd_x[std::size_t(k)] : 0) + (odd_y ? tables_.mech_cell_odd_y[std::size_t(k)] : 0);
+    const int quarters = tables_.mech_water[std::size_t(k)] ^ (odd_y ? 5 : 0);
+    f.sink = flags_[flag::kTileEvents] != 0 ? 0 : mech_sink(window_cell(terrain_, position_, index).value_or(-1), quarters);
+    return f;
 }
 
 // BTECH.EXE 1000:0e4b (Ghidra FUN_1000_0e4b)
@@ -1265,7 +1274,7 @@ bool Town::fight_rounds(int kind, KeySource& keys) {
                     figs_.active[std::size_t(f)] = 0;
                 if (figs_.active[std::size_t(f)] != 0) over = false;
             }
-            if (!over && combat_.enemy_people_ran && kind == 0) log_.push_back("enemy people running: not rebuilt");
+            if (!over && combat_.enemy_people_ran && kind == 0 && !enemy_people_run(keys, over)) return false;
             if (kind == 1 && figs_.active[0] == 0) over = true;
             if (!exit_zone && kind == 2 && figs_.active[0] == 0 && flags_[0x23] == 0) over = true;
             if (exit_zone) over = true;
@@ -1314,6 +1323,61 @@ bool Town::fight_rounds(int kind, KeySource& keys) {
         return false;
     }
     fight_ends();
+    return true;
+}
+
+// BTECH.EXE 203b:1135..12a1, part of 203b:000a (docs/combat.md 2.10)
+// An enemy person planned against a 'Mech this round: with an enemy 'Mech
+// still up, the people too far from their first target leave; with none,
+// a coin toss ends the fight.
+bool Town::enemy_people_run(KeySource& keys, bool& over) {
+    bool mech_up = false;
+    for (int f = 12; f < 16; ++f)
+        if (figs_.active[std::size_t(f)] != 0) mech_up = true;
+    if (mech_up) {
+        const formats::MapPosition at = position_;
+        combat_.enemy_people_ran = false;
+        bool fled = false;
+        Combat combat = combat_rules();
+        for (int f = 16; f < 24; ++f) {
+            if (figs_.active[std::size_t(f)] == 0) continue;
+            position_ = {figs_.x[std::size_t(f)], figs_.y[std::size_t(f)]};
+            const int target = combat_.targets[std::size_t(f)][0];
+            if (target >= 0x80) {
+                // cbw makes it negative and the original reads before the
+                // position arrays.
+                log_.push_back("an enemy person running from a target byte past 0x7f: not rebuilt");
+                position_ = at;
+                fight_unfinished_ = true;
+                return false;
+            }
+            if (combat.distance(figs_.x[std::size_t(target)], figs_.y[std::size_t(target)]) > 25) {
+                fled = true;
+                figs_.active[std::size_t(f)] = 0;
+                figs_.x[std::size_t(f)] = figs_.y[std::size_t(f)] = 0xffff;
+            }
+        }
+        position_ = at;
+        if (fled) {
+            open_message_box();  // 24d3:17c6 / 17ea, 273d:0259
+            print_id("fight.some_fled");
+            if (!read_key(keys)) {
+                place_open_ = true;
+                return false;
+            }
+        }
+        return true;
+    }
+    combat_.enemy_people_ran = (random_.next() & 1) != 0;
+    if (combat_.enemy_people_ran) {
+        over = true;
+        open_message_box();
+        print_id("fight.all_fled");
+        if (!read_key(keys)) {
+            place_open_ = true;
+            return false;
+        }
+    }
     return true;
 }
 

@@ -619,6 +619,13 @@ If F:374c was set this round (an enemy person was planned against a 'Mech, 4.4):
   its first target is removed. "Some of the enemy humans have fled!" (DG:38bc) if any. No draw.
 - With no enemy 'Mech: one r; r & 1 ends the fight with "The enemy humans have fled!" (DG:38e0).
 
+Only in a kind-0 fight that is not already over. The distance is measured from the person as if the
+party stood there (the party position is set to the person's, then put back). The first target is
+the first byte of its target list (F:3800 + 12 x figure), sign-extended: a byte with bit 7 set would
+index before the position arrays. The fight ends as a fight, not a flight, so 2.15 runs its
+fought path. Rebuilt (`Town::enemy_people_run`), except the sign-extended case, which logs and
+stops.
+
 ### 2.11 The raid story
 
 In the raid, one story line per round (five lines, far pointer table DG:3a2e), all remaining
@@ -726,6 +733,18 @@ marked destroyed: "You dig through the soldiers' pockets and find" (DG:1085) a s
 + 3 per beaten enemy person (at least 2 in all) C-Bills. If weapons were found (bug 27), each
 beaten enemy person's weapon is offered: when Jason is alone, as a swap for his own (DG:10e5,
 default no); otherwise through `17dc:15e6`.
+
+In detail: window 1 is selected, cleared and framed (`2656:0004(0)`); the pocket text; the sum
+in light green (`1000:28a2`), then colour 15 and DG:10b5; the sum is added
+to the C-Bills (F:d370) without redrawing them; the weapons line (DG:10c6) if any were found;
+"." (DG:051d, `1000:2a7e`); the message pause and a key (`273d:086a`, `0259`). Then, only if
+weapons were found, for each beaten enemy person 0-7 in order: with a second party member,
+`17dc:15e6` with that person's weapon (not rebuilt); with Jason alone, the window is cleared and,
+if the person's weapon is not 0, the swap question (DG:10e5), Jason's weapon's name, DG:10ff, the
+found one's name, DG:1113, and a yes/no with No first; Yes swaps them. The
+weapons test reads character s + 12 for figure s + 12 (s = 4-11), past the sixteen records into
+'Mech record 0, whose name and armour bytes are seldom 0: so Jason is usually offered a swap even
+when the soldiers carried nothing. Rebuilt (`Town::loot`), except `17dc:15e6`.
 
 ## 3. One round: `22e8:000c`
 

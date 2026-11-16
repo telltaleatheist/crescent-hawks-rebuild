@@ -826,8 +826,32 @@ CHAIN_DEATH_CASES = [dict(case, compare=False) for case in CHAIN_CASES] + [
     {"name": "chain_enc_over", "keys": "idle:1", "match": SCREEN},
 ]
 
+# Poked: from chain_out_4, Jason is put in a 'Mech (docs/reference.md,
+# "Pokes"): the raid's wrecked Chameleon record 0 gets a first letter, armour
+# and structure, and character 0 byte 0x0c says he pilots record 0. The
+# values are our own test values, not the template's (docs/reference.md).
+# Then the walk west to the first
+# encounter in reach, five soldiers, which the computer fights.
+MECH_POKES = " ".join(["char:0:0c=00", "mech:0:00=43"] + ["mech:0:%02x=20" % b for b in range(0x11, 0x1c)]
+                      + ["mech:0:%02x=10" % b for b in range(0x1c, 0x24)] + ["mech:0:24=ff"])
+CHAIN_MECH_POKED_CASES = [dict(case, compare=False) for case in CHAIN_CASES[:CHAIN_CASES.index(
+    next(c for c in CHAIN_CASES if c["name"] == "chain_out_4")) + 1]] + [
+    # The state only: the original's screen still shows Jason on foot until
+    # its next drawing, chr's draws the poked 'Mech at once.
+    {"name": "chain_mech_poked", "keys": MECH_POKES + " idle:1", "match": {}},
+    {"name": "chain_mech_walk", "keys": "left*29", "match": SCREEN},
+    {"name": "chain_mech_enc", "keys": "left", "match": SCREEN},
+    {"name": "chain_mech_round_1", "keys": "y y enter arm:1 n", "match": {}, "fight": True},
+    {"name": "chain_mech_end_1", "keys": "enter", "match": SCREEN},
+    {"name": "chain_mech_end_2", "keys": "enter", "match": SCREEN},
+    {"name": "chain_mech_end_3", "keys": "enter", "match": SCREEN},
+    {"name": "chain_mech_loot", "keys": "enter", "match": SCREEN},
+    {"name": "chain_mech_swap", "keys": "enter", "match": SCREEN},
+    {"name": "chain_mech_return", "keys": "enter", "match": SCREEN},
+]
+
 # The long unpoked run: its own tier (`--campaign`, ctest label campaign).
-CAMPAIGN = {"chain", "chain_death"}
+CAMPAIGN = {"chain", "chain_death", "chain_mech_poked"}
 
 SEQUENCES = [("town", CASES, FULL_CASES, []), ("training", TRAINING_CASES, [], []),
              ("quiz", QUIZ_CASES, [], ["--show-quiz"]), ("mission", MISSION_CASES, MISSION_FULL_CASES, []),
@@ -847,6 +871,7 @@ SEQUENCES = [("town", CASES, FULL_CASES, []), ("training", TRAINING_CASES, [], [
              ("rest", [], REST_CASES, []),
              ("chain", [], CHAIN_CASES, []),
              ("chain_death", [], CHAIN_DEATH_CASES, []),
+             ("chain_mech_poked", [], CHAIN_MECH_POKED_CASES, []),
              ("handover", [], HANDOVER_CASES, [])]
 
 # The feeder (tools/capture/snap.asm, docs/reference.md) hands over a key at

@@ -357,6 +357,7 @@ private:
     static constexpr int kQuizMenu = 0x25;
     void build_window();
     void run_map_loads();
+    bool enemy_people_run(KeySource& keys, bool& over);
     std::optional<StepResult> step_party(Step step, KeySource& keys);
     MechParty active_mechs() const;
     // Which of 'Mech records 0-3 exist (byte 0 not ff).
@@ -366,6 +367,7 @@ private:
         return exist;
     }
     std::vector<Figure> walk_in_figures();
+    Figure party_mech_figure(int m, int k) const;
     std::vector<Figure> fight_figures_drawn(bool marks = true);
     void print_unit_heading(int fig);
     bool on_foot(int character) const;
