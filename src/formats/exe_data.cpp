@@ -20,6 +20,24 @@ constexpr std::array kDos103 = {
     // 2c6c:a661, 1,024 bytes: the 8x8 font, one bit per pixel, 8 bytes per
     // character, characters 0..127 (273d:00d5 masks with 0x7f).
     ExeSpan{ExeSpan::Kind::Font, "font", 0x2c6c, 0xa661, 0x400},
+    // The rule tables (formats/rules.h, docs/formats/mech.md), written to
+    // rules/*.json. The eight 'Mech templates, 0x7d bytes each, that
+    // 17dc:0d49 and the new game (24d3) copy into the 'Mech records:
+    ExeSpan{ExeSpan::Kind::Table, "rules.mech_templates", 0x37e8, 0x02f0, 8 * 0x7d},
+    // The weapon table, 0x21 records of 0x11 bytes (22e8:000c, 1e31:0f24):
+    ExeSpan{ExeSpan::Kind::Table, "rules.weapons", 0x46db, 0x2ed8, 0x21 * 0x11},
+    // 22e8:000c's hit location table, DG:2e40 + 11 * side + 2d6 (4 x 11):
+    ExeSpan{ExeSpan::Kind::Table, "rules.hit_locations", 0x46db, 0x2e42, 44},
+    // 22e8:000c's cluster table, DG:2e5e + 7 * 2d6 + column (11 x 7):
+    ExeSpan{ExeSpan::Kind::Table, "rules.clusters", 0x46db, 0x2e6e, 77},
+    // The side hit by facing difference, DG:2d11 + (-7..7):
+    ExeSpan{ExeSpan::Kind::Table, "rules.facing_sides", 0x46db, 0x2d0a, 15},
+    // The to-hit modifier by the target's steps so far, DG:2d1a + 0..12:
+    ExeSpan{ExeSpan::Kind::Table, "rules.target_movement", 0x46db, 0x2d1a, 13},
+    // 17dc:0d49's armour cut by difficulty, DG:165a + 0..6:
+    ExeSpan{ExeSpan::Kind::Table, "rules.difficulty_armour", 0x46db, 0x165a, 7},
+    // The personal armour types' points, DG:4ddb + 0..5 (1000:3a49, 15ab:1a8f, 24d3:0a3c):
+    ExeSpan{ExeSpan::Kind::Table, "rules.personal_armour", 0x46db, 0x4ddb, 6},
     // Text the game shows. The names are the text IDs (docs/text.md): a
     // text provider hands them out, and an override file can replace them.
     // 1000:1c12, the step check:
@@ -138,8 +156,9 @@ std::span<const std::uint8_t> OriginalExe::get(std::string_view name) const {
     return std::span(unpacked_).subspan(at, it->size);
 }
 
-std::string OriginalExe::text(std::string_view name) const {
-    const auto bytes = get(name);
+std::string OriginalExe::text(std::string_view name) const { return text_of(get(name)); }
+
+std::string OriginalExe::text_of(std::span<const std::uint8_t> bytes) {
     std::size_t n = 0;
     while (n < bytes.size()) {
         const std::uint8_t c = bytes[n];

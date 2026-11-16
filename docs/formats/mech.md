@@ -7,8 +7,23 @@ combat reads. How they are used is in [combat.md](../combat.md); the prefixes DG
 **None of these tables is shipped.** The importer (docs/import.md) reads them from the player's
 own BTECH.EXE (version-checked, at the addresses below) and writes plain data files in the
 player's data folder: the templates to `rules/mechs.json`, the weapon table to
-`rules/weapons.json`, the rest to `rules/combat.json` (proposed names). The repo holds only the
-layouts and addresses on this page. The few numbers quoted are examples.
+`rules/weapons.json`, the rest to `rules/combat.json` (`formats/rules.h`, import version 7). The
+repo holds only the layouts and addresses on this page. The few numbers quoted are examples.
+
+**The files.** Every entry carries its address in the program. In `mechs.json` each template has
+an `id` (locust, wasp, stinger, commando, chameleon, jenner, spectator, urbanmech, in the
+program's order), its 16 name bytes as stored (`record_name`, part of the record) and one key per
+field of the table below: `tonnage`, `armour`, `structure`, `actuators`, `heat_sinks`, `ammo`,
+`walk_mp`, `jump_mp`, `slots`, `max_armour`, `max_structure`, `start_actuators`, `start_ammo`,
+`engine_hits`, `gyro_hits`, `sensor_hits`, `byte_78`, `pilot`, `second_pilot`, `model`,
+`byte_7c`. In `weapons.json` each weapon has its `number`, `personal`, then `damage` (or, for
+people's weapons, `damage_fixed` and `damage_d6`), `shots` (the cluster column for missiles),
+`heat`, `min_range`, `short`, `medium`, `long` and `skill`: the packed bytes split into their
+nibbles and bit fields. `combat.json` has `hit_locations` (location 0-10, not the armour byte),
+`clusters`, `facing_sides`, `target_movement`, `difficulty_armour` and `personal_armour`. The
+names the player sees are texts, `mech.<id>` and `weapon.<n>`, in `text/english.json`. The game
+keeps the records as the original's bytes in memory; a test checks that the files give those
+bytes back exactly.
 
 ## Where the records live
 

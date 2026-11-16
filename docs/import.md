@@ -19,13 +19,17 @@ user's application-data folder (on macOS `~/Library/Application Support/crescent
 
 ## What it writes
 
-    import.json          {"import_version": 4, "source": "BTECH.EXE DOS 1.03", "exe_sha256": ...}
+    import.json          {"import_version": 7, "source": "BTECH.EXE DOS 1.03", "exe_sha256": ...}
     text/english.json    {"texts": [{"id": ..., "address": "ssss:oooo", "text": ...}, ...]}
     font/font.txt        the font (docs/formats/font.md)
+    rules/mechs.json     the 'Mech templates   } the rule tables built into the program,
+    rules/weapons.json   the weapon table      } with named fields
+    rules/combat.json    the combat tables     } (docs/formats/mech.md)
 
 The places' texts come from the player's .BLD files (docs/formats/bld.md): every text a script
 can print, as `bld.<file>.<offset>` with the address `FILE.BLD+offset`. All 26 .BLD files must
-be there.
+be there. The names of the 'Mech templates and the weapons are texts too (`mech.<id>`,
+`weapon.<n>`), read from inside the rule tables.
 
 `import.json` is written last, so an interrupted import counts as missing.
 
@@ -34,7 +38,7 @@ be there.
 `src/formats/exepack.cpp` unpacks BTECH.EXE in memory, with the same steps as
 `tools/unexepack.py`. The result's SHA-256 must be the DOS 1.03 program's (056b4067...).
 `src/formats/exe_data.cpp` holds the import table: each piece's name (for text, its text ID),
-segment:offset and length. The repo ships that table, never the text. A text is read the way the
+segment:offset and length. The repo ships that table, never the text or the tables' values. A text is read the way the
 printer reads it (docs/text.md): it ends at a NUL that is not a code's argument, or after a byte
 with the top bit set.
 

@@ -21,7 +21,7 @@ namespace chr::formats {
 // One named piece of the program: segment:offset as in docs/functions.md
 // (load segment 0x1000) and its length in bytes.
 struct ExeSpan {
-    enum class Kind { Font, Text };
+    enum class Kind { Font, Text, Table };
     Kind kind;
     std::string_view name;  // for text, the text ID (docs/text.md)
     std::uint16_t segment;
@@ -51,6 +51,8 @@ public:
     // next byte as their argument (so `06 00`, black, is not the end), and a
     // byte with the top bit set is the last one.
     std::string text(std::string_view name) const;
+    // The same reading of any bytes (for texts inside a table).
+    static std::string text_of(std::span<const std::uint8_t> bytes);
 
     static std::span<const ExeSpan> table();
 

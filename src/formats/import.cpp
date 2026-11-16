@@ -9,6 +9,7 @@
 #include "formats/font_file.h"
 #include "formats/game_files.h"
 #include "formats/json.h"
+#include "formats/rules.h"
 
 namespace chr::formats {
 
@@ -39,6 +40,8 @@ ImportState import_state(const fs::path& data_dir) {
     if (!fs::exists(manifest_path(data_dir), ec) || !fs::exists(imported_text_path(data_dir), ec) ||
         !fs::exists(imported_font_path(data_dir), ec))
         return ImportState::Missing;
+    for (const auto name : kRulesFiles)
+        if (!fs::exists(rules_dir(data_dir) / name, ec)) return ImportState::Missing;
     try {
         const auto bytes = read_file(manifest_path(data_dir));
         const auto manifest = parse_json(std::string(bytes.begin(), bytes.end()));
@@ -64,6 +67,11 @@ void import_original(const fs::path& game_dir, const fs::path& data_dir) {
         text += "    {\"id\": " + json_quote(span.name) + ", \"address\": " +
                 json_quote(OriginalExe::address(span)) + ", \"text\": " + json_quote(exe.text(span.name)) + "}";
     }
+    // The names of the 'Mech templates and the weapons, from the rule tables.
+    const auto rules = rules_from_original(exe);
+    for (const auto& named : rules_texts_from_original(exe))
+        text += ",\n    {\"id\": " + json_quote(named.id) + ", \"address\": " + json_quote(named.address) +
+                ", \"text\": " + json_quote(named.bytes) + "}";
     // The places' texts, from the player's .BLD files: every text a script
     // can print, found by walking the script from its start.
     for (const auto file : kBldFiles) {
@@ -86,6 +94,10 @@ void import_original(const fs::path& game_dir, const fs::path& data_dir) {
     fs::remove(manifest_path(data_dir), ec);
     write_file(imported_text_path(data_dir), text);
     write_file(imported_font_path(data_dir), write_font_file(font_from_original(exe.get("font"))));
+    const auto files = write_rules_files(rules, kImportVersion);
+    write_file(rules_dir(data_dir) / kRulesFiles[0], files.mechs);
+    write_file(rules_dir(data_dir) / kRulesFiles[1], files.weapons);
+    write_file(rules_dir(data_dir) / kRulesFiles[2], files.combat);
     write_file(manifest_path(data_dir),
                "{\n  \"import_version\": " + std::to_string(kImportVersion) + ",\n  \"source\": " +
                    json_quote("BTECH.EXE " + std::string(kSupportedVersion)) + ",\n  \"exe_sha256\": " +
@@ -98,7 +110,7 @@ bool ensure_imported(const fs::path& game_dir, const fs::path& data_dir) {
     try {
         import_original(game_dir, data_dir);
     } catch (const std::exception& e) {
-        throw FormatError(std::string("the game's text and font have ") +
+        throw FormatError(std::string("the game's text, font and rule tables have ") +
                           (state == ImportState::Missing ? "not been imported" : "an older import") +
                           " in " + data_dir.string() + ", and importing them failed: " + e.what() +
                           ". Run `chr --import --game-dir DIR` with your copy of the game (DOS " +

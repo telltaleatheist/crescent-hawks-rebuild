@@ -6,6 +6,7 @@
 //   text/english.json    every text: id, its address in the program (or a
 //                        .BLD file), text
 //   font/font.txt        the font (formats/font_file.h)
+//   rules/*.json         the rule tables (formats/rules.h)
 //
 // From then on the game reads only those files; the program is needed only
 // to import. Overrides (a translation, a mod) are more text files of the same
@@ -19,8 +20,9 @@ namespace chr::formats {
 
 // Bump when the files change shape or the import table gains pieces: a data
 // folder from an older import is imported again.
-inline constexpr int kImportVersion = 6;  // 2: the direction names; 3: "C-Bills:"; 4: the .BLD texts;
-                                        // 5: the class and talk texts; 6: the start-up's
+inline constexpr int kImportVersion = 7;  // 2: the direction names; 3: "C-Bills:"; 4: the .BLD texts;
+                                        // 5: the class and talk texts; 6: the start-up's;
+                                        // 7: the rule tables, 'Mech and weapon names, combat texts
 
 std::filesystem::path imported_text_path(const std::filesystem::path& data_dir);
 std::filesystem::path imported_font_path(const std::filesystem::path& data_dir);
