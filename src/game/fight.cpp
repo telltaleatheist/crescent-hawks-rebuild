@@ -492,6 +492,7 @@ void Town::show_unit(Combat& combat, int fig, bool redraw) {
     show_page();
     const bool mech = fig < 4 || (fig >= 12 && fig < 16);
     boxes_ = {mech ? XorBox{25, 10, 3, 3, 15} : XorBox{26, 12, 1, 1, 15}};  // 287f:2b87 per row
+    boxes_since_ = text_.paint_clock();
     if (fig >= 12) return;
     if (fig < 4) combat.mech_mp(fig, std::int8_t(combat_.orders[std::size_t(fig)][0]));  // 203b:22bc
     else combat.person_mp(fig);                                                         // 203b:2474
@@ -503,21 +504,10 @@ void Town::show_unit(Combat& combat, int fig, bool redraw) {
         col += dx;
         row += dy;
         const char glyph = char(tables_.path_arrows[std::size_t((dy + 1) * 4 + dx + 1)]);
+        // An arrow written inside the box covers the XOR there (boxes()).
         text_.put_text(std::string_view(&glyph, 1), col, row, 15, 0);  // 273d:00d5
-        // An arrow written inside the box covers the XOR there: the box
-        // goes on showing only in its other cells.
-        std::vector<XorBox> kept;
-        for (const auto& b : boxes_) {
-            if (col < b.col || col >= b.col + b.width || row < b.row || row >= b.row + b.height) {
-                kept.push_back(b);
-                continue;
-            }
-            for (int r = b.row; r < b.row + b.height; ++r)
-                for (int k = b.col; k < b.col + b.width; ++k)
-                    if (k != col || r != row) kept.push_back({k, r, 1, 1, b.colour});
-        }
-        boxes_ = kept;
     }
+    settle_boxes();
     path_end_col_ = col;
     path_end_row_ = row;
 }
@@ -933,6 +923,7 @@ void Town::xor_box(const XorBox& box) {
                 else xor_box({c, r, 1, 1, box.colour});
         return;
     }
+    settle_boxes();
     const auto overlap = [](const XorBox& a, const XorBox& b) {
         return a.col < b.col + b.width && b.col < a.col + a.width && a.row < b.row + b.height && b.row < a.row + a.height;
     };
@@ -1106,11 +1097,12 @@ void Town::show_page() {
     screen_sprites_ = page_sprites_;
     screen_pixels_.clear();
     boxes_.clear();
+    boxes_since_ = text_.paint_clock();
     text_.forget(13, 0, kTextColumns - 13, kTextRows);
 }
 
 void Town::hold_screen(int frames) {
-    events_.push_back({Shown{view(), figures(), screen_sprites_, screen_pixels_, text_, boxes_, picture_}, frames, -1});
+    events_.push_back({Shown{view(), figures(), screen_sprites_, screen_pixels_, text_, boxes(), picture_}, frames, -1});
 }
 
 Combat Town::combat_rules() {

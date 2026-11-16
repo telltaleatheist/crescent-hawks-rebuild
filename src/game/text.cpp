@@ -54,11 +54,13 @@ void TextScreen::clear_window() {
 void TextScreen::put_piece(int piece, int col, int row) {
     if (col < 0 || row < 0 || col >= kTextColumns || row >= kTextRows) return;
     cells_[row * kTextColumns + col] = {TextCell::Kind::Frame, std::uint8_t(piece), 15, 0};
+    painted_[std::size_t(row * kTextColumns + col)] = paint_clock_;
 }
 
 void TextScreen::frame(int style) {
     const auto& w = windows_[current_];
     const auto* t = style_table(*tables_, style);
+    ++paint_clock_;
     put_piece(t[0], w.x - 1, w.y - 1);
     put_piece(t[1], w.x + w.width, w.y - 1);
     put_piece(t[2], w.x - 1, w.y + w.height);
@@ -71,21 +73,27 @@ void TextScreen::frame(int style) {
 }
 
 void TextScreen::put_text(std::string_view text, int col, int row, int fg, int bg) {
+    ++paint_clock_;
     for (const char ch : text) {
         if (col >= kTextColumns) break;  // (the original wraps to the next screen row)
-        if (row >= 0 && row < kTextRows && col >= 0)
+        if (row >= 0 && row < kTextRows && col >= 0) {
             cells_[row * kTextColumns + col] = {TextCell::Kind::Glyph,
                                                 std::uint8_t(std::uint8_t(ch) & 0x7f),
                                                 std::uint8_t(fg), std::uint8_t(bg)};
+            painted_[std::size_t(row * kTextColumns + col)] = paint_clock_;
+        }
         ++col;
     }
 }
 
 void TextScreen::fill(int col, int row, int width, int height, int colour) {
+    ++paint_clock_;
     for (int r = row; r < row + height; ++r)
         for (int c = col; c < col + width; ++c)
-            if (c >= 0 && r >= 0 && c < kTextColumns && r < kTextRows)
+            if (c >= 0 && r >= 0 && c < kTextColumns && r < kTextRows) {
                 cells_[r * kTextColumns + c] = {TextCell::Kind::Fill, 0, 15, std::uint8_t(colour)};
+                painted_[std::size_t(r * kTextColumns + c)] = paint_clock_;
+            }
 }
 
 void TextScreen::forget(int col, int row, int width, int height) {
@@ -115,9 +123,12 @@ void TextScreen::put_line(std::string& line, bool newline) {
         const int length = int(line.size());
         if (int(line.size()) < w.width) line.resize(std::size_t(w.width), ' ');
         line.resize(std::size_t(w.width));
+        ++paint_clock_;
         for (int r = w.y; r < w.y + w.height - 1; ++r)
-            for (int c = w.x; c < w.x + w.width; ++c)
+            for (int c = w.x; c < w.x + w.width; ++c) {
                 cells_[r * kTextColumns + c] = cells_[(r + 1) * kTextColumns + c];
+                painted_[std::size_t(r * kTextColumns + c)] = paint_clock_;
+            }
         fill(w.x, w.y + w.height - 1, w.width, 1, 0);  // cleared to colour 0, not the window's
         put_text(line, w.x, w.y + w.height - 1, w.fg, w.bg);
         if (!newline) {

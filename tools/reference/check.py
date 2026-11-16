@@ -782,6 +782,23 @@ CHAIN_CASES = [dict(case, compare=False) for case in SPOT_CASES] + [
     {"name": "chain_five_over", "keys": "left", "match": SCREEN},
     {"name": "chain_five_in_town", "keys": "enter", "match": SCREEN},
     {"name": "chain_five_walk_on", "keys": "down", "match": SCREEN},
+    # Mission 6: its one draw lands on the raid here (r & 1), the keys as in
+    # `raid`.
+    {"name": "chain_raid_waited", "keys": "idle:2900 up*5", "match": SCREEN},
+    {"name": "chain_raid_greeting", "keys": "y orig:enter*4", "match": SCREEN},
+    {"name": "chain_raid_briefing", "keys": "y", "match": SCREEN},
+    {"name": "chain_raid_mech_menu", "keys": "enter", "match": SCREEN},
+    {"name": "chain_raid_message", "keys": "enter", "match": SCREEN},
+    {"name": "chain_raid_computer", "keys": "enter", "match": SCREEN},
+    {"name": "chain_raid_messages", "keys": "enter", "match": SCREEN},
+    {"name": "chain_raid_graphics", "keys": "enter", "match": SCREEN},
+    {"name": "chain_raid_options", "keys": "up*2 enter", "match": SCREEN},
+    {"name": "chain_raid_orders", "keys": "enter", "match": SCREEN, "fight": True},
+] + [{"name": "chain_raid_round_%d" % n, "keys": "enter", "match": SCREEN, "fight": True} for n in range(1, 6)] + [
+    # Then Begin Fight (and the story lines' keys) on until the Jenners bring
+    # the Chameleon down and the town comes back.
+] + [{"name": "chain_raid_key_%d" % n, "keys": "enter*5", "match": SCREEN, "fight": True} for n in range(10, 46, 5)] + [
+    {"name": "chain_raid_key_%d" % n, "keys": "enter", "match": SCREEN, "fight": True} for n in range(46, 58)] + [
 ]
 
 # The long unpoked run: its own tier (`--campaign`, ctest label campaign).

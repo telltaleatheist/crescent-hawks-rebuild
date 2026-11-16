@@ -191,7 +191,10 @@ nine overheat it) and one waypoint; 12 falls in round 8, the remaining three wea
 waypoint south where it can be seen, and 13 falls in round 15; the walk back and the verdict
 (passed). This run found two differences, both fixed: special 43's townsperson stays inside while
 flag 2d is set, and the fight's figure drawer draws the map's marks (a fire changes frame each
-drawing). `fourth` (long only) is mission 4 (flag 00
+drawing). Then mission 6, whose draw lands on the raid: Begin Fight round after round, the
+story lines and map 11, until the Jenners bring the Chameleon down, and the ending text, which
+covers the orders screen's XORed box (a third fix: the box went on showing over it). The party is
+then in the ruined town, outdoors (flag 04), where the run ends until the outdoors are rebuilt. `fourth` (long only) is mission 4 (flag 00
 poked to 4): no computer question (F:0090), the Locust flees at the first orders menu, the walk
 back, the verdict and the town. `raid` (long only) is mission 7 (flag 00 poked to 7), the
 Kurita raid: the computer question (only mission 4 skips it), then Begin Fight round after round

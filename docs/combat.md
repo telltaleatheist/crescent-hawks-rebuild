@@ -112,6 +112,12 @@ and the 'Mech sprites' outline is number 1, so it turns 14 where a black 0 turns
 works the box out from the colour numbers of the tiles and figures under it
 (`platform::draw_xor_box`).
 
+The box stays on the screen until something paints over it: the next page copied to the screen
+(`273d:06c3`), or a window cleared, framed or written over its cells. With combat graphics off no
+round redraws the map, so after the fight the box is still there until the next window covers it
+(the raid's ending text does). The rebuild's text layer counts its painting calls and stamps each
+cell it paints; a box cell painted after the box was drawn shows the paint (`Town::boxes`).
+
 Mission 3 (mode 3) is rebuilt: (r & 3) + 3 enemy people (`0d49`'s second count, 1.4 step 6),
 then the same fight as mode 2. The `people` sequence compares it to the orders menu and 20
 rounds; from round 6 the soldiers' lines of sight read the area grids (1.2.1). The orders menu
@@ -1267,8 +1273,10 @@ sequence compares the scene with the original's, over the whole screen and the s
 16. The raid's walk-out ending (a party figure past the raid area's edge, [bp-0x38] = 2: window 3,
     "You have eluded your enemies!" (DG:39f7) and `1000:2a4f`'s key) is rebuilt but not compared
     by the rig: the `raid` sequence ends with the Locust destroyed.
-17. Mission 6 choosing the raid (its one r, the raid if r & 1) is rebuilt but not compared: the
-    `raid` sequence pokes flag 00 to 7, which is always the raid.
+17. Answered: mission 6's draw lands on the raid in the campaign run (`chain`, docs/reference.md),
+    and the raid matches from there to its ending text, Begin Fight round after round until the
+    Jenners bring the Chameleon down. Mission 6 without the raid (the draw's other side) is still
+    not compared.
 18. Answered: special 43 (scripts.md) is compared in the campaign run (`chain`, docs/reference.md),
     which wins mission 5 by orders. Its walker stays inside while flag 2d is set
     (docs/townspeople.md).

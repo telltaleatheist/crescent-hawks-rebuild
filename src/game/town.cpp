@@ -296,14 +296,30 @@ void Town::draw_panel(bool clear) {
 void Town::open_message_box() {
     text_.select_window(7);
     text_.clear_window();
-    text_.frame(0);
-    // The box and its frame are drawn over whatever was on the screen,
-    // the orders screen's XORed box too.
-    const auto& w = text_.window();
-    std::erase_if(boxes_, [&](const XorBox& b) {
-        return b.col >= w.x - 1 && b.row >= w.y - 1 && b.col + b.width <= w.x + w.width + 1 &&
-               b.row + b.height <= w.y + w.height + 1;
-    });
+    text_.frame(0);  // over the orders screen's XORed box too (boxes())
+}
+
+std::vector<XorBox> Town::boxes() const {
+    std::vector<XorBox> out;
+    for (const auto& b : boxes_) {
+        bool covered = false;
+        for (int r = b.row; r < b.row + b.height; ++r)
+            for (int c = b.col; c < b.col + b.width; ++c)
+                covered = covered || text_.painted_at(c, r) > boxes_since_;
+        if (!covered) {
+            out.push_back(b);
+            continue;
+        }
+        for (int r = b.row; r < b.row + b.height; ++r)
+            for (int c = b.col; c < b.col + b.width; ++c)
+                if (text_.painted_at(c, r) <= boxes_since_) out.push_back({c, r, 1, 1, b.colour});
+    }
+    return out;
+}
+
+void Town::settle_boxes() {
+    boxes_ = boxes();
+    boxes_since_ = text_.paint_clock();
 }
 
 std::optional<bool> Town::yes_no(bool yes_first, KeySource& keys) {

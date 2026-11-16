@@ -98,6 +98,12 @@ public:
     // Moves the cursor up a row (the yes/no question rewrites its line).
     void cursor_up() { --windows_[current_].row; }
 
+    // A count of the painting calls (fill, clear, frame, put_text), and the
+    // count when each cell was last painted: what was XORed over a cell
+    // before it was painted is gone (Town::boxes).
+    std::uint32_t paint_clock() const { return paint_clock_; }
+    std::uint32_t painted_at(int col, int row) const { return painted_[std::size_t(row * kTextColumns + col)]; }
+
     // Every cell, for tests and the renderer.
     std::span<const TextCell> cells() const { return cells_; }
     // The characters of one row, '\0' cells as spaces, for tests.
@@ -109,6 +115,8 @@ private:
     void put_piece(int piece, int col, int row);
 
     std::array<TextCell, kTextColumns * kTextRows> cells_{};
+    std::array<std::uint32_t, kTextColumns * kTextRows> painted_{};
+    std::uint32_t paint_clock_ = 0;
     const formats::Tables* tables_;
     std::array<TextWindow, formats::kWindowCount> windows_{};
     int current_ = 0;

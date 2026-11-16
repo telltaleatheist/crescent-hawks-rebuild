@@ -202,7 +202,9 @@ public:
     void set_rules(const formats::Rules* rules) { rules_ = rules; }
     // Boxes XORed onto the screen over the map (the orders screen's mark on
     // the selected unit), drawn last.
-    const std::vector<XorBox>& boxes() const { return boxes_; }
+    // The XORed boxes still showing: a cell painted over since (a window
+    // cleared or framed, text written) shows the paint instead.
+    std::vector<XorBox> boxes() const;
     const FightFigures& fight_figures() const { return figs_; }
     const FigureAnimation& figure_animation() const { return animation_; }
     const std::array<formats::MechRecord, 8>& mechs() const { return mechs_; }
@@ -426,6 +428,8 @@ private:
     int message_speed_ = 2;  // DG:015e
     bool poll_open_ = false;
     std::vector<XorBox> boxes_;
+    std::uint32_t boxes_since_ = 0;  // the text layer's paint clock when boxes_ was last settled
+    void settle_boxes();
     bool party_box_shown_ = true;
     bool fight_unfinished_ = false;
     MechParty step_mechs_;            // the step check's 'Mechs, read again after a visit
