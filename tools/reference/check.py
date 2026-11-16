@@ -303,10 +303,53 @@ QUIZ_CASES = TRAINING_CASES[:5] + [
     },
 ]
 
+# Training mission 2 fought by the computer, with no combat messages and no
+# combat graphics: after the three answers it runs on random draws alone.
+# With the computer fighting, the original asks once a round whether a key
+# is waiting (203b:1015). The feeder answers the 4th such question, so the
+# first capture is after round 4; each idle:1 after it is one more round.
+# chr counts the same questions as idle passes and stops at the first one
+# its script has no item for, so a capture after round n needs n - 1 passes:
+# the 2 check.py adds after a key, and chr:idle:1. A capture after the fight has ended is taken at "You should return to
+# base now.", where the original waits for a key (idle:99 lets the rest of
+# the rounds go by first).
+MISSION_CASES = TRAINING_CASES[:9] + [
+    {
+        # Yes: the combat messages menu, on Verbose.
+        "name": "mission_messages",
+        "keys": "y",
+        "match": {"the panel": WHOLE_PANEL, "the map": WHOLE_MAP},
+    },
+    {
+        # None: "See combat graphics", on Yes.
+        "name": "mission_graphics",
+        "keys": "up*2 enter",
+        "match": {"the panel": WHOLE_PANEL, "the map": WHOLE_MAP},
+    },
+] + [
+    {
+        # No: the rounds. The state after round n (the screen is not drawn
+        # while they run).
+        "name": "mission_round_%d" % n,
+        "keys": "n chr:idle:1" if n == 4 else "idle:1",
+        "match": {},
+        "fight": True,
+    }
+    for n in range(4, 9)
+] + [
+    {
+        # The fight is over: "You should return to base now."
+        "name": "mission_end",
+        "keys": "idle:99",
+        "match": {"the panel": WHOLE_PANEL, "the map": WHOLE_MAP},
+        "fight": True,
+    },
+]
+
 # Each sequence is one run of the original: (name, quick cases, --full
 # cases, chr's own options).
 SEQUENCES = [("town", CASES, FULL_CASES, []), ("training", TRAINING_CASES, [], []),
-             ("quiz", QUIZ_CASES, [], ["--show-quiz"])]
+             ("quiz", QUIZ_CASES, [], ["--show-quiz"]), ("mission", MISSION_CASES, [], [])]
 
 # The feeder (tools/capture/snap.asm, docs/reference.md) hands over a key at
 # every 4th poll of the keyboard. The main loop polls once a pass, and after
@@ -337,6 +380,8 @@ def original_token(k):
         return flag_poke(k)
     if k.startswith("orig:"):
         return k[len("orig:"):]
+    if k.startswith("chr:"):
+        return None
     return k
 
 
@@ -356,6 +401,9 @@ def chr_script(cases, upto):
         for k in expand(case["keys"]):
             if k.startswith("orig:"):
                 continue  # input only the original asks for (docs/reference.md)
+            if k.startswith("chr:"):
+                items.append(k[len("chr:"):])  # chr's count of passes only
+                continue
             if k.startswith("flag:"):
                 items.append("set:" + k[len("flag:"):])
                 continue
@@ -373,7 +421,8 @@ def original_script(cases):
     tokens = [START]
     for case in cases:
         if case.get("keys"):
-            tokens.append(" ".join(original_token(k) for k in case["keys"].replace(",", " ").split()))
+            keys = [original_token(k) for k in case["keys"].replace(",", " ").split()]
+            tokens.append(" ".join(k for k in keys if k is not None))
         tokens.append("@snap:" + case["name"])
     return " ".join(tokens)
 
@@ -393,10 +442,11 @@ def run_sequence(a, sequence, cases, chr_options=()):
         name = case["name"]
         shot = os.path.join(a.work, name + ".bmp")
         out = subprocess.run([a.chr, "--game-dir", a.game_dir, "--data-dir", a.data_dir,
-                              "--script", chr_script(cases, i), "--screenshot", shot, "--state", *chr_options],
+                              "--script", chr_script(cases, i), "--screenshot", shot,
+                              "--fight-state" if case.get("fight") else "--state", *chr_options],
                              check=True, env=env, stdout=subprocess.PIPE, text=True).stdout
         ours_state = [line for line in out.splitlines() if line.startswith("state ")]
-        ref_state = state.original_state(os.path.join(ref_dir, name + ".bin"))
+        ref_state = state.original_state(os.path.join(ref_dir, name + ".bin"), fight=case.get("fight", False))
         ref = compare.reference_pixels(os.path.join(ref_dir, name + ".bin"))
         ours = compare.bmp_pixels(shot)
         compare.write_diff(os.path.join(a.work, name + "-diff.png"), ref, ours)
@@ -429,6 +479,7 @@ def main():
     ap.add_argument("--data-dir", required=True)
     ap.add_argument("--work", required=True, help="where the captures, screenshots and diffs go")
     ap.add_argument("--full", action="store_true", help="the long cases too")
+    ap.add_argument("--sequence", action="append", help="run only this sequence (may be repeated)")
     a = ap.parse_args()
 
     missing = [what for what, ok in (("DOSBox-X", os.path.exists(run.DOSBOX)),
@@ -442,6 +493,8 @@ def main():
     os.makedirs(a.work, exist_ok=True)
     ok = True
     for sequence, quick, full, chr_options in SEQUENCES:
+        if a.sequence and sequence not in a.sequence:
+            continue
         cases = quick + (full if a.full else [])
         ok = run_sequence(a, sequence, cases, chr_options) and ok
     return 0 if ok else 1

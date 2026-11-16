@@ -116,7 +116,21 @@ three questions and the greeting after them). A key written `orig:KEY` goes to t
 only: without the scene, the training center's quiz takes a key and three menu answers there
 that the rebuild does not ask (docs/combat.md 7). In `quiz`, `orig:` keys move the original's
 menu bar onto the right part, where the rebuild's bar starts, before each comparison. A
-sequence can give chr options of its own (`SEQUENCES`).
+sequence can give chr options of its own (`SEQUENCES`). `check.py --sequence NAME` runs only
+the named sequences.
+
+`mission` is training mission 2 fought by the computer, with no combat messages and no combat
+graphics (docs/combat.md 1.2.2). Once the three questions are answered nothing is drawn and no
+key is read until the fight ends; the only input is the "is a key waiting?" question the fight
+asks once a round (`203b:1015`, which would hand the fight back to the player). The feeder
+answers the 4th such question, so the first capture falls after round 4, and each `idle:1`
+after it is one more round. chr asks the same question once a round (`KeySource::poll`): an
+idle pass answers no, a key yes, and the end of the script stops the fight there, so a capture
+after round n needs n - 1 passes in chr's script. A key written `chr:KEY` goes to chr only (here
+`chr:idle:1`, the third pass). These cases compare the fight's tables too: a case with
+`"fight": True` runs `chr --fight-state` and `state.py --fight` (the 24 figures' places,
+active and destroyed counts, headings, facings and frames, their orders, targets and paths, the
+heat, the burning counts, DG:014a and the map marks).
 
 ## Findings
 

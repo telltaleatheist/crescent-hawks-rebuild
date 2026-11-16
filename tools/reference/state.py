@@ -15,7 +15,7 @@ import sys
 from memory import Memory
 
 
-def original_state(path):
+def original_state(path, fight=False):
     m = Memory(path)
     far = m.word(m.ds, 0x538a)        # the segment of DGROUP:d3xx
     xs = m.word(m.ds, 0x53a4)         # figure x positions (4004)
@@ -39,8 +39,31 @@ def original_state(path):
         lines.append("state mech %d %s" % (k, m.read(far, 0xc724 + 0x7d * k, 0x7d).hex()))
     menus = m.word(m.ds, 0x56de)                                            # the menu table, 385b:0092
     lines.append("state menus " + " ".join("%d" % m.word(menus, 0x98 + 16 * i) for i in range(41)))
+    if fight:
+        lines += fight_state(m, far)
+    return lines
+
+
+def fight_state(m, far):
+    """The fight's tables (docs/combat.md), in the form `chr --fight-state`
+    prints them. They all live in the far segment F."""
+    lines = []
+    for i in range(24):
+        lines.append("state figure %d at %04x %04x active %d destroyed %d heading %02x facing %02x frame %02x" % (
+            i, m.word(far, 0x4004 + 2 * i), m.word(far, 0x4036 + 2 * i), m.word(far, 0x406a + 2 * i),
+            m.word(far, 0x393c + 2 * i), m.read(far, 0x3920 + i, 1)[0], m.read(far, 0x396c + i, 1)[0],
+            m.read(far, 0x409a + i, 1)[0]))
+        lines.append("state orders %d %s" % (i, m.read(far, 0x32c6 + 0x30 * i, 0x30).hex()))
+        lines.append("state targets %d %s" % (i, m.read(far, 0x3800 + 12 * i, 12).hex()))
+        lines.append("state path %d %s" % (i, m.read(far, 0x40b4 + 0x18 * i, 0x18).hex()))
+    lines.append("state heat " + " ".join("%02x" % b for b in m.read(far, 0x006e, 8)))
+    lines.append("state burning " + " ".join("%02x" % b for b in m.read(far, 0xd576, 8)))
+    lines.append("state fight_on %d" % (m.word(m.ds, 0x014a) != 0))
+    marks = ["%02x%02x%02x%02x" % (m.read(far, 0xd457 + k, 1)[0], m.read(far, 0xd497 + k, 1)[0],
+                                   m.read(far, 0xd4d7 + k, 1)[0], m.read(far, 0xd517 + k, 1)[0]) for k in range(64)]
+    lines.append("state marks next %02x %s" % (m.read(far, 0xd557, 1)[0], " ".join(marks)))
     return lines
 
 
 if __name__ == "__main__":
-    print("\n".join(original_state(sys.argv[1])))
+    print("\n".join(original_state(sys.argv[1], fight="--fight" in sys.argv[2:])))

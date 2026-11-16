@@ -58,6 +58,7 @@ struct Options {
     std::filesystem::path data_dir;  // the imported text and font
     bool import = false;
     bool state = false;      // print the game state after the script
+    bool fight_state = false;  // with it, the fight's tables
     bool show_quiz = false;  // show the training center's quiz (no check)
     int map = 0;             // 0: the start-up, then map 1
     // A test aid: flags set as the town starts (--set-flag NN=VV, hex).
@@ -91,6 +92,8 @@ bool parse(int argc, char** argv, Options& options) {
             options.screenshot = argv[++i];
         } else if (arg == "--state") {
             options.state = true;
+        } else if (arg == "--fight-state") {
+            options.state = options.fight_state = true;
         } else if (arg == "--show-quiz") {
             options.show_quiz = true;
         } else if (arg == "--set-flag" && i + 1 < argc) {
@@ -140,6 +143,35 @@ void print_state(const chr::game::Town& town) {
     }
     std::printf("\nstate menus");
     for (const auto last : town.menu_last()) std::printf(" %d", last);
+    std::printf("\n");
+}
+
+// The fight's tables, as tools/reference/state.py reads them (docs/combat.md).
+void print_fight_state(const chr::game::Town& town) {
+    const auto& f = town.fight_figures();
+    const auto& a = town.figure_animation();
+    const auto& c = town.combat();
+    for (int i = 0; i < chr::game::FightFigures::kCount; ++i) {
+        const auto n = std::size_t(i);
+        std::printf("state figure %d at %04x %04x active %d destroyed %d heading %02x facing %02x frame %02x\n", i,
+                    f.x[n], f.y[n], f.active[n] & 0xffff, int(f.destroyed[n]), f.heading[n] & 0xff,
+                    a.direction(i) & 0xff, a.frame(i) & 0xff);
+        std::printf("state orders %d ", i);
+        for (const auto b : c.orders[n]) std::printf("%02x", b);
+        std::printf("\nstate targets %d ", i);
+        for (const auto b : c.targets[n]) std::printf("%02x", b);
+        std::printf("\nstate path %d ", i);
+        for (const auto b : c.paths[n]) std::printf("%02x", b & 0xff);
+        std::printf("\n");
+    }
+    std::printf("state heat");
+    for (const auto h : c.heat) std::printf(" %02x", h & 0xff);
+    std::printf("\nstate burning");
+    for (const auto b : c.burning) std::printf(" %02x", b);
+    std::printf("\nstate fight_on %d\n", int(c.fight_on));
+    const auto& m = town.marks();
+    std::printf("state marks next %02x", m.next);
+    for (const auto& k : m.marks) std::printf(" %02x%02x%02x%02x", k.code, k.area, k.x, k.y);
     std::printf("\n");
 }
 
@@ -352,6 +384,7 @@ int main(int argc, char** argv) {
                 if (town->start_up_open()) std::printf("(waiting in the start-up)\n");
             }
             if (options.state) print_state(*town);
+            if (options.fight_state) print_fight_state(*town);
         }
 
         bool running = status == 0;
