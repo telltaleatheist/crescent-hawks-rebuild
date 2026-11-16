@@ -68,6 +68,8 @@ constexpr std::array kDos103 = {
     ExeSpan{ExeSpan::Kind::Table, "tables.person_water", 0x46db, 0x032e, 4, "6a03e86ab54be375"},
     ExeSpan{ExeSpan::Kind::Table, "tables.mech_step_x", 0x46db, 0x045c, 8, "5b76c41e8baa8005"},
     ExeSpan{ExeSpan::Kind::Table, "tables.mech_step_y", 0x46db, 0x0474, 8, "8a4459acf78eabb8"},
+    ExeSpan{ExeSpan::Kind::Table, "tables.marked_spot_x", 0x46db, 0x1632, 8, "0feee0909cfb969d"},
+    ExeSpan{ExeSpan::Kind::Table, "tables.marked_spot_y", 0x46db, 0x163a, 8, "dc3398dd9d76b22e"},
     ExeSpan{ExeSpan::Kind::Table, "tables.mech_formation_x", 0x46db, 0x3a26, 4, "9565215f32d0de3b"},
     ExeSpan{ExeSpan::Kind::Table, "tables.mech_formation_y", 0x46db, 0x3a2a, 4, "e26174938af57d98"},
     ExeSpan{ExeSpan::Kind::Table, "tables.mech_cell", 0x46db, 0x02de, 8, "c8e0ac891029dadd"},

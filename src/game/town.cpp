@@ -519,6 +519,10 @@ std::optional<StepResult> Town::step_party(Step step, KeySource& keys) {
     }
     log_.push_back(line + where);
     window_at_ = position_;  // 287f:1314 at the end of 1000:218f
+    if (window_stale_) {
+        terrain_.map_changed();
+        window_stale_ = false;
+    }
     return r;
 }
 

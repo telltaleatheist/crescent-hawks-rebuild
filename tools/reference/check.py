@@ -579,6 +579,23 @@ HANDOVER_CASES = [dict(case, compare=False) for case in MISSION_CASES[:4]] + [
 
 # Each sequence is one run of the original: (name, quick cases, --full
 # cases, chr's own options).
+# Mission 1, the marked spot, reached by keys alone after the course: flag
+# 14 (set by TRAINING.BLD as a mission starts) runs down over 255 town
+# ticks, an idle tick every 11 polls; then the training center again, the
+# quiz on the original's side (the copy we read always passes it), the
+# second mission in the Wasp, which has hands. The spot is drawn at random
+# (spot 3 here); the way to it and back was found with chr's step check.
+SPOT_CASES = [dict(case, compare=False) for case in COURSE_CASES + COURSE_FULL_CASES] + [
+    {"name": "spot_waited", "keys": "idle:2900 up*5", "match": SCREEN},
+    {"name": "spot_greeting", "keys": "y orig:enter*4", "match": SCREEN},
+    {"name": "spot_briefing", "keys": "y", "match": SCREEN},
+    {"name": "spot_start", "keys": "enter down enter", "match": SCREEN},
+    {"name": "spot_reached", "keys": "pgup*10 right*21 pgdn right*3 pgup right*18", "match": SCREEN},
+    {"name": "spot_back", "keys": "enter end*2 down*4 end left*55", "match": SCREEN},
+    {"name": "spot_in_town", "keys": "enter", "match": SCREEN},
+    {"name": "spot_walk_on", "keys": "down", "match": SCREEN},
+]
+
 SEQUENCES = [("town", CASES, FULL_CASES, []), ("training", TRAINING_CASES, [], []),
              ("quiz", QUIZ_CASES, [], ["--show-quiz"]), ("mission", MISSION_CASES, MISSION_FULL_CASES, []),
              ("verbose", VERBOSE_CASES, VERBOSE_FULL_CASES, []), ("drawn", DRAWN_CASES, DRAWN_FULL_CASES, []),
@@ -591,6 +608,7 @@ SEQUENCES = [("town", CASES, FULL_CASES, []), ("training", TRAINING_CASES, [], [
              ("scan", SCAN_CASES, SCAN_FULL_CASES, []),
              ("people", PEOPLE_CASES, PEOPLE_FULL_CASES, []),
              ("course", COURSE_CASES, COURSE_FULL_CASES, []),
+             ("spot", [], SPOT_CASES, []),
              ("handover", [], HANDOVER_CASES, [])]
 
 # The feeder (tools/capture/snap.asm, docs/reference.md) hands over a key at

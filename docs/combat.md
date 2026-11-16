@@ -192,7 +192,7 @@ sight at long range can (the figure is 8-15 cells from the window's edges).
 
 FUN_17dc_0629. A jump table at cs:086f by mode. All modes share a walking loop like the town's
 (a key is a step, `1000:218f`; with no key the tiles animate and the townspeople move) and the
-results step at 0bf2. Rebuilt: modes 0, 2 and 3 and the walk (`game/mission.cpp`); in modes 2 and
+results step at 0bf2. Rebuilt: modes 0-3 and the walk (`game/mission.cpp`); in modes 2 and
 3 the rebuild stops after the fight (2.15), so their walk back is not reached yet.
 
 **The walk** (0883..0bef). Each pass, first: with the party back at the training center's door
@@ -212,7 +212,7 @@ pass counts. The callers: special 1 (modes 0-7 from flag 00), ARENA.BLD's specia
 | mode | what happens | pass (flag 01 = 1) |
 |---|---|---|
 | 0 | A walking course. P:200a (the map store's byte 0xfed) is saved and set to 0, then a step of (0, 0) (`218f(0)`). Every tick counts 1, plus F:32ae of figure 0 >> 3: 1 more in shallow water, 2 more in deep (`1000:051b` writes 8 or 16 there for a 'Mech, below). So the count is time, idle ticks included. Reaching x >= 0x0c78 and y >= 0xc07c marks the task done, the first time with DG:14a1 (`mission.course_corner`, `24d3:17ea`, a key). | done, and the count (less 50 if record 0's name starts with L, a Locust) below 215. P:200a is restored. |
-| 1 | A marked spot. One r & 7 picks a spot from DG:1632 / DG:163a; that map cell in P:101d is saved and set to tile 0x50. With a Locust a message (DG:1434) comes first. The walk ends on the cell just below the spot (text DG:14ef with a Locust, else DG:152a, and the cell is put back). | the 'Mech is not a Locust (it has no jump jets: a guess). Either way Piloting (character 0 byte 8) + 1 if below 3. |
+| 1 | A marked spot. One r & 7 picks a spot from DG:1632 / DG:163a (`tables.marked_spot_x/y`, a cell column and row in the area); that cell of the map store (P:101d + block x 64 + cell) is saved and set to tile 0x50. With a Locust a message (DG:1434, `mission.failed`) and a key come first. Then `218f(0)`. The task is done, after a tick, when the party's cell ((x & 0x7f) / 2, (y & 0x7f) / 2) is the one below the spot or below and to the left: a message and a key, DG:14ef (`mission.no_hands`) with a Locust, else DG:152a (`mission.hands`), and then the map cell is put back. Only the map store: the cell window keeps tile 0x50 until the next step builds it (`287f:1314` at the end of `218f`). | the 'Mech is not a Locust (it has no hands; the script says so). The cell is put back again. Either way Piloting (character 0 byte 8) + 1 if below 3. |
 | 2 | Target practice. One enemy 'Mech (`0d49(1, 0)`), then its record 4 is disarmed: both actuator bytes 0x24 / 0x25, all ten ammunition bytes 0x27-0x30 and both MP bytes 0x31 / 0x32 set to 0. It cannot move, kick or fire. Fight kind 1. | as below |
 | 3 | 3-6 enemy people (`0d49(0, (r & 3) + 3)`: the random count is pushed first, so it is the second argument), fight kind 1. | as below |
 | 4-7 | 1-4 enemy 'Mechs (`0d49(mode - 3, 0)`), fight kind 1, with F:0090 = 1 (no "computer fights for you" question, no Computer order). Mode 6: one r, the raid if r & 1. Mode 7: always the raid. In the raid F:3772 = 1 and the 16 cells P:101d + 0ff0..0fff are set to tile 0x40 (a gap in a wall: a guess). F:0090 = 0 afterwards. | as below |

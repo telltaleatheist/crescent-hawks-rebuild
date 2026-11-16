@@ -284,6 +284,8 @@ private:
         bool warned = false;  // [bp-e]: "Don't come back here..." shown
         int count = 0;        // [bp-14]: the course's ticks
         std::optional<std::uint8_t> saved_cell;  // [bp-18]: a map cell the mission changed
+        std::size_t cell = 0;                    // [bp-4]: that cell, in the map store
+        int spot = 0;                            // [bp-22]: mission 1's spot
     };
     bool mission_walk(MissionWalk& w, KeySource& keys);
     void mission_tick();
@@ -292,7 +294,7 @@ private:
     void move_townspeople();
     // Sets byte `index` of the map store (P:101d) and has the window built
     // again.
-    void set_map_cell(std::size_t index, int tile);
+    void set_map_cell(std::size_t index, int tile, bool rebuild = true);
     void place_mission(int mechs, int people);
     bool fight(int kind, KeySource& keys);
     // The orders menu: 0 Begin Fight, 1 Flee; nothing when the keys ran
@@ -418,6 +420,7 @@ private:
     bool fight_unfinished_ = false;
     MechParty step_mechs_;            // the step check's 'Mechs, read again after a visit
     formats::MapPosition window_at_;  // where 287f:1314 last built the window
+    bool window_stale_ = false;       // the map changed since
     int mission_ticks_ = 0;  // DG:5802: the missions' walk's ticks, 0-3
     bool townspeople_away_ = false;
     bool show_quiz_ = false;

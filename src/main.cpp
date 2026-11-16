@@ -142,11 +142,13 @@ bool parse(int argc, char** argv, Options& options) {
 }
 
 // --state: what tools/reference/check.py compares with the original's memory.
-// The cell window 287f:1314 builds at `at` from the terrain as it is now:
-// its nine blocks' values (P:07a4), then its cells a row a line (P:07ad).
+// The cell window at `at`: the one the game holds if it was last built
+// there (a map cell changed since shows only after the next build, as in
+// the original), else built from the terrain as it is now. Its nine blocks'
+// values (P:07a4), then its cells a row a line (P:07ad).
 void print_window(const chr::game::Town& town, chr::formats::MapPosition at) {
     using chr::game::Terrain;
-    const auto window = town.terrain().window(at, town.map());
+    const auto& window = town.terrain().window(at);
     std::printf("window %04x %04x blocks ", at.x, at.y);
     for (const auto b : window.blocks) std::printf("%02x", b);
     for (int r = 0; r < Terrain::kWindowCells; ++r) {

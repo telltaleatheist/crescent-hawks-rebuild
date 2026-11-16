@@ -17,9 +17,15 @@ bool at_the_door(formats::MapPosition p) { return p.x <= 0x0c3c && p.y >= 0xc049
 
 }  // namespace
 
-void Town::set_map_cell(std::size_t index, int tile) {
+// The map store changes at once; the cell window (P:07ad) only when
+// 1000:218f next builds it, unless `rebuild`.
+void Town::set_map_cell(std::size_t index, int tile, bool rebuild) {
     map_.blocks[index] = std::uint8_t(tile);
-    terrain_.map_changed();
+    if (rebuild) {
+        terrain_.map_changed();
+    } else {
+        window_stale_ = true;
+    }
 }
 
 // BTECH.EXE 17dc:0629 (Ghidra FUN_17dc_0629)
@@ -36,9 +42,30 @@ bool Town::run_mission(int mode, KeySource& keys) {
             w.saved_cell = map_.blocks[kCourseCell];
             set_map_cell(kCourseCell, 0);
         }
+        w.cell = kCourseCell;
         // 1000:218f(0): a step on the spot.
         if (!step_party({0, 0}, keys)) return false;
         break;
+    case 1: {
+        // One of eight spots is marked with tile 0x50.
+        w.spot = random_.next() & 7;
+        const int sx = tables_.marked_spot_x[std::size_t(w.spot)];
+        const int sy = tables_.marked_spot_y[std::size_t(w.spot)];
+        w.cell = std::size_t(((sy & 0x78) << 6) + ((sy & 7) << 3) + ((sx & 0x78) << 3) + (sx & 7));
+        log_.push_back("mission 1: spot " + std::to_string(w.spot) + " (" + std::to_string(sx) + ", " +
+                       std::to_string(sy) + ")");
+        if (map_.blocks.size() > w.cell) {
+            w.saved_cell = map_.blocks[w.cell];
+            set_map_cell(w.cell, 0x50);
+        }
+        if (mechs_[0][0] == 'L') {
+            open_message_box();
+            print_id("mission.failed");  // 24d3:17ea, then a key
+            if (!read_key(keys)) return false;
+        }
+        if (!step_party({0, 0}, keys)) return false;
+        break;
+    }
     case 2: {
         place_mission(1, 0);
         // The target can't shoot back: 'Mech record 4 loses its weapons and
@@ -131,6 +158,24 @@ bool Town::mission_step_done(MissionWalk& w, KeySource& keys) {
             if (!read_key(keys)) return false;
         }
         return true;
+    case 1: {
+        // Standing on the cell just below the spot, or below and to the
+        // left: in cells of the area, (x & 0x7f) / 2 and (y & 0x7f) / 2.
+        const int hx = (position_.x & 0x7f) >> 1, hy = (position_.y & 0x7f) >> 1;
+        const int sx = tables_.marked_spot_x[std::size_t(w.spot)];
+        const int sy = tables_.marked_spot_y[std::size_t(w.spot)];
+        if (hx < sx - 1 || hx > sx || hy != sy + 1 || w.done) return true;
+        w.done = true;
+        open_message_box();
+        if (mechs_[0][0] == 'L') {
+            print_id("mission.no_hands");
+        } else {
+            // The 'Mech picks it up: the spot is put back at once.
+            print_id("mission.hands");
+            if (w.saved_cell) set_map_cell(w.cell, *w.saved_cell, false);
+        }
+        return read_key(keys).has_value();  // 273d:086a, 273d:0259
+    }
     default:
         return true;
     }
@@ -145,7 +190,15 @@ void Town::mission_results(const MissionWalk& w) {
         int count = w.count;
         if (mechs_[0][0] == 'L') count -= 50;
         if (w.done && count < 215) flags_[flag::kPassed] = 1;
-        if (w.saved_cell) set_map_cell(kCourseCell, *w.saved_cell);
+        if (w.saved_cell) set_map_cell(w.cell, *w.saved_cell, false);
+        break;
+    }
+    case 1: {
+        // Passed unless in a Locust; Piloting goes up to 3 either way.
+        if (w.saved_cell) set_map_cell(w.cell, *w.saved_cell, false);
+        if (mechs_[0][0] != 'L') flags_[flag::kPassed] = 1;
+        auto& piloting = characters_[0][std::size_t(character::kSkills + 4)];
+        if (piloting < 3) ++piloting;
         break;
     }
     default:

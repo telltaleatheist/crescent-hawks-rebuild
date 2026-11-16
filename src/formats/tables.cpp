@@ -57,6 +57,8 @@ const std::vector<Flat>& flat_tables() {
         {"person_water", 0x46db, 0x032e, Element::U8, [](Tables& t) { return all(t.person_water); }},
         {"mech_step_x", 0x46db, 0x045c, Element::S16, [](Tables& t) { return all(t.mech_step_x); }},
         {"mech_step_y", 0x46db, 0x0474, Element::S16, [](Tables& t) { return all(t.mech_step_y); }},
+        {"marked_spot_x", 0x46db, 0x1632, Element::S8, [](Tables& t) { return all(t.marked_spot_x); }},
+        {"marked_spot_y", 0x46db, 0x163a, Element::S8, [](Tables& t) { return all(t.marked_spot_y); }},
         {"mech_formation_x", 0x46db, 0x3a26, Element::S8, [](Tables& t) { return all(t.mech_formation_x); }},
         {"mech_formation_y", 0x46db, 0x3a2a, Element::S8, [](Tables& t) { return all(t.mech_formation_y); }},
         {"mech_cell", 0x46db, 0x02de, Element::S16, [](Tables& t) { return all(t.mech_cell); }},

@@ -116,9 +116,10 @@ the cells past a map's edge are terrain.
   `tables.mirror_north_south` (upside down) and `tables.mirror_east_west` (mirrored). It is
   built in P:20dd and copied from there.
 
-The rebuild's `Terrain::window` is checked against the original's memory: every rig case builds
-the window where the original last built its own (P:02cf, 02d1) and compares the nine values and
-the 576 cells (`check.py`, `window.py`). Everything that reads the window in the original reads
+The rebuild's `Terrain::window` is checked against the original's memory: every rig case takes
+the window where the original last built its own (P:02cf, 02d1), the one chr holds if it was
+built there (`chr --window`), and compares the nine values and the 576 cells (`check.py`,
+`window.py`). Everything that reads the window in the original reads
 it in the rebuild: the map view, the party's and the 'Mechs' water cells, the townspeople's steps
 and the fight's paths, lines of sight and figure cells (`window_cell`, `Terrain::cell`). The
 rebuild builds it for the place it is asked about, once per block, rather than at the original's
