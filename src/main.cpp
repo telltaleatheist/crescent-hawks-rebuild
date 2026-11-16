@@ -15,7 +15,9 @@
 // --script plays a key sequence first ("up*5 y", "idle:40", see
 // game/town.h) and prints what each key did. --screenshot renders one frame
 // to the file without opening a window; with --event N, the screen of the
-// N-th thing the logic showed (game/shown.h), and --events lists them. In a window the town runs at the
+// N-th thing the logic showed (game/shown.h), and --events lists them.
+// --step-hold N holds each step the original showed without a wait (a
+// missile's, an explosion's) N display frames (default 1). In a window the town runs at the
 // original's pace, one main-loop pass per display frame of a VGA card
 // (game/clock.h).
 //
@@ -62,6 +64,7 @@ struct Options {
     bool state = false;      // print the game state after the script
     bool fight_state = false;  // with it, the fight's tables
     int event = -1;            // --event N
+    int step_hold = 1;         // --step-hold N
     bool list_events = false;
     bool show_quiz = false;  // show the training center's quiz (no check)
     int map = 0;             // 0: the start-up, then map 1
@@ -98,6 +101,8 @@ bool parse(int argc, char** argv, Options& options) {
             options.state = true;
         } else if (arg == "--event" && i + 1 < argc) {
             options.event = std::atoi(argv[++i]);
+        } else if (arg == "--step-hold" && i + 1 < argc) {
+            options.step_hold = std::max(1, std::atoi(argv[++i]));
         } else if (arg == "--events") {
             options.list_events = true;
         } else if (arg == "--fight-state") {
@@ -115,7 +120,8 @@ bool parse(int argc, char** argv, Options& options) {
             }
         } else {
             std::fprintf(stderr, "usage: chr [--game-dir DIR] [--data-dir DIR] [--import] [--map N] [--script KEYS]\n"
-                         "           [--text FILE] [--screenshot FILE.bmp] [--event N] [--events] [--state] [--show-quiz]\n"
+                         "           [--text FILE] [--screenshot FILE.bmp] [--event N] [--events] [--step-hold N]\n"
+                         "           [--state] [--show-quiz]\n"
                          "  --show-quiz: show the training center's quiz (no check: the right part is\n"
                          "           picked and any answer goes on); by default it is skipped\n"
                          "  test aids (docs/reference.md): [--set-flag NN=VV] sets a flag (hex) as the town\n"
@@ -455,8 +461,11 @@ int main(int argc, char** argv) {
                 held += frames;
                 const auto& events = town->events();
                 while (played < events.size()) {
-                    // A sound takes no time; a screen at least one frame.
-                    const int cost = events[played].screen ? std::max(1, events[played].frames) : 0;
+                    // A sound takes no time. A screen the original showed
+                    // without a wait went by as fast as the machine drew
+                    // the next: the platform holds it `step_hold` frames.
+                    const auto& e = events[played];
+                    const int cost = !e.screen ? 0 : e.frames > 0 ? e.frames : options.step_hold;
                     if (held < cost) break;
                     held -= cost;
                     ++played;

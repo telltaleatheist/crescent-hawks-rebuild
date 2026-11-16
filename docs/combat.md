@@ -145,8 +145,10 @@ frames and scripts, the parked facings, and the drawer's terrain at every redraw
 the fight's outcome (quirk 36: in the `drawn` run Jason's Locust starts in water). So is what
 they show: the round's redraw, the poses, the missiles, the lines, the explosions and the
 pictures, matched pixel for pixel at the end of every round by the `drawn` sequence. Steps the
-original shows without a wait (a missile's or an explosion's) are held one display frame each:
-the original's pace there was the machine's speed. A line is shown whole once plotted. The
+original shows without a wait (the round's redraw, a missile's steps, an explosion's) went by
+as fast as the machine could draw the next one, so their pace depended on the CPU: on the
+machines of the day each probably took several display frames. The platform holds each one
+`--step-hold` frames (default 1), a setting of the platform, not of the logic. A line is shown whole once plotted. The
 sounds are recorded but not played yet (no sound is rebuilt). A story picture is held 50 frames
 at its last frame.
 
