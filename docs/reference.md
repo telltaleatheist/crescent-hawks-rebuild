@@ -179,7 +179,11 @@ poked to 4): no computer question (F:0090), the Locust flees at the first orders
 back, the verdict and the town. `raid` (long only) is mission 7 (flag 00 poked to 7), the
 Kurita raid: the computer question (only mission 4 skips it), then Begin Fight round after round
 through the five story lines and the load of map 11, until the Jenners bring the Locust down,
-then the results and the script. `handover` (long
+then the results and the script. `rest` (long only) is the third mission's first try with
+flag 13 not poked (flags 00 = 2 and 01 = 1 stand in for missions 0-1): the commandant sends
+Jason away and takes the 'Mech back (special 3), he walks to the Barracks, sleeps (flag 13 + 1,
+the story, flag 14 = 0) and walks back the same way, steps turned round, for the quiz, the
+greeting and the briefing. `handover` (long
 only) lets the computer fight six rounds, hands the fight back with a key at
 the round's poll, and flees and fails. The training
 cases at its start are captured but not compared (`"compare": False`): the `training` sequence

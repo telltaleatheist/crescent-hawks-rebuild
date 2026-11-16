@@ -1269,6 +1269,9 @@ sequence compares the scene with the original's, over the whole screen and the s
     by the rig: the `raid` sequence ends with the Locust destroyed.
 17. Mission 6 choosing the raid (its one r, the raid if r & 1) is rebuilt but not compared: the
     `raid` sequence pokes flag 00 to 7, which is always the raid.
+18. Special 43 (scripts.md) is rebuilt from the code but not compared: it follows a won mission 5,
+    and the rig has no key sequence yet that destroys the Locust by orders (mission 5 alone has no
+    computer, 1.3).
 
 ## Functions
 

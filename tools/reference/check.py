@@ -630,6 +630,33 @@ RAID_CASES = [dict(case, compare=False) for case in FOURTH_CASES[:4]] + [
     {"name": "raid_22", "keys": "enter", "match": SCREEN},
 ]
 
+# The third mission's first try (flag 13 not poked): the commandant stops
+# Jason and takes the 'Mech back (TRAINING.BLD +04f3, special 3). He sleeps
+# in the barracks (BARRACKS.BLD +0243: flag 13 + 1, the story, flag 14 = 0)
+# and goes back for the briefing, the quiz asked again.
+REST_CASES = [dict(case, compare=False) for case in TRAINING_CASES[:4]] + [
+    dict(TRAINING_CASES[4], name="rest_question",
+         keys=TRAINING_CASES[4]["keys"].replace("flag:13=01", "flag:01=01")),
+    dict(TRAINING_CASES[5], name="rest_greeting"),
+    {"name": "rest_commandant", "keys": "y", "match": SCREEN},
+    {"name": "rest_handed_back", "keys": "enter", "match": SCREEN},
+    # On foot to the Barracks door (MAP1 entrance 6).
+    {"name": "rest_barracks_question", "keys": "up home*2 down*2 left*2 down right*2 pgup down*2 left*23 home up*85 left home up left home up*15 home", "match": SCREEN},
+    {"name": "rest_barracks", "keys": "y", "match": SCREEN},
+    {"name": "rest_sleep", "keys": "down enter", "match": SCREEN},
+    {"name": "rest_story_2", "keys": "enter", "match": SCREEN},
+    {"name": "rest_story_4", "keys": "enter*2", "match": SCREEN},
+    {"name": "rest_story_7", "keys": "enter*3", "match": SCREEN},
+    {"name": "rest_menu_again", "keys": "enter", "match": SCREEN},
+    {"name": "rest_leave", "keys": "up enter", "match": SCREEN},
+    # The same way back (each step turned round) to the Training Center.
+    {"name": "rest_back_question", "keys": "pgdn down*15 pgdn right down pgdn right down*85 pgdn right*23 up*2 end left*2 up right*2 up*2 pgdn*2 down home up*2", "match": SCREEN},
+    # Flag 14 is 0 again: the quiz first (orig: only), then the greeting.
+    {"name": "rest_back_greeting", "keys": "y orig:enter*4", "match": SCREEN},
+    # Flag 13 is set now: the third mission's briefing (TRAINING.BLD +05b6).
+    {"name": "rest_briefing", "keys": "y", "match": SCREEN},
+]
+
 # Each sequence is one run of the original: (name, quick cases, --full
 # cases, chr's own options).
 # Mission 1, the marked spot, reached by keys alone after the course: flag
@@ -664,6 +691,7 @@ SEQUENCES = [("town", CASES, FULL_CASES, []), ("training", TRAINING_CASES, [], [
              ("spot", [], SPOT_CASES, []),
              ("fourth", [], FOURTH_CASES, []),
              ("raid", [], RAID_CASES, []),
+             ("rest", [], REST_CASES, []),
              ("handover", [], HANDOVER_CASES, [])]
 
 # The feeder (tools/capture/snap.asm, docs/reference.md) hands over a key at

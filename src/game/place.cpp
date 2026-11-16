@@ -301,6 +301,20 @@ bool Town::special(int n, KeySource& keys) {
         }
         return true;
     }
+    case 43: {
+        // 24d3:157e: Rick Atlas waits in the Lounge. Townsperson 0 stands
+        // at the Lounge's entrance (7), inside (wait ff), last in the
+        // Lounge and bound for the Training Center (entrance 0), until the
+        // talk lets him out (flag 2d, talk()).
+        auto& w = people_.walkers()[0];
+        w.at = map_.entrances[7];
+        w.target = map_.entrances[0];
+        w.route = 0x70;
+        w.wait = 0xff;
+        figs_.x[16] = w.at.x;
+        figs_.y[16] = w.at.y;
+        return true;
+    }
     case 12:
         return talk(keys);
     case 14:
