@@ -103,10 +103,11 @@ Townspeople Townspeople::place(const formats::MtpMap& map, int map_number, Rando
 }
 
 void Townspeople::move(const formats::MtpMap& map, MapPosition party, const PartyPlaces& party_places,
-                       FigureAnimation& animation, Random& random) {
+                       FigureAnimation& animation, Random& random, std::span<bool, 8> near) {
     for (int i = 0; i < 8; ++i) {
         auto& w = walkers_[std::size_t(i)];
         const int f = kFirstWalker + i;
+        near[std::size_t(i)] = false;
         if (w.wait != 0) {
             // (F:d339 keeps the first person inside: not set in town.)
             if (--w.wait == 0) w.at = map.entrances[std::size_t(w.route >> 4)];
@@ -119,6 +120,7 @@ void Townspeople::move(const formats::MtpMap& map, MapPosition party, const Part
         const std::uint16_t top = move_y(std::uint16_t(party.y & 0xf070), -16);
         const std::uint16_t bottom = move_y(std::uint16_t(party.y | 0x0f), 16);
         if (!(w.at.x > left && w.at.x < right && w.at.y > top && w.at.y < bottom)) continue;
+        near[std::size_t(i)] = true;
 
         step(i, map, party, party_places);
         animation.walk(f, w.heading);

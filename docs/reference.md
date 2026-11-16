@@ -138,12 +138,15 @@ fight there; `arm:N` gives chr N - 1 passes after the key instead of the usual 2
 cases end after round 1; `--full` adds rounds 2-8 and the end of the fight. `verbose` is the
 same fight with combat messages Verbose (graphics still off), so every capture compares the last
 shot's line in window 4 too; its quick case is round 1 as well. `brief` (messages Brief) is
-long only. The training
+long only. `drawn` is the fight with no messages and combat graphics on: the state only,
+since chr does not show the shots yet; round 1 quick, the rest long. The training
 cases at its start are captured but not compared (`"compare": False`): the `training` sequence
 compares them. These cases compare the fight's tables too: a case with
 `"fight": True` runs `chr --fight-state` and `state.py --fight` (the 24 figures' places,
-active and destroyed counts, headings, facings and frames, their orders, targets and paths, the
-heat, the burning counts, DG:014a and the map marks).
+active and destroyed counts, headings, facings and frames, their orders, targets and paths, what
+the figure drawer wrote for each (on screen, terrain, tile, the 'Mechs' tile above and half-row,
+screen place), the parked facings, where each is in its script (DG:01f6), the heat, the burning
+counts, DG:014a and the map marks).
 
 ## Findings
 

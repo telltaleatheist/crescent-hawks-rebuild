@@ -52,6 +52,16 @@ public:
     // Runs figure `f`'s script to its next frame and makes it the frame
     // (F:409a), as 1000:1732's callers do.
     void advance(int f) { frame_[std::size_t(f)] = step(f); }
+    // The script byte at `address` (37e8:0270..02ef, or the data segment's
+    // shot scripts); 0xff past them.
+    int script_byte(int address) const;
+    // Runs the script at `pos` to its next frame, as 1000:1732 does for a
+    // figure (a direction byte goes to *direction); -1 at an ff.
+    int run(int& pos, int* direction = nullptr) const;
+    // Where figure f is in its script (DGROUP:01f6 + 4f), and whether it is
+    // at an ff, a pose's end.
+    int script_position(int f) const { return pos_[std::size_t(f)]; }
+    bool at_end(int f) const { return script_byte(pos_[std::size_t(f)]) == 0xff; }
     // Sets a frame and the direction last walked (F:396c) directly.
     void set_frame(int f, int frame) { frame_[std::size_t(f)] = frame; }
     void set_direction(int f, int direction) { direction_[std::size_t(f)] = direction; }
@@ -73,7 +83,7 @@ private:
     int step(int f);
 
     const formats::Tables* tables_;
-    std::array<int, kFigures> pos_{};        // offset into the scripts (37e8:0000 + pos)
+    std::array<int, kFigures> pos_{};        // the script's offset (37e8:0270.., or DG for the shot's)
     std::array<int, kFigures> direction_{};  // -1: none yet
     std::array<int, kFigures> frame_{};
 };

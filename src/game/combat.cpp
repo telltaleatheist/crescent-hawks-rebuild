@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <cstdlib>
+#include <utility>
 
 #include "game/map_view.h"
 #include "game/townspeople.h"
@@ -12,6 +13,48 @@
 namespace chr::game {
 
 namespace {
+
+// BTECH.EXE 1e31:1df8 (Ghidra FUN_1e31_1df8)
+// Where `to` falls in the view centred on `from`, in text cells (the
+// centre is column 0x1a, row 0x0c), walking one half-cell at a time across
+// area edges; for a figure the drawer did not draw.
+std::pair<int, int> view_place(formats::MapPosition from, formats::MapPosition to) {
+    int col = 0x1a, row = 0x0c;
+    std::uint16_t x = from.x, y = from.y;
+    for (int guard = 0; guard < 0x10000 && y > to.y; ++guard) {
+        --y;
+        if (y & 0x80) y &= 0xf07f;
+        --row;
+    }
+    for (int guard = 0; guard < 0x10000 && y < to.y; ++guard) {
+        ++y;
+        if (y & 0x80) y = std::uint16_t(y + 0xf80);
+        ++row;
+    }
+    for (int guard = 0; guard < 0x10000 && x > to.x; ++guard) {
+        --x;
+        if (x & 0x80) x &= 0x0f7f;
+        --col;
+    }
+    for (int guard = 0; guard < 0x10000 && x < to.x; ++guard) {
+        ++x;
+        if (x & 0x80) x = std::uint16_t(x + 0x80);
+        ++col;
+    }
+    return {col, row};
+}
+
+// BTECH.EXE 1e31:1ea2 (Ghidra FUN_1e31_1ea2)
+// The octant of a line, from the screen's y difference (start minus end)
+// and x difference (end minus start).
+int octant(int dy, int dx) {
+    if (dy < 0) {
+        if (dx > 0) return -dy > dx ? 3 : 2;
+        return -dx <= -dy ? 4 : 5;
+    }
+    if (dx > 0) return dx <= dy ? 0 : 1;
+    return -dx >= dy ? 6 : 7;
+}
 
 using formats::MapPosition;
 
@@ -832,8 +875,18 @@ void Combat::damage_mech(int s, int t, int w, int dir, int to_hit, bool mission,
         location = rules_.combat.hit_locations[0][(random_.next() & 8) ? 9 : 1] + mech::kArmour;
     }
     const auto& wr = weapon_record(w);
-    // Bug 5: a personal weapon at a 'Mech does nothing at all.
-    if (wr[weapon::kShots] & 0x80) return;
+    // Bug 5: a personal weapon at a 'Mech does nothing at all, and the hit
+    // flag the graphics get is the round's last shot's.
+    if (wr[weapon::kShots] & 0x80) {
+        if (fixes_.fix_stale_hit_flag) {
+            hit_ = false;
+        } else if (!hit_known_) {
+            note("a personal weapon at a 'Mech as the round's first shot: the hit flag taken as a miss");
+            hit_ = false;
+        }
+        hit_known_ = true;
+        return;
+    }
     int damage = w == weapon::kKick ? kick_damage_ : wr[weapon::kDamage];
     if (wr[weapon::kShots] > 1) {
         const int c = two_d6(random_);
@@ -842,7 +895,9 @@ void Combat::damage_mech(int s, int t, int w, int dir, int to_hit, bool mission,
         damage = at < 77 ? cluster[at] * damage : 0;
         if (at >= 77) note("a cluster column past the table");
     }
-    if (two_d6(random_) < to_hit) {
+    hit_ = two_d6(random_) >= to_hit;
+    hit_known_ = true;
+    if (!hit_) {
         print({"shot.mech_missed"});
         damage = 0;
         if (s_.terrain[std::size_t(t)] != 0 && ((w > 0x0f && w < 0x13) || w == weapon::kInferno) &&
@@ -907,7 +962,9 @@ void Combat::damage_person(int t, int w, int to_hit, bool& killed) {
     shots &= 0x7f;
     if (damage == 0) damage = 1;
     const int first = damage;
-    if (two_d6(random_) < to_hit) {
+    hit_ = person_hit_ = two_d6(random_) >= to_hit;
+    hit_known_ = true;
+    if (!hit_) {
         shots = 0;
         if (s_.terrain[std::size_t(t)] != 0 && ((w > 0x0f && w < 0x13) || w == weapon::kInferno) &&
             s_.tile[std::size_t(t)] > 0x0f && s_.tile[std::size_t(t)] < 0x40)
@@ -933,6 +990,127 @@ void Combat::damage_person(int t, int w, int to_hit, bool& killed) {
         r[character::kHitPoints] = damage < hp ? std::uint8_t(hp - damage) : 0;
     }
     if (r[character::kHitPoints] == 0) killed = true;
+}
+
+int Combat::view_figure() const {
+    const int m = std::int8_t(characters_[0][character::kMech]);
+    return m < 8 ? m : 4;
+}
+
+void Combat::redraw() {
+    const int v = view_figure();
+    party_ = {figs_.x[std::size_t(v)], figs_.y[std::size_t(v)]};  // 1000:17bb
+    if (hooks_.draw_view) hooks_.draw_view(graphics_);
+}
+
+void Combat::present(int s, int t, int w, int dir) {
+    const auto su = std::size_t(s), tu = std::size_t(t);
+    const MapPosition centre = {figs_.x[std::size_t(view_figure())], figs_.y[std::size_t(view_figure())]};
+    const auto park = [this](int f) {
+        if (animation_.direction(f) != -1) s_.parked_facing[std::size_t(f)] = std::int8_t(animation_.direction(f));
+    };
+    const auto pose = [this](int table, int d) {  // far pointer d of a table (offset, segment)
+        return tables_.mech_poses[std::size_t((table - 0x2d58) / 2 + 2 * d)];
+    };
+    // The shooter's pose.
+    park(s);
+    const int kept = animation_.frame(s);
+    const bool other = figs_.sprite_base[su] != 0;  // F:d55e
+    if (is_mech(s)) {
+        if (w == weapon::kKick) animation_.start_script(s, pose(other ? 0x2db8 : 0x2d98, dir));
+        else animation_.start_script(s, pose(other ? 0x2d78 : 0x2d58, dir));
+    } else if (w >= 0 && w < 0x0f) {
+        animation_.start_script(s, tables_.person_poses[std::size_t(w * 16 + dir * 2)]);
+    } else {
+        note("a person's pose for a weapon past DG:3ff8's table: none");
+    }
+    // The target's reaction, a person hit by anything but missiles.
+    bool reaction = person_hit_;
+    int picture = 0;  // [bp-0x24]
+    if (w == 0x0a || w == 0x0b) {
+        reaction = false;
+        if (is_mech(t)) picture = 1;
+    }
+    if (w >= 0x19 && w <= 0x1f) reaction = false;
+    if (reaction) {
+        park(t);
+        animation_.start_script(t, formats::Tables::kReactionScript);
+    }
+    while (!animation_.at_end(s)) {
+        animation_.advance(s);  // 1000:1732
+        if (reaction) animation_.advance(t);
+        if (s_.on_screen[su]) redraw();  // 1e31:1f09, shown (273d:06c3), 5 frames
+    }
+    // The shot: kind 1 a missile flies, 2 and 3 a line is drawn.
+    int kind = 0;
+    if (w == 0x0a || w == 0x0b || (w >= 0x19 && w <= 0x1f)) kind = 1;
+    if (w == 0x0c || w == 0x0d) kind = 2;
+    if (w >= 0x0f && w <= 0x12) {
+        kind = 3;
+        if (s < 12) picture = other ? 7 : 4;
+        else if (t == 0 && other) picture = 3;
+    }
+    if (kind != 0 && (s_.on_screen[su] || s_.on_screen[tu])) {
+        const auto place = [&](int f) {
+            if (s_.on_screen[std::size_t(f)]) return std::pair{s_.screen_x[std::size_t(f)], s_.screen_y[std::size_t(f)]};
+            const auto [c, r] = view_place(centre, {figs_.x[std::size_t(f)], figs_.y[std::size_t(f)]});
+            return std::pair{c << 3, r << 3};
+        };
+        auto [sx, sy] = place(s);
+        auto [tx, ty] = place(t);
+        if (is_mech(t)) ty -= 8;
+        if (kind != 1) {
+            tx += 3;
+            ty += 3;
+            const int table = is_mech(s) ? (other ? 16 : 0) : 32;
+            sx += tables_.muzzle[std::size_t(table + dir)];
+            sy += tables_.muzzle[std::size_t(table + 8 + dir)];
+        }
+        int missile = tables_.mech_poses[std::size_t(0x40 + 2 * dir)];  // DG:2dd8: figure 0x18's script
+        if (std::abs(sx - tx) > 8 || std::abs(sy - ty) > 8) {
+            const int dy = sy - ty, dx = tx - sx;
+            int major = std::abs(dy), minor = std::abs(dx);
+            if (minor > major) std::swap(major, minor);
+            const int o = octant(dy, dx);
+            const int scale = kind == 1 ? 4 : 1;
+            const int step_x = tables_.line_steps[std::size_t(o)] * scale;
+            const int step_y = tables_.line_steps[std::size_t(8 + o)] * scale;
+            const int diag_x = tables_.line_steps[std::size_t(16 + o)] * scale;
+            const int diag_y = tables_.line_steps[std::size_t(24 + o)] * scale;
+            int error = major >> 1;
+            for (int guard = 0; sx != tx || sy != ty; ++guard) {
+                if (guard > 0x4000) {
+                    // The original would go on for ever, a step past its end.
+                    note("a shot's line misses its end: stopped");
+                    break;
+                }
+                const bool inside = sx >= 0x68 && sx < 0x140 && sy >= 0 && sy < 200;
+                if (kind == 1) {
+                    animation_.run(missile);  // frame + 0x68
+                    if (inside) redraw();     // then the missile (1e31:1f73), shown
+                }
+                if (sx != tx) sx += step_x;
+                if (sy != ty) sy += step_y;
+                error -= minor;
+                if (error < 0) {
+                    if (sx != tx) sx += diag_x;
+                    if (sy != ty) sy += diag_y;
+                    error += major;
+                }
+            }
+        }
+    }
+    if (!hit_) {
+        redraw();
+    } else if (w > 6 && s_.on_screen[tu]) {
+        int explosion = formats::Tables::kExplosionScript;  // figure 0x18's script
+        while (animation_.script_byte(explosion) != 0xff) {
+            animation_.run(explosion);  // frame + 0xfa, over the target
+            redraw();
+        }
+        if (picture != 0 && hooks_.picture) hooks_.picture(picture, 0);
+    }
+    if (is_mech(s)) animation_.set_frame(s, kept);
 }
 
 void Combat::after_shot(int t, bool killed, bool destroyed, int c) {
@@ -965,6 +1143,7 @@ void Combat::after_shot(int t, bool killed, bool destroyed, int c) {
 }
 
 bool Combat::fire(int s, int slot, bool mission, const std::array<std::int8_t, 24>& moved) {
+    person_hit_ = false;
     destroyed_ = false;
     critical_hit_ = false;
     int t = std::int8_t(s_.targets[std::size_t(s)][std::size_t(slot)]);
@@ -1081,9 +1260,15 @@ bool Combat::fire(int s, int slot, bool mission, const std::array<std::int8_t, 2
             c = character_of(t);
             damage_person(t, w, to_hit, killed);
         }
-        if (graphics_) note("combat graphics: the shot is not drawn");
+        if (graphics_ && s_.fight_on) present(s, t, w, dir);
         after_shot(t, killed, destroyed, c);
-        if (arm_off_) critical_hit_ = false;
+        if (graphics_) animation_.set_direction(s, -1);  // F:396c + s = ff
+        if (arm_off_) {
+            critical_hit_ = false;
+            if (graphics_ && !(t == 13 && s_.spectator) && hooks_.picture) hooks_.picture(0x10, 0);
+        }
+        if (critical_hit_ && graphics_ && c == std::int8_t(characters_[0][character::kMech]) && hooks_.picture)
+            hooks_.picture(5, 0);
         if (hooks_.pause) hooks_.pause();
         s_.targets[std::size_t(s)][std::size_t(slot)] |= 0x80;
         arm_off_ = false;
@@ -1098,6 +1283,7 @@ void Combat::round(bool mission) {
     const MapPosition saved = party_;
     std::array<std::int8_t, 24> moved{};  // steps taken this round
     s_.path_step.fill(0);
+    hit_known_ = false;
     for (int phase = 0; phase < 12; ++phase) {
         if (!s_.fight_on) continue;
         bool any = phase == 0;
@@ -1129,7 +1315,7 @@ void Combat::round(bool mission) {
             }
             party_ = before;
         }
-        if (any && graphics_) note("combat graphics: the round's redraw is not rebuilt");
+        if (any && (graphics_ || fixes_.fix_terrain_without_graphics)) redraw();
         // Firing: each figure's first slot that fires ends its turn.
         for (int f = 0; f < 24; ++f) {
             if (!s_.fight_on || figs_.active[std::size_t(f)] == 0) continue;

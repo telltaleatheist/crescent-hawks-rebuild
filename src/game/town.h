@@ -247,7 +247,7 @@ private:
     bool show_quiz(KeySource& keys);
     static constexpr int kQuizMenu = 0x25;
     std::vector<Figure> walk_in_figures();
-    std::vector<Figure> fight_figures_drawn() const;
+    std::vector<Figure> fight_figures_drawn();
     void print_unit_heading(int fig);
     bool on_foot(int character) const;
     // The screen as it was last drawn, while the program draws nothing new

@@ -341,7 +341,7 @@ void Town::game_tick() {
     // Every third tick the townspeople move (1000:24c2).
     if (third_++ == 2) {
         third_ = 0;
-        people_.move(map_, position_, party_places_, animation_, random_);
+        people_.move(map_, position_, party_places_, animation_, random_, std::span(combat_.on_screen).first<8>());
         if (people_.outside_window) {
             people_.outside_window = false;
             log_.push_back("a person's step looked outside the cell window: read the map instead");

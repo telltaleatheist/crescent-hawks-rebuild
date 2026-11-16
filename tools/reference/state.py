@@ -56,6 +56,13 @@ def fight_state(m, far):
         lines.append("state orders %d %s" % (i, m.read(far, 0x32c6 + 0x30 * i, 0x30).hex()))
         lines.append("state targets %d %s" % (i, m.read(far, 0x3800 + 12 * i, 12).hex()))
         lines.append("state path %d %s" % (i, m.read(far, 0x40b4 + 0x18 * i, 0x18).hex()))
+        mech = i < 4 or 12 <= i < 16
+        lines.append("state drawn %d on %d terrain %02x tile %02x above %02x half %02x at %d %d parked %02x script %04x" % (
+            i, m.read(far, 0x42f6 + i, 1)[0], m.read(far, 0x32ae + i, 1)[0], m.read(far, 0x3750 + i, 1)[0],
+            # F:45ce and F:4554 hold the 'Mechs' only; past them is other data.
+            m.read(far, 0x45ce + i, 1)[0] if mech else 0, m.read(far, 0x4554 + i, 1)[0] if mech else 0,
+            m.word(far, 0x324c + 2 * i),
+            m.word(far, 0x327c + 2 * i), m.read(far, 0x45b6 + i, 1)[0], m.word(m.ds, 0x01f6 + 4 * i)))
     lines.append("state heat " + " ".join("%02x" % b for b in m.read(far, 0x006e, 8)))
     lines.append("state burning " + " ".join("%02x" % b for b in m.read(far, 0xd576, 8)))
     lines.append("state fight_on %d" % (m.word(m.ds, 0x014a) != 0))

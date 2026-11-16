@@ -162,7 +162,9 @@ void print_fight_state(const chr::game::Town& town) {
         for (const auto b : c.targets[n]) std::printf("%02x", b);
         std::printf("\nstate path %d ", i);
         for (const auto b : c.paths[n]) std::printf("%02x", b & 0xff);
-        std::printf("\n");
+        std::printf("\nstate drawn %d on %d terrain %02x tile %02x above %02x half %02x at %d %d parked %02x script %04x\n",
+                    i, int(c.on_screen[n]), c.terrain[n] & 0xff, c.tile[n], c.standing_on[n], c.sink[n],
+                    c.screen_x[n] & 0xffff, c.screen_y[n] & 0xffff, c.parked_facing[n] & 0xff, a.script_position(i) & 0xffff);
     }
     std::printf("state heat");
     for (const auto h : c.heat) std::printf(" %02x", h & 0xff);

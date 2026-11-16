@@ -36,6 +36,8 @@ struct Fixes {
     bool fix_area_wrap = false;            // 31: 203b:2835
     bool fix_stop_on_loss = false;         // 33: 22e8:000c
     bool fix_enemy_heat_cap = false;       // 35: 1e31:0c63, the cap at 30 tests party record a
+    bool fix_terrain_without_graphics = false;  // 36: 22e8:000c, the drawer's terrain without the
+                                                //     combat graphics, as with them
 
     // Fixed by default (on): memory the rebuild does not hold, or a hang.
     bool fix_kick_actuators = true;   // 2: 1e31:1b44 reads 'Mech records 12-15, past the eight

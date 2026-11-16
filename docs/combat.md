@@ -118,14 +118,16 @@ Not rebuilt yet on this stretch: `0d49`'s enemy people (its second count) and `0
 
 ### 1.2.2 Mission 2 fought by the computer (rebuilt)
 
-With "Should the computer fight?" answered Yes and combat graphics No, at every combat messages
-level, the whole fight runs from random draws alone: the planner (section 4), the rounds (section 3) and
+With "Should the computer fight?" answered Yes, at every combat messages level and with combat
+graphics off or on, the whole fight runs from random draws alone: the planner (section 4), the rounds (section 3) and
 the end tests (2.8), up to "You should return to base now." (2.12). Rebuilt in
 `src/game/combat.cpp` (the rules) and `Town::fight_rounds` (the loop), and matched on the
-original by the rig's `mission`, `verbose` and `brief` sequences (docs/reference.md): the
+original by the rig's `mission`, `verbose`, `brief` and `drawn` (graphics on) sequences
+(docs/reference.md): the
 screen (with messages on, every shot's line in window 4, 3.8) and the state after rounds 4 to 8 and
 at the end, every figure's place, heading, facing and frame, the orders, targets, paths, heat
-and map marks, and both 'Mech records byte for byte. In it the party's Locust shoots the enemy
+and map marks, what the figure drawer wrote (3.14), the parked facings and where each figure is
+in its script, and both 'Mech records byte for byte. In it the party's Locust shoots the enemy
 Locust (which has no weapons, no ammunition and no hips, so it creeps 1 half-cell a round)
 until it is destroyed.
 
@@ -136,7 +138,13 @@ The pauses after a shot (3.8) are not timed: the town's logic runs a fight throu
 question at once, so a player sees each round's last line only. The state does not depend on
 them.
 
-Not rebuilt yet: the combat graphics, the player's orders, the Arena's spectator, the double agent, and what follows the fight (2.13 is
+With combat graphics on, everything the shots' graphics change is rebuilt (3.14): the poses'
+frames and scripts, the parked facings, and the drawer's terrain at every redraw, which changes
+the fight's outcome (quirk 36: in the `drawn` run Jason's Locust starts in water). What the
+graphics show is not: chr does not draw or sound the poses, missiles, lines, explosions or
+pictures yet (the pictures' random draws are made).
+
+Not rebuilt yet: the shots' graphics on screen, the player's orders, the Arena's spectator, the double agent, and what follows the fight (2.13 is
 done; 2.15 is not).
 
 **The cell window in a fight.** The planner's path (3.3) and the line of sight (3.6) read map
@@ -789,16 +797,18 @@ building, 0x80 / 0x81 a wreck (two sprite sets). The ring is probably the map ob
      DG:2d58 (the Kick DG:2d98), or DG:2d78 / DG:2db8 when its sprite set F:d55e + s is not 0;
      a person DG:3ff8 + 0x20 w + 4d. Its facing F:396c + s, unless ff, is parked in F:45b6 + s,
      and a 'Mech's walking frame (F:409a + s) is kept to be put back at the end.
-  3. The target's reaction, only on a hit and not for the missiles (w 0x0a-0x0b at a 'Mech,
-     0x19-0x1f): the script DG:2e3c, its facing parked likewise.
+  3. The target's reaction, only when a person is hit (22e8:000c sets the flag only there) and
+     not by missiles (w 0x0a-0x0b, 0x19-0x1f): the script DG:2e3c (it loops), its facing parked
+     likewise. Its facing F:396c is left as it was, so the walk after it carries on in the
+     reaction's loop if the person walks the way it last walked.
   4. Until the shooter's script reaches its end (ff): both figures take their next frame
      (`1000:1732`), and if the shooter is on screen (F:42f6 + s, set by the figure drawer) the
      view is redrawn (`1e31:1f09`), shown (`273d:06c3`) and held 5 frames (`273d:0006(5)`).
   5. A sound by weapon (`1000:19bf`): w 0-2: 0x0d; 3: 5; 4-6: 0x0b; 7-8: 6; 9, 0x13-0x17: 3.
   6. The shot itself, when either figure is on screen. Kind 1, the missiles (w 0x0a-0x0b and
      0x19-0x1f, sound 1 first): a sprite (frames from `1000:1732` + 0x68, script DG:2dd8 + 4d)
-     moved along the line four pixels a step, each step drawn (`1e31:1f73`) and shown (on the CGA
-     only every fourth). Kinds 2 (w 0x0c-0x0d) and 3 (w 0x0f-0x12, the lasers and the PPC): the
+     moved along the line four pixels a step, each step inside the map window redrawn (`1e31:1f09`),
+     drawn (`1e31:1f73`) and shown (on the Tandy, display 1, only every fourth). Kinds 2 (w 0x0c-0x0d) and 3 (w 0x0f-0x12, the lasers and the PPC): the
      line plotted pixel by pixel (`273d:031c`), from the figures' screen places (F:324c / F:327c
      + 2s, or worked out by `1e31:1df8` for one off screen) moved by 3 and by a muzzle offset by
      direction (DG:2d28/2d30 a 'Mech, 2d38/2d40 with the other sprite set, 2d48/2d50 a person),
@@ -812,8 +822,24 @@ building, 0x80 / 0x81 a wreck (two sprite sets). The ring is probably the map ob
      one: 1 for the missiles at a 'Mech, 4 (7 with the other sprite set) for a party figure's
      lasers or PPC, 3 for an enemy's when the target is figure 0 and the shooter's sprite set is
      not 0.
-  8. A 'Mech shooter's walking frame is put back. At the very end of the function, F:396c + s =
-     ff (the facing is read from F:45b6 + s from then on, 3.9).
+  8. A 'Mech shooter's walking frame is put back; a person's stays its pose's last. At the very
+     end of the function, F:396c + s = ff (the facing is read from F:45b6 + s from then on, 3.9).
+
+  Every redraw here (`1e31:1f09`) puts back the cell window saved at the round's last redraw
+  (`287f:1ece`: the window around Jason, saved after the movement in phase 0 and in every phase
+  where a figure moved), walks the party's place onto Jason's figure (`1000:17bb`), steps the
+  animated tiles (`1000:240b`) and draws the view and figures (`287f:18ef`, `1000:0e4b`). The
+  firing code puts the party's place back after each shot, so of all this only the drawer's
+  writes and the tiles' frame remain. A line or missile from or to a figure off screen starts or
+  ends at its place worked out from Jason's (`1e31:1df8`); it is drawn only when either is on
+  screen, and not at all when the two are within 8 pixels.
+
+  **The figure drawer** (`1000:0e4b`), for every figure in view (people, then 'Mechs): F:42f6
+  (on screen, all 24 cleared first; in the town F:42f6 + i is townsperson i's "near the party"
+  flag, `1000:24c2`), F:324c / 327c (its pixel place), F:3750 (the tile under it), F:32ae (the
+  rows it sinks: a person 2, 4 in deep water; a 'Mech 8, 16), and for a 'Mech F:45ce (the tile
+  one cell up, for the missed-shot mark) and F:4554 (1 in its cell's other half-row; both
+  cleared first for every 'Mech that exists). A figure out of view keeps its old values.
 - **A person killed**: "Killed him!" (DG:41fc); destroyed, inactive, the record emptied, a body
   mark 0x7e; every target byte aimed at him cleared. Character 0 or 1: DG:014a = 0, the fight ends
   at once (open question 6).
@@ -946,7 +972,7 @@ mistake; "quirk" means it may be intended.
 | 2 | The Kick's to-hit counts missing actuators of 'Mech record s, the figure number; for an enemy kicker (figures 12-15) that reads past the eight records. Probable. | `22e8:000c` to-hit, `1e31:1b44` | `fix_kick_actuators` |
 | 3 | Every damaged internal location gets at least one critical; the board game gives none below 8. Probable. | `1e31:11ab` | `fix_critical_count` |
 | 4 | Against people, D is not reset between the shots of one weapon: armour halving carries on. Probable. | `22e8:000c` | `fix_person_damage` |
-| 5 | A personal weapon at a 'Mech: no roll, no effect, and the hit flag passed to the animation is left from the last shot (unset at first). Presentation only. | `22e8:000c`, `22e8:12c7` | `fix_stale_hit_flag` |
+| 5 | A personal weapon at a 'Mech: no roll, no effect, and the hit flag passed to the animation is left from the round's last shot (unset at the round's first: 22e8:000c's stack, taken as a miss with a log line). With graphics on it picks between a miss's redraw and the explosion, so only the tiles' frame differs. The fix shows a miss. | `22e8:000c`, `22e8:12c7` | `fix_stale_hit_flag` |
 | 6 | Actuator losses: MP is lifted to 1 only when exactly 0, so -1 ends as 0. Probable. | `203b:22bc` | `fix_actuator_min` |
 | 7 | The run bonus +1 tests the undamaged walking MP for oddness. Quirk. | `203b:22bc` | `fix_run_parity` |
 | 8 | Enemy people's MP: the planner passes figure - 8, so figures 16-19 use party characters 4-7 and 20-23 a flat 6. Probable. | `1e31:03ab`, `203b:2474` | `fix_enemy_foot_mp` |
@@ -977,7 +1003,7 @@ mistake; "quirk" means it may be intended.
 | 33 | Jason's 'Mech destroyed in a mission stops all movement only when the damage ended exactly in the head or centre torso, not when it overflowed. | `22e8:000c` | `fix_stop_on_loss` |
 | 34 | Only ten ammunition bytes: an 11th weapon would use the walking MP byte as its ammunition. No template has more than nine weapons. | `1e31:10a2`, `22e8:000c` | none |
 | 35 | The end of the round caps heat at 30 for party record a only, whichever record it heated: an enemy 'Mech's heat climbs past 30 (and its MP stays 0 only at exactly 30, 3.2). | `1e31:0c63` | `fix_enemy_heat_cap` |
-| 36 | The terrain under a figure (F:32ae, F:3750, F:45ce, F:4554: to-hit, water cooling, fire, the missed-shot mark) is written only by the figure drawers (`1000:051b`, `1000:0e4b`). In a fight they run only for the combat graphics (the round's redraw and the shot's presentation) or the Arena's spectator, so with combat graphics off the terrain has no effect at all. Quirk. | `22e8:000c`, `22e8:12c7` | none yet |
+| 36 | The terrain under a figure (F:32ae, F:3750, F:45ce, F:4554: to-hit, water cooling, fire, the missed-shot mark) is written only by the figure drawers (`1000:051b`, `1000:0e4b`). In a computer-fought fight they run only for the combat graphics (the round's redraw and the shot's presentation) or the Arena's spectator, so with combat graphics off the terrain has no effect at all (the player's orders screen draws the figures too). With graphics on, only figures in Jason's view get theirs. Quirk; the fix writes the drawer's values at the round's redraw without showing it, as with graphics on. | `22e8:000c`, `22e8:12c7` | `fix_terrain_without_graphics` |
 
 The switches are `game/fixes.h`. Each is off by default, except where the original reads or
 writes memory the rebuild does not hold, or never returns: bugs 2, 17, 18, 21, 23, 26 and 32
@@ -1042,9 +1068,9 @@ sequence compares the scene with the original's, over the whole screen and the s
 ## 8. Open questions
 
 1. `17dc:1c9b` sets the eight characters' 'Mech slot bytes to 3 (meaning unknown).
-2. F:32ae (terrain: to-hit, the course count, water cooling) and F:3750 (the tile under a figure):
-   exact meanings. They (and F:45ce, F:4554) are written only by the figure drawers `1000:051b`
-   and `1000:0e4b`, and cleared at a fight's start. With combat graphics off nothing draws the
+2. F:32ae and F:3750 are what the figure drawer `1000:0e4b` worked out (3.14: the rows a figure
+   sinks, the tile under it). Open: what `1000:051b` writes to F:32ae (it writes no other of
+   them), and whether it matters before a fight. With combat graphics off nothing draws the
    figures during the rounds, so in such a fight they keep their start values (0 for kinds
    1-3).
 3. The nine bytes P:07a4..07ac whose bit 0x80 blocks salvage. In a fight's memory they are the

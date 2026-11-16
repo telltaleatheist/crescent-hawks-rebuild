@@ -18,7 +18,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 1000:00bb | 0x100bb | `FUN_1000_00bb` | 313 | Main loop: one turn per key; redraws the map, figures and panel each turn; resets the one-question-per-turn flag | read |
 | 1000:01f4 | 0x101f4 | `FUN_1000_01f4` | 807 | Main loop, idle half: waits one display frame (273d:0006); every 11 passes a game tick: timers, random, money, tile animation 240b, 24c2 every third, redraw (docs/town_loop.md) | rebuilt |
 | 1000:051b | 0x1051b | `FUN_1000_051b` | 2352 | Draws the figures: map objects (2a93), the party (walking frame, sinking in water), the townspeople in view, 'Mechs; records the party's places (party and townspeople rebuilt) | rebuilt |
-| 1000:0e4b | 0x10e4b | `FUN_1000_0e4b` | 2279 |  | - |
+| 1000:0e4b | 0x10e4b | `FUN_1000_0e4b` | 2279 | The fight's figure drawer: people, then 'Mechs top to bottom; writes on screen, screen place, tile, sink (docs/combat.md 3.14) | rebuilt |
 | 1000:1732 | 0x11732 | `FUN_1000_1732` | 137 | Runs a figure's walking script to its next frame (0xfd direction, 0xfe jump back, 0xff hold) | rebuilt |
 | 1000:17bb | 0x117bb | `FUN_1000_17bb` | 92 |  | - |
 | 1000:1817 | 0x11817 | `FUN_1000_1817` | 88 |  | - |
@@ -190,9 +190,9 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 1e31:1bfe | 0x1ff0e | `FUN_1e31_1bfe` | 429 |  | - |
 | 1e31:1dab | 0x200bb | `FUN_1e31_1dab` | 33 | Prints a text into the current window when combat messages are on (DG:2e38) (docs/combat.md 3.8) | rebuilt |
 | 1e31:1dcc | 0x200dc | `FUN_1e31_1dcc` | 44 | The pause after a shot: 12 x DG:015e frames, or a key from 5 on (docs/combat.md 3.8) | rebuilt in part |
-| 1e31:1df8 | 0x20108 | `FUN_1e31_1df8` | 170 |  | - |
-| 1e31:1ea2 | 0x201b2 | `FUN_1e31_1ea2` | 103 |  | - |
-| 1e31:1f09 | 0x20219 | `FUN_1e31_1f09` | 106 |  | - |
+| 1e31:1df8 | 0x20108 | `FUN_1e31_1df8` | 170 | A place's text cell in the view centred on another, half-cell by half-cell (into F:e486/e488) | rebuilt |
+| 1e31:1ea2 | 0x201b2 | `FUN_1e31_1ea2` | 103 | A line's octant from its y and x differences | rebuilt |
+| 1e31:1f09 | 0x20219 | `FUN_1e31_1f09` | 106 | The shot's redraw: the saved cell window back, the view onto Jason, tiles' frame, view and figures | rebuilt (not shown) |
 | 1e31:1f73 | 0x20283 | `FUN_1e31_1f73` | 108 |  | - |
 | 1e31:1fdf | 0x202ef | `FUN_1e31_1fdf` | 203 | Panel: "C-Bills:" and the amount in green, in window 3 | rebuilt |
 

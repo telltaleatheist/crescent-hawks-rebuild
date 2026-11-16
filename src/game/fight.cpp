@@ -22,21 +22,6 @@ constexpr int kPilot = 0x79;
 
 std::int16_t wrap16(int v) { return std::int16_t(std::uint16_t(v)); }
 
-// 1000:2689 / 0e4b: a figure's place relative to the view's top-left text
-// cell, across area edges as the original works it out.
-int view_col(std::uint16_t fx, std::uint16_t px) {
-    int col = wrap16(fx - px);
-    if (col < -0x80) col += 0x80;
-    if (col > 0x80) col -= 0x80;
-    return col + 0x1a;
-}
-int view_row(std::uint16_t fy, std::uint16_t py) {
-    int row = wrap16(fy - py);
-    if (row < wrap16(0xf080)) row += 0xf80;
-    if (row > 0xf80) row -= 0xf80;
-    return row + 0x0c;
-}
-
 }  // namespace
 
 int mech_sink(int tile, int quarters) {
@@ -83,42 +68,95 @@ std::vector<Figure> Town::walk_in_figures() {
 }
 
 // BTECH.EXE 1000:0e4b (Ghidra FUN_1000_0e4b)
-// The fight's figure drawer: every figure from its own place, the 'Mechs
-// (0-3, 12-15) in view top to bottom, 24x24, sinking in water. (The people,
-// figures 4-11 and 16-23: docs/combat.md.)
-std::vector<Figure> Town::fight_figures_drawn() const {
+// The fight's figure drawer: the people (figures 4-11, 16-23) in slot
+// order, then the 'Mechs (0-3, 12-15) in view top to bottom, each from its
+// own place relative to the view. On the way it writes what the fight
+// later reads about each figure drawn (docs/combat.md 3.14, quirk 36): on
+// screen, its screen place, the tile under it and how deep it stands.
+std::vector<Figure> Town::fight_figures_drawn() {
+    auto& c = combat_;
+    const std::uint16_t px = position_.x, py = position_.y;
+    const int corner = view_corner_index(position_);
+    const auto cell = [&](int index) { return window_cell(map_, position_, index).value_or(-1); };
+    const bool level = flags_[0x3a] == 0;  // F:d346
+    c.on_screen.fill(false);
+    std::vector<Figure> out;
+    for (const int base : {4, 16}) {
+        for (int f = base; f < base + 8; ++f) {
+            const auto fx = figs_.x[std::size_t(f)], fy = figs_.y[std::size_t(f)];
+            if (fx == 0xffff) continue;
+            const int col = wrap16(fx - px + 0x1a), row = wrap16(fy - py + 0x0c);
+            if ((fx & 0xff00) == (px & 0xff00) && (col < 0x0d || col > 0x27)) continue;
+            if ((fy & 0xff00) == (py & 0xff00) && (row < 0 || row > 0x18)) continue;
+            if (col < -0x73 || col > 0xa7 || row < wrap16(0xf080) || row > 0x0f98) continue;
+            c.on_screen[std::size_t(f)] = true;
+            const int cm = (col & 0x7f) - 0x0d, rm = row & 0x7f;
+            int index = (rm >> 1) * kWindowCells + (cm >> 1) + corner;
+            if ((cm & 1) && (px & 1)) index += 1;
+            if ((rm & 1) && (py & 1)) index += kWindowCells;
+            const int tile = cell(index);
+            const int quarters = tables_.person_quarters[std::size_t(((rm ^ py) & 1) * 2 + ((cm ^ px) & 1))];
+            int sink = 0;
+            if (level && tile >= 0 && tile < 0xf6 && (tile & quarters) && (tile & 0xf0) < 0x30)
+                sink = (tile & 0xf0) == 0x20 ? 4 : 2;
+            c.tile[std::size_t(f)] = std::uint8_t(tile);
+            c.terrain[std::size_t(f)] = std::int8_t(sink);
+            c.screen_x[std::size_t(f)] = (col & 0x7f) << 3;
+            c.screen_y[std::size_t(f)] = rm << 3;
+            Figure fig;
+            fig.sprite = sprite((figs_.sprite_base[std::size_t(f)] + animation_.frame(f)) & 0xff);
+            fig.half_x = formats::MapPosition{fx, fy}.half_cell_x() + 1;
+            fig.half_y = formats::MapPosition{fx, fy}.half_cell_y();
+            fig.sink = sink;
+            out.push_back(fig);
+        }
+    }
     struct Drawn {
         Figure figure;
         int pixel_y;
     };
     std::vector<Drawn> mechs;
-    const bool odd_x = position_.x & 1, odd_y = position_.y & 1;
     for (const int f : {0, 1, 2, 3, 12, 13, 14, 15}) {
         const auto fx = figs_.x[std::size_t(f)], fy = figs_.y[std::size_t(f)];
         if (fx == 0xffff) continue;
-        const int col = view_col(fx, position_.x), row = view_row(fy, position_.y);
-        if ((fx & 0xff00) == (position_.x & 0xff00) && (col < 0x0b || col > 0x27)) continue;
-        if ((fy & 0xff00) == (position_.y & 0xff00) && (row < 0 || row > 0x1a)) continue;
-        if (col < -0x75 || col > 0xa7 || row < -0x0f80 || row > 0x0f9a) continue;
-        // The tile under it: DG:0364/039e give the column's cell.
-        int index = view_corner_index(position_) + (row >> 1) * kWindowCells;
-        if ((row & 1) && odd_y) index += kWindowCells;
-        if (col >= 13) index += (col - 13) >> 1;
-        if (col >= 13 && ((col - 13) & 1) && odd_x) index += 1;
-        const int quarters = ((row ^ position_.y) & 1) ? 4 : 1;
+        const int col = wrap16(fx - px + 0x1a), row = wrap16(fy - py + 0x0c);
+        const bool off_x = (fx & 0xff00) == (px & 0xff00) && (col < 0x0b || col > 0x27);
+        const bool off_y = (fy & 0xff00) == (py & 0xff00) && (row < 0 || row > 0x1a);
+        c.sink[std::size_t(f)] = 0;
+        c.standing_on[std::size_t(f)] = 0;
+        if (col < -0x75 || col > 0xa7 || row < wrap16(0xf080) || row > 0x0f9a || off_x || off_y) continue;
+        c.on_screen[std::size_t(f)] = true;
+        const int cm = col & 0x7f, rm = row & 0x7f;
+        // DG:0364/039e give the column's cell: (col - 13) / 2, and one more
+        // for an odd half-cell when the view's x is odd (columns 11-12: 0).
+        int index = (rm >> 1) * kWindowCells;
+        if ((row & 1) && (py & 1)) index += kWindowCells;
+        int quarters = 1;
+        if ((rm ^ py) & 1) {
+            quarters = 4;
+            c.sink[std::size_t(f)] = 1;
+        }
+        if (cm >= 13) index += (cm - 13) >> 1;
+        if (cm >= 13 && ((cm - 13) & 1) && (px & 1)) index += 1;
+        c.standing_on[std::size_t(f)] = std::uint8_t(cell(corner + index - kWindowCells));
+        const int tile = cell(corner + index);
+        c.tile[std::size_t(f)] = std::uint8_t(tile);
+        const int sink = level ? mech_sink(tile, quarters) : 0;
+        c.terrain[std::size_t(f)] = std::int8_t(sink);
+        c.screen_x[std::size_t(f)] = cm << 3;
+        c.screen_y[std::size_t(f)] = rm << 3;
         Figure fig;
         fig.sprite = sprite((figs_.sprite_base[std::size_t(f)] + animation_.frame(f)) & 0xff);
         fig.half_x = formats::MapPosition{fx, fy}.half_cell_x();
         fig.half_y = formats::MapPosition{fx, fy}.half_cell_y() - 2;
-        fig.sink = mech_sink(window_cell(map_, position_, index).value_or(-1), quarters);
-        mechs.push_back({fig, 8 * row - 16});
+        fig.sink = sink;
+        mechs.push_back({fig, 8 * rm - 16});
     }
     // Sorted as the original does: for each i, every later one higher on
     // the screen is swapped in.
     for (std::size_t i = 0; i < mechs.size(); ++i)
         for (std::size_t j = i + 1; j < mechs.size(); ++j)
             if (mechs[j].pixel_y < mechs[i].pixel_y) std::swap(mechs[i], mechs[j]);
-    std::vector<Figure> out;
     for (const auto& m : mechs) out.push_back(m.figure);
     return out;
 }
@@ -374,6 +412,15 @@ Combat Town::combat_rules() {
         text_.select_window(4);
         text_.clear_window();
     };
+    hooks.draw_view = [this](bool shown) {
+        if (!shown) {
+            fight_figures_drawn();
+            return;
+        }
+        if (tiles_animate(map_number_)) phase_ = (phase_ + 1) % 3;  // 1000:240b
+        frozen_ = Frozen{live_view(), fight_figures_drawn()};
+    };
+    hooks.picture = [this](int number, int mode) { show_picture(number, mode); };
     hooks.log = [this](const std::string& line) {
         if (log_.empty() || log_.back() != line) log_.push_back(line);
     };
@@ -382,14 +429,8 @@ Combat Town::combat_rules() {
 }
 
 // BTECH.EXE 203b:056b..1481, the rounds with the computer in control
-// (docs/combat.md 2.5, 2.8, 2.12, 2.13), with combat graphics off; with
-// them on, the fight stops here.
+// (docs/combat.md 2.5, 2.8, 2.12, 2.13).
 bool Town::fight_rounds(int kind, KeySource& keys) {
-    if (graphics_) {
-        log_.push_back("a fight with combat graphics: not rebuilt");
-        fight_unfinished_ = true;
-        return false;
-    }
     Combat combat = combat_rules();
     bool over = false;
     while (!over) {

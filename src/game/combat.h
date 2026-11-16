@@ -83,10 +83,13 @@ struct CombatState {
     std::array<std::array<std::uint8_t, kSlots>, kFigures> targets{};       // F:3800; ff none, bit 7 fired
     std::array<std::array<std::int8_t, kPathBytes>, kFigures> paths{};      // F:40b4
     std::array<std::uint8_t, kFigures> path_step{};      // F:0078: steps of the path taken this round
-    std::array<std::int8_t, kFigures> terrain{};         // F:32ae (set by the figure drawer)
-    std::array<std::uint8_t, kFigures> tile{};           // F:3750: the tile under it (the drawer)
-    std::array<std::uint8_t, kFigures> standing_on{};    // F:45ce (the drawer)
-    std::array<std::uint8_t, kFigures> sink{};           // F:4554 (the drawer)
+    // Written by the figure drawer (1000:0e4b), only for figures it draws:
+    std::array<std::int8_t, kFigures> terrain{};         // F:32ae: rows it sinks, 0 on dry land
+    std::array<std::uint8_t, kFigures> tile{};           // F:3750: the tile under it
+    std::array<std::uint8_t, kFigures> standing_on{};    // F:45ce: a 'Mech's tile one cell up
+    std::array<std::uint8_t, kFigures> sink{};           // F:4554: a 'Mech in its cell's other half-row
+    std::array<bool, kFigures> on_screen{};              // F:42f6
+    std::array<int, kFigures> screen_x{}, screen_y{};    // F:324c/327c: its pixel place
     std::array<std::int8_t, kFigures> parked_facing{};   // F:45b6
     std::array<std::int8_t, 8> heat{};                   // F:006e, by 'Mech record
     std::array<std::int8_t, 8> weapon_heat{};            // F:0092: this round's
@@ -105,8 +108,14 @@ public:
     // (2656:03f5; pieces the original copies into its buffer DG:0012 come
     // as one call); select_box: window 4 made current; clear_box: and
     // cleared; set_fg:
-    // the current window's colour (F:37fe); pause: 1e31:1dcc.
+    // the current window's colour (F:37fe); pause: 1e31:1dcc; draw_view:
+    // the view and the figures drawn at the party's place (287f:18ef,
+    // 1000:0e4b) with the tiles' next frame (1000:240b), or with `shown`
+    // false only the drawer's writes (fix_terrain_without_graphics);
+    // picture: 1000:48b7.
     struct Hooks {
+        std::function<void(bool shown)> draw_view;
+        std::function<void(int number, int mode)> picture;
         std::function<void(const std::vector<std::string>& ids)> print;
         std::function<void()> select_box;
         std::function<void()> clear_box;
@@ -189,9 +198,16 @@ private:
     void destroy_mech(int f);
     // BTECH.EXE 22e8:1e46 (Ghidra FUN_22e8_1e46)
     void fire_check(int t, int dx, int dy);
-    // BTECH.EXE 22e8:12c7 (Ghidra FUN_22e8_12c7), what it does without the
-    // combat graphics.
+    // BTECH.EXE 22e8:12c7 (Ghidra FUN_22e8_12c7), the combat graphics'
+    // part: the poses, the shot and the explosion (docs/combat.md 3.14).
+    void present(int s, int t, int w, int dir);
+    // 22e8:12c7's kills and wrecks, which come after it.
     void after_shot(int t, bool killed, bool destroyed, int c);
+    // Jason's figure, the view's centre (F:c620: his 'Mech, or figure 4).
+    int view_figure() const;
+    // The view redrawn around Jason's figure (1000:17bb, then draw_view):
+    // 22e8:000c's after the movement, 1e31:1f09 during a shot.
+    void redraw();
     // BTECH.EXE 1e31:0c63 (Ghidra FUN_1e31_0c63)
     void end_round(const std::array<std::int8_t, 24>& moved);
     // BTECH.EXE 1c67:0d7e (Ghidra FUN_1c67_0d7e): every path zeroed.
@@ -230,6 +246,9 @@ private:
     int heat_slowed_ = 0;        // F:4592
     formats::MapPosition walker_{};  // F:e486/e488: where a path being simulated has got to
     int step_dx_ = 0, step_dy_ = 0;  // F:458e/4590: the step 1e31:0006 took
+    bool hit_ = false;       // 22e8:000c's [bp-0x56]: the shot hit
+    bool hit_known_ = false;  // set by a shot this round (bug 5: unset at first)
+    bool person_hit_ = false;  // [bp-0x6]: a person was hit (its reaction is shown)
     bool target_taken_ = false;  // F:d57e
     bool destroyed_ = false;     // F:e484
     bool critical_hit_ = false;  // F:4586

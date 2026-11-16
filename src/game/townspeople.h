@@ -5,6 +5,7 @@
 
 #include <array>
 #include <cstdint>
+#include <span>
 #include <vector>
 
 #include "formats/mtp.h"
@@ -52,9 +53,11 @@ public:
     // its last entrance when the count runs out. A person out walking takes
     // a step toward its next entrance, but only while within 16 half-cells
     // or so of the party's 16x16 square; on arriving it goes in for a
-    // random 0-31 rounds and picks the entrance after.
+    // random 0-31 rounds and picks the entrance after. `near` gets whether
+    // each one is within that square (F:42f6 + i, the bytes the fight's
+    // drawer later uses for figures 0-7).
     void move(const formats::MtpMap& map, formats::MapPosition party, const PartyPlaces& party_places,
-              FigureAnimation& animation, Random& random);
+              FigureAnimation& animation, Random& random, std::span<bool, 8> near);
 
     // BTECH.EXE 1000:051b (Ghidra FUN_1000_051b), the townspeople's part.
     // The people out walking that are in view, in order.

@@ -365,13 +365,22 @@ def messages_cases(level, keys):
 
 
 VERBOSE_CASES, VERBOSE_FULL_CASES = messages_cases("verbose", "enter")
+
+# The same fight with no messages and combat graphics on: the shots' poses,
+# missiles and explosions redraw the view, and every redraw writes the
+# figures' terrain and screen places (docs/combat.md 3.14, quirk 36). The
+# state is compared, not the screen.
+DRAWN_ROUNDS = [dict(case, name=case["name"].replace("mission", "drawn"),
+                     keys="arm:1 y" if n == 1 else case["keys"]) for n, case in enumerate(MISSION_ROUNDS, 1)]
+DRAWN_CASES = [dict(case, compare=False) for case in MISSION_CASES[:11]] + DRAWN_ROUNDS[:1]
+DRAWN_FULL_CASES = DRAWN_ROUNDS[1:] + [dict(MISSION_FULL_CASES[-1], name="drawn_end", match={})]
 BRIEF_CASES, BRIEF_FULL_CASES = messages_cases("brief", "up enter")
 
 # Each sequence is one run of the original: (name, quick cases, --full
 # cases, chr's own options).
 SEQUENCES = [("town", CASES, FULL_CASES, []), ("training", TRAINING_CASES, [], []),
              ("quiz", QUIZ_CASES, [], ["--show-quiz"]), ("mission", MISSION_CASES, MISSION_FULL_CASES, []),
-             ("verbose", VERBOSE_CASES, VERBOSE_FULL_CASES, []),
+             ("verbose", VERBOSE_CASES, VERBOSE_FULL_CASES, []), ("drawn", DRAWN_CASES, DRAWN_FULL_CASES, []),
              ("brief", [], BRIEF_CASES + BRIEF_FULL_CASES, [])]
 
 # The feeder (tools/capture/snap.asm, docs/reference.md) hands over a key at

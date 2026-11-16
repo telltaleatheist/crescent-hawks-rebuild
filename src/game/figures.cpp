@@ -11,7 +11,10 @@ namespace {
 // 0-127 is a frame; 0xfd n records direction n; 0xfe n jumps back n bytes
 // (counted from the n); 0xff steps back one byte (a frame held for ever).
 // One script per direction, for the 'Mechs (0x270 + 8d) and for the
-// characters (0x2b0 + 8d).
+// characters (0x2b0 + 8d). The shot's poses (DG:3ef0..3ff7), the hit
+// reaction (DG:2e3c) and the explosion (DG:41d8) are scripts of the same
+// kind in the data segment (tables.json too); their offsets do not overlap
+// the walking scripts', so an offset names a script either way.
 constexpr int kScriptBase = 0x270;
 constexpr int character_script(int direction) { return 0x2b0 + 8 * direction; }  // DGROUP:027a
 
@@ -23,27 +26,55 @@ constexpr std::array<int, 8> kSpriteBase = {0x96, 0x96, 0x96, 0x96, 0x96, 0x96, 
 
 FigureAnimation::FigureAnimation(const formats::Tables& tables) : tables_(&tables) {
     for (int f = 0; f < kFigures; ++f) {
-        pos_[f] = character_script(4) - kScriptBase;  // DGROUP:01f6: 37e8:02d0 for all
+        // DGROUP:01f6's first pointers: 37e8:0290 for the 'Mechs, 02d0 for the rest.
+        pos_[f] = (f < 4 || (f >= 12 && f < 16)) ? mech_script(4) : character_script(4);
         direction_[f] = -1;                              // F:396c = 0xff
         frame_[f] = (f < 4 || (f >= 12 && f < 16)) ? 0 : 0x10;  // F:409a
     }
 }
 
-int FigureAnimation::step(int f) {
+int FigureAnimation::script_byte(int address) const {
+    const auto in = [address](int base, const auto& table) {
+        return address >= base && address < base + int(table.size());
+    };
+    const auto& t = *tables_;
+    if (in(kScriptBase, t.walking_scripts)) return t.walking_scripts[std::size_t(address - kScriptBase)];
+    if (in(formats::Tables::kPoseScriptBase, t.pose_scripts))
+        return t.pose_scripts[std::size_t(address - formats::Tables::kPoseScriptBase)];
+    if (in(formats::Tables::kReactionScript, t.reaction_script))
+        return t.reaction_script[std::size_t(address - formats::Tables::kReactionScript)];
+    if (in(formats::Tables::kExplosionScript, t.explosion_script))
+        return t.explosion_script[std::size_t(address - formats::Tables::kExplosionScript)];
+    return 0xff;  // no script holds it: held, as at a script's end
+}
+
+int FigureAnimation::run(int& pos, int* direction) const {
     for (;;) {
-        const auto& scripts = tables_->walking_scripts;
-        const auto b = std::int8_t(scripts[std::size_t(pos_[f]++)]);
+        const auto b = std::int8_t(script_byte(pos++));
         if (b >= 0) return b;
-        if (b == -3) direction_[f] = scripts[std::size_t(pos_[f]++)];
-        else if (b == -2) pos_[f] -= scripts[std::size_t(pos_[f])];
-        else if (b == -1) pos_[f] -= 1;
+        if (b == -3) {
+            const int d = script_byte(pos++);
+            if (direction) *direction = d;
+        } else if (b == -2) {
+            pos -= script_byte(pos);
+        } else if (b == -1) {
+            // The original steps back onto the ff and reads it again, for
+            // ever. Its callers stop at an ff (22e8:12c7) or never meet one.
+            pos -= 1;
+            return -1;
+        }
     }
 }
 
-void FigureAnimation::start_script(int f, int address) { pos_[std::size_t(f)] = address - kScriptBase; }
+int FigureAnimation::step(int f) {
+    const int frame = run(pos_[std::size_t(f)], &direction_[std::size_t(f)]);
+    return frame < 0 ? frame_[std::size_t(f)] : frame;
+}
+
+void FigureAnimation::start_script(int f, int address) { pos_[std::size_t(f)] = address; }
 
 void FigureAnimation::walk(int f, int direction) {
-    if (direction_[f] != direction) pos_[f] = character_script(direction) - kScriptBase;
+    if (direction_[f] != direction) pos_[f] = character_script(direction);
     frame_[f] = step(f);
 }
 
