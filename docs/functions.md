@@ -114,8 +114,8 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 
 | Address | Linear | Ghidra name | Span | Label | Status |
 |---|---|---|---|---|---|
-| 19b8:080a | 0x1a38a | `FUN_19b8_080a` | 283 |  | - |
-| 19b8:0925 | 0x1a4a5 | `FUN_19b8_0925` | 1075 |  | - |
+| 19b8:080a | 0x1a38a | `FUN_19b8_080a` | 283 | The 'Mech upgrade offer: the upgrade from bytes 0x7b and 0x7c (docs/combat.md 2.6, Kick) | read in part |
+| 19b8:0925 | 0x1a4a5 | `FUN_19b8_0925` | 1075 | Pays for and applies a 'Mech upgrade: eight cases by model and stage (docs/combat.md 2.6, Kick) | read in part |
 | 19b8:0d58 | 0x1a8d8 | `FUN_19b8_0d58` | 758 | A new party member joins (script E9) | read |
 | 19b8:104e | 0x1abce | `FUN_19b8_104e` | 817 |  | - |
 | 19b8:137f | 0x1aeff | `FUN_19b8_137f` | 194 |  | - |

@@ -93,17 +93,20 @@ the rebuilt start-up.
 Some cases need game state that play would take long to reach, or that the rebuild cannot reach
 yet (a training mission past the first two, before those missions are rebuilt). For those a case
 can set a flag in both programs at the same point of the script: `flag:NN=VV` (hex) in a case's
-keys in `check.py`.
+keys in `check.py`. `mech:R:BB=VV` (hex) likewise writes byte BB of 'Mech record R (F:c724 +
+0x7d R + BB), for damage that no case can cause yet.
 
 - **The original:** run.py's `@poke:SEG:OFFSET=BYTES` (here `@poke:F:d30c+NN=VV`). SNAP writes the
   bytes into the running copy's memory in DOSBox-X at that point; nothing is written to the
   game's files. SEG is F, P or DG (docs/original.md, "Data segments"), found through the DGROUP
   word the game itself keeps it in. SNAP refuses any segment below the game's first data segment
   (the game's code and the run-time library) or above DGROUP, writes nothing and leaves
-  POKEFAIL.TXT, which run.py reports as a failed run. A poke needs the game's DS, so it works in
-  the town's main loop, which asks DOS for keys.
+  POKEFAIL.TXT, which run.py reports as a failed run. A poke needs the game's DS; it works in
+  the town's main loop, which asks DOS for keys, and at the fight's orders menu (the `kick`
+  sequence's record poke).
 - **The rebuild:** `set:NN=VV` in a `--script`, applied at that point by the town's main loop
   (a question or the start-up refuses one), or `chr --set-flag NN=VV`, applied as the town starts.
+  `mech:R:BB=VV` is applied wherever the next key or pass is taken, the fight's reads included.
 
 What a poke may not touch: code, and anything that decides the copy-protection path. Flag 14
 (F:d320), which skips the training quiz while nonzero, is refused by run.py and by chr; the
@@ -149,7 +152,8 @@ into figure 1's orders (bug 17), then a round. `weapons` opens Use Weapons, give
 weapon the enemy through the target picker and fights four rounds (the picker's view reaches
 past the map file's east edge, so its last column is not compared: docs/combat.md 1.2.2).
 `kick` orders a kick at the enemy through the picker (its last map column is left out for the
-same reason) and fights three rounds. `handover` (long only) lets the computer fight six rounds, hands the fight back with a key at
+same reason) and fights three rounds; the long run then takes the left hip away (a record poke
+standing in for a critical hit): Kick cannot, and the round drops the kick still ordered. `handover` (long only) lets the computer fight six rounds, hands the fight back with a key at
 the round's poll, and flees and fails. The training
 cases at its start are captured but not compared (`"compare": False`): the `training` sequence
 compares them. These cases compare the fight's tables too: a case with

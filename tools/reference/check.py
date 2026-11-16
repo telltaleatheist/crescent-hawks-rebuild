@@ -485,6 +485,14 @@ KICK_FULL_CASES = [
 ] + [
     {"name": "kick_round_%d" % n, "keys": "down*5 enter" if n == 1 else "enter", "match": SCREEN, "fight": True}
     for n in range(1, 4)
+] + [
+    # The left hip actuator lost (a test poke of byte 0x24 standing in for
+    # a critical hit): Kick says it cannot, and a key.
+    {"name": "kick_no_hip", "keys": "mech:0:24=c7 up*5 enter", "match": SCREEN, "fight": True},
+    # The key: the orders menu, its bar on Kick.
+    {"name": "kick_no_hip_menu", "keys": "enter", "match": SCREEN, "fight": True},
+    # Begin Fight: the round drops the kick still in slot 11.
+    {"name": "kick_no_hip_round", "keys": "down*5 enter", "match": SCREEN, "fight": True},
 ]
 
 # The computer hands the fight back (a key at the round's poll) and the
@@ -538,12 +546,19 @@ def flag_poke(token):
     return "@poke:F:%04x=%02x" % (FLAGS_AT + int(flag, 16), int(value, 16))
 
 
+RECORDS_AT = 0xC724  # F:c724, the eight 'Mech records (docs/formats/mech.md)
+
+
 def original_token(k):
     """A case's key as the original's script has it: flag: is a poke, and
     orig: marks input that only the original asks for (the training quiz,
     which the rebuild does not show: docs/combat.md)."""
     if k.startswith("flag:"):
         return flag_poke(k)
+    if k.startswith("mech:"):
+        record, _, rest = k[len("mech:"):].partition(":")
+        byte, _, value = rest.partition("=")
+        return "@poke:F:%04x=%02x" % (RECORDS_AT + 0x7d * int(record, 16) + int(byte, 16), int(value, 16))
     if k.startswith("orig:"):
         return k[len("orig:"):]
     if k.startswith("arm:"):
@@ -573,6 +588,9 @@ def chr_script(cases, upto):
                 continue
             if k.startswith("flag:"):
                 items.append("set:" + k[len("flag:"):])
+                continue
+            if k.startswith("mech:"):
+                items.append(k)  # applied as the next key is read; no passes of its own
                 continue
             items.append(k)
             if case.get("starts_town"):

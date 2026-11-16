@@ -8,6 +8,7 @@
 #include <array>
 #include <cstdint>
 #include <deque>
+#include <functional>
 #include <filesystem>
 #include <optional>
 #include <string>
@@ -53,7 +54,11 @@ struct ScriptItem {
     int idle = 0;       // > 0: idle passes instead of a key
     int set_flag = -1;  // >= 0: a test aid, set this flag to set_value instead
     int set_value = 0;
+    int poke_record = -1;  // >= 0: a test aid, write poke_value to byte poke_byte of this 'Mech record
+    int poke_byte = 0;
+    int poke_value = 0;
     bool is_set() const { return set_flag >= 0; }
+    bool is_poke() const { return poke_record >= 0; }
     bool operator==(const ScriptItem&) const = default;
 };
 
@@ -67,9 +72,13 @@ public:
     std::optional<int> next() override;
     // An idle item is one pass with no key waiting; a key is waiting.
     std::optional<bool> poll() override;
+    // Where mech: items go: they are applied as the next key or pass is taken.
+    void set_poke(std::function<void(int record, int byte, int value)> poke) { poke_ = std::move(poke); }
 
 private:
+    void apply_pokes();
     std::deque<ScriptItem> items_;
+    std::function<void(int, int, int)> poke_;
 };
 
 // Parses a key script: names separated by spaces or commas, each with an
@@ -78,6 +87,8 @@ private:
 // idle:N for N passes of the main loop without a key, or set:NN=VV (hex) to
 // set flag NN to VV at that point (a test aid, docs/reference.md). Only the
 // town's main loop takes a set: item; a question or the start-up refuses one.
+// mech:R:BB=VV (hex) writes VV to byte BB of 'Mech record R wherever the
+// next key or pass is taken (a test aid standing in for damage).
 // Throws std::invalid_argument naming the bad token.
 std::deque<ScriptItem> parse_key_script(const std::string& script);
 
@@ -186,6 +197,11 @@ public:
     const FightFigures& fight_figures() const { return figs_; }
     const FigureAnimation& figure_animation() const { return animation_; }
     const std::array<formats::MechRecord, 8>& mechs() const { return mechs_; }
+    // A test aid: one byte of a 'Mech record (the script's mech: items).
+    void poke_mech(int record, int byte, int value) {
+        mechs_[std::size_t(record)][std::size_t(byte)] = std::uint8_t(value);
+        log_.push_back("test aid: 'Mech record " + std::to_string(record) + " byte " + std::to_string(byte) + " set");
+    }
     const CombatState& combat() const { return combat_; }
     const MapMarks& marks() const { return marks_; }
     // The original's bugs: kept by default, each fixable (game/fixes.h).

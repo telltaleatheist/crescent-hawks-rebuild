@@ -382,6 +382,7 @@ int main(int argc, char** argv) {
                 else town->draw_panel();
                 for (const auto& [f, v] : options.set_flags) town->set_flag_when_town_starts(f, v);
                 chr::game::ScriptKeys source(keys);
+                source.set_poke([&](int r, int b, int v) { town->poke_mech(r, b, v); });
                 town->run(source);
                 return true;
             } catch (const std::exception& e) {

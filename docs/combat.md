@@ -445,7 +445,18 @@ instead.
   (menu 3, F:00c8) is set to Kick, so the bar comes back on it. The weapons list also uses slots
   0-11, one per listed weapon, and the round reads slot 11 of a 'Mech as the Kick: a 'Mech with
   twelve weapon items would show its twelfth weapon's target in the kick's slot, and ordering
-  that weapon would order a kick.
+  that weapon would order a kick. Unreachable in 1.03 (a latent bug, no switch): the templates
+  carry 2-9 weapons (the Chameleon 9), and the only other writes of weapon items are the 'Mech
+  upgrades (`19b8:0925`, below), which reach at most 10 (the Commando after both). A 'Mech
+  record is otherwise only ever a copy of a template or of a wreck. The same limit keeps the
+  list's ammunition column (byte 0x27 + i) inside the ten ammunition bytes: an eleventh weapon
+  would read the walking MP.
+- *The 'Mech upgrades* (`19b8:080a` offers, `19b8:0925` pays and applies; read only for the
+  weapon count, not rebuilt). The upgrade is chosen by the record's byte 0x7b (a model number,
+  0-3 upgradable: 0 the Locust and the Spectator, 1 the Wasp, 2 the Stinger, 3 the Commando)
+  and byte 0x7c (0 first upgrade, 1 second, 3 none left): eight cases, each writing fixed item
+  slots, ammunition and armour bytes. Weapon counts before, after the first and after the
+  second: Locust and Spectator 3, 3, 5; Wasp 2, 2, 5; Stinger 3, 5, 7; Commando 3, 4, 10.
 - **Computer** (`1e31:03ab(fig, 1)`): the planner, then the unit's screen with the planned path
   (`203b:1774(fig, 1)`), and the position restored. The menu's pass for a unit under the computer
   shows "The computer is currently moving this unit" and does the same.

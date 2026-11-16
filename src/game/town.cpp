@@ -10,7 +10,17 @@
 
 namespace chr::game {
 
+void ScriptKeys::apply_pokes() {
+    while (!items_.empty() && items_.front().is_poke()) {
+        const auto item = items_.front();
+        items_.pop_front();
+        if (!poke_) throw std::invalid_argument("a mech: item with nothing to poke");
+        poke_(item.poke_record, item.poke_byte, item.poke_value);
+    }
+}
+
 std::optional<ScriptItem> ScriptKeys::next_item() {
+    apply_pokes();
     if (items_.empty()) return std::nullopt;
     const auto item = items_.front();
     items_.pop_front();
@@ -18,6 +28,7 @@ std::optional<ScriptItem> ScriptKeys::next_item() {
 }
 
 std::optional<int> ScriptKeys::next() {
+    apply_pokes();
     while (!items_.empty() && items_.front().idle > 0) items_.pop_front();
     const auto item = next_item();
     if (!item) return std::nullopt;
@@ -26,6 +37,7 @@ std::optional<int> ScriptKeys::next() {
 }
 
 std::optional<bool> ScriptKeys::poll() {
+    apply_pokes();
     if (items_.empty()) return std::nullopt;
     auto& item = items_.front();
     if (item.idle > 0) {
@@ -57,6 +69,26 @@ std::deque<ScriptItem> parse_key_script(const std::string& script) {
             if (f == flag::kQuizLock)
                 throw std::invalid_argument("\"" + t + "\": flag 14 decides whether the training quiz runs; not settable");
             keys.push_back({0, 0, f, v});
+            return;
+        }
+        if (t.rfind("mech:", 0) == 0) {
+            int r = -1, b = -1, v = -1;
+            const auto colon = t.find(':', 5), eq = t.find('=');
+            try {
+                if (colon != std::string::npos && eq != std::string::npos && eq > colon) {
+                    r = std::stoi(t.substr(5, colon - 5), nullptr, 16);
+                    b = std::stoi(t.substr(colon + 1, eq - colon - 1), nullptr, 16);
+                    v = std::stoi(t.substr(eq + 1), nullptr, 16);
+                }
+            } catch (const std::exception&) {
+            }
+            if (r < 0 || r >= 8 || b < 0 || b >= 0x7d || v < 0 || v > 0xff)
+                throw std::invalid_argument("bad record poke \"" + t + "\" (use mech:R:BB=VV, hex)");
+            ScriptItem item;
+            item.poke_record = r;
+            item.poke_byte = b;
+            item.poke_value = v;
+            keys.push_back(item);
             return;
         }
         if (t.rfind("idle:", 0) == 0) {
