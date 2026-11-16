@@ -116,8 +116,9 @@ public:
 
     // BTECH.EXE 1000:4cac (Ghidra FUN_1000_4cac)
     // The left panel: the party box (window 3) with the characters and
-    // C-Bills, and the box above it (window 4).
-    void draw_panel();
+    // C-Bills, and the box above it (window 4). `clear`: the party box is
+    // cleared after its frame (4cac's argument). Window 4 is left selected.
+    void draw_panel(bool clear = false);
 
     // Takes keys and idle passes until the source runs out.
     void run(ScriptKeys& input);

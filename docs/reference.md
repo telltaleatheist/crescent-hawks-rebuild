@@ -103,6 +103,15 @@ comment, with what it stands in for (for example "stands in for passing missions
 the play it stands in for is rebuilt, a long case reaches the same point with keys alone, and
 the poked case stays as a quick one.
 
+## Sequences and keys only the original asks for
+
+`check.py` has several sequences, each one run of the original from a new game: `town` (the
+cases above) and `training` (training mission 2: the walk to the training center, its greeting,
+the briefing and the 'Mech menu; it pokes flags 00 and 13, standing in for passing missions 0-1
+and resting in the Barracks). A key written `orig:KEY` goes to the original only: the training
+center's quiz, which the rebuild does not show (docs/combat.md), takes a key and three menu
+answers there.
+
 ## Findings
 
 Every case in `check.py` is identical over the whole screen and in the game state:
@@ -116,6 +125,11 @@ Every case in `check.py` is identical over the whole screen and in the game stat
 docs/town_loop.md has what the main loop does and when, docs/townspeople.md the townspeople.
 
 Found by the comparison along the way:
+
+- The training walk found two rules of the townspeople's step (docs/townspeople.md): the party's
+  places are recorded right after its step, before the townspeople move (`1000:0081`), and a
+  person's tile is read from the 24x24-cell window around the party, so past its side edge the
+  cell of the next or the previous row decides.
 
 - The move log ("North" in the upper box): the main loop prints the direction (DG:01aa) in
   window 4 after each walking key unless a message came up. Once the box is full it scrolls a

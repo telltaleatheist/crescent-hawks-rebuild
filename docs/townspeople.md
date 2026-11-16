@@ -74,6 +74,18 @@ A direction is taken if:
 
 - the map cell under the new half-cell (the cell holding x + 1, as for the party's leader) is
   below the blocking tile (DGROUP:0150); and
+  - the cell is read from the 24x24-cell window that `287f:1314` fills with the 3x3 blocks around
+    the party's block (P:07ad), not from the map (`1e31:023c`). The index is the view's corner
+    cell P:09ed (((party y half-cell >> 1) & 7) + 2) * 24 + ((party x half-cell >> 1) & 7) + 2,
+    plus the new half-cell relative to the view (x - party x + 0x1a, y - party y + 0x0c, as
+    `1000:2689` computes it across area edges): (rel y >> 1) * 24 + (rel x - 13) >> 1, one more
+    when rel x is even and the party's x odd, 24 more when rel y and the party's y are both odd.
+    Rows are 24 cells, so a person past the window's right or left edge (a person "near" the
+    party can be up to about 25 half-cells to the side) is checked against a cell of the next or
+    the previous row. Found on the original: a person going south-east by the training center
+    with the party far west was stopped by such a cell and went south. An index outside the
+    window would read the memory around it; the rebuild reads the real cell there and logs it
+    (not met on any path tested); and
 - no other figure stands exactly there (`1e31:16ab`): a character of the party where it was
   last drawn (the end of `1000:051b` records them), or another person. A 'Mech blocks three
   half-cells of its row; there are none in town. If the place taken is the target itself,
@@ -82,8 +94,9 @@ A direction is taken if:
 Then the person moves there and its heading becomes that direction. If none can be taken it
 stays put, heading unchanged.
 
-Since the party's places are those of the last drawing, a person can step onto the half-cell
-the party has just moved to in this tick, and is drawn there.
+The party's places are those of the last drawing. After a key that drawing comes right after
+the party's step (`1000:0081`), so a person never steps onto the half-cell the party has just
+moved to.
 
 ## Drawing (1000:051b)
 

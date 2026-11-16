@@ -45,6 +45,42 @@ int tile_at(const formats::MtpMap& map, MapPosition p) {
 
 }  // namespace
 
+// BTECH.EXE 1e31:023c..02a6, the tile a person would step onto, as the
+// original finds it: not in the map but in the 24x24-cell window that
+// 287f:1314 fills with the 3x3 blocks around the party's block (P:07ad), at
+// the view's corner cell P:09ed plus the place relative to the view
+// (1000:2689: x - party x + 0x1a, y - party y + 0x0c, across area edges as
+// the original). Rows are 24 cells, so a place past the window's right or
+// left edge reads the next or the previous row's cell instead: a person
+// far to the side of the party can be stopped by a cell that is not where
+// it steps (docs/townspeople.md). An index outside the window would read
+// whatever follows or precedes it in memory; the rebuild reads the real
+// cell there and says so in `outside`.
+int window_tile(const formats::MtpMap& map, MapPosition party, MapPosition next, bool& outside) {
+    int rel_x = wrap16(next.x - party.x);
+    if (rel_x < -0x80) rel_x += 0x80;
+    if (rel_x > 0x80) rel_x -= 0x80;
+    rel_x += 0x1a;
+    int rel_y = wrap16(next.y - party.y);
+    if (rel_y < wrap16(0xf080)) rel_y += 0xf80;
+    if (rel_y > 0xf80) rel_y -= 0xf80;
+    rel_y += 0x0c;
+    auto floor_half = [](int v) { return v >= 0 ? v / 2 : -((1 - v) / 2); };  // sar 1
+    int index = floor_half(rel_y) * 24 + floor_half(rel_x - 13);
+    if ((rel_x & 1) == 0 && (party.x & 1) != 0) ++index;
+    if ((rel_y & 1) != 0 && (party.y & 1) != 0) index += 24;
+    // P:09ed: where the view's corner cell is in the window.
+    index += (((party.half_cell_y() >> 1) & 7) + 2) * 24 + ((party.half_cell_x() >> 1) & 7) + 2;
+    outside = index < 0 || index >= 24 * 24;
+    if (outside) return tile_at(map, next);
+    const int cx = ((party.half_cell_x() >> 4) - 1) * formats::kBlockCells + index % 24 -
+                   map.block_x * formats::kBlockCells;
+    const int cy = ((party.half_cell_y() >> 4) - 1) * formats::kBlockCells + index / 24 -
+                   map.block_y * formats::kBlockCells;
+    if (cx < 0 || cy < 0 || cx >= map.width || cy >= map.height) return -1;
+    return map.cell(cx, cy);
+}
+
 int direction_toward(MapPosition from, MapPosition to) {
     // Rows: from - to, in 8 bits; across an area edge only the sign is kept.
     int dy = std::int8_t(std::uint8_t(from.y - to.y));
@@ -103,7 +139,7 @@ void Townspeople::move(const formats::MtpMap& map, MapPosition party, const Part
         const std::uint16_t bottom = move_y(std::uint16_t(party.y | 0x0f), 16);
         if (!(w.at.x > left && w.at.x < right && w.at.y > top && w.at.y < bottom)) continue;
 
-        step(i, map, party_places);
+        step(i, map, party, party_places);
         animation.walk(f, w.heading);
         if (w.at == w.target) {
             // In through the door: out again after (random & 31) rounds.
@@ -123,9 +159,10 @@ void Townspeople::move(const formats::MtpMap& map, MapPosition party, const Part
 // Turns one eighth toward the target (unless already facing it), then tries
 // eight directions, turning by kTurns from the end each time (straight on
 // first); takes the first one onto a cell that does not block (tile below
-// DGROUP:0150) and that no other figure stands on. Stays put if at the
+// DGROUP:0150, read through the cell window: window_tile) and that no other
+// figure stands on. Stays put if at the
 // target already or if every way is shut.
-void Townspeople::step(int i, const formats::MtpMap& map, const PartyPlaces& party_places) {
+void Townspeople::step(int i, const formats::MtpMap& map, MapPosition party, const PartyPlaces& party_places) {
     auto& w = walkers_[std::size_t(i)];
     if (--wobble_count_ == 0) {
         wobble_count_ = 30;
@@ -140,7 +177,9 @@ void Townspeople::step(int i, const formats::MtpMap& map, const PartyPlaces& par
         MapPosition next = w.at;
         if (kStepX[std::size_t(d)] != 0) next.x = step_x(next.x, kStepX[std::size_t(d)]);
         if (kStepY[std::size_t(d)] != 0) next.y = step_y(next.y, kStepY[std::size_t(d)]);
-        const int tile = tile_at(map, next);
+        bool outside = false;
+        const int tile = window_tile(map, party, next, outside);
+        if (outside) outside_window = true;
         if (tile < 0 || tile >= blocking_) continue;
         // BTECH.EXE 1e31:16ab (Ghidra FUN_1e31_16ab): a character of the
         // party where it was last drawn, or another person. (And a 'Mech's

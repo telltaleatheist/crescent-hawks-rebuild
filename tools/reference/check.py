@@ -207,6 +207,45 @@ FULL_CASES = [
     },
 ]
 
+# Training mission 2 (docs/combat.md), a separate run from a new game.
+# POKED: flag 00 = 2 and flag 13 = 1 stand in for passing missions 0-1 and
+# resting in the barracks (BARRACKS.BLD +0247), which the rebuild cannot do
+# yet (docs/reference.md, "Test aids"). When (e) rebuilds those missions, a
+# long case reaches this point with keys alone.
+TO_TRAINING_CENTER = ("end*2 left*12 end*2 left*2 end*12 left*2 end down*6 end*2 down*6 end*3 "
+                      "left*2 end down*2 end*6 down*49 pgdn right*19 pgup*4")
+TRAINING_CASES = [dict(case, name="training_" + case["name"]) for case in CASES[:4]] + [
+    {
+        # Walk to the training center: "Will you enter the Training Center?"
+        "name": "training_question",
+        "keys": "flag:00=02 flag:13=01 " + TO_TRAINING_CENTER,
+        "match": {"the panel": WHOLE_PANEL, "the map": WHOLE_MAP},
+    },
+    {
+        # Yes. The original first asks its quiz (a key, then three menus:
+        # orig: only, docs/combat.md); then TRAINING.BLD greets and asks
+        # about the third mission.
+        "name": "training_greeting",
+        "keys": "y orig:enter*4",
+        "match": {"the panel": WHOLE_PANEL, "the map": WHOLE_MAP},
+    },
+    {
+        # Yes: the mission's briefing (TRAINING.BLD +05b6).
+        "name": "training_briefing",
+        "keys": "enter",
+        "match": {"the panel": WHOLE_PANEL, "the map": WHOLE_MAP},
+    },
+    {
+        # The 'Mech menu (menu 7).
+        "name": "training_mech_menu",
+        "keys": "enter",
+        "match": {"the panel": WHOLE_PANEL, "the map": WHOLE_MAP},
+    },
+]
+
+# Each sequence is one run of the original: (name, quick cases, --full cases).
+SEQUENCES = [("town", CASES, FULL_CASES), ("training", TRAINING_CASES, [])]
+
 # The feeder (tools/capture/snap.asm, docs/reference.md) hands over a key at
 # every 4th poll of the keyboard. The main loop polls once a pass, and after
 # a key it flushes the keyboard with one more poll, so the town starts with
@@ -228,6 +267,17 @@ def flag_poke(token):
     return "@poke:F:%04x=%02x" % (FLAGS_AT + int(flag, 16), int(value, 16))
 
 
+def original_token(k):
+    """A case's key as the original's script has it: flag: is a poke, and
+    orig: marks input that only the original asks for (the training quiz,
+    which the rebuild does not show: docs/combat.md)."""
+    if k.startswith("flag:"):
+        return flag_poke(k)
+    if k.startswith("orig:"):
+        return k[len("orig:"):]
+    return k
+
+
 def expand(keys):
     out = []
     for token in keys.replace(",", " ").split():
@@ -242,6 +292,8 @@ def chr_script(cases, upto):
     in_town = False
     for case in cases[:upto + 1]:
         for k in expand(case["keys"]):
+            if k.startswith("orig:"):
+                continue  # input only the original asks for (docs/reference.md)
             if k.startswith("flag:"):
                 items.append("set:" + k[len("flag:"):])
                 continue
@@ -259,36 +311,19 @@ def original_script(cases):
     tokens = [START]
     for case in cases:
         if case.get("keys"):
-            tokens.append(" ".join(flag_poke(k) if k.startswith("flag:") else k
-                                   for k in case["keys"].replace(",", " ").split()))
+            tokens.append(" ".join(original_token(k) for k in case["keys"].replace(",", " ").split()))
         tokens.append("@snap:" + case["name"])
     return " ".join(tokens)
 
 
-def main():
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--chr", required=True)
-    ap.add_argument("--game-dir", required=True)
-    ap.add_argument("--data-dir", required=True)
-    ap.add_argument("--work", required=True, help="where the captures, screenshots and diffs go")
-    ap.add_argument("--full", action="store_true", help="the long cases too")
-    a = ap.parse_args()
-    cases = CASES + (FULL_CASES if a.full else [])
-
-    missing = [what for what, ok in (("DOSBox-X", os.path.exists(run.DOSBOX)),
-                                     ("nasm", shutil.which("nasm")),
-                                     ("the game folder", os.path.exists(os.path.join(a.game_dir, "BTECH.EXE"))))
-               if not ok]
-    if missing:
-        print("skipped: missing " + ", ".join(missing))
-        return SKIP
-
-    os.makedirs(a.work, exist_ok=True)
-    ref_dir = os.path.join(a.work, "original")
+def run_sequence(a, sequence, cases):
+    """One run of the original through `cases`, then chr for each case.
+    True if every required rectangle and the state match."""
+    ref_dir = os.path.join(a.work, "original-" + sequence)
     finished, _ = run.run(a.game_dir, original_script(cases), ref_dir, timeout=900 if a.full else 240)
     if not finished:
-        print("the original did not reach the end of the script")
-        return 1
+        print(f"the original did not reach the end of the {sequence} script")
+        return False
 
     env = dict(os.environ, SDL_VIDEO_DRIVER="dummy", SDL_AUDIO_DRIVER="dummy")
     ok = True
@@ -322,6 +357,31 @@ def main():
         ok = ok and not differ
         for known in case.get("known", []):
             print(f"  known: {known}")
+    return ok
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--chr", required=True)
+    ap.add_argument("--game-dir", required=True)
+    ap.add_argument("--data-dir", required=True)
+    ap.add_argument("--work", required=True, help="where the captures, screenshots and diffs go")
+    ap.add_argument("--full", action="store_true", help="the long cases too")
+    a = ap.parse_args()
+
+    missing = [what for what, ok in (("DOSBox-X", os.path.exists(run.DOSBOX)),
+                                     ("nasm", shutil.which("nasm")),
+                                     ("the game folder", os.path.exists(os.path.join(a.game_dir, "BTECH.EXE"))))
+               if not ok]
+    if missing:
+        print("skipped: missing " + ", ".join(missing))
+        return SKIP
+
+    os.makedirs(a.work, exist_ok=True)
+    ok = True
+    for sequence, quick, full in SEQUENCES:
+        cases = quick + (full if a.full else [])
+        ok = run_sequence(a, sequence, cases) and ok
     return 0 if ok else 1
 
 

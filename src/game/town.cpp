@@ -156,10 +156,11 @@ std::vector<StatBar> Town::bars() const {
     return bars;
 }
 
-void Town::draw_panel() {
+void Town::draw_panel(bool clear) {
     text_.fill(0, 0, 13, kTextRows, 0);  // the panel starts black
     text_.select_window(3);
     text_.frame(3);
+    if (clear) text_.clear_window();
     text_.put_text(lookup(texts_, "panel.party_heading"), 9, 13, 15, 0);
     // The first four characters of the party, a line each from row 14, two
     // rows apart, with their bars (bars()).
@@ -281,6 +282,10 @@ void Town::key(int k, KeySource& more) {
     if (stopped()) return;
     turn(k, more);
     if (stopped()) return;
+    // BTECH.EXE 1000:0081: after the step the figures are drawn (1000:051b),
+    // which records where the party's characters now stand, before the
+    // townspeople move in the tick below.
+    record_party_places();
     // BTECH.EXE 1000:00fb: the figures' walking frames move on, then the key
     // half goes straight on to a game tick.
     animation_.key(k);
@@ -318,6 +323,10 @@ void Town::game_tick() {
     if (third_++ == 2) {
         third_ = 0;
         people_.move(map_, position_, party_places_, animation_, random_);
+        if (people_.outside_window) {
+            people_.outside_window = false;
+            log_.push_back("a person's step looked outside the cell window: read the map instead");
+        }
     }
     // The map and the figures are drawn again (DGROUP:014a is set in town),
     // over any message box (1000:046e).

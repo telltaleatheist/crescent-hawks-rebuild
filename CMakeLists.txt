@@ -120,7 +120,7 @@ if(SDL3_FOUND)
       COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/reference/check.py
         --chr $<TARGET_FILE:chr> --game-dir ${CHR_GAME_DIR}
         --data-dir ${CMAKE_BINARY_DIR}/chr-data --work ${CMAKE_BINARY_DIR}/reference)
-    set_tests_properties(reference_compare PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 300 LABELS reference
+    set_tests_properties(reference_compare PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 600 LABELS reference
       ENVIRONMENT "CHR_SCRATCH=${CMAKE_BINARY_DIR}/reference-scratch;SDL_VIDEO_DRIVER=dummy;SDL_AUDIO_DRIVER=dummy")
     # The long cases too (a few minutes): `ctest -LE long` leaves it out.
     add_test(NAME reference_compare_full

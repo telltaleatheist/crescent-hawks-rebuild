@@ -76,6 +76,10 @@ bool Town::visit_place(int entrance, KeySource& keys) {
         log_.push_back("training quiz: pictures " + std::to_string(pictures[0]) + " " +
                        std::to_string(pictures[1]) + " " + std::to_string(pictures[2]) +
                        " (not shown)");
+        // The quiz's last steps are still seen: 1c67:0b40 redraws the panel
+        // with the party box cleared, then clears the box above it.
+        draw_panel(true);
+        text_.clear_window();
     }
     if (!run_script(file, keys)) return false;
     // Special 14 after every visit.

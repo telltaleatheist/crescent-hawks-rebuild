@@ -13,7 +13,9 @@ Each pass of the loop asks DOS whether a key is waiting (`273d:002f`, int 21h fu
   DOSBox shows), 60 on an EGA card. Then a countdown (`[bp-1a]`, 0 when the loop starts) is
   decremented; when it goes below 0 a game tick runs. So the first pass on a map is a tick, and
   then every 11th pass.
-- **A key** (key half): it reads the key, flushes the keyboard, takes the steps, logs the
+- **A key** (key half): it reads the key, flushes the keyboard, takes the steps (each step is
+  followed by `1000:051b`, which draws the figures and records where the party's characters
+  stand, so the townspeople moved in the tick below see the party's new place), logs the
   direction, then calls `1000:231d` (the figures' walking frames) and goes straight on to a game
   tick, without waiting. Every key is a game tick.
 

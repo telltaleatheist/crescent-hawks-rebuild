@@ -28,6 +28,13 @@ struct Walker {
 // refused onto any of them.
 using PartyPlaces = std::array<formats::MapPosition, 8>;
 
+// BTECH.EXE 1e31:023c..02a6: the tile a figure stepping to `next` is
+// checked against: a cell of the original's 24x24-cell window around the
+// party (townspeople.cpp). `outside` is set when the index falls outside the
+// window, where the rebuild reads the real cell. -1 off the map.
+int window_tile(const formats::MtpMap& map, formats::MapPosition party, formats::MapPosition next,
+                bool& outside);
+
 class Townspeople {
 public:
     // BTECH.EXE 1000:2da8 (Ghidra FUN_1000_2da8), its last part (a map
@@ -63,8 +70,13 @@ public:
     // Read elsewhere (cleared at 2000:1e3b), not rebuilt yet.
     bool target_taken = false;
 
+    // Set when a person's step looked outside the original's cell window,
+    // where the original reads memory the rebuild does not hold; the rebuild
+    // read the real map cell instead (the caller logs it).
+    bool outside_window = false;
+
 private:
-    void step(int i, const formats::MtpMap& map, const PartyPlaces& party_places);
+    void step(int i, const formats::MtpMap& map, formats::MapPosition party, const PartyPlaces& party_places);
 
     std::array<Walker, 8> walkers_{};
     int blocking_ = 0x55;  // DGROUP:0150
