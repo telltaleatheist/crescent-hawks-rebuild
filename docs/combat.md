@@ -112,8 +112,9 @@ and the 'Mech sprites' outline is number 1, so it turns 14 where a black 0 turns
 works the box out from the colour numbers of the tiles and figures under it
 (`platform::draw_xor_box`).
 
-Not rebuilt yet on this stretch: `0d49`'s enemy people (its second count), which mission 2 never
-has. The orders menu itself is in 2.6.
+Mission 3 (mode 3) is rebuilt: (r & 3) + 3 enemy people (`0d49`'s second count, 1.4 step 6),
+then the same fight as mode 2. The `people` sequence compares it to the orders menu and five
+rounds; round 6 needs the area grids (1.2.1). The orders menu itself is in 2.6.
 
 ### 1.2.2 Mission 2 fought by the computer (rebuilt)
 
@@ -166,12 +167,18 @@ last line of sight then: figure 0's) holds exactly those cells. Row wrapping (an
 row's end reads the next row) is the original's and is kept.
 
 **Where the rebuild stands in for memory it does not hold.** Both are logged; neither came up
-in mission 2.
+in mission 2. The first came up in mission 3 (the `people` sequence, round 6).
 
 - *An index outside the window (below 0 or from 576 on).* The original reads the P: bytes next
   to the buffer: before it the nine area-grid entries of the loaded blocks (P:07a4..07ac) and
-  other data, after it the corner words P:09ed..09f2 and other data. These are not map cells,
-  and the rebuild does not hold that part of P:. It counts such a cell as blocking, so a path
+  other data, after it the corner words P:09ed..09f2 and other data. Before P:07a4 lie the nine
+  area grids themselves (P:0564..07a3, 64 entries each, mtp.md), so an index down to -0x249
+  reads area-grid entries: on the town maps the neighbouring areas' terrain types (0x00, 0x10,
+  0x20, 0x30), all below DG:0150, so the original's line of sight goes on through them. In
+  mission 3, round 6, a soldier's line of sight to Jason's 'Mech reads indices -22 and -21
+  (P:0797, P:0798: 00 and 10 in every capture from the town's start on); the original's soldier
+  sees and fires, the rebuild's does not. These are not map cells, and the rebuild does not hold
+  the area grids yet. It counts such a cell as blocking, so a path
   stops there and a line of sight ends unseen. Blocking also ends the line of sight's loop, which
   in the original only ends when it reaches the target or a cell at or above DG:0150. A path
   (12 half-cells at most) cannot leave the window; a line of sight at long range can (the figure
@@ -254,7 +261,14 @@ FUN_17dc_0d49. `a` is the number of enemy 'Mechs, `b` the number of enemy people
    remaining character j up to b: byte 0 = 0, 'Mech slot 8 (on foot), sprite base fe, frame
    0x1c, walking script 27e8:02e0, heading and facing 6, active, position from the same offset
    tables at index j; skills 4-9 = r & 1 each (6 draws, Medical is not set), byte 1 = 2d6,
-   byte 0x0f (hit points) = 10 x byte 1, byte 0x0b (weapon) = r mod 14.
+   byte 0x0f (hit points) = 10 x byte 1, byte 0x0b (weapon) = r mod 14 (r is 0-255).
+   The offsets are read at the character number j (8-15), not from 0: past index 11 the x offset
+   comes from the y table (DG:164e + j - 12) and the y offset from the armour cut after it
+   (DG:165a + j - 12). The three tables lie in a row, so this is the original's placement and
+   is kept as it is (no switch: the intended places are not known). Rebuilt for the training
+   missions (`Town::place_mission`). Each soldier's heading is written to F:3920 + figure,
+   which is also its townsperson's heading (one table), so the townspeople come back from the
+   fight facing as their figures last did.
 
 ### 1.5 The Arena and the raid
 

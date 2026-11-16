@@ -201,9 +201,14 @@ bool Town::walk_in(KeySource& keys) {
     return run_mission(flags_[0], keys);
 }
 
-// BTECH.EXE 17dc:0629 (Ghidra FUN_17dc_0629), mode 2 (the third training
-// mission): one enemy Locust, disarmed, and the fight.
+// BTECH.EXE 17dc:0629 (Ghidra FUN_17dc_0629), modes 2 and 3 (the third and
+// fourth training missions): one enemy Locust, disarmed, or three to six
+// enemy people; then the fight.
 bool Town::run_mission(int mode, KeySource& keys) {
+    if (mode == 3) {
+        place_mission(0, (random_.next() & 3) + 3);
+        return fight(1, keys);
+    }
     if (mode != 2) {
         log_.push_back("mission " + std::to_string(mode) + ": not rebuilt");
         fight_unfinished_ = true;
@@ -220,12 +225,14 @@ bool Town::run_mission(int mode, KeySource& keys) {
 
 // BTECH.EXE 17dc:0d49 (Ghidra FUN_17dc_0d49), for a training mission (no
 // bit 0x80 in either count): `mechs` enemy Locusts in records 4 on, as
-// figures 12 on, and `people` enemy people.
+// figures 12 on, and `people` enemy people in character records 8 on, as
+// figures 16 on.
 void Town::place_mission(int mechs, int people) {
     figs_.computer[0] = false;
     // The townspeople keep their places in their records; every figure is
     // emptied.
     people_.leave_for_fight();
+    townspeople_away_ = true;
     for (int m = 4; m < 8; ++m) mechs_[std::size_t(m)][0] = 0xff;
     for (int c = 8; c < 16; ++c) characters_[std::size_t(c)][character::kName] = character::kEmpty;
     for (int f = 0; f < FightFigures::kCount; ++f) {
@@ -270,7 +277,36 @@ void Town::place_mission(int mechs, int people) {
         figs_.x[std::size_t(f)] = std::uint16_t(x0 + tables_.enemy_offset_x[std::size_t(placed)]);
         figs_.y[std::size_t(f)] = std::uint16_t(y0 + tables_.enemy_offset_y[std::size_t(placed)]);
     }
-    if (people > 0) log_.push_back("enemy people: not rebuilt");
+    // People: the characters after the 'Mechs' pilots, at most to 15, as
+    // figures 8 on from their numbers.
+    const int end = std::min(16, people + 8 + placed);
+    for (int j = 8 + placed; j < end; ++j) {
+        auto& r = characters_[std::size_t(j)];
+        r[character::kName] = 0;
+        r[character::kMech] = character::kOnFoot;
+        const int f = j + 8;
+        figs_.sprite_base[std::size_t(f)] = 0xfe;
+        animation_.set_frame(f, 0x1c);
+        animation_.start_script(f, 0x2e0);
+        figs_.heading[std::size_t(f)] = 6;
+        people_.walkers()[std::size_t(f - 16)].heading = 6;  // the same byte, F:3920 + f
+        animation_.set_direction(f, 6);
+        figs_.active[std::size_t(f)] = 1;
+        // The offset tables are read at the character's number: past 11 the
+        // x offset is the y table's and the y offset the armour cut's after
+        // it (DG:1642, 164e and 165a lie in a row).
+        const auto offset = [&](int k) {
+            if (k < 12) return tables_.enemy_offset_x[std::size_t(k)];
+            if (k < 24) return tables_.enemy_offset_y[std::size_t(k - 12)];
+            return int(std::int8_t(rules_->combat.difficulty_armour[std::size_t(k - 24)]));
+        };
+        figs_.x[std::size_t(f)] = std::uint16_t(x0 + offset(j));
+        figs_.y[std::size_t(f)] = std::uint16_t(y0 + offset(j + 12));
+        for (int k = 0; k < 6; ++k) r[std::size_t(character::kSkills + k)] = std::uint8_t(random_.next() & 1);
+        r[character::kB] = std::uint8_t(two_d6(random_));  // 1000:19dd
+        r[character::kHitPoints] = std::uint8_t(10 * r[character::kB]);
+        r[character::kWeapon] = std::uint8_t(random_.next() % 14);
+    }
 }
 
 // BTECH.EXE 203b:000a (Ghidra FUN_203b_000a), a fight of kind 1 (a training

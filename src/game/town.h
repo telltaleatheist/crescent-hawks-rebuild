@@ -208,6 +208,10 @@ public:
     void set_fixes(const Fixes& fixes) { fixes_ = fixes; }
     // The fight reached a step the rebuild stops at (logged; docs/combat.md).
     bool fight_unfinished() const { return fight_unfinished_; }
+    // Whether the townspeople have left for a fight: their figures 16-23
+    // (the same memory in the original, F:4004 / 4036 / 3920) are the
+    // fight's enemy people until it puts them back.
+    bool townspeople_away() const { return townspeople_away_; }
 
 private:
     class Question;
@@ -368,6 +372,7 @@ private:
     std::vector<XorBox> boxes_;
     bool party_box_shown_ = true;
     bool fight_unfinished_ = false;
+    bool townspeople_away_ = false;
     bool show_quiz_ = false;
     std::optional<QuizScene> quiz_;
 };

@@ -155,7 +155,9 @@ past the map file's east edge, so its last column is not compared: docs/combat.m
 `kick` orders a kick at the enemy through the picker (its last map column is left out for the
 same reason) and fights three rounds; the long run then takes the left hip away (a record poke
 standing in for a critical hit): Kick cannot, and the round drops the kick still ordered. `scan` opens Scan Unit: Friends (Next comes back to the unit), Done, Enemies (the enemy Locust
-and its direction; the last map column left out), Done, Cancel, and a round. `handover` (long
+and its direction; the last map column left out), Done, Cancel, and a round. `people` is mission 3 (flag 00 = 3): three to six enemy people, the orders menu and five rounds
+(long), compared with the walker lines showing figures 16-23 during the fight, as the original's
+shared memory does. `handover` (long
 only) lets the computer fight six rounds, hands the fight back with a key at
 the round's poll, and flees and fails. The training
 cases at its start are captured but not compared (`"compare": False`): the `training` sequence

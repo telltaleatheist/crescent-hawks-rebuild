@@ -520,6 +520,19 @@ SCAN_FULL_CASES = [
     {"name": "scan_round", "keys": "down*3 enter", "match": SCREEN, "fight": True},
 ]
 
+# Mission 3 (training mode 3, docs/combat.md 1.3): three to six enemy
+# people against Jason's Locust (17dc:0d49's people), then rounds fought.
+PEOPLE_CASES = [dict(case, name=case["name"].replace("training_", "people_")) for case in TRAINING_CASES]
+PEOPLE_CASES[4] = dict(PEOPLE_CASES[4], keys=PEOPLE_CASES[4]["keys"].replace("flag:00=02", "flag:00=03"))
+PEOPLE_CASES = [dict(case, compare=False) for case in PEOPLE_CASES[:5]] + PEOPLE_CASES[5:]
+# Round 6 is left out: a soldier's line of sight leaves the cell window,
+# where the original reads the area grids before it (docs/combat.md 1.2.1)
+# and the rebuild does not hold them yet.
+PEOPLE_FULL_CASES = [
+    {"name": "people_round_%d" % n, "keys": "enter", "match": SCREEN, "fight": True}
+    for n in range(1, 6)
+]
+
 # The computer hands the fight back (a key at the round's poll) and the
 # player flees, and fails: 52 idle passes in town before the walk to the
 # training center and six computer-fought rounds give a flee draw with
@@ -549,6 +562,7 @@ SEQUENCES = [("town", CASES, FULL_CASES, []), ("training", TRAINING_CASES, [], [
              ("weapons", WEAPON_CASES, WEAPON_FULL_CASES, []),
              ("kick", KICK_CASES, KICK_FULL_CASES, []),
              ("scan", SCAN_CASES, SCAN_FULL_CASES, []),
+             ("people", PEOPLE_CASES, PEOPLE_FULL_CASES, []),
              ("handover", [], HANDOVER_CASES, [])]
 
 # The feeder (tools/capture/snap.asm, docs/reference.md) hands over a key at

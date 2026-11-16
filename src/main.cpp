@@ -138,9 +138,16 @@ void print_state(const chr::game::Town& town) {
     std::printf("state random %02x %02x %02x\n", r[0], r[1], r[2]);
     std::printf("state cbills %d\n", int(town.money().cbills));
     int i = 0;
-    for (const auto& w : town.townspeople().walkers())
+    const auto& figs = town.fight_figures();
+    for (const auto& w : town.townspeople().walkers()) {
+        // In a fight the original's walker places and headings are figures
+        // 16-23's.
+        const bool away = town.townspeople_away();
+        const auto f = std::size_t(16 + i);
         std::printf("state walker %d at %04x %04x target %04x %04x route %02x wait %02x heading %d\n", i++,
-                    w.at.x, w.at.y, w.target.x, w.target.y, w.route, w.wait, int(w.heading));
+                    away ? figs.x[f] : w.at.x, away ? figs.y[f] : w.at.y, w.target.x, w.target.y, w.route, w.wait,
+                    away ? int(figs.heading[f]) : int(w.heading));
+    }
     std::printf("state party %04x %04x\n", town.position().x, town.position().y);
     std::printf("state flags ");
     for (const auto f : town.flags()) std::printf("%02x", f);
