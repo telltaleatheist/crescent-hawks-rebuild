@@ -1040,7 +1040,7 @@ mistake; "quirk" means it may be intended.
 | 14 | Under computer control, an auto-retreat value of 2 is later read as "left the raid area". Probable. | `203b:000a` | `fix_auto_retreat` |
 | 15 | The flee draw is made in kinds 2 and 3, where fleeing is refused. Kept for the draw order. | `203b:000a` | none |
 | 16 | A waypoint in area rows 8-15 is never recognised as a duplicate (sign extension), so it is added again. Harmless. | `203b:1c1f` | `fix_waypoint_compare` |
-| 17 | A 13th waypoint is written into the next figure's first order (each Move adds one, so thirteen Moves reach it). The rebuild holds that order, so the original's write is reproduced with the switch off. | `203b:1c1f` | `fix_order_bound` |
+| 17 | A 13th waypoint is written into the next figure's first order (each Move adds one, so thirteen Moves reach it). Kept: the rebuild holds that order, and the `waypoints` sequence matches the original's write. The fix drops the waypoint and logs it. | `203b:1c1f` | `fix_order_bound` |
 | 18 | The path is written without a bound; more than 12 steps would spill into the next figure's path. | `203b:193b` | `fix_path_bound` |
 | 19 | Scan: for a 'Mech without sensors the "no enemy humans" check is skipped and the list is opened empty. | `203b:2591` | `fix_scan_sensors` |
 | 20 | The reachability test before "Engage" changes figure 0's heading. | `203b:28db` | `fix_probe_heading` |
@@ -1062,9 +1062,11 @@ mistake; "quirk" means it may be intended.
 | 36 | The terrain under a figure (F:32ae, F:3750, F:45ce, F:4554: to-hit, water cooling, fire, the missed-shot mark) is written only by the figure drawers (`1000:051b`, `1000:0e4b`). In a computer-fought fight they run only for the combat graphics (the round's redraw and the shot's presentation) or the Arena's spectator, so with combat graphics off the terrain has no effect at all (the player's orders screen draws the figures too). With graphics on, only figures in Jason's view get theirs. Quirk; the fix writes the drawer's values at the round's redraw without showing it, as with graphics on. | `22e8:000c`, `22e8:12c7` | `fix_terrain_without_graphics` |
 
 The switches are `game/fixes.h`. Each is off by default, except where the original reads or
-writes memory the rebuild does not hold, or never returns: bugs 2, 17, 18, 21, 23, 26 and 32
+writes memory the rebuild does not hold, or never returns: bugs 2, 18, 21, 23, 26 and 32
 take the fixed path by default and log it. Bug 5 is kept, but the first shot of a session (whose
-flag the original leaves uninitialised) counts as "missed" and is logged. Bugs 12, 15, 28, 30 and
+flag the original leaves uninitialised) counts as "missed" and is logged. Bug 17 writes into
+memory the rebuild holds (the next figure's orders), so it is kept like the others; the
+`waypoints` reference sequence checks that write against the original. Bugs 12, 15, 28, 30 and
 34 have no switch.
 
 ## 7. The copy-protection check

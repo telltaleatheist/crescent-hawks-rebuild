@@ -25,6 +25,7 @@ struct Fixes {
     bool fix_retreat_flag = false;         // 13: 1e31:03ab, F:3992
     bool fix_auto_retreat = false;         // 14: 203b:000a, 2 read as "left the area"
     bool fix_waypoint_compare = false;     // 16: 203b:1c1f, sign extension
+    bool fix_order_bound = false;          // 17: 203b:1c1f, a 13th waypoint in the next figure's orders
     bool fix_scan_sensors = false;         // 19: 203b:2591
     bool fix_probe_heading = false;        // 20: 203b:28db, figure 0's heading
     bool fix_heat_sink_count = false;      // 22: 15ab:0002
@@ -41,7 +42,6 @@ struct Fixes {
 
     // Fixed by default (on): memory the rebuild does not hold, or a hang.
     bool fix_kick_actuators = true;   // 2: 1e31:1b44 reads 'Mech records 12-15, past the eight
-    bool fix_order_bound = true;      // 17: 203b:1c1f, a 13th waypoint
     bool fix_path_bound = true;       // 18: 203b:193b, a path of more than 12 steps
     bool fix_flee_target = true;      // 21: 203b:000a, figure -1 (F:4002 / F:4034)
     bool fix_weapon_count = true;     // 23: 15ab:0002, a count left from the stack

@@ -435,6 +435,20 @@ MOVE_FULL_CASES = [
     {"name": "move_round_3", "keys": "enter", "match": SCREEN, "fight": True},
 ]
 
+# Thirteen Walk orders (bug 17), each on the unit's own cell (the cursor
+# out and back): they cost nothing, and in this area (0xcc) bug 16 never
+# finds a repeat. The thirteenth goes into figure 1's first order, in the
+# original and, with fix_order_bound off (the default), in chr.
+WAYPOINT_CASES = [dict(case, compare=False) for case in ORDERS_CASES[:12]] + [
+    {"name": "waypoints_12", "keys": "up*9 enter right left enter " + " ".join(
+        ["enter right left enter"] * 11), "match": SCREEN, "fight": True},
+]
+WAYPOINT_FULL_CASES = [
+    {"name": "waypoints_13", "keys": "enter right left enter", "match": SCREEN, "fight": True},
+    # Begin Fight: figure 1 is not active, so its order is never read.
+    {"name": "waypoints_round", "keys": "down*9 enter", "match": SCREEN, "fight": True},
+]
+
 # Each sequence is one run of the original: (name, quick cases, --full
 # cases, chr's own options).
 SEQUENCES = [("town", CASES, FULL_CASES, []), ("training", TRAINING_CASES, [], []),
@@ -442,7 +456,8 @@ SEQUENCES = [("town", CASES, FULL_CASES, []), ("training", TRAINING_CASES, [], [
              ("verbose", VERBOSE_CASES, VERBOSE_FULL_CASES, []), ("drawn", DRAWN_CASES, DRAWN_FULL_CASES, []),
              ("brief", [], BRIEF_CASES + BRIEF_FULL_CASES, []),
              ("orders", ORDERS_CASES, ORDERS_FULL_CASES, []),
-             ("moves", MOVE_CASES, MOVE_FULL_CASES, [])]
+             ("moves", MOVE_CASES, MOVE_FULL_CASES, []),
+             ("waypoints", [], WAYPOINT_CASES + WAYPOINT_FULL_CASES, [])]
 
 # The feeder (tools/capture/snap.asm, docs/reference.md) hands over a key at
 # every 4th poll of the keyboard. The main loop polls once a pass, and after
