@@ -142,3 +142,26 @@ The step check (1000:1c12) reads P:07a4: a block of type 0 whose four neighbours
   the masks.
 - The area-to-map table and the nine-map load (1000:3469, 1000:3edc), 1000:42c8, and
   24d3:12db's `104e(0x89)`.
+
+What has been read of these so far:
+
+- **The area-to-map table** is a plain table in the program image, 37e8:0030, 256 bytes (one map
+  number per area, 0 for none). The save-game load (1000:32b3) changes two entries first, in
+  memory: area 0xcc becomes map 11 when F:d310 is set, area 0x34 map 12 when F:d33e is set. Area
+  0x7d is map 3.
+- **The nine-map load** (1000:32b3 at 3469, 1000:3d40 at 3edc): `104e(area)`, then for each
+  grid k whose area `area - 0x11 + 16 (k / 3) + k % 3` lies in 0..255 and has a map,
+  `2da8(k, map)`; then `1da8`. Unlike 104e, the index is bounded. Both skip it when F:d346 is set
+  (another path, 0b5d:0004 / 1b5d:0327).
+- **1000:3d40** is a viewer moved with the arrow keys a whole area at a time (0x200 across,
+  0x2000 down), drawn by **1000:3fae**: three rows of five areas, each made with 104e, its maps
+  laid over it (1000:42c8 loads the middle grid's .MTP into the buffer) and drawn block by block.
+  On leaving it the nine-map load runs at the position chosen.
+- **The step up (287f:158c)**, at an area's north edge: y becomes the area above's row 0x7f,
+  the grids move down a row (P:0564..06e3 to P:05a4..07a3, 0x180 bytes), the top row's three
+  grids are made with 18d8 and 0bfb (heights at `0x0afa + area`, that is `world[area - 0x11]`),
+  and the masks rebuilt (1886). It then sets P:09f3 = 0x100, P:09f5 = 2 and P:09f6..09f8 to the
+  new row's three areas: a queue of map loads still to do, read elsewhere (not found yet). The
+  other three steps (163b down, 16e3 left, 17c5 right) are alike. 1000:17bb and 1000:1817 call
+  them to walk the position to a place or by a distance; 1000:186f moves the position without
+  them.
