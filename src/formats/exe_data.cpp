@@ -318,11 +318,11 @@ constexpr std::array kDos103 = {
     ExeSpan{ExeSpan::Kind::Text, "fight.arena_lost", 0x46db, 0x39ca, 45, "69d3577b21b8a4d9"},
     ExeSpan{ExeSpan::Kind::Text, "fight.eluded_2", 0x46db, 0x39f7, 30, "e0acd99081a6c9cb"},
     // 203b:0fa9, by the encounter (pointers at DG:3a2e):
-    ExeSpan{ExeSpan::Kind::Text, "fight.encounter.0", 0x46db, 0x32e6, 67, "cfe14dda6d049ea5"},
-    ExeSpan{ExeSpan::Kind::Text, "fight.encounter.1", 0x46db, 0x3329, 65, "1247cb50874bb04a"},
-    ExeSpan{ExeSpan::Kind::Text, "fight.encounter.2", 0x46db, 0x336a, 56, "e0cae20ddd6f8474"},
-    ExeSpan{ExeSpan::Kind::Text, "fight.encounter.3", 0x46db, 0x33a2, 60, "04cd4d4f13726a65"},
-    ExeSpan{ExeSpan::Kind::Text, "fight.encounter.4", 0x46db, 0x33de, 36, "ad609b9ee1e499e9"},
+    ExeSpan{ExeSpan::Kind::Text, "fight.raid.0", 0x46db, 0x32e6, 67, "cfe14dda6d049ea5"},
+    ExeSpan{ExeSpan::Kind::Text, "fight.raid.1", 0x46db, 0x3329, 65, "1247cb50874bb04a"},
+    ExeSpan{ExeSpan::Kind::Text, "fight.raid.2", 0x46db, 0x336a, 56, "e0cae20ddd6f8474"},
+    ExeSpan{ExeSpan::Kind::Text, "fight.raid.3", 0x46db, 0x33a2, 60, "04cd4d4f13726a65"},
+    ExeSpan{ExeSpan::Kind::Text, "fight.raid.4", 0x46db, 0x33de, 36, "ad609b9ee1e499e9"},
     // 203b:14c3, the orders menu, and its helpers (1c1f, 1e46, 2223, 24d2, 2591):
     ExeSpan{ExeSpan::Kind::Text, "orders.computer_moving", 0x46db, 0x3a42, 45, "dbecabe0eba4c812"},
     ExeSpan{ExeSpan::Kind::Text, "orders.menu_mech", 0x46db, 0x3a6f, 77, "4d557b5052311b83"},

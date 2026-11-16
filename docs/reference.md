@@ -176,7 +176,10 @@ Wasp, the way to the marked spot (the same random spot in both) and back, and th
 The window it compares is the one chr holds, which after the spot's cell is put back still shows
 tile 0x50 until the next step, as the original's does. `fourth` (long only) is mission 4 (flag 00
 poked to 4): no computer question (F:0090), the Locust flees at the first orders menu, the walk
-back, the verdict and the town. `handover` (long
+back, the verdict and the town. `raid` (long only) is mission 7 (flag 00 poked to 7), the
+Kurita raid: the computer question (only mission 4 skips it), then Begin Fight round after round
+through the five story lines and the load of map 11, until the Jenners bring the Locust down,
+then the results and the script. `handover` (long
 only) lets the computer fight six rounds, hands the fight back with a key at
 the round's poll, and flees and fails. The training
 cases at its start are captured but not compared (`"compare": False`): the `training` sequence

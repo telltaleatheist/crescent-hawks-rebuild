@@ -229,8 +229,13 @@ void Town::place_mission(int mechs, int people) {
     std::uint16_t x0 = std::uint16_t(0x0c65 + (random_.next() & 7));
     const std::uint16_t y0 = std::uint16_t(0xc059 + (random_.next() & 7));
     if (flags_[0] == 2) x0 = 0x0c72;
+    // In the raid (F:3772): four 'Mechs, JENNERs (27e8:0561, template 5),
+    // and flag 03 set to 0.
+    if (raid_) mechs = 4;
+    const auto& tmpl = rules_->mechs[raid_ ? 5 : 0].record;
     // Flag 03 counts failed tries at the mission: it is kept at 6 at most,
     // and takes armour off the enemy (and, after five, more: below).
+    if (raid_) flags_[flag::kTries] = 0;
     if (flags_[flag::kTries] > 6) flags_[flag::kTries] = 6;
     const int tries = flags_[flag::kTries];
     const int cut = rules_->combat.difficulty_armour[std::size_t(tries)];
@@ -240,7 +245,7 @@ void Town::place_mission(int mechs, int people) {
         pilot[character::kName] = 0;
         pilot[character::kMech] = std::uint8_t(4 + i);
         auto& rec = mechs_[std::size_t(4 + i)];
-        rec = rules_->mechs[0].record;
+        rec = tmpl;
         for (int b = kArmourFirst; b <= kArmourLast; ++b)
             rec[std::size_t(b)] = rec[std::size_t(b)] <= cut ? 0 : std::uint8_t(rec[std::size_t(b)] - cut);
         if (tries > 4)
@@ -323,7 +328,17 @@ bool Town::fight(int kind, KeySource& keys) {
 
     // F:009e = 0; then 15ab:0b5e: "Do you want the computer to fight for
     // you?" with F:009e as the default, so always No; not asked with
-    // F:0090 (missions 4-7).
+    // F:0090 (mission 4).
+    // In the raid: "...", a key (24d3:17c6 / 17ea, 273d:0259).
+    if (raid_) {
+        open_message_box();
+        print_id("fight.raid_mechs");
+        if (!read_key(keys)) {
+            place_open_ = true;
+            return false;
+        }
+        raid_line_ = 0;
+    }
     computer_ = false;
     if (!no_computer_order_) {
         text_.select_window(3);
@@ -1134,12 +1149,39 @@ Combat Town::combat_rules() {
                   random_, combat_, marks_, *rules_, tables_, fixes_, messages_, graphics_, std::move(hooks));
 }
 
+// BTECH.EXE 203b:0f52..0ffb
+// After each round of the raid, its next story line (DG:3a2e); when the
+// fight is over, all those left. Before the second the place picture 2;
+// after the third map 11 takes the town's place (27e8:00fc = 11).
+bool Town::raid_lines(bool over, KeySource& keys) {
+    for (int n = over ? 5 - raid_line_ : 1; n > 0; --n) {
+        if (raid_line_ >= 5) continue;
+        if (raid_line_ == 1) show_picture(2, 1);
+        open_message_box();
+        print_id("fight.raid." + std::to_string(raid_line_++));
+        if (!read_key(keys)) {
+            place_open_ = true;
+            return false;
+        }
+        if (raid_line_ == 3 && !load_town_map(11)) {
+            fight_unfinished_ = true;
+            return false;
+        }
+        text_.select_window(4);
+        clear_window();
+    }
+    return true;
+}
+
 // BTECH.EXE 203b:056b..1481, the rounds (docs/combat.md 2.5-2.8, 2.12,
 // 2.13).
 bool Town::fight_rounds(int kind, KeySource& keys) {
     Combat combat = combat_rules();
     bool over = false;
+    int fled_how = 0;  // [bp-0x38]: 2 when the raid's way out was reached
     while (!over) {
+        // Each round draws the map first (287f:1314).
+        terrain_.release_window();
         const formats::MapPosition start = position_;
         combat_.person_ran = false;
         if (!computer_) {
@@ -1179,6 +1221,7 @@ bool Town::fight_rounds(int kind, KeySource& keys) {
                 }
             }
             over = fled != 0;
+            fled_how = fled;
             // Each party unit in slot order: the computer's plan, or the
             // path of its orders when the orders screen has not worked it out.
             for (int f = 0; f < 12 && !over; ++f) {
@@ -1227,6 +1270,7 @@ bool Town::fight_rounds(int kind, KeySource& keys) {
             if (exit_zone) over = true;
             if (!combat_.fight_on) over = true;
         }
+        if (raid_ && !raid_lines(over, keys)) return false;
         // With the computer in control a waiting key hands the party back
         // to the player (273d:002f, no demo playing), and is thrown away:
         // the orders menu comes next round.
@@ -1244,7 +1288,16 @@ bool Town::fight_rounds(int kind, KeySource& keys) {
     // After the loop (203b:1040): window 3 is cleared.
     text_.select_window(3);
     clear_window();
-    if (kind == 1 && combat_.fight_on) {
+    if (kind == 1 && combat_.fight_on && raid_) {
+        // Out by the way out: window 3 again, "...", "Press a key."
+        // (203b:13e2, 1000:2a4f).
+        if (fled_how == 2) {
+            text_.select_window(3);
+            clear_window();
+            print_id("fight.eluded_2");
+            if (!press_key(keys)) return false;
+        }
+    } else if (kind == 1 && combat_.fight_on) {
         // 24d3:17c6 / 17ea and a key.
         open_message_box();
         print_id("fight.return_to_base");

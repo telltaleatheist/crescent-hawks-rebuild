@@ -85,7 +85,7 @@ table in `src/formats/exe_data.cpp` gives each one's address:
 | IDs | Printed by | What |
 |---|---|---|
 | mech.&lt;id&gt;, weapon.0 - weapon.32 | (the rule tables) | the 'Mech templates' and weapons' names, read from inside the tables |
-| fight.* | 203b:000a | the encounter, the engage question, the double agent's story (fight.agent.0-16), the end of a fight, the five encounter descriptions (fight.encounter.0-4) |
+| fight.* | 203b:000a | the encounter, the engage question, the double agent's story (fight.agent.0-16), the end of a fight, the raid's five story lines (fight.raid.0-4) |
 | orders.*, options.*, scan.* | 203b:14c3 and its helpers, 15ab:1467 | the orders menus, movement messages, the movement modes (orders.mode.0-2), the combat options, the Scan browser |
 | weapons.*, pick.*, destroyed.* | 1d43 | the Use Weapons screen, the range bands (weapons.range.0-3), the target picker, a 'Mech destroyed |
 | shot.* | 22e8:000c, 22e8:12c7, 1e31 | the pieces of a shot's message, hit and miss, critical, kills |

@@ -227,7 +227,8 @@ private:
     int view_figure() const;
     // The view redrawn around Jason's figure (1000:17bb, then draw_view):
     // 22e8:000c's after the movement, 1e31:1f09 during a shot.
-    void redraw();
+    // 1e31:1f09, or with after_movement the round's own (22e8:1210..1281).
+    void redraw(bool after_movement = false);
     void show(int frames) const;
     void sound(int n) const;
     // BTECH.EXE 1e31:0c63 (Ghidra FUN_1e31_0c63)

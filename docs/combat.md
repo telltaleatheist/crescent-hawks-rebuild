@@ -192,9 +192,8 @@ sight at long range can (the figure is 8-15 cells from the window's edges).
 
 FUN_17dc_0629. A jump table at cs:086f by mode. All modes share a walking loop like the town's
 (a key is a step, `1000:218f`; with no key the tiles animate and the townspeople move) and the
-results step at 0bf2. Rebuilt: modes 0-7 and the walk (`game/mission.cpp`), and the results of
-modes 2-7, but not yet the raid (modes 6 and 7: its messages during the fight, 203b:0f61, and
-what follows).
+results step at 0bf2. Rebuilt: modes 0-7, the raid and the walk (`game/mission.cpp`), and the
+results of modes 2-7.
 
 **The walk** (0883..0bef). Each pass, first: with the party back at the training center's door
 (x <= 0x0c3c, 0xc049 <= y <= 0xc04f) the mission ends if its task is done ([bp-2]); if not, the
@@ -216,7 +215,7 @@ pass counts. The callers: special 1 (modes 0-7 from flag 00), ARENA.BLD's specia
 | 1 | A marked spot. One r & 7 picks a spot from DG:1632 / DG:163a (`tables.marked_spot_x/y`, a cell column and row in the area); that cell of the map store (P:101d + block x 64 + cell) is saved and set to tile 0x50. With a Locust a message (DG:1434, `mission.failed`) and a key come first. Then `218f(0)`. The task is done, after a tick, when the party's cell ((x & 0x7f) / 2, (y & 0x7f) / 2) is the one below the spot or below and to the left: a message and a key, DG:14ef (`mission.no_hands`) with a Locust, else DG:152a (`mission.hands`), and then the map cell is put back. Only the map store: the cell window keeps tile 0x50 until the next step builds it (`287f:1314` at the end of `218f`). | the 'Mech is not a Locust (it has no hands; the script says so). The cell is put back again. Either way Piloting (character 0 byte 8) + 1 if below 3. |
 | 2 | Target practice. One enemy 'Mech (`0d49(1, 0)`), then its record 4 is disarmed: both actuator bytes 0x24 / 0x25, all ten ammunition bytes 0x27-0x30 and both MP bytes 0x31 / 0x32 set to 0. It cannot move, kick or fire. Fight kind 1. | as below |
 | 3 | 3-6 enemy people (`0d49(0, (r & 3) + 3)`: the random count is pushed first, so it is the second argument), fight kind 1. | as below |
-| 4-7 | 1-4 enemy 'Mechs (`0d49(mode - 3, 0)`), fight kind 1, with F:0090 = 1 (no "computer fights for you" question, no Computer order). Mode 6: one r, the raid if r & 1. Mode 7: always the raid. In the raid F:3772 = 1 and the 16 cells P:101d + 0ff0..0fff are set to tile 0x40 (a gap in a wall: a guess). F:0090 = 0 afterwards. | as below |
+| 4-7 | 1-4 enemy 'Mechs (`0d49(mode - 3, 0)`), fight kind 1. Mode 4 alone sets F:0090 = 1 (no "computer fights for you" question, no Computer order): the switch (17dc:086f) sends mode 4 to 17dc:0765, which sets it, and modes 5-7 to 0770, just after. Mode 6: one r, the raid if r & 1. Mode 7: always the raid. In the raid F:3772 = 1 and the 16 cells P:101d + 0ff0..0fff are set to tile 0x40 (a gap in a wall: a guess; map 11's load in the fight replaces them). F:0090 = 0 afterwards. | as below |
 | 8 | The Arena: `0d49(0x81, 0)`: one enemy 'Mech by the bit-0x80 branch of 1.4 (two, the second the spectator, when F:d452..d455 holds an ff), figure 0 active, fight kind 2. | not set by this mode |
 | 9 | Jason alone on foot (`19b8:152f` first hides characters 1-7 and the four 'Mechs, saving their first bytes at F:3fe9 + p and F:d452 + m, and puts the party at (0x0d10, 0x7024)). F:398e = 1. Every key is a step; on every 80th step `0d49(0, 0x88)` (eight enemy people) and fight kind 3. The mode ends when DG:014a is 0 after a fight. On y = 0x702d, at x = 0x0d14 + 4i (i < 4), texts DG:155d, 159a, 15d4 the first time and a call to `19b8:16b2`. | not set by this mode |
 
@@ -359,7 +358,7 @@ Kinds 1-3 always fight.
 
 1. In the raid: a message box (DG:3452), a key.
 2. Kind 2: the view is set on the party and drawn.
-3. F:009e (the computer fights for the party) = 0. Unless F:0090 is set (modes 4-7), the
+3. F:009e (the computer fights for the party) = 0. Unless F:0090 is set (mode 4), the
    question "Do you want the computer to fight for you?" (`15ab:0b5e`, DG:1115), yes/no with
    F:009e as the default: always No, as it was just cleared.
 4. "Combat messages:" None / Brief / Verbose (`203b:24f0`, DG:3d3a) into DG:2e38 (0, 1, 2),
@@ -590,9 +589,25 @@ If F:374c was set this round (an enemy person was planned against a 'Mech, 4.4):
 ### 2.11 The raid story
 
 In the raid, one story line per round (five lines, far pointer table DG:3a2e), all remaining
-lines at once when the fight ends. Before the second line, place picture O2 is shown
-(`1000:48b7(2, 1)`, one draw). After the third, map 4 is loaded into block slot 0x0b
-(`1000:2da8`) and 27e8:00fc = 0x0b.
+lines at once when the fight ends (203b:0f52..0ffb). Each is a message box and a key, and
+window 4 (the picture box) is cleared after it. Before the second line, place picture O2 is
+shown (`1000:48b7(2, 1)`, one draw). After the third, map 11 (the destroyed Citadel, with its
+own tile sheet DESTRUCT.ICN) is loaded into grid 4 (`1000:2da8(4, 11)`), the masks rebuilt
+(`287f:1da8`) and 27e8:00fc = 0x0b. The load places the townspeople again (8 draws, none out on
+maps above 10) but does not build the cell window again: it keeps its cells until the next
+`287f:1314`.
+
+The raid's 'Mech list is fixed: four JENNERs (1.4). The rig plays mission 7 to its end (`raid`,
+docs/reference.md): the Locust falls in round 17 of the raid, the remaining lines follow, then
+the results (not passed) and the script.
+
+**The saved window.** After a round's movement (22e8:1210..1281, with combat graphics on) the
+fight walks the party's place onto the view figure, builds the window there (`1314`) and saves
+its 576 cells (`287f:1ece` into 2892:4314). Each redraw during a shot (`1e31:1f09`) copies the
+saved cells back, leaving the window's place (P:02cf) and block values (P:07a4) as the last
+`1314` set them, often at a figure's place for its line of sight. So the cells can belong to
+another block than the place says. Nothing visible depends on it; the rig compares it, and it
+shows after the raid's map load, when the saved cells differ from the fresh ones.
 
 ### 2.12 After the loop
 
@@ -1239,7 +1254,7 @@ sequence compares the scene with the original's, over the whole screen and the s
 9. Flag 24's values and where it is set, besides the traitor's 0x7f.
 10. `1c31:000a` (healing after a fight), `17dc:15e6` (offering a weapon), `15ab:18e8`, `1000:0e4b`,
     `287f:1df8`, `287f:1da8`: not read.
-11. The order of `1000:2da8`'s two arguments in the raid (map 4 into slot 0x0b, or the reverse).
+11. (Answered: `2da8(4, 11)` loads map 11 into grid 4, 2.11.)
 12. Whether the menu `2656:0b5e` can return -1 (Esc).
 13. 'Mech byte 0x78, F:4586 / F:3986 readers besides those above, DG:015e and DG:0150 (where they
     are set).

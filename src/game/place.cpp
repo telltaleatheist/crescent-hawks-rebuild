@@ -28,10 +28,12 @@ std::optional<int> Town::read_key(KeySource& keys) {
 
 void Town::print_id(const std::string& id) { text_.print(lookup(texts_, id)); }
 
-// The bars are drawn into window 3: clearing it takes them away too.
+// The bars are drawn into window 3, the place's picture into window 4:
+// clearing the window takes them away too.
 void Town::clear_window() {
     text_.clear_window();
     if (text_.window_number() == 3) party_box_shown_ = false;
+    if (text_.window_number() == kPanelPictureWindow) picture_.reset();
 }
 
 // BTECH.EXE 17dc:0008 (Ghidra FUN_17dc_0008)

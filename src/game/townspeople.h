@@ -77,6 +77,11 @@ public:
     // BTECH.EXE 203b:141a..1473: after the fight, back where they were.
     // Their headings are figures 16-23's in the fight (one table, F:3920 +
     // 16 + i, in the original), so the fight's come back with them.
+    // BTECH.EXE 1000:2da8, its last part, for a map loaded while the people
+    // are away in a fight: placed as by `place`, their records (put back
+    // when the fight ends) at the entrance each starts from.
+    void place_during_fight(const formats::MtpMap& map, int map_number, Random& random);
+
     void back_from_fight(const std::array<std::int8_t, 8>& headings) {
         for (std::size_t i = 0; i < walkers_.size(); ++i) {
             walkers_[i].at = kept_[i];

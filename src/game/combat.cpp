@@ -1005,9 +1005,13 @@ void Combat::sound(int n) const {
     if (hooks_.sound) hooks_.sound(n);
 }
 
-void Combat::redraw() {
+void Combat::redraw(bool after_movement) {
     const int v = view_figure();
     party_ = {figs_.x[std::size_t(v)], figs_.y[std::size_t(v)]};  // 1000:17bb
+    if (graphics_) {
+        if (after_movement) terrain_.save_cells(party_);  // 287f:1314, 1ece
+        else terrain_.restore_cells();
+    }
     if (hooks_.draw_view) hooks_.draw_view(graphics_);
 }
 
@@ -1354,7 +1358,7 @@ void Combat::round(bool mission) {
             party_ = before;
         }
         if (any && (graphics_ || fixes_.fix_terrain_without_graphics)) {
-            redraw();
+            redraw(true);
             if (graphics_) show(0);  // 273d:06c3
         }
         // Firing: each figure's first slot that fires ends its turn.

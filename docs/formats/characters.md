@@ -133,7 +133,7 @@ slots 0-10 are its weapons in item order and slot 11 is the Kick.
 | F:3772 | the raid |
 | F:e48e | the Arena 'Mech fight (figure 13 is the spectator) |
 | F:009e | the computer fights for the party |
-| F:0090 | no "computer" options (missions 4-7) |
+| F:0090 | no "computer" options (mission 4) |
 | F:e484, F:4586, F:3986 | this shot: 'Mech destroyed, critical hit, arm destroyed |
 | DG:014a | the fight goes on; 0 when character 0 or 1 is killed |
 | DG:2e38, DG:2e3a | message level (0 None, 1 Brief, 2 Verbose), combat graphics (yes/no) |

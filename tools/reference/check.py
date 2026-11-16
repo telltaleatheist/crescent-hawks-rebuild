@@ -604,6 +604,32 @@ FOURTH_CASES = [dict(case, compare=False) for case in TRAINING_CASES[:4]] + [
     {"name": "fourth_in_town", "keys": "enter", "match": SCREEN},
 ]
 
+# Training mission 7 (flag 00 poked to 7): always the raid. Its message,
+# the options without the computer question, then Begin Fight round after
+# round: a story line after each (the second with the place's picture,
+# after the third map 11 in the town's place), until the Jenners bring the
+# Locust down; the rest of the lines, the results and the script.
+def raid_round(n, keys):
+    return {"name": "raid_%02d" % n, "keys": keys, "match": SCREEN, "fight": True}
+RAID_CASES = [dict(case, compare=False) for case in FOURTH_CASES[:4]] + [
+    dict(FOURTH_CASES[4], name="raid_question",
+         keys=FOURTH_CASES[4]["keys"].replace("flag:00=04", "flag:00=07")),
+    dict(FOURTH_CASES[5], name="raid_greeting"),
+    dict(FOURTH_CASES[6], name="raid_briefing"),
+    dict(FOURTH_CASES[7], name="raid_message"),
+    {"name": "raid_mechs", "keys": "enter", "match": SCREEN},
+    {"name": "raid_computer", "keys": "enter", "match": SCREEN},
+    {"name": "raid_messages", "keys": "enter", "match": SCREEN},
+    {"name": "raid_graphics", "keys": "up*2 enter", "match": SCREEN},
+    {"name": "raid_orders", "keys": "enter", "match": SCREEN, "fight": True},
+    raid_round(1, "enter"), raid_round(3, "enter*2"), raid_round(5, "enter*2"), raid_round(6, "enter"),
+    raid_round(9, "enter*3"), raid_round(13, "enter*4"), raid_round(17, "enter*4"),
+    {"name": "raid_18", "keys": "enter", "match": SCREEN},
+    {"name": "raid_20", "keys": "enter*2", "match": SCREEN},
+    {"name": "raid_21", "keys": "enter", "match": SCREEN},
+    {"name": "raid_22", "keys": "enter", "match": SCREEN},
+]
+
 # Each sequence is one run of the original: (name, quick cases, --full
 # cases, chr's own options).
 # Mission 1, the marked spot, reached by keys alone after the course: flag
@@ -637,6 +663,7 @@ SEQUENCES = [("town", CASES, FULL_CASES, []), ("training", TRAINING_CASES, [], [
              ("course", COURSE_CASES, COURSE_FULL_CASES, []),
              ("spot", [], SPOT_CASES, []),
              ("fourth", [], FOURTH_CASES, []),
+             ("raid", [], RAID_CASES, []),
              ("handover", [], HANDOVER_CASES, [])]
 
 # The feeder (tools/capture/snap.asm, docs/reference.md) hands over a key at

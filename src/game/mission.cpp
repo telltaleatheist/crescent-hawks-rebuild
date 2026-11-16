@@ -1,5 +1,7 @@
 // The training missions' driver (docs/combat.md 1.3): a mission's set-up,
 // the walk it shares with every mode, and the results.
+#include "formats/game_files.h"
+#include "formats/mtp.h"
 #include "game/text_provider.h"
 #include "game/tile_animation.h"
 #include "game/town.h"
@@ -90,16 +92,16 @@ bool Town::run_mission(int mode, KeySource& keys) {
     case 5:
     case 6:
     case 7:
-        // 1-4 enemy 'Mechs; no computer to fight for the party (F:0090).
-        // Mission 6 is the raid one time in two, mission 7 always.
-        no_computer_order_ = true;
+        // 1-4 enemy 'Mechs. Mission 4 alone (17dc:0765; 5-7 enter at 0770)
+        // has no computer to fight for the party (F:0090). Mission 6 is the
+        // raid one time in two, mission 7 always.
+        no_computer_order_ = mode == 4;
         if (mode == 6 && (random_.next() & 1)) raid_ = true;
         if (mode == 7) raid_ = true;
-        if (raid_) {
-            log_.push_back("the raid: not rebuilt");
-            fight_unfinished_ = true;
-            return false;
-        }
+        // The raid: the map store's last 16 cells (block 63's last two
+        // rows) become tile 0x40.
+        if (raid_)
+            for (std::size_t c = 0xff0; c < 0x1000 && c < map_.blocks.size(); ++c) set_map_cell(c, 0x40);
         place_mission(mode - 3, 0);
         if (!fight(1, keys)) return false;
         party_to_jason();
@@ -174,6 +176,41 @@ void Town::mission_draw() {
     record_party_places();
     text_.forget(13, 0, kTextColumns - 13, kTextRows);
     frozen_ = Frozen{live_view(), figures};
+}
+
+// BTECH.EXE 1000:2da8 (Ghidra FUN_1000_2da8) into grid 4, and 287f:1da8
+// Map `number` takes the town's place: its blocks in the middle grid, its
+// tiles (map 11 has its own sheet), its blocking tile and its townspeople,
+// placed again with eight random numbers (none out on maps above 10).
+bool Town::load_town_map(int number) {
+    const std::string name = "MAP" + std::to_string(number) + ".MTP";
+    const auto path = game_dir_ ? formats::find_game_file(*game_dir_, name) : std::nullopt;
+    if (!path) {
+        log_.push_back(name + ": not found");
+        return false;
+    }
+    map_ = formats::decode_mtp(formats::read_file(*path));
+    map_number_ = number;
+    tile_sheet_ = tile_sheet_for_map(number);
+    flags_[flag::kTileEvents] = number == 14 ? 1 : 0;
+    terrain_.hold_window();
+    terrain_.place_map(map_, 4);
+    terrain_.link_blocks();
+    if (townspeople_away_) {
+        people_.place_during_fight(map_, number, random_);
+        for (int i = 0; i < 8; ++i) {
+            const auto& w = people_.walkers()[std::size_t(i)];
+            const auto at = number > 10 ? formats::MapPosition{0, 0} : w.target;
+            figs_.x[std::size_t(16 + i)] = at.x;
+            figs_.y[std::size_t(16 + i)] = at.y;
+            animation_.set_direction(16 + i, -1);
+            animation_.set_frame(16 + i, 0x10);
+        }
+    } else {
+        log_.push_back("a map load in town: not rebuilt");
+    }
+    log_.push_back("map " + std::to_string(number) + " loaded");
+    return true;
 }
 
 // BTECH.EXE 17dc:134b (Ghidra FUN_17dc_134b)

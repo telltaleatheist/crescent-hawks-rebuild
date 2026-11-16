@@ -98,6 +98,16 @@ Townspeople Townspeople::place(const formats::MtpMap& map, int map_number, Rando
     return t;
 }
 
+void Townspeople::place_during_fight(const formats::MtpMap& map, int map_number, Random& random) {
+    auto placed = place(map, map_number, random, *tables_);
+    blocking_ = placed.blocking_;
+    for (std::size_t i = 0; i < walkers_.size(); ++i) {
+        walkers_[i] = placed.walkers_[i];
+        kept_[i] = walkers_[i].target;
+        walkers_[i].at = {0xffff, 0xffff};
+    }
+}
+
 void Townspeople::move(const formats::MtpMap& map, const Terrain& terrain, MapPosition party, const PartyPlaces& party_places,
                        FigureAnimation& animation, Random& random, std::span<bool, 8> near) {
     for (int i = 0; i < 8; ++i) {

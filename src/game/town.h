@@ -295,6 +295,9 @@ private:
     void mission_draw();
     void draw_marks();
     void party_to_jason();
+    bool load_town_map(int number);
+    bool raid_lines(bool over, KeySource& keys);
+    int raid_line_ = 0;  // [bp-8] of 203b:000a: the raid's story lines shown
     bool mission_step_done(MissionWalk& w, KeySource& keys);
     void mission_results(const MissionWalk& w);
     void move_townspeople();
@@ -409,7 +412,7 @@ private:
     int messages_ = 2;       // DG:2e38: combat messages (0 none, 1 brief, 2 verbose)
     bool graphics_ = true;   // DG:2e3a: see combat graphics
     bool computer_ = false;  // F:009e: the computer fights for you
-    bool no_computer_order_ = false;  // F:0090: no Computer order (missions 4-7)
+    bool no_computer_order_ = false;  // F:0090: no Computer order (mission 4)
     bool raid_ = false;               // F:3772: the Kurita raid
     int path_end_col_ = 0, path_end_row_ = 0;  // F:3778/377a: the cell where the shown path ends
     std::optional<Frozen> frozen_;  // the map as the screen shows it

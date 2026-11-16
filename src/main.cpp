@@ -148,7 +148,7 @@ bool parse(int argc, char** argv, Options& options) {
 // values (P:07a4), then its cells a row a line (P:07ad).
 void print_window(const chr::game::Town& town, chr::formats::MapPosition at) {
     using chr::game::Terrain;
-    const auto& window = town.terrain().window(at);
+    const auto window = town.terrain().held_window(at);
     std::printf("window %04x %04x blocks ", at.x, at.y);
     for (const auto b : window.blocks) std::printf("%02x", b);
     for (int r = 0; r < Terrain::kWindowCells; ++r) {

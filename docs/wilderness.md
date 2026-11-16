@@ -79,8 +79,8 @@ by `height / 8` of them. The rest of the grid keeps its terrain. It then rebuild
 Each area's map comes from a 256-entry table (at the segment in DG:53d0, offset 0x30 + area;
 flags change two entries first, 1000:3419-3435: area 0xcc map 11, area 0x34 map 12). A
 load into all nine areas (1000:3469, 1000:3edc) loads each grid's map in turn. None of the areas
-around 0xcc has a map. Not rebuilt yet: the rebuild loads map 1 into grid 4 only, as the new game
-does.
+around 0xcc has a map. Not rebuilt yet: the rebuild loads into grid 4 only, map 1 as the new game
+does, and map 11 in the raid (docs/combat.md 2.11).
 
 ## The masks: 287f:1886 and 287f:11bb
 

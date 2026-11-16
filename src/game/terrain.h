@@ -57,6 +57,41 @@ public:
     const Window& window(formats::MapPosition position) const;
     // The placed map's cells have changed: the window is built again.
     void map_changed() { built_.reset(); }
+    // A map load (1000:2da8) leaves the cell window as it was until 287f:1314
+    // next builds one: the window as last built is held for what reads the
+    // original's memory (the rig), until release_window().
+    void hold_window() {
+        if (!built_) return;
+        held_ = built_;
+        held_column_ = built_column_;
+        held_row_ = built_row_;
+    }
+    // BTECH.EXE 287f:1ece (Ghidra FUN_287f_1ece)
+    // The fight saves the window's cells after a round's movement
+    // (22e8:126a, around the party) and each redraw during a shot
+    // (1e31:1f09) copies them back, leaving the window's place and block
+    // values as they were.
+    void save_cells(formats::MapPosition position) const { saved_ = window(position).cells; }
+    void restore_cells() const {
+        if (saved_) restored_ = saved_;
+    }
+    // The round's map drawing (287f:1314) builds the window again.
+    void release_window() const {
+        held_.reset();
+        restored_.reset();
+    }
+    // The window the original's memory holds for `position`'s block.
+    Window held_window(formats::MapPosition position) const {
+        const int column = (position.x & 0xff) >> 4, row = (position.y & 0xff) >> 4;
+        if (held_ && column == held_column_ && row == held_row_) return *held_;
+        if (restored_) {
+            static const formats::MtpMap kNoMap{};
+            Window w = window(position, map_ ? *map_ : kNoMap);
+            w.cells = *restored_;
+            return w;
+        }
+        return window(position);
+    }
     // Cell `index` of that window. Before it, as in the original's memory,
     // the nine block values (P:07a4), the grids (P:0564) and the masks
     // (P:0324); nothing past it or before those (memory the rebuild does
@@ -96,6 +131,9 @@ private:
     const formats::MtpMap* map_ = nullptr;
     mutable std::optional<Window> built_;
     mutable int built_column_ = -1, built_row_ = -1;
+    mutable std::optional<Window> held_;
+    int held_column_ = -1, held_row_ = -1;
+    mutable std::optional<std::array<std::uint8_t, kWindowCells * kWindowCells>> saved_, restored_;
 };
 
 }  // namespace chr::game
