@@ -32,9 +32,9 @@ The program's key reader hands back a character, or minus the scan code for keys
 
 (The keypad's 7, 9, 1 and 3 are Home, PgUp, End and PgDn with Num Lock off.) Every key is one
 turn: the main loop (`1000:002d`) reads it, empties the keyboard buffer, selects the upper panel
-box (window 4) and takes the step DS:015a times (1 at the start; `1000:3c67` changes it). Unless a
-message or question came up during the step (DS:d55c), it then writes the direction's name in
-that box ("North", "Northeast", ...; DS:01aa), blocked or not, so the box is a log of the last
+box (window 4) and takes the step DG:015a times (1 at the start; `1000:3c67` changes it). Unless a
+message or question came up during the step (F:d55c), it then writes the direction's name in
+that box ("North", "Northeast", ...; DG:01aa), blocked or not, so the box is a log of the last
 eleven steps. The map, the figures and the panel are drawn again afterwards (`1000:01f4`), so a
 message drawn over the map lasts until the next key. The keyboard and the idle half of the loop
 are in docs/reference.md.
@@ -52,14 +52,14 @@ It returns "blocked" or "free". In order:
 2. **Each character.** The party is up to eight characters, each at a fixed offset from the
    position (in half-cells): (0,0), (0,-1), (0,1), (1,0), (-1,0), (1,-1), (-1,1), (1,1). A new game
    has Jason alone, at (0,0). For each present character, with its position after the step:
-   - **Entrance.** Unless a question has been asked this turn already (flag DS:d55c) or the party
+   - **Entrance.** Unless a question has been asked this turn already (flag F:d55c) or the party
      is in its 'Mechs, if the character would stand exactly on one of the map's first 12 entrance
      positions, the message box opens with "Will you enter the" + newline + the place's name +
      "?" and the yes/no question (`1000:1a13`, Yes picked first). Yes goes into the place
      (`17dc:0008`, not rebuilt yet). The check then carries on either way.
    - **Tile.** A figure is drawn on half-cell (x+1, y), so the cell checked is the one holding
-     half-cell (x+1, y): cell ((x+1)/2, y/2). If that tile number is at least DS:0150 the step is
-     blocked. DS:0150 is 0x55 on every map but map 14, where it is 0x21 (`1000:2da8` sets it).
+     half-cell (x+1, y): cell ((x+1)/2, y/2). If that tile number is at least DG:0150 the step is
+     blocked. DG:0150 is 0x55 on every map but map 14, where it is 0x21 (`1000:2da8` sets it).
 3. **The 'Mechs** (when the party is in its 'Mechs, slots 0-3 with offsets (0,-2), (0,4), (3,1),
    (-3,1); two cells wide, entrances matched at x +-1, and the tile handlers for map 14's special
    tiles). Not used in town at the start of the game; documented later with the 'Mech maps.

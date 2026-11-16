@@ -64,7 +64,7 @@ private:
 std::deque<ScriptItem> parse_key_script(const std::string& script);
 
 // A character's panel numbers: the three bars under the heading "BDC"
-// (bytes 1, 2 and 3 of its 17-byte record at DGROUP:c614) and byte 15, which
+// (bytes 1, 2 and 3 of its 17-byte record at F:c614) and byte 15, which
 // the first bar's warning part is measured from. What they mean is not
 // read yet.
 struct PanelStats {
@@ -204,9 +204,9 @@ private:
     TextScreen text_;
     Random random_ = Random::at_town_start();
     Townspeople people_;
-    PartyPlaces party_places_{};  // DGROUP:4004/4036 for figures 4-11
+    PartyPlaces party_places_{};  // F:4004/4036 for figures 4-11
     Money money_;
-    // Outdoors (DGROUP:d310) is flag 04: clear on a town map.
+    // Outdoors (F:d310) is flag 04: clear on a town map.
     bool outdoors() const { return flags_[flag::kOutdoors] != 0; }
     int countdown_ = 0;       // the main loop's [bp-1a]: 0 when it starts (1000:0016)
     std::uint8_t third_ = 0;  // DGROUP:57fe
@@ -225,7 +225,7 @@ private:
     std::array<formats::MenuRecord, formats::kMenus.size()> menus_ = formats::kMenus;
     std::array<int, formats::kMenus.size()> menu_last_{};
     std::optional<PlacePicture> picture_;
-    int place_number_ = 0;  // DGROUP:4584: the entrance last entered
+    int place_number_ = 0;  // F:4584: the entrance last entered
     std::optional<std::filesystem::path> game_dir_;
 };
 

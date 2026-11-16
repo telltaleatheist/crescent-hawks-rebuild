@@ -12,11 +12,11 @@ using formats::MapPosition;
 // Figure numbers: the townspeople are 16-23.
 constexpr int kFirstWalker = 16;
 
-// DGROUP:d56e..d575: the townspeople's first sprite (0xfe for all: the grey
+// F:d56e..d575: the townspeople's first sprite (0xfe for all: the grey
 // people of MECHSHAP.CMP's row 40, plus the walking frame 0x10-0x1f).
 constexpr int kWalkerSprite = 0xfe;
 
-// 2c6c:0240: direction_toward's answer for each combination of its four
+// P:0240 (Ghidra 2c6c:0240): direction_toward's answer for each combination of its four
 // tests (north 8, south 4, east 2, west 1).
 constexpr std::array<int, 16> kDirectionOf = {-1, 6, 2, -1, 4, 5, 3, -1, 0, 7, 1, -1, -1, -1, -1, -1};
 
@@ -91,7 +91,7 @@ void Townspeople::move(const formats::MtpMap& map, MapPosition party, const Part
         auto& w = walkers_[std::size_t(i)];
         const int f = kFirstWalker + i;
         if (w.wait != 0) {
-            // (DGROUP:d339 keeps the first person inside: not set in town.)
+            // (F:d339 keeps the first person inside: not set in town.)
             if (--w.wait == 0) w.at = map.entrances[std::size_t(w.route >> 4)];
             continue;
         }
@@ -150,7 +150,7 @@ void Townspeople::step(int i, const formats::MtpMap& map, const PartyPlaces& par
         for (std::size_t j = 0; j < walkers_.size(); ++j)
             taken = taken || (j != std::size_t(i) && walkers_[j].at == next);
         if (taken) {
-            // DGROUP:d57e: someone stands on the target itself.
+            // F:d57e: someone stands on the target itself.
             if (next == w.target) target_taken = true;
             continue;
         }

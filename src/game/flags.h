@@ -1,4 +1,4 @@
-// The script flags: the bytes from DGROUP:d30c (docs/scripts.md). The .BLD
+// The script flags: the bytes from F:d30c (docs/scripts.md). The .BLD
 // scripts read and write them by number, and the rest of the program keeps
 // some of its own state in the same bytes, so they are one array here too.
 // The scripts use 00-3f; C-Bills follow at d370 (flag 64).

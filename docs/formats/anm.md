@@ -11,7 +11,7 @@
     +32  speed (signed byte)
     +33  the frames' data, one after the other
 
-The program loads the file at DGROUP:42c3 and keeps the delays just before it, at DGROUP:42a2, so
+The program loads the file at P:42c3 and keeps the delays just before it, at DGROUP:42a2, so
 a list entry s names the delay byte at file offset s − 0x21 (signed). Frame k stays up for
 delay · speed · 3 / 4 ticks (`1000:1afd`). The first frame always shows, whatever entry 0 holds.
 

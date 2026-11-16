@@ -13,7 +13,7 @@ with the original by the rig's `start_*` cases (docs/reference.md): all match pi
    one `273d:0006` wait each, or until a key (`273d:002f`, which only looks).
 3. **The title** (`1000:46a7`): BTTITLE.CMP with its palette.
 4. **`1000:50c8`**, the rest of the start-up:
-   - 256 random numbers fill a table at DGROUP(5400):09fb (counted in the town's random state,
+   - 256 random numbers fill a table at P:09fb (counted in the town's random state,
      docs/townspeople.md);
    - `1000:320b` loads ANIMATE.ICN and BTTLTECH.ICN for later (nothing shows);
    - `1000:476d` plays the title's tune, WWOODBT.SIF, until a key or the tune's end.

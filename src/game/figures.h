@@ -68,7 +68,7 @@ struct Figure {
 // BTECH.EXE 1000:051b (Ghidra FUN_1000_051b), the party's part.
 // The present characters, in order, the k-th one drawn at the k-th
 // formation place (DGROUP:02ae/02be: by the count drawn so far, not the
-// character's own slot). Its sprite is its base (DGROUP:d562) plus its
+// character's own slot). Its sprite is its base (F:d562) plus its
 // animation frame. In shallow water a figure sinks 2 rows, in deeper water
 // 4. (The map's objects, the townspeople and the 'Mechs come before and
 // after it in the original: not rebuilt yet.)

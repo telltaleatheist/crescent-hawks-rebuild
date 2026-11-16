@@ -9,7 +9,7 @@ delete it afterwards.
 
 There is one keyboard read in the whole program, `287f:0b8a`: BIOS int 16h function 0 (wait for
 a key), giving a character or minus the scan code. It sits behind `273d:0259`, which can also
-record keys into a buffer or play them back from one (DS:3938, DS:458c: a built-in demo or
+record keys into a buffer or play them back from one (F:3938, F:458c: a built-in demo or
 replay mechanism, not traced further). Whether a key is waiting is asked of DOS: `273d:002f`
 calls `287f:3bdc`, int 21h function 0Bh. The program never hooks int 9.
 
@@ -42,7 +42,7 @@ Captures (`@snap:NAME`) are written at the same moments, so they show the screen
 waiting on. In the EGA mode a capture also holds the first 640K of memory and the game's data
 segment (DS when it last asked DOS whether a key was waiting), so the game's state can be read
 back: `tools/reference/memory.py CAPTURE ds:4fc0:3 "[538a]:d370:4"` prints bytes, where
-`[538a]` is the segment whose number is the word at DS:538a, as the game reaches its far data.
+`[538a]` is the segment whose number is the word at DG:538a, as the game reaches its far data.
 `state.py CAPTURE` prints the state the rig compares, in the form `chr --state` prints it. When the script ends SNAP writes SNAPEND.TXT and `run.py` kills DOSBox-X. Nothing
 depends on the clock or on how fast the host is: two runs of the same script give byte-identical
 captures (checked for the start-up, the town and the Citadel question).
@@ -93,7 +93,7 @@ docs/town_loop.md has what the main loop does and when, docs/townspeople.md the 
 
 Found by the comparison along the way:
 
-- The move log ("North" in the upper box): the main loop prints the direction (DS:01aa) in
+- The move log ("North" in the upper box): the main loop prints the direction (DG:01aa) in
   window 4 after each walking key unless a message came up. Once the box is full it scrolls a
   line at a time (each entry is a line break, then the word).
 - The main loop's pace is the display's vertical retrace, not the timer (docs/town_loop.md).

@@ -10,24 +10,11 @@ instruction by instruction more than once; "open" items are collected at the end
 
 ## Conventions
 
-**Addresses.** Code is `ssss:oooo` (segment as the rest of the docs write it, load segment
-0x1000 included; Ghidra names the function `FUN_ssss_oooo`). Data addresses carry a prefix for
-the segment the code really uses. The program keeps its segment values in words inside DGROUP,
-and they are not all the same segment:
-
-| prefix | segment word value | holds (as far as combat goes) |
-|---|---|---|
-| DG: | 0x36db (DGROUP itself) | texts, the weapon table and the other rule tables, the combat settings DG:2e38 / DG:2e3a, DG:014a, the walk-script pointers DG:01f6 |
-| F: | 0x2892 (the far data segment) | character records F:c614, 'Mech records F:c724, the per-figure arrays, the flags F:d30c + n, C-Bills F:d370 |
-| P: | 0x1c6c | the party position P:a44b / P:a44d, the map cell buffer P:07ad, the view origin P:09ed..09f1 |
-| M: | 0x285b | the menu state M:00c2 / 00c6 / 00c8 |
-| 27e8: | 0x27e8 | the 'Mech templates and the walking scripts; written as `27e8:oooo` |
-
-The values are as stored in the EXE; at run time each is 0x1000 higher (F is 3892, DGROUP
-46db). Older pages (scripts.md, town_loop.md, townspeople.md) write the flags, C-Bills, the
-character records and the party position as DGROUP or DS. The code reaches the flags, C-Bills
-and records through F and the party position through P. Those pages are to be corrected
-separately.
+**Addresses.** Code is `ssss:oooo` (load segment 0x1000 included; Ghidra names the function
+`FUN_ssss_oooo`). Data addresses carry the prefix of the segment the code really uses: `DG:`
+(DGROUP: texts, rule tables, settings), `F:` (far data: flags, C-Bills, the character and 'Mech
+records, the figure arrays), `P:` (the party position, the map cells), `M:` (the menu state) and
+`27e8:` (the 'Mech templates). docs/original.md, "Data segments", defines them.
 
 **Positions** are two words (docs/movement.md): the low 7 bits of each count half-cells in a
 64x64-cell area, x bits 8-11 are the area column, y bits 12-15 the area row. Combat measures in

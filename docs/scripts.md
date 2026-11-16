@@ -8,9 +8,9 @@ names and its text IDs.
 
 Answering Yes at an entrance calls `17dc:0008(n)` with the map's place number:
 
-1. Sets flag 0a (DGROUP:d316) to 1, and stores n at DGROUP:4584 (used on leaving, below).
+1. Sets flag 0a (F:d316) to 1, and stores n at F:4584 (used on leaving, below).
 2. Maps n to a script number through the map's own table (the .MTP's `place_scripts` at file
-   offset 0x205, loaded at DGROUP:4602; docs/formats/mtp.md). Numbers 0x12 and 0x16 and up are used
+   offset 0x205, loaded at F:4602; docs/formats/mtp.md). Numbers 0x12 and 0x16 and up are used
    as they are. On map 1, entrance 1 is the Citadel.
 3. Asks for the right game disk (1000:28cc). The rebuild drops this: there are no disks.
 4. **The training center on its first visit.** For place 0, while flag 14 (d320) is 0 and no demo
@@ -23,7 +23,7 @@ Answering Yes at an entrance calls `17dc:0008(n)` with the map's place number:
    - leaving the garage (8) with flag 30 set and flag 0e set, and flag 32 clear, shows a text
      (DGROUP:1384, 13b6) and runs place 12 (VIEWDISK);
    - leaving place 13 (BARRACK2) with flag 0e set runs place 12 too.
-   In both cases DGROUP:0064 is set to 0c.
+   In both cases 27e8:0064 is set to 0c.
 8. Puts the screen back: window 4 cleared, window 3, the panel redrawn (`1000:4cac(1)`).
 9. Leaving place 14 (ENTRANCE) with flag 36 set clears the 8 party records' first byte and calls
    `1b5d:0004`.
@@ -31,7 +31,7 @@ Answering Yes at an entrance calls `17dc:0008(n)` with the map's place number:
 ## The machine
 
 - The script, deciphered, with a program counter (pc) from offset 0.
-- **Flags.** A byte array at DGROUP:d30c, indexed by a signed byte, all 0 at a new game except
+- **Flags.** A byte array at F:d30c, indexed by a signed byte, all 0 at a new game except
   the money floor. The scripts and the rest of the program share them (src/game/flags.h):
 
   | flag | byte | what |
@@ -48,8 +48,8 @@ Answering Yes at an entrance calls `17dc:0008(n)` with the map's place number:
   | 33–34 | d33f | the money floor, a word: 50 at a new game |
   | 4f | d35b | how often a place's picture shows |
 - **The current text window and its cursor** (docs/text.md).
-- **C-Bills**, DGROUP:d370 (32-bit).
-- **The party's map place**, DGROUP:a44b (x) and a44d (y).
+- **C-Bills**, F:d370 (32-bit).
+- **The party's map place**, P:a44b (x) and a44d (y).
 
 Execution: read the byte at pc and step past it. An opcode E4–FF runs; any other byte is stepped
 over. It loops until `end`. Operands are read in order after the opcode. A byte operand is
@@ -67,8 +67,8 @@ unsigned 16-bit value. Jumps go to an absolute script offset.
 | E8 | if_random | b mask, w to | r = random (287f:0bc0); if r AND mask (sign-extended) ≠ 0, goto to | random |
 | E9 | new_member | b skill | a new member joins (`19b8:0d58`, below) | party records |
 | EA | picture | b n, b mode | shows place picture n, O<n>.ANM, in the picture box (`1000:48b7`); not while a demo plays | |
-| EB | if_d451 | w to | if DGROUP:d451 ≠ 0, goto to | reads d451 |
-| EC | if_d450 | w to | if DGROUP:d450 ≠ 0, goto to | reads d450 |
+| EB | if_d451 | w to | if F:d451 ≠ 0, goto to | reads d451 |
+| EC | if_d450 | w to | if F:d450 ≠ 0, goto to | reads d450 |
 | ED | if_skill | b skill, b level, w to | if any party member (record byte 0 ≠ ff) has skill byte `skill` ≥ level (signed), goto to | reads c614+ |
 | EE | pay | w amount | C-Bills −= amount, or to 0 if it is more than they have; redraws the C-Bills | d370 |
 | EF | if_cbills | w amount, w to | if C-Bills ≥ amount (unsigned 32-bit compare), goto to | reads d370 |
@@ -117,7 +117,7 @@ starting answer.
 ### A new member (BTECH.EXE 19b8:0d58)
 
 The first free record of the 8 (byte 0 = ff) gets:
-- the next name number (DGROUP:d456, from 2 to 9 and round again);
+- the next name number (F:d456, from 2 to 9 and round again);
 - three random attributes (`1000:19dd`), and random 0/1 for each of 7 skills;
 - skill `skill` set to 3 (a mech-tech also loses some of an attribute);
 - a 'Mech slot if one is free.
@@ -156,7 +156,7 @@ Special 05's texts are imported from BTECH.EXE as `course.*` (docs/import.md).
 
 ### Talk to others (BTECH.EXE 17dc:17b9)
 
-1. The place is the first i with DGROUP:4602[i] == flag 0d.
+1. The place is the first i with F:4602[i] == flag 0d.
 2. Clears the window. The townspeople inside are those waiting (wait ≠ 0) whose route's place
    ((route >> 4) & 7) is this one (docs/townspeople.md).
 3. Nobody: `talk.nobody`, wait for a key.
@@ -177,7 +177,7 @@ Special 05's texts are imported from BTECH.EXE as `course.*` (docs/import.md).
 
 ## Not rebuilt yet
 
-- **EB/EC** read DGROUP:d451 and d450, which nothing rebuilt sets yet; the rebuild never jumps.
+- **EB/EC** read F:d451 and d450, which nothing rebuilt sets yet; the rebuild never jumps.
 - **E4** (sound) and **E9** (new member) do nothing but log.
 - The specials other than 4, 5, 12 and 14, and the training center's first visit (1c67:08a8).
 

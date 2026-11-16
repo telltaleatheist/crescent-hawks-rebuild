@@ -281,7 +281,7 @@ void Town::game_tick() {
             log_.push_back("timer 37 ran out in the region: 1d43:0c72 not rebuilt");
     }
     const std::uint8_t r = random_.next();
-    (void)r;  // outdoors, (r & DGROUP:d330) == 0 starts a fight: not rebuilt
+    (void)r;  // outdoors, (r & F:d330) == 0 starts a fight: not rebuilt
     // BTECH.EXE 1000:02b6..02ed: flags 1d, 14, 15 and 16 count down to 0
     // (Katrina's text sets 16 to ff).
     for (const int f : {0x1d, 0x14, 0x15, 0x16}) count_down(f);
@@ -337,7 +337,7 @@ void Town::turn(int k, KeySource& keys) {
         line += "asked to enter place " + std::to_string(*r.offered_place) +
                 " (no); ";
     // The main loop then writes the direction in the upper panel box, unless
-    // a message or question came up this turn (DGROUP:d55c). Blocked steps
+    // a message or question came up this turn (F:d55c). Blocked steps
     // are logged too.
     if (!r.offered_place && r.outcome != StepOutcome::TooDeep) {
         text_.select_window(4);

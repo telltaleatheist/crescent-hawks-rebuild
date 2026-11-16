@@ -27,7 +27,7 @@ constexpr int character_script(int direction) { return 0x2b0 + 8 * direction; } 
 constexpr std::array<int, 8> kDirectionKeys = {key::kUp,   key::kPageUp, key::kRight, key::kPageDown,
                                                key::kDown, key::kEnd,    key::kLeft,  key::kHome};
 
-// DGROUP:d562: each character's first sprite. Only Jason's is known so far
+// F:d562: each character's first sprite. Only Jason's is known so far
 // (0x96, set by the new-game setup at 1000:4f0f); the others are set when
 // they join the party, not rebuilt yet.
 constexpr std::array<int, 8> kSpriteBase = {0x96, 0x96, 0x96, 0x96, 0x96, 0x96, 0x96, 0x96};
@@ -44,8 +44,8 @@ constexpr std::array<std::array<std::uint8_t, 4>, 8> kWaterQuarters = {{
 FigureAnimation::FigureAnimation() {
     for (int f = 0; f < kFigures; ++f) {
         pos_[f] = character_script(4) - kScriptBase;  // DGROUP:01f6: 37e8:02d0 for all
-        direction_[f] = -1;                              // DGROUP:396c = 0xff
-        frame_[f] = (f < 4 || (f >= 12 && f < 16)) ? 0 : 0x10;  // DGROUP:409a
+        direction_[f] = -1;                              // F:396c = 0xff
+        frame_[f] = (f < 4 || (f >= 12 && f < 16)) ? 0 : 0x10;  // F:409a
     }
 }
 

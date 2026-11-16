@@ -71,7 +71,7 @@ StepResult take_step(const formats::MtpMap& map, int map_number, MapPosition fro
     // Each character in turn: first an entrance under its new position, then
     // the tile under its feet. A figure stands on half-cell (x + 1, y): the
     // cell checked is the one holding that half-cell.
-    bool asked = false;  // DGROUP:d55c: one question per turn
+    bool asked = false;  // F:d55c: one question per turn
     const int limit = blocking_tile(map_number);
     for (int i = 0; i < 8; ++i) {
         if (!party.present[i]) continue;

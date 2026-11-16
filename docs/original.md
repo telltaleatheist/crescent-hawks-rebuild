@@ -55,3 +55,25 @@ through pointers may still be missing, so expect the count to grow somewhat.
 For scale, MechWarrior 3 has about 3,850 game functions.
 
 The function map is `docs/functions.md`.
+
+## Data segments and the prefixes the docs use
+
+The code does not hold its data segments as constants. It loads them from
+words inside DGROUP (for example `mov es,[0x5528]`), and those words hold
+four different segments. A data address in these docs carries the prefix of
+the segment the code really reaches it through:
+
+| Prefix | Image segment | Ghidra segment | What lives there |
+|---|---|---|---|
+| `DG:` | 0x36db | 46db | DGROUP itself: texts, the rule tables (weapons, hit locations, clusters), settings such as the message level DG:2e38, the town's counters DG:57fe / DG:5800 |
+| `F:` | 0x2892 | 3892 | the far data: the flags F:d30c + n, C-Bills F:d370, the character records F:c614, the 'Mech records F:c724, the figure arrays (positions F:4004 / F:4036, sprites F:d55e, facings F:396c, frames F:409a), the random generator's state F:d456 |
+| `P:` | 0x1c6c | 2c6c | the party position P:a44b / P:a44d, the map cell buffer P:07ad, the view origin P:09ed..09f1, picture buffers |
+| `M:` | 0x285b | 385b | the menu state M:00c2 / 00c6 / 00c8 |
+
+The image segment is the value stored in the EXE; Ghidra shows each 0x1000
+higher. `27e8:oooo` (Ghidra 37e8) is a constant segment named directly in
+the code: the 'Mech templates and the walking scripts. Where an older note
+says "DS" for a near address, it means `DG:`.
+
+To tell which segment an address is in, look at the word the code loads into
+ES before the access, not at the address: F's and DGROUP's offsets overlap.

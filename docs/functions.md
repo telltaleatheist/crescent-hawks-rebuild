@@ -29,16 +29,16 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 1000:19f3 | 0x119f3 | `FUN_1000_19f3` | 32 |  | - |
 | 1000:1a13 | 0x11a13 | `FUN_1000_1a13` | 234 | Yes/no question: Y/N answer, left/right pick, space/Enter accept; reprints the answer line each key | rebuilt |
 | 1000:1afd | 0x11afd | `FUN_1000_1afd` | 277 | Shows one .ANM picture: its frames and delays (docs/formats/anm.md) | rebuilt |
-| 1000:1c12 | 0x11c12 | `FUN_1000_1c12` | 1405 | Can the party step by (dx, dy)? Deep water at a block edge; offers to enter a place at an entrance; blocks on tile >= DS:0150 | rebuilt |
+| 1000:1c12 | 0x11c12 | `FUN_1000_1c12` | 1405 | Can the party step by (dx, dy)? Deep water at a block edge; offers to enter a place at an entrance; blocks on tile >= DG:0150 | rebuilt |
 | 1000:218f | 0x1218f | `FUN_1000_218f` | 398 | Walking keys: arrows and Home/PgUp/End/PgDn to a step, checks it, moves y then x, loads areas crossed into | rebuilt |
 | 1000:231d | 0x1231d | `FUN_1000_231d` | 238 | After a key: a walking key moves the figures' walking scripts on | rebuilt |
-| 1000:240b | 0x1240b | `FUN_1000_240b` | 183 | Animated tiles: next of 3 frames, ANIMATE.ICN tile 1+3i+frame over each of the 10 tile numbers at DS:04b0 | rebuilt |
+| 1000:240b | 0x1240b | `FUN_1000_240b` | 183 | Animated tiles: next of 3 frames, ANIMATE.ICN tile 1+3i+frame over each of the 10 tile numbers at DG:04b0 | rebuilt |
 | 1000:24c2 | 0x124c2 | `FUN_1000_24c2` | 933 | Townspeople, every third game tick: count down inside, come out at the last entrance; out and near the party, a step (1e31:0006), walking frame, at the target go in for random&31 rounds | rebuilt |
 | 1000:2867 | 0x12867 | `FUN_1000_2867` | 59 |  | - |
 | 1000:28a2 | 0x128a2 | `FUN_1000_28a2` | 42 | Sets the text colour to light green (CGA: 1) | rebuilt |
 | 1000:28cc | 0x128cc | `FUN_1000_28cc` | 71 |  | - |
 | 1000:2913 | 0x12913 | `FUN_1000_2913` | 226 |  | - |
-| 1000:29f5 | 0x129f5 | `FUN_1000_29f5` | 54 | The money floor: word DS:d340/d33f | rebuilt |
+| 1000:29f5 | 0x129f5 | `FUN_1000_29f5` | 54 | The money floor: word F:d340/d33f | rebuilt |
 | 1000:2a2b | 0x12a2b | `FUN_1000_2a2b` | 36 | Empties the keyboard buffer (unless playing back recorded keys) | read |
 | 1000:2a4f | 0x12a4f | `FUN_1000_2a4f` | 26 |  | - |
 | 1000:2a69 | 0x12a69 | `FUN_1000_2a69` | 21 |  | - |
@@ -64,7 +64,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 1000:4cac | 0x14cac | `FUN_1000_4cac` | 171 | The left panel: party box (window 3, frame style 3, 'BDC' heading, up to 4 names) and the box above (window 4, style 4) | rebuilt |
 | 1000:4d57 | 0x14d57 | `FUN_1000_4d57` | 112 |  | - |
 | 1000:4dc7 | 0x14dc7 | `FUN_1000_4dc7` | 769 | New game: reset the party, load map 1 into area 4, set the start position | read |
-| 1000:50c8 | 0x150c8 | `FUN_1000_50c8` | 434 | Start-up: 256 random numbers into DGROUP(5400):09fb; the title; the notice and first-time question; the demo if no key (docs/startup.md) | rebuilt |
+| 1000:50c8 | 0x150c8 | `FUN_1000_50c8` | 434 | Start-up: 256 random numbers into P:09fb; the title; the notice and first-time question; the demo if no key (docs/startup.md) | rebuilt |
 
 ## CODE_1: segment 1527, 2,104 bytes
 
@@ -261,7 +261,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 273d:0086 | 0x27456 | `FUN_273d_0086` | 79 | Copy a picture buffer to the screen (by display) | replaced |
 | 273d:00d5 | 0x274a5 | `FUN_273d_00d5` | 294 | Writes a string straight onto the screen at (column, row) in two colours with the 8x8 font | rebuilt |
 | 273d:01fb | 0x275cb | `FUN_273d_01fb` | 94 |  | - |
-| 273d:0259 | 0x27629 | `FUN_273d_0259` | 195 | Reads a key (287f:0b8a), or plays one back from / records one into the key buffer (DS:3938, DS:458c) | read |
+| 273d:0259 | 0x27629 | `FUN_273d_0259` | 195 | Reads a key (287f:0b8a), or plays one back from / records one into the key buffer (F:3938, F:458c) | read |
 | 273d:031c | 0x276ec | `FUN_273d_031c` | 207 |  | - |
 | 273d:03eb | 0x277bb | `FUN_273d_03eb` | 178 |  | - |
 | 273d:049d | 0x2786d | `FUN_273d_049d` | 136 | Unpack a loaded .CMP by its type byte (CGA: reduce to 4 colours) | rebuilt |
@@ -343,7 +343,7 @@ read each one before taking it as such.
 | 287f:0b73 | 0x29363 | `FUN_287f_0b73` | 23 |  | replaced |
 | 287f:0b8a | 0x2937a | `FUN_287f_0b8a` | 29 | BIOS int 16h function 0: wait for a key; character, or minus the scan code | replaced |
 | 287f:0ba7 | 0x29397 | `FUN_287f_0ba7` | 25 |  | replaced |
-| 287f:0bc0 | 0x293b0 | `FUN_287f_0bc0` | 59 | Random number: 3-byte shift register at DS:4fc0 | rebuilt |
+| 287f:0bc0 | 0x293b0 | `FUN_287f_0bc0` | 59 | Random number: 3-byte shift register at DG:4fc0 | rebuilt |
 | 287f:0bfb | 0x293eb | `FUN_287f_0bfb` | 268 |  | replaced |
 | 287f:0d07 | 0x294f7 | `FUN_287f_0d07` | 114 |  | replaced |
 | 287f:0d79 | 0x29569 | `FUN_287f_0d79` | 127 |  | replaced |
@@ -371,7 +371,7 @@ read each one before taking it as such.
 | 287f:1b71 | 0x2a361 | `FUN_287f_1b71` | 35 | Draw a whole tile on EGA (from its caller) | replaced |
 | 287f:1b94 | 0x2a384 | `FUN_287f_1b94` | 75 | Copy a half-height tile into the screen buffer (from its caller) | replaced |
 | 287f:1bdf | 0x2a3cf | `FUN_287f_1bdf` | 29 |  | replaced |
-| 287f:1bfc | 0x2a3ec | `FUN_287f_1bfc` | 135 | Copy a half-width tile into the screen buffer: right half when DS:a450 is 0 | replaced |
+| 287f:1bfc | 0x2a3ec | `FUN_287f_1bfc` | 135 | Copy a half-width tile into the screen buffer: right half when DG:a450 is 0 | replaced |
 | 287f:1c83 | 0x2a473 | `FUN_287f_1c83` | 53 |  | replaced |
 | 287f:1cb8 | 0x2a4a8 | `FUN_287f_1cb8` | 130 |  | replaced |
 | 287f:1d3a | 0x2a52a | `FUN_287f_1d3a` | 82 |  | replaced |

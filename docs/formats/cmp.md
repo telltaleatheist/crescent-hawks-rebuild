@@ -66,7 +66,7 @@ screens use the table at 37e8:0000 (MCGA: 37e8:0010).
 
 ## The four displays
 
-The start-up menu (1527:0044) sets the display variable at DS:4fba from the
+The start-up menu (1527:0044) sets the display variable at DG:4fba from the
 key pressed: 1 → 0, 2 → 1, 3 → 2, 4 → 3.
 
 | Choice | Value | Display | What the program does with the unpacked picture |
@@ -90,7 +90,7 @@ is dark blue).
 
 The MCGA table has 16 two-byte entries. The first byte's high nibble is green
 and its low three bits are blue. The second byte is red. Each value from 0 to 7
-goes through an eight-step table (DGROUP 2c6c:a459) to a 6-bit DAC level
+goes through an eight-step table (P:a459) to a 6-bit DAC level
 between 0 and 63. MCGA therefore has its own colours, not the EGA ones. The
 rebuild does not use them yet.
 

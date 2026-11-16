@@ -184,7 +184,7 @@ bool Town::run_script(int file, KeySource& keys) {
         }
         case formats::Op::IfFlagD450:
         case formats::Op::IfFlagD451:
-            // DGROUP:d450 / d451, set by specials not rebuilt yet (UnBattletech
+            // F:d450 / d451, set by specials not rebuilt yet (UnBattletech
             // names them "training complete" and a milestone); 0 in a new game.
             jump_if(false);
             break;

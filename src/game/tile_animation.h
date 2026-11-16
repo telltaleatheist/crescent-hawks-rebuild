@@ -29,7 +29,7 @@ inline std::optional<AssetId> animated_tile(std::uint8_t tile, int phase) {
 
 namespace chr::game {
 
-// DGROUP(3892):3988 must be 0 for 1000:240b to run. Loading BTTLTECH.ICN
+// F:3988 must be 0 for 1000:240b to run. Loading BTTLTECH.ICN
 // (1000:4621) sets 0; map 11's DESTRUCT.ICN (1000:2e2e) sets 1, map 14's
 // loader (1b5d:...) sets 2. So only the maps drawn with BTTLTECH.ICN animate.
 inline bool tiles_animate(int map_number) { return map_number != 11 && map_number != 14; }

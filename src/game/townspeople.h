@@ -13,18 +13,18 @@
 
 namespace chr::game {
 
-// One person's record (17 words... 0x1a bytes at DGROUP:d390 + 0x1a i).
+// One person's record (17 words... 0x1a bytes at F:d390 + 0x1a i).
 struct Walker {
-    formats::MapPosition at;      // DGROUP:4024/4056 (figure 16 + i): (0, 0) while inside
-    formats::MapPosition target;  // DGROUP:d394/d396: the entrance it walks to
-    std::uint8_t route = 0;       // DGROUP:d398: high nibble the last entrance, low the next
-    std::uint8_t wait = 0;        // DGROUP:d399: counts down while inside; 0 = out walking
-    std::int8_t heading = 0;      // DGROUP:3920 (figure 16 + i): the way it last stepped
+    formats::MapPosition at;      // F:4024/4056 (figure 16 + i): (0, 0) while inside
+    formats::MapPosition target;  // F:d394/d396: the entrance it walks to
+    std::uint8_t route = 0;       // F:d398: high nibble the last entrance, low the next
+    std::uint8_t wait = 0;        // F:d399: counts down while inside; 0 = out walking
+    std::int8_t heading = 0;      // F:3920 (figure 16 + i): the way it last stepped
     bool operator==(const Walker&) const = default;
 };
 
 // Where the party's characters stood when the figures were last drawn
-// (DGROUP:4004/4036, figures 4-11; (0, 0) for one not drawn). A step is
+// (F:4004/4036, figures 4-11; (0, 0) for one not drawn). A step is
 // refused onto any of them.
 using PartyPlaces = std::array<formats::MapPosition, 8>;
 
@@ -59,7 +59,7 @@ public:
     // never near the party). With the fix it comes out on the next round.
     bool fix_lost_walker = false;
 
-    // DGROUP:d57e: set when a person found another figure on its target.
+    // F:d57e: set when a person found another figure on its target.
     // Read elsewhere (cleared at 2000:1e3b), not rebuilt yet.
     bool target_taken = false;
 

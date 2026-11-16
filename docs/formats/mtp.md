@@ -45,7 +45,7 @@ shipped map uses tiles 0–249 only). Cells carry no other bits. Everything the
 game knows about a cell comes from its tile number:
 
 - **Blocking.** 1000:1c12, the step check, refuses a step onto any tile
-  numbered DS:0150 or more. That limit is 0x55 normally and 0x21 on map 14
+  numbered DG:0150 or more. That limit is 0x55 normally and 0x21 on map 14
   (1000:2da8 sets it).
 - **Places.** A step that lands exactly on an entrance position (one of the
   first 12 entries) names the place from the 0x100 table and offers to go in
@@ -67,7 +67,7 @@ time.
 
 The map is not drawn from the file directly. The world is a set of areas, each
 a grid of 8x8 blocks (64x64 cells). The program keeps nine area grids at
-2c6c:0564 (pointers at DS:0170), with area 4 in the middle.
+P:0564 (pointers at DG:0170), with area 4 in the middle.
 
 - An area grid entry of 0x80 or more is a **fixed block**: entry − 0x80 indexes
   the block store at 2c6c:0c1d, 64 bytes per block. The `.MTP` cells are read
