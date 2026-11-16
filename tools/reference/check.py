@@ -740,6 +740,24 @@ CHAIN_CASES = [dict(case, compare=False) for case in SPOT_CASES] + [
     {"name": "chain_fourth_over", "keys": "left", "match": SCREEN},
     {"name": "chain_fourth_in_town", "keys": "enter", "match": SCREEN},
     {"name": "chain_fourth_walk_on", "keys": "down", "match": SCREEN},
+    # Mission 4 again, won by orders: the Wasp loses a fair fight with the
+    # Locust, so the Chameleon, every weapon on the Locust, one waypoint.
+    {"name": "chain_win_waited", "keys": "idle:2900 up*5", "match": SCREEN},
+    {"name": "chain_win_greeting", "keys": "y orig:enter*4", "match": SCREEN},
+    {"name": "chain_win_briefing", "keys": "y", "match": SCREEN},
+    {"name": "chain_win_mech_menu", "keys": "enter", "match": SCREEN},
+    {"name": "chain_win_messages", "keys": "down enter", "match": SCREEN},
+    {"name": "chain_win_graphics", "keys": "up*2 enter", "match": SCREEN},
+    {"name": "chain_win_orders", "keys": "enter", "match": SCREEN, "fight": True},
+    {"name": "chain_win_weapons", "keys": "up*6 enter enter enter down enter enter down enter enter down enter enter down enter enter down enter enter down enter enter down enter enter down enter enter down enter", "match": SCREEN, "fight": True},
+    {"name": "chain_win_walk", "keys": "enter pgdn*4 right*4 enter", "match": SCREEN, "fight": True},
+    {"name": "chain_win_round_1", "keys": "down*9 enter", "match": SCREEN, "fight": True},
+] + [{"name": "chain_win_round_%d" % n, "keys": "enter", "match": SCREEN, "fight": True} for n in range(2, 7)] + [
+    {"name": "chain_win_end", "keys": "idle:99", "match": SCREEN, "fight": True},
+    {"name": "chain_win_walk_back", "keys": "enter home*7", "match": SCREEN},
+    {"name": "chain_win_over", "keys": "left*5", "match": SCREEN},
+    {"name": "chain_win_in_town", "keys": "enter", "match": SCREEN},
+    {"name": "chain_win_walk_on", "keys": "down", "match": SCREEN},
 ]
 
 # The long unpoked run: its own tier (`--campaign`, ctest label campaign).
