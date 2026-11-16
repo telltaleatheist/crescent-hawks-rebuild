@@ -86,6 +86,26 @@ bool Town::run_mission(int mode, KeySource& keys) {
         party_to_jason();
         w.done = true;
         break;
+    case 4:
+    case 5:
+    case 6:
+    case 7:
+        // 1-4 enemy 'Mechs; no computer to fight for the party (F:0090).
+        // Mission 6 is the raid one time in two, mission 7 always.
+        no_computer_order_ = true;
+        if (mode == 6 && (random_.next() & 1)) raid_ = true;
+        if (mode == 7) raid_ = true;
+        if (raid_) {
+            log_.push_back("the raid: not rebuilt");
+            fight_unfinished_ = true;
+            return false;
+        }
+        place_mission(mode - 3, 0);
+        if (!fight(1, keys)) return false;
+        party_to_jason();
+        w.done = true;
+        no_computer_order_ = false;
+        break;
     default:
         log_.push_back("mission " + std::to_string(mode) + ": not rebuilt");
         fight_unfinished_ = true;

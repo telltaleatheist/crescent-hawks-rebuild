@@ -174,7 +174,9 @@ without a poke: 2900 idle polls let flag 14 run down (255 town ticks, an idle ti
 polls), the training center again with the quiz on the original's side, the second mission in the
 Wasp, the way to the marked spot (the same random spot in both) and back, and the town after.
 The window it compares is the one chr holds, which after the spot's cell is put back still shows
-tile 0x50 until the next step, as the original's does. `handover` (long
+tile 0x50 until the next step, as the original's does. `fourth` (long only) is mission 4 (flag 00
+poked to 4): no computer question (F:0090), the Locust flees at the first orders menu, the walk
+back, the verdict and the town. `handover` (long
 only) lets the computer fight six rounds, hands the fight back with a key at
 the round's poll, and flees and fails. The training
 cases at its start are captured but not compared (`"compare": False`): the `training` sequence

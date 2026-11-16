@@ -192,8 +192,9 @@ sight at long range can (the figure is 8-15 cells from the window's edges).
 
 FUN_17dc_0629. A jump table at cs:086f by mode. All modes share a walking loop like the town's
 (a key is a step, `1000:218f`; with no key the tiles animate and the townspeople move) and the
-results step at 0bf2. Rebuilt: modes 0-3 and the walk (`game/mission.cpp`), and the results of
-modes 2-7.
+results step at 0bf2. Rebuilt: modes 0-7 and the walk (`game/mission.cpp`), and the results of
+modes 2-7, but not yet the raid (modes 6 and 7: its messages during the fight, 203b:0f61, and
+what follows).
 
 **The walk** (0883..0bef). Each pass, first: with the party back at the training center's door
 (x <= 0x0c3c, 0xc049 <= y <= 0xc04f) the mission ends if its task is done ([bp-2]); if not, the
@@ -359,8 +360,8 @@ Kinds 1-3 always fight.
 1. In the raid: a message box (DG:3452), a key.
 2. Kind 2: the view is set on the party and drawn.
 3. F:009e (the computer fights for the party) = 0. Unless F:0090 is set (modes 4-7), the
-   question "Do you want the computer to fight for you?" (`15ab:0b5e`, DG:1115), yes/no with the
-   old answer as default.
+   question "Do you want the computer to fight for you?" (`15ab:0b5e`, DG:1115), yes/no with
+   F:009e as the default: always No, as it was just cleared.
 4. "Combat messages:" None / Brief / Verbose (`203b:24f0`, DG:3d3a) into DG:2e38 (0, 1, 2),
    remembered between fights.
 5. "See combat graphics:" yes/no (`203b:2556`, DG:3d5e) into DG:2e3a, remembered. **This

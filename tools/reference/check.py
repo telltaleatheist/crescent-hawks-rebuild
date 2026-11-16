@@ -585,6 +585,25 @@ HANDOVER_CASES = [dict(case, compare=False) for case in MISSION_CASES[:4]] + [
     {"name": "handover_next_round", "keys": "enter", "match": SCREEN, "fight": True},
 ]
 
+# Training mission 4 (flag 00 poked to 4): one enemy 'Mech, and no
+# computer to fight for the party (F:0090), so no question about it. The
+# Locust flees at the first orders menu; the walk back from Jason's 'Mech
+# to the door, the verdict on running away, and the town.
+FOURTH_CASES = [dict(case, compare=False) for case in TRAINING_CASES[:4]] + [
+    dict(TRAINING_CASES[4], name="fourth_question",
+         keys=TRAINING_CASES[4]["keys"].replace("flag:00=02", "flag:00=04"), match=SCREEN),
+    dict(TRAINING_CASES[5], name="fourth_greeting", match=SCREEN),
+    dict(TRAINING_CASES[6], name="fourth_briefing", match=SCREEN),
+    dict(TRAINING_CASES[7], name="fourth_mech_menu", match=SCREEN),
+    {"name": "fourth_messages", "keys": "enter", "match": SCREEN},
+    {"name": "fourth_graphics", "keys": "up*2 enter", "match": SCREEN},
+    {"name": "fourth_orders", "keys": "enter", "match": SCREEN, "fight": True},
+    {"name": "fourth_fled", "keys": "up enter", "match": SCREEN, "fight": True},
+    {"name": "fourth_walk", "keys": "enter", "match": SCREEN},
+    {"name": "fourth_over", "keys": "left*4", "match": SCREEN},
+    {"name": "fourth_in_town", "keys": "enter", "match": SCREEN},
+]
+
 # Each sequence is one run of the original: (name, quick cases, --full
 # cases, chr's own options).
 # Mission 1, the marked spot, reached by keys alone after the course: flag
@@ -617,6 +636,7 @@ SEQUENCES = [("town", CASES, FULL_CASES, []), ("training", TRAINING_CASES, [], [
              ("people", PEOPLE_CASES, PEOPLE_FULL_CASES, []),
              ("course", COURSE_CASES, COURSE_FULL_CASES, []),
              ("spot", [], SPOT_CASES, []),
+             ("fourth", [], FOURTH_CASES, []),
              ("handover", [], HANDOVER_CASES, [])]
 
 # The feeder (tools/capture/snap.asm, docs/reference.md) hands over a key at

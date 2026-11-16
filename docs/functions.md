@@ -98,7 +98,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 17dc:0008 | 0x17dc8 | `FUN_17dc_0008` | 440 | Enters a place: loads and runs its .BLD script, then puts the town screen back (docs/scripts.md) | rebuilt |
 | 17dc:01c0 | 0x17f80 | `FUN_17dc_01c0` | 1079 | The .BLD script interpreter: opcodes E4-FF (docs/scripts.md) | rebuilt |
 | 17dc:05f7 | 0x183b7 | `FUN_17dc_05f7` | 50 | Reads a script word (jump targets) | rebuilt |
-| 17dc:0629 | 0x183e9 | `FUN_17dc_0629` | 1824 | Scene driver: training missions 0-7, the arena (8), the jail break (9); results in flag 01 (docs/combat.md); modes 0-3 and the walk rebuilt | rebuilt (in part) |
+| 17dc:0629 | 0x183e9 | `FUN_17dc_0629` | 1824 | Scene driver: training missions 0-7, the arena (8), the jail break (9); results in flag 01 (docs/combat.md); modes 0-7 (not the raid) and the walk rebuilt | rebuilt (in part) |
 | 17dc:0d49 | 0x18b09 | `FUN_17dc_0d49` | 1538 | Sets up the opponents: enemy pilots and 'Mechs from templates, difficulty armour cut (docs/combat.md) | read |
 | 17dc:134b | 0x1910b | `FUN_17dc_134b` | 147 | Puts the party at figure 0 (or 4) after a fight and redraws | rebuilt |
 | 17dc:13de | 0x1919e | `FUN_17dc_13de` | 520 |  | - |

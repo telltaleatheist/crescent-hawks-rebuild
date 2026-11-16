@@ -321,21 +321,26 @@ bool Town::fight(int kind, KeySource& keys) {
     for (int c = 0; c < 8; ++c)
         if (on_foot(c)) log_.push_back("a character on foot in a fight: not rebuilt");
 
-    // 15ab:0b5e: "Do you want the computer to fight for you?"
-    text_.select_window(3);
-    text_.clear_window();
-    party_box_shown_ = false;
-    print_id("fight.computer_question");
-    const auto computer = yes_no(computer_, keys);
-    if (!computer) {
-        place_open_ = true;
-        return false;
+    // F:009e = 0; then 15ab:0b5e: "Do you want the computer to fight for
+    // you?" with F:009e as the default, so always No; not asked with
+    // F:0090 (missions 4-7).
+    computer_ = false;
+    if (!no_computer_order_) {
+        text_.select_window(3);
+        text_.clear_window();
+        party_box_shown_ = false;
+        print_id("fight.computer_question");
+        const auto computer = yes_no(computer_, keys);
+        if (!computer) {
+            place_open_ = true;
+            return false;
+        }
+        computer_ = *computer;
     }
-    computer_ = *computer;
     // 203b:24f0: the combat messages, a menu of three (menu record 3 from
     // row 2, starting on the last choice).
     text_.select_window(3);
-    text_.clear_window();
+    clear_window();
     print_id("options.messages");
     menus_[3].first_row = 2;
     menus_[3].items = 3;
