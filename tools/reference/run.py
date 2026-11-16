@@ -1,0 +1,182 @@
+#!/usr/bin/env python3
+"""Run the ORIGINAL game headless with a key script and collect screenshots.
+
+    run.py --game-dir DIR --out OUTDIR "3 @snap:title enter ... @snap:town"
+
+It builds a scratch C: drive from the player's own game folder (copied, never
+changed, never into the repo), adds SNAP.COM (tools/capture/snap.asm, built
+here with nasm) and KEYS.BIN, and runs DOSBox-X with -silent, no sound and
+no PC speaker: no window opens and nothing plays. The scratch drive goes in CHR_SCRATCH
+(else the system's temp folder) and is deleted afterwards. SNAP feeds each key only
+when the game is waiting for one (docs/reference.md), so runs do not race
+the game's loading. Each "@snap:NAME" writes OUTDIR/NAME.png (and NAME.bin,
+the raw capture) at the moment the game next waits for a key.
+
+Script tokens, separated by spaces or commas, "*N" repeats:
+  up down left right home end pgup pgdn enter space esc, a single letter
+  or digit, and @snap:NAME.
+
+Exit status: 0 when the whole script ran, 1 on a timeout or error.
+"""
+import argparse
+import os
+import shutil
+import signal
+import struct
+import subprocess
+import sys
+import tempfile
+import time
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+TOOLS = os.path.dirname(HERE)
+sys.path.insert(0, os.path.join(TOOLS, "capture"))
+import snap2png  # noqa: E402
+
+DOSBOX = "/Applications/dosbox-x.app/Contents/MacOS/dosbox-x"
+SNAP_MARK = 0xFFFF
+
+# BIOS key words: scan code << 8 | character.
+NAMED = {
+    "up": 0x4800, "down": 0x5000, "left": 0x4B00, "right": 0x4D00,
+    "home": 0x4700, "pgup": 0x4900, "end": 0x4F00, "pgdn": 0x5100,
+    "enter": 0x1C0D, "space": 0x3920, "esc": 0x011B,
+}
+ROWS = {  # scan codes of the letter and digit keys
+    "1234567890": 0x02, "qwertyuiop": 0x10, "asdfghjkl": 0x1E, "zxcvbnm": 0x2C,
+}
+
+
+def key_word(name):
+    if name in NAMED:
+        return NAMED[name]
+    if len(name) == 1:
+        for row, first in ROWS.items():
+            i = row.find(name.lower())
+            if i >= 0:
+                return (first + i) << 8 | ord(name)
+    raise ValueError(f"unknown key {name!r}")
+
+
+def compile_script(script):
+    """The KEYS.BIN words and the capture names, in order."""
+    words, names = [], []
+    for token in script.replace(",", " ").split():
+        if token.startswith("@snap:"):
+            words.append(SNAP_MARK)
+            names.append(token[len("@snap:"):])
+            continue
+        name, _, count = token.partition("*")
+        words.extend([key_word(name)] * (int(count) if count else 1))
+    return words, names
+
+
+def text_screen(data):
+    """The characters of a text-mode capture, 80x25."""
+    t = data[24 + 768:24 + 768 + 4000]
+    rows = []
+    for y in range(25):
+        rows.append("".join(chr(c) if 32 <= c < 127 else " "
+                            for c in t[2 * y * 80:2 * (y + 1) * 80:2]).rstrip())
+    return "\n".join(rows).rstrip("\n") + "\n"
+
+
+def build_snap(dest):
+    src = os.path.join(TOOLS, "capture", "snap.asm")
+    subprocess.run(["nasm", "-f", "bin", "-o", dest, src], check=True)
+
+
+def run(game_dir, script, out_dir, timeout=120, keep=False):
+    words, names = compile_script(script)
+    os.makedirs(out_dir, exist_ok=True)
+    scratch = os.environ.get("CHR_SCRATCH")
+    if scratch:
+        os.makedirs(scratch, exist_ok=True)
+    work = tempfile.mkdtemp(prefix="chr-ref-", dir=scratch)
+    try:
+        c = os.path.join(work, "c")
+        shutil.copytree(game_dir, c)
+        build_snap(os.path.join(c, "SNAP.COM"))
+        with open(os.path.join(c, "KEYS.BIN"), "wb") as f:
+            f.write(struct.pack(f"<H{len(words)}H", len(words), *words))
+        conf = os.path.join(work, "run.conf")
+        with open(conf, "w") as f:
+            f.write("[sdl]\noutput=surface\n"
+                    "[mixer]\nnosound=true\n"
+                    "[speaker]\npcspeaker=false\ntandy=off\n"
+                    "[autoexec]\n"
+                    "mount c c\n"  # relative to the working folder, so captures don't show a temp path
+                    "c:\n"
+                    "SNAP 0 K\n"
+                    "BTECH\n")
+        env = dict(os.environ, SDL_AUDIODRIVER="dummy")
+        log = open(os.path.join(work, "dosbox.log"), "w")
+        proc = subprocess.Popen([DOSBOX, "-silent", "-conf", conf], cwd=work, env=env,
+                                stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
+        done = os.path.join(c, "SNAPEND.TXT")
+        deadline = time.time() + timeout
+        finished = False
+        try:
+            while time.time() < deadline:
+                if os.path.exists(done):
+                    finished = True
+                    time.sleep(0.5)  # the last capture's file is closed first; let it settle
+                    break
+                if proc.poll() is not None:
+                    break
+                time.sleep(0.2)
+        finally:
+            # DOSBox-X ignores a plain kill while the game runs.
+            try:
+                os.killpg(proc.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+            proc.wait()
+            log.close()
+        shots = sorted(f for f in os.listdir(c) if f.startswith("SNAP") and f.endswith(".BIN"))
+        written = []
+        for name, shot in zip(names, shots):
+            data = open(os.path.join(c, shot), "rb").read()
+            shutil.copyfile(os.path.join(c, shot), os.path.join(out_dir, name + ".bin"))
+            if len(data) > 5 and data[5] <= 3:  # a text mode: write the characters
+                with open(os.path.join(out_dir, name + ".txt"), "w") as f:
+                    f.write(text_screen(data))
+                written.append(name)
+                continue
+            try:
+                w, h, rows = snap2png.decode(data)
+            except ValueError as e:
+                print(f"{name}: {e}", file=sys.stderr)
+                continue
+            snap2png.png(os.path.join(out_dir, name + ".png"), w, h, rows)
+            written.append(name)
+        if not finished:
+            print(f"run.py: the script did not finish ({len(shots)} of {len(names)} captures); "
+                  f"DOSBox-X log in {work}" if keep else
+                  f"run.py: the script did not finish ({len(shots)} of {len(names)} captures)",
+                  file=sys.stderr)
+        return finished, written
+    finally:
+        if not keep:
+            shutil.rmtree(work, ignore_errors=True)
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("script")
+    ap.add_argument("--game-dir", default=os.environ.get("CHR_GAME_DIR"), required=not os.environ.get("CHR_GAME_DIR"))
+    ap.add_argument("--out", required=True)
+    ap.add_argument("--timeout", type=float, default=120)
+    ap.add_argument("--keep", action="store_true", help="keep the scratch C: drive and log")
+    a = ap.parse_args()
+    if not os.path.exists(DOSBOX):
+        print(f"run.py: DOSBox-X not found at {DOSBOX}", file=sys.stderr)
+        return 1
+    ok, written = run(a.game_dir, a.script, a.out, a.timeout, a.keep)
+    for name in written:
+        print(os.path.join(a.out, name))
+    return 0 if ok else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

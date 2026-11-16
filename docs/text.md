@@ -85,6 +85,7 @@ their IDs; an override file can replace any of them.
 | walk.too_deep | 46db:0410 | The water is too deep that way. |
 | walk.enter_question | 46db:0430 | Will you enter the (new line) |
 | walk.enter_question_end | 46db:0444 | ? |
+| walk.direction.north ... northwest | 46db:006c - 00a7 | (new line) North, Northeast, East, Southeast, South, Southwest, West, Northwest |
 | ui.answer_yes_picked | 46db:03ee | the yes/no line, Yes picked |
 | ui.answer_no_picked | 46db:03fe | the yes/no line, No picked |
 | panel.party_heading | 46db:0aca | BDC (over the bar columns 9-11) |

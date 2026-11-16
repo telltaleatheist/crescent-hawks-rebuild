@@ -31,8 +31,13 @@ The program's key reader hands back a character, or minus the scan code for keys
 | PgDn | 0x51 | (+1, +1) |
 
 (The keypad's 7, 9, 1 and 3 are Home, PgUp, End and PgDn with Num Lock off.) Every key is one
-turn: the main loop (`1000:00bb`) draws the map, the figures and the panel again afterwards, so
-a message drawn over the map lasts until the next key.
+turn: the main loop (`1000:002d`) reads it, empties the keyboard buffer, selects the upper panel
+box (window 4) and takes the step DS:015a times (1 at the start; `1000:3c67` changes it). Unless a
+message or question came up during the step (DS:d55c), it then writes the direction's name in
+that box ("North", "Northeast", ...; DS:01aa), blocked or not, so the box is a log of the last
+eleven steps. The map, the figures and the panel are drawn again afterwards (`1000:01f4`), so a
+message drawn over the map lasts until the next key. The keyboard and the idle half of the loop
+are in docs/reference.md.
 
 ## The step check (1000:1c12)
 

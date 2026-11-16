@@ -12,8 +12,25 @@
 ;     mode 13h (MCGA 320x200x256): 64000 bytes from A000:0000;
 ;     text modes 0-3: 4000 bytes (80x25 characters and attributes) from B800:0000;
 ;     other modes: nothing (the header still records the mode).
-; Usage: SNAP [ticks]   (default 18, about one capture a second; at most
-; 9999 files).
+; Usage: SNAP [ticks] [K]
+;   ticks: capture every so many ticks (default 18, about one a second; 0
+;   turns the timed captures off). At most 9999 files.
+;   K: play the key script in KEYS.BIN (see below).
+;
+; Key script (tools/reference/run.py writes KEYS.BIN): a word count, then
+; that many words: 0FFFFh = capture the screen now, otherwise a key as the
+; BIOS gives it (scan code << 8 | character). Keys are fed only when the
+; game is waiting for one, never by the clock, so a run does not depend on
+; how fast the machine is:
+;   - the game calls int 16h function 0 or 10h (wait for a key) and the
+;     BIOS keyboard buffer is empty; or
+;   - it asks DOS (int 21h function 0Bh) whether a key is waiting, the
+;     buffer is empty, and it has asked POLLS times in a row since it last
+;     read a key. One question right after a key (a flush loop) never gets a
+;     key; a loop that waits for a key by asking does.
+; At such a moment the script's captures are written, then its next key is
+; put in the buffer (int 16h function 5). When the script is used up SNAP
+; writes SNAPEND.TXT and stops feeding.
 ;
 ; Build: nasm -f bin -o SNAP.COM snap.asm
 
@@ -31,6 +48,15 @@ count       dw 0
 saved_ss    dw 0
 saved_sp    dw 0
 fname       db 'SNAP0000.BIN', 0
+old16       dd 0
+old21       dd 0
+POLLS       equ 4
+MAX_KEYS    equ 2048
+feeding     db 0
+polls       dw 0
+key_pos     dw 0
+key_count   dw 0
+end_name    db 'SNAPEND.TXT', 0
 header      db 'CHRS', 1
 h_mode      db 0
 h_start     dw 0
@@ -88,6 +114,116 @@ timer:
 .out:
         pop ax
         iret
+
+; Is the BIOS keyboard buffer empty? ZF set if so. Keeps every register.
+buffer_empty:
+        push ds
+        push ax
+        mov ax, 40h
+        mov ds, ax
+        mov ax, [1ah]
+        cmp ax, [1ch]
+        pop ax
+        pop ds
+        ret
+
+int16:
+        cmp byte [cs:feeding], 0
+        je .chain
+        cmp ah, 0
+        je .read
+        cmp ah, 10h
+        jne .chain
+.read:
+        mov word [cs:polls], 0
+        call buffer_empty
+        jne .chain
+        call feed
+.chain:
+        jmp far [cs:old16]
+
+int21:
+        cmp ah, 0bh
+        jne .chain
+        cmp byte [cs:feeding], 0
+        je .chain
+        call buffer_empty
+        jne .chain
+        inc word [cs:polls]
+        cmp word [cs:polls], POLLS
+        jb .chain
+        mov word [cs:polls], 0
+        call feed
+.chain:
+        jmp far [cs:old21]
+
+; The game is waiting for a key: write the script's captures up to its next
+; key, then put that key in the buffer. Runs on SNAP's own stack. Keeps
+; every register and the flags.
+feed:
+        pushf
+        cmp byte [cs:busy], 0
+        jne .busy
+        cli
+        mov byte [cs:busy], 1
+        mov [cs:saved_ss], ss
+        mov [cs:saved_sp], sp
+        push cs
+        pop ss
+        mov sp, stack_top
+        push ax
+        push bx
+        push cx
+        push dx
+        push si
+        push di
+        push ds
+        push es
+        push bp
+        push cs
+        pop ds
+.next:
+        mov bx, [key_pos]
+        cmp bx, [key_count]
+        jae .finished
+        inc word [key_pos]
+        shl bx, 1
+        mov cx, [keys + bx]
+        cmp cx, 0ffffh
+        jne .key
+        call capture
+        jmp .next
+.key:
+        mov ah, 5
+        pushf
+        call far [old16]
+        jmp .out
+.finished:
+        mov byte [feeding], 0
+        mov ah, 3ch
+        xor cx, cx
+        mov dx, end_name
+        int 21h
+        jc .out
+        mov bx, ax
+        mov ah, 3eh
+        int 21h
+.out:
+        pop bp
+        pop es
+        pop ds
+        pop di
+        pop si
+        pop dx
+        pop cx
+        pop bx
+        pop ax
+        mov ss, [cs:saved_ss]
+        mov sp, [cs:saved_sp]
+        mov byte [cs:busy], 0
+.busy:
+        popf
+        ret
 
 ; Writes one capture. Saves and restores the graphics controller registers
 ; it touches (index, read map select, mode).
@@ -275,36 +411,87 @@ gc_mode     db 0
             times 512 db 0
 stack_top:
 
+keys        times MAX_KEYS dw 0
+
 resident_end:
 
 install:
-        ; optional interval argument (decimal) in the command tail
+        ; command tail: an optional interval (decimal) and an optional K
         mov si, 81h
         xor ax, ax
         xor cx, cx
+        xor di, di                  ; di = 1 once a digit is seen
 .parse:
         mov cl, [si]
         inc si
-        cmp cl, ' '
-        je .parse
+        cmp cl, 13
+        je .parsed
+        cmp cl, 'K'
+        je .flag
+        cmp cl, 'k'
+        je .flag
         cmp cl, '0'
-        jb .parsed
+        jb .parse
         cmp cl, '9'
-        ja .parsed
+        ja .parse
+        mov di, 1
         mov bx, 10
         mul bx
         sub cl, '0'
         add ax, cx
         jmp .parse
+.flag:
+        mov byte [want_keys], 1
+        jmp .parse
 .parsed:
-        or ax, ax
+        or di, di
         jz .keep
         mov [interval], ax
 .keep:
+        cmp byte [want_keys], 0
+        je .no_keys
+        mov ax, 3d00h               ; open KEYS.BIN
+        mov dx, keys_name
+        int 21h
+        jc .bad_keys
+        mov bx, ax
+        mov ah, 3fh
+        mov cx, 2
+        mov dx, key_count
+        int 21h
+        jc .bad_keys
+        mov cx, [key_count]
+        cmp cx, MAX_KEYS
+        ja .bad_keys
+        shl cx, 1
+        mov ah, 3fh
+        mov dx, keys
+        int 21h
+        jc .bad_keys
+        mov ah, 3eh
+        int 21h
+        mov ax, 3516h
+        int 21h
+        mov [old16], bx
+        mov [old16+2], es
+        mov ax, 2516h
+        mov dx, int16
+        int 21h
+        mov ax, 3521h
+        int 21h
+        mov [old21], bx
+        mov [old21+2], es
+        mov ax, 2521h
+        mov dx, int21
+        int 21h
+        mov byte [feeding], 1
+.no_keys:
         mov ah, 34h                 ; InDOS flag address
         int 21h
         mov [indos], bx
         mov [indos+2], es
+        cmp word [interval], 0
+        je .resident
         mov ax, 3508h
         int 21h
         mov [old8], bx
@@ -312,6 +499,7 @@ install:
         mov ax, 2508h
         mov dx, timer
         int 21h
+.resident:
         mov ah, 9
         mov dx, msg
         int 21h
@@ -320,5 +508,14 @@ install:
         shr dx, cl
         mov ax, 3100h
         int 21h
+.bad_keys:
+        mov ah, 9
+        mov dx, bad_msg
+        int 21h
+        mov ax, 4c01h
+        int 21h
 
+want_keys db 0
+keys_name db 'KEYS.BIN', 0
 msg     db 'SNAP installed', 13, 10, '$'
+bad_msg db 'SNAP: cannot read KEYS.BIN', 13, 10, '$'

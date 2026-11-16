@@ -207,3 +207,21 @@ TEST(map1_question_in_another_language) {
     CHECK(town->text().row_text(10).substr(14, 23) == "Wollt ihr hinein in die");
     CHECK(town->text().row_text(11).substr(14, 10) == "Zitadelle?");
 }
+
+TEST(map1_move_log_in_the_upper_box) {
+    std::unique_ptr<Town> town;
+    Map1 m;
+    // Five steps north: the fifth asks about the Citadel, so it is not logged.
+    if (!play_map1("up*5", town, m)) return;
+    const auto& t = town->text();
+    CHECK(t.row_text(1).substr(1, 11) == "           ");  // each name starts with a new line
+    for (int row = 2; row <= 5; ++row) CHECK(t.row_text(row).substr(1, 6) == "North ");
+    CHECK(t.row_text(6).substr(1, 5) == "     ");
+
+    // A blocked step is logged too.
+    std::unique_ptr<Town> town2;
+    Map1 m2;
+    if (!play_map1("down*3 pgup", town2, m2)) return;
+    CHECK(town2->text().row_text(4).substr(1, 5) == "South");
+    CHECK(town2->text().row_text(5).substr(1, 9) == "Northeast");
+}

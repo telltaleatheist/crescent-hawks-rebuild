@@ -14,9 +14,9 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | Address | Linear | Ghidra name | Span | Label | Status |
 |---|---|---|---|---|---|
 | 1000:0000 | 0x10000 | `switchD_1000:f462::caseD_6` | 45 |  | - |
-| 1000:002d | 0x1002d | `FUN_1000_002d` | 142 |  | - |
+| 1000:002d | 0x1002d | `FUN_1000_002d` | 142 | Main loop, key half: reads a key, flushes, selects window 4, steps DS:015a times, logs the direction (DS:01aa) unless a message came up | read |
 | 1000:00bb | 0x100bb | `FUN_1000_00bb` | 313 | Main loop: one turn per key; redraws the map, figures and panel each turn; resets the one-question-per-turn flag | read |
-| 1000:01f4 | 0x101f4 | `FUN_1000_01f4` | 807 |  | - |
+| 1000:01f4 | 0x101f4 | `FUN_1000_01f4` | 807 | Main loop, idle half: waits a tick; every 11 passes a game tick (tile animation 240b, 24c2, money, panel C-Bills, redraw map and figures) | read |
 | 1000:051b | 0x1051b | `FUN_1000_051b` | 2352 | Draws the party's figures on the map (leader at half-cell X+1, Y); sets which of the 8 characters are present | read |
 | 1000:0e4b | 0x10e4b | `FUN_1000_0e4b` | 2279 |  | - |
 | 1000:1732 | 0x11732 | `FUN_1000_1732` | 137 |  | - |
@@ -32,21 +32,21 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 1000:1c12 | 0x11c12 | `FUN_1000_1c12` | 1405 | Can the party step by (dx, dy)? Deep water at a block edge; offers to enter a place at an entrance; blocks on tile >= DS:0150 | rebuilt |
 | 1000:218f | 0x1218f | `FUN_1000_218f` | 398 | Walking keys: arrows and Home/PgUp/End/PgDn to a step, checks it, moves y then x, loads areas crossed into | rebuilt |
 | 1000:231d | 0x1231d | `FUN_1000_231d` | 238 |  | - |
-| 1000:240b | 0x1240b | `FUN_1000_240b` | 183 |  | - |
+| 1000:240b | 0x1240b | `FUN_1000_240b` | 183 | Tile animation: steps a 3-frame phase (DS:5800) and copies that frame of 10 ANIMATE.ICN tiles into the tile slots at DS:04b0 | read |
 | 1000:24c2 | 0x124c2 | `FUN_1000_24c2` | 933 |  | - |
 | 1000:2867 | 0x12867 | `FUN_1000_2867` | 59 |  | - |
 | 1000:28a2 | 0x128a2 | `FUN_1000_28a2` | 42 |  | - |
 | 1000:28cc | 0x128cc | `FUN_1000_28cc` | 71 |  | - |
 | 1000:2913 | 0x12913 | `FUN_1000_2913` | 226 |  | - |
 | 1000:29f5 | 0x129f5 | `FUN_1000_29f5` | 54 |  | - |
-| 1000:2a2b | 0x12a2b | `FUN_1000_2a2b` | 36 |  | - |
+| 1000:2a2b | 0x12a2b | `FUN_1000_2a2b` | 36 | Empties the keyboard buffer (unless playing back recorded keys) | read |
 | 1000:2a4f | 0x12a4f | `FUN_1000_2a4f` | 26 |  | - |
 | 1000:2a69 | 0x12a69 | `FUN_1000_2a69` | 21 |  | - |
 | 1000:2a7e | 0x12a7e | `FUN_1000_2a7e` | 21 |  | - |
 | 1000:2a93 | 0x12a93 | `FUN_1000_2a93` | 445 |  | - |
 | 1000:2c50 | 0x12c50 | `FUN_1000_2c50` | 344 |  | - |
 | 1000:2da8 | 0x12da8 | `FUN_1000_2da8` | 1123 | Load MAP<n>.MTP into the block store and an area grid (DESTRUCT.ICN for map 11) | rebuilt |
-| 1000:320b | 0x1320b | `FUN_1000_320b` | 168 | Load ANIMATE.ICN, then BTTLTECH.ICN | read |
+| 1000:320b | 0x1320b | `FUN_1000_320b` | 168 | Loads ANIMATE.ICN into the animation buffer | read |
 | 1000:32b3 | 0x132b3 | `FUN_1000_32b3` | 800 |  | - |
 | 1000:35d3 | 0x135d3 | `FUN_1000_35d3` | 442 |  | - |
 | 1000:378d | 0x1378d | `FUN_1000_378d` | 1091 |  | - |
@@ -256,12 +256,12 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | Address | Linear | Ghidra name | Span | Label | Status |
 |---|---|---|---|---|---|
 | 273d:0006 | 0x273d6 | `FUN_273d_0006` | 41 |  | - |
-| 273d:002f | 0x273ff | `FUN_273d_002f` | 36 |  | - |
+| 273d:002f | 0x273ff | `FUN_273d_002f` | 36 | Is a key waiting? (DOS int 21h 0Bh through 287f:3bdc, or recorded keys) | read |
 | 273d:0053 | 0x27423 | `FUN_273d_0053` | 51 |  | - |
 | 273d:0086 | 0x27456 | `FUN_273d_0086` | 79 | Copy a picture buffer to the screen (by display) | replaced |
 | 273d:00d5 | 0x274a5 | `FUN_273d_00d5` | 294 | Writes a string straight onto the screen at (column, row) in two colours with the 8x8 font | rebuilt |
 | 273d:01fb | 0x275cb | `FUN_273d_01fb` | 94 |  | - |
-| 273d:0259 | 0x27629 | `FUN_273d_0259` | 195 |  | - |
+| 273d:0259 | 0x27629 | `FUN_273d_0259` | 195 | Reads a key (287f:0b8a), or plays one back from / records one into the key buffer (DS:3938, DS:458c) | read |
 | 273d:031c | 0x276ec | `FUN_273d_031c` | 207 |  | - |
 | 273d:03eb | 0x277bb | `FUN_273d_03eb` | 178 |  | - |
 | 273d:049d | 0x2786d | `FUN_273d_049d` | 136 | Unpack a loaded .CMP by its type byte (CGA: reduce to 4 colours) | rebuilt |
@@ -341,7 +341,7 @@ read each one before taking it as such.
 | 287f:0b26 | 0x29316 | `FUN_287f_0b26` | 26 |  | replaced |
 | 287f:0b40 | 0x29330 | `FUN_287f_0b40` | 51 |  | replaced |
 | 287f:0b73 | 0x29363 | `FUN_287f_0b73` | 23 |  | replaced |
-| 287f:0b8a | 0x2937a | `FUN_287f_0b8a` | 29 |  | replaced |
+| 287f:0b8a | 0x2937a | `FUN_287f_0b8a` | 29 | BIOS int 16h function 0: wait for a key; character, or minus the scan code | replaced |
 | 287f:0ba7 | 0x29397 | `FUN_287f_0ba7` | 25 |  | replaced |
 | 287f:0bc0 | 0x293b0 | `FUN_287f_0bc0` | 59 |  | replaced |
 | 287f:0bfb | 0x293eb | `FUN_287f_0bfb` | 268 |  | replaced |
@@ -446,7 +446,7 @@ read each one before taking it as such.
 | 287f:3b9e | 0x2c38e | `FUN_287f_3b9e` | 24 |  | replaced |
 | 287f:3bb6 | 0x2c3a6 | `FUN_287f_3bb6` | 28 |  | replaced |
 | 287f:3bd2 | 0x2c3c2 | `FUN_287f_3bd2` | 10 |  | replaced |
-| 287f:3bdc | 0x2c3cc | `FUN_287f_3bdc` | 44 |  | replaced |
+| 287f:3bdc | 0x2c3cc | `FUN_287f_3bdc` | 44 | DOS int 21h function 0Bh: is a key waiting? | replaced |
 | 287f:3c08 | 0x2c3f8 | `FUN_287f_3c08` | 100 |  | replaced |
 | 287f:3c6c | 0x2c45c | `FUN_287f_3c6c` | 22 |  | replaced |
 | 287f:3c82 | 0x2c472 | `FUN_287f_3c82` | 154 |  | replaced |

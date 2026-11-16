@@ -138,6 +138,17 @@ void Town::run(KeySource& keys) {
     }
 }
 
+namespace {
+
+// The name of a step's direction, in the order of the keys at DGROUP:0160.
+std::string direction_text_id(Step s) {
+    static constexpr const char* kNames[3][3] = {
+        {"northwest", "north", "northeast"}, {"west", "", "east"}, {"southwest", "south", "southeast"}};
+    return std::string("walk.direction.") + kNames[s.dy + 1][s.dx + 1];
+}
+
+}  // namespace
+
 void Town::turn(int k, KeySource& keys) {
     // The map is drawn again every turn (1000:00bb), over the message box.
     text_.forget(13, 0, kTextColumns - 13, kTextRows);
@@ -167,6 +178,14 @@ void Town::turn(int k, KeySource& keys) {
     if (r.offered_place)
         line += "asked to enter place " + std::to_string(*r.offered_place) +
                 " (no); ";
+    // The main loop then writes the direction in the upper panel box, unless
+    // a message or question came up this turn (DGROUP:d55c). Blocked steps
+    // are logged too.
+    if (!r.offered_place && r.outcome != StepOutcome::TooDeep) {
+        text_.select_window(4);
+        text_.set_fg(15);
+        text_.print(lookup(texts_, direction_text_id(*step)));
+    }
     switch (r.outcome) {
     case StepOutcome::Moved: line += "moved"; break;
     case StepOutcome::Blocked: line += "blocked"; break;

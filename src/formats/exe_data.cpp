@@ -26,6 +26,17 @@ constexpr std::array kDos103 = {
     ExeSpan{ExeSpan::Kind::Text, "walk.too_deep", 0x46db, 0x0410, 32},
     ExeSpan{ExeSpan::Kind::Text, "walk.enter_question", 0x46db, 0x0430, 20},  // then the place's name
     ExeSpan{ExeSpan::Kind::Text, "walk.enter_question_end", 0x46db, 0x0444, 2},
+    // 1000:00bb, the main loop: after a walking key it writes the direction
+    // in the upper panel box (pointers at DGROUP:01aa, in the order of the
+    // keys at DGROUP:0160). Each starts with a new line.
+    ExeSpan{ExeSpan::Kind::Text, "walk.direction.north", 0x46db, 0x006c, 7},
+    ExeSpan{ExeSpan::Kind::Text, "walk.direction.northeast", 0x46db, 0x0073, 11},
+    ExeSpan{ExeSpan::Kind::Text, "walk.direction.east", 0x46db, 0x007e, 6},
+    ExeSpan{ExeSpan::Kind::Text, "walk.direction.southeast", 0x46db, 0x0084, 11},
+    ExeSpan{ExeSpan::Kind::Text, "walk.direction.south", 0x46db, 0x008f, 7},
+    ExeSpan{ExeSpan::Kind::Text, "walk.direction.southwest", 0x46db, 0x0096, 11},
+    ExeSpan{ExeSpan::Kind::Text, "walk.direction.west", 0x46db, 0x00a1, 6},
+    ExeSpan{ExeSpan::Kind::Text, "walk.direction.northwest", 0x46db, 0x00a7, 11},
     // 1000:1a13, the yes/no answer line, with Yes or with No picked:
     ExeSpan{ExeSpan::Kind::Text, "ui.answer_yes_picked", 0x46db, 0x03ee, 16},
     ExeSpan{ExeSpan::Kind::Text, "ui.answer_no_picked", 0x46db, 0x03fe, 17},

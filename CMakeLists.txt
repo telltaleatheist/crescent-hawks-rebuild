@@ -95,6 +95,18 @@ if(SDL3_FOUND)
     set_tests_properties(walk_scrolls_west PROPERTIES ENVIRONMENT "${chr_headless}"
       PASS_REGULAR_EXPRESSION "moved at 0c3b,c019")
   endif()
+  # The rebuild against the original, pixel for pixel (tools/reference,
+  # docs/reference.md): runs the original in DOSBox-X headless. Skips without
+  # DOSBox-X, nasm or the game.
+  find_package(Python3 COMPONENTS Interpreter QUIET)
+  if(Python3_FOUND)
+    add_test(NAME reference_compare
+      COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/reference/check.py
+        --chr $<TARGET_FILE:chr> --game-dir ${CHR_GAME_DIR}
+        --data-dir ${CMAKE_BINARY_DIR}/chr-data --work ${CMAKE_BINARY_DIR}/reference)
+    set_tests_properties(reference_compare PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 300
+      ENVIRONMENT "CHR_SCRATCH=${CMAKE_BINARY_DIR}/reference-scratch;SDL_VIDEO_DRIVER=dummy;SDL_AUDIO_DRIVER=dummy")
+  endif()
   if(WIN32)
     # SDL3.dll beside chr.exe.
     add_custom_command(TARGET chr POST_BUILD
