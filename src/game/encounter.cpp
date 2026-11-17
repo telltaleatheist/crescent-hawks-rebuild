@@ -63,6 +63,7 @@ bool Town::random_encounter(KeySource& keys) {
         figs_.destroyed[std::size_t(f)] = false;
         figs_.active[std::size_t(f)] = 0;
         figs_.heading[std::size_t(f)] = -1;
+        combat_.terrain[std::size_t(f)] = 0;  // F:32ae; the tile (F:3750) is left as it was
         figs_.x[std::size_t(f)] = figs_.y[std::size_t(f)] = 0xffff;
     }
     for (auto& w : people_.walkers()) w.heading = -1;

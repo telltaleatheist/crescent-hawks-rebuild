@@ -39,7 +39,9 @@ std::string place_text_id(int map_number, int place) {
     return "map" + std::to_string(map_number) + ".place." + std::to_string(place);
 }
 
-MapText::MapText(const formats::MtpMap& map, int map_number) {
+MapText::MapText(const formats::MtpMap& map, int map_number) { add(map, map_number); }
+
+void MapText::add(const formats::MtpMap& map, int map_number) {
     for (std::size_t e = 0; e < map.places.size(); ++e)
         table_.set(place_text_id(map_number, int(e)), map.places[e]);
     for (std::size_t p = 0; p < map.people.size(); ++p)

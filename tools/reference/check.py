@@ -997,6 +997,60 @@ CHAIN_TOWN_CASES = [dict(case, compare=False) for case in
     # comes into the grids (docs/wilderness.md, the map loads).
     {"name": "chain_town_walk_6", "keys": "home*26", "match": SCREEN},
     {"name": "chain_town_walk_6b", "keys": "home*25", "match": SCREEN},
+    # Segments 7-9: on up-left, then north, to groups of six, two and four
+    # in reach, each declined and evaded.
+    {"name": "chain_town_walk_7", "keys": "home*30", "match": SCREEN},
+    {"name": "chain_town_walk_7b", "keys": "home*31", "match": SCREEN},
+    {"name": "chain_town_7_no", "keys": "n", "match": SCREEN},
+    {"name": "chain_town_7_eluded", "keys": "enter", "match": SCREEN},
+    {"name": "chain_town_7_back", "keys": "enter", "match": SCREEN},
+    {"name": "chain_town_walk_8", "keys": "up home " * 4 + "up", "match": SCREEN},
+    {"name": "chain_town_8_no", "keys": "n", "match": SCREEN},
+    {"name": "chain_town_8_eluded", "keys": "enter", "match": SCREEN},
+    {"name": "chain_town_8_back", "keys": "enter", "match": SCREEN},
+    {"name": "chain_town_walk_9", "keys": "up*28", "match": SCREEN},
+    {"name": "chain_town_9_no", "keys": "n", "match": SCREEN},
+    {"name": "chain_town_9_eluded", "keys": "enter", "match": SCREEN},
+    {"name": "chain_town_9_back", "keys": "enter", "match": SCREEN},
+    # Segment 10: 12 steps north, until map 2 (area 0x8a) is loaded into
+    # the grids.
+    {"name": "chain_town_walk_10", "keys": "up*12", "match": SCREEN},
+    # Segments 11-14: map 2 is walled on its south and east sides; on foot
+    # (tiles from 0x55 block) its only way in is the west side at rows
+    # 27-31, which leads to one door, entrance 10 (the 'Mech Garage). North
+    # to the wall, west along it and round (the planner's walks, some steps
+    # blocked), then north up the west side to the door: one group evaded,
+    # one fled, one evaded on the way. Ends at the door's question.
+    {"name": "chain_town_walk_11", "keys": "up*32", "match": SCREEN},
+    {"name": "chain_town_walk_11b", "keys": "up*32", "match": SCREEN},
+    {"name": "chain_town_walk_11c", "keys": "up*17", "match": SCREEN},
+    {"name": "chain_town_11_no", "keys": "n", "match": SCREEN},
+    {"name": "chain_town_11_eluded", "keys": "enter", "match": SCREEN},
+    {"name": "chain_town_11_back", "keys": "enter", "match": SCREEN},
+    {"name": "chain_town_walk_12", "keys": "up*32", "match": SCREEN},
+    {"name": "chain_town_walk_12b", "keys": "up*8 home left home left home left home left home left home left home left home left home left home left home left home left", "match": SCREEN},
+    {"name": "chain_town_walk_12c", "keys": "home left home left home left home left home left home left home left home left home left home left home left home left home left home left home left home left", "match": SCREEN},
+    {"name": "chain_town_walk_12d", "keys": "home left home left home left home left home left home left home left home left home left home left home left home left home left home left home left home left", "match": SCREEN},
+    {"name": "chain_town_walk_12e", "keys": "home left home left home left home left home left home left home left home left home left home left home left home left home left home left home left home left", "match": SCREEN},
+    {"name": "chain_town_walk_12f", "keys": "home left home left home left home left right up right up right up right up right up right up right up right up right up right up right up right up", "match": SCREEN},
+    {"name": "chain_town_walk_12g", "keys": "right up right up right up right up right up right up right up right up right up right up right up right up right up right up right up right up", "match": SCREEN},
+    {"name": "chain_town_walk_12h", "keys": "right up right up right up right up left*4 up*11", "match": SCREEN},
+    {"name": "chain_town_12_no", "keys": "n", "match": SCREEN},
+    {"name": "chain_town_12_computer", "keys": "n", "match": SCREEN},
+    {"name": "chain_town_12_messages", "keys": "enter", "match": SCREEN},
+    {"name": "chain_town_12_graphics", "keys": "n", "match": SCREEN},
+    {"name": "chain_town_12_menu", "keys": "up enter", "match": SCREEN, "fight": True},
+    {"name": "chain_town_12_orders", "keys": "enter", "match": SCREEN, "fight": True},
+    {"name": "chain_town_12_flee", "keys": "up enter", "match": SCREEN, "fight": True},
+    {"name": "chain_town_12_eluded", "keys": "enter", "match": SCREEN},
+    {"name": "chain_town_12_back", "keys": "enter", "match": SCREEN},
+    {"name": "chain_town_12_back_2", "keys": "enter", "match": SCREEN},
+    {"name": "chain_town_walk_13", "keys": "up*2", "match": SCREEN},
+    {"name": "chain_town_13_no", "keys": "n", "match": SCREEN},
+    {"name": "chain_town_13_eluded", "keys": "enter", "match": SCREEN},
+    {"name": "chain_town_13_back", "keys": "enter", "match": SCREEN},
+    {"name": "chain_town_walk_14", "keys": "up*32", "match": SCREEN},
+    {"name": "chain_town_walk_14b", "keys": "up right*8", "match": SCREEN},
 ]
 
 # The long unpoked run: its own tier (`--campaign`, ctest label campaign).

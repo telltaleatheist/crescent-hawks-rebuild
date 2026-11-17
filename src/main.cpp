@@ -420,7 +420,18 @@ int main(int argc, char** argv) {
             rules = chr::formats::read_rules(options.data_dir);
         } catch (const std::exception&) {
         }
-        const chr::game::MapText map_text(map, options.map);
+        // Every map's names, not only the starting map's: a map is loaded
+        // into the grids as the party nears it.
+        chr::game::MapText map_text(map, options.map);
+        for (int n = 1; n <= 15; ++n) {
+            if (n == options.map) continue;
+            const auto path = chr::formats::find_game_file(options.game_dir, "MAP" + std::to_string(n) + ".MTP");
+            if (!path) continue;
+            try {
+                map_text.add(chr::formats::decode_mtp(chr::formats::read_file(*path)), n);
+            } catch (const std::exception&) {
+            }
+        }
         const chr::game::LayeredText texts({&overrides, &imported, &map_text, &interface_default});
         auto replay = [&]() -> bool {
             try {

@@ -52,7 +52,10 @@ private:
 // "mapN.person.P".
 class MapText final : public TextProvider {
 public:
+    MapText() = default;
     MapText(const formats::MtpMap& map, int map_number);
+    // Every map's names can be held at once, since a map loads mid-game.
+    void add(const formats::MtpMap& map, int map_number);
     std::optional<std::string> find(std::string_view id) const override;
 
 private:

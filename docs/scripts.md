@@ -218,6 +218,12 @@ ARENA's specials 21, 22 and 23 (`17dc:1c9b`, `17dc:1a26`, `17dc:1b41`) and PARTY
 0x62 10, 0x66 13, 0x7d 3, 0x8a 2, 0xa6 7, 0xb9 4, 0xc2 5, 0xcc 1 (and 11), 0xd5 6
 (`tables.area_maps`).
 
+Reaching map 2 on foot: its south and east sides are walls and its north edge is blocked too
+(on map 2 a step onto a tile from 0x55 is blocked, docs/movement.md). The only opening that leads
+anywhere is the west side at rows 27-31 (cells 0-5), and it reaches 25 cells and one door: entrance
+10, the second entrance of the 'Mech Garage (GARAGE, which sets flag 18). The rows 50-51 gap on the
+same side is a pocket closed by the compound's wall. The rest of the town is reached from inside.
+
 ## Not rebuilt yet
 
 - **EB/EC** read F:d451 and d450, which nothing rebuilt sets yet (0 in a new game); the

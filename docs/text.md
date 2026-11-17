@@ -135,7 +135,7 @@ narration of what happened, descriptions and flavour, and the original's own not
 | IDs | Count | Why |
 |---|---|---|
 | bld.* | 424 | the places' scripts: story and dialogue (all .BLD text) |
-| mapN.place.E, mapN.person.P | - | names from the map files, read from the player's .MTP at run time (not in the import) |
+| mapN.place.E, mapN.person.P | - | names from the map files, read from the player's .MTP at run time (not in the import); every map's at start, since a map is loaded mid-game as the party nears it |
 | character.0-7 | 8 | names |
 | mech.*, weapon.0-32, armour.0-5, quiz.part.0-19 | 67 | names of 'Mechs, weapons, armour and parts |
 | quiz.message, quiz.question | 2 | the quiz scene, which belongs to the copy protection and the manual |
