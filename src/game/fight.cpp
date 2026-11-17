@@ -1285,6 +1285,7 @@ bool Town::fight_rounds(int kind, KeySource& keys) {
                 } else if (kind > 0) {
                     combat_.person_ran = true;  // the mission is failed
                 }
+                log_.push_back(fled != 0 ? "flee: escaped" : "flee: failed");
             }
             over = fled != 0;
             fled_how = fled;

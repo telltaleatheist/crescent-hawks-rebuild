@@ -972,6 +972,17 @@ CHAIN_TOWN_CASES = [dict(case, compare=False) for case in
     {"name": "chain_town_eluded", "keys": "enter", "match": SCREEN},
     {"name": "chain_town_back", "keys": "enter", "match": SCREEN},
     {"name": "chain_town_back_2", "keys": "enter", "match": SCREEN},
+    # Segment 2: 16 steps north-west (up-left and up in turn) to a group of
+    # five in reach; declining it evades them this time (2.12): the escape,
+    # its key and the return.
+    {"name": "chain_town_walk_2", "keys": "home up " * 7 + "home up", "match": SCREEN},
+    {"name": "chain_town_2_no", "keys": "n", "match": SCREEN},
+    {"name": "chain_town_2_eluded", "keys": "enter", "match": SCREEN},
+    {"name": "chain_town_2_back", "keys": "enter", "match": SCREEN},
+    # Segment 3: 64 steps west and north-west (left and up-left in turn),
+    # with no encounter in reach; in halves.
+    {"name": "chain_town_walk_3", "keys": "left home " * 15 + "left home", "match": SCREEN},
+    {"name": "chain_town_walk_3b", "keys": "left home " * 15 + "left home", "match": SCREEN},
 ]
 
 # The long unpoked run: its own tier (`--campaign`, ctest label campaign).

@@ -183,6 +183,7 @@ bool Town::encounter_end(bool fought, KeySource& keys) {
         }
         if (!after_fight_steps(keys)) return false;
     } else if (combat_.fight_on) {
+        log_.push_back("encounter: eluded without a fight");
         clear_window();
         print_id("fight.eluded");
         if (!press_key(keys)) return false;

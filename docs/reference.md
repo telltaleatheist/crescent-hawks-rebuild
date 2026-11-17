@@ -229,7 +229,11 @@ poked sequences keep their prefix. Map 11's shops cannot be entered, and of the 
 there before leaving (0-255) none lets the walk to map 2 avoid every encounter in reach, so Jason
 flees those (2.7). With no idle the walk out is the chain's own (shared, not compared again); the
 first segment is `chain_death`'s encounter declined, the three questions, Flee from the orders menu,
-the escape, its key and the return to the position before the fight.
+the escape, its key and the return to the position before the fight. Each later segment is planned
+in chr from the state the original reached (`flee: escaped` / `flee: failed` and `encounter: eluded
+without a fight` in chr's log tell the outcomes apart), then captured and compared: segment 2 is 16
+steps north-west to five soldiers in reach, declined and evaded (2.12, one draw); segment 3 is 64
+steps west and north-west with every encounter out of reach.
 `chain_orders_poked` is that fight up to the hand-back, then Next Unit to Rex and his orders: the
 person menu, Use Weapon (the override question, the target picker from the Wasp, Cancel), Scan
 Unit (Friends: the Chameleon and Rex's details; Enemies: "humans only" and the enemy person),
