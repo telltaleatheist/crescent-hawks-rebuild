@@ -1161,6 +1161,14 @@ CHAIN_PARTY_CASES = [dict(case, compare=False) for case in
     # (kind -1) at its first question (docs/combat.md 1.6).
     {"name": "chain_party_member", "keys": "enter", "match": SCREEN},
     {"name": "chain_party_member_2", "keys": "enter", "match": SCREEN},
+    # Messages as they were, no graphics, then Flee from the first orders
+    # menu: kind -1 may flee (combat.md 1.6), and this draw escapes. Jason
+    # and the companion are walked back to the alley's entry position.
+    {"name": "chain_party_messages", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_graphics", "keys": "n", "match": SCREEN},
+    {"name": "chain_party_flee", "keys": "up enter", "match": SCREEN, "fight": True},
+    {"name": "chain_party_eluded", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_back", "keys": "enter", "match": SCREEN},
 ]
 
 # The long unpoked run: its own tier (`--campaign`, ctest label campaign).

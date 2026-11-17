@@ -91,7 +91,7 @@ bool Town::random_encounter(KeySource& keys) {
     // cleared for the attackers (2656:0281(4), 0388).
     if (!place_encounter()) return false;
     text_.select_window(4);
-    text_.clear_window();
+    clear_window();
     bool any = false;
     MapPosition first{};
     for (int f = 12; f < 24 && !any; ++f)
@@ -191,7 +191,7 @@ bool Town::encounter_end(bool fought, KeySource& keys) {
     }
     if (combat_.fight_on) {
         text_.select_window(4);
-        text_.clear_window();
+        clear_window();
         draw_panel(true);  // 1000:4cac(1)
         open_message_box();
         print_id("fight.return");

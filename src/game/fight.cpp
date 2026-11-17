@@ -386,6 +386,9 @@ bool Town::alley_fight(KeySource& keys) {
     const auto& blocks = terrain_.held_window(window_at_).blocks;
     for (std::size_t i = 0; i < encounter_blocks_.size(); ++i) encounter_blocks_[i] = std::uint8_t(blocks[i]);
     encounter_entry_ = position_;
+    // As after an encounter, the fight's last drawing stays on the screen
+    // until the next tick draws the map (2.12).
+    encounter_frozen_ = true;
     return fight(-1, keys);
 }
 
@@ -578,7 +581,7 @@ std::optional<int> Town::orders_menu(Combat& combat, KeySource& keys) {
     bool entered = true;
     for (;;) {
         text_.select_window(4);
-        text_.clear_window();
+        clear_window();
         print_unit_heading(fig, false, false);
         text_.set_fg(15);
         if (figs_.computer[std::size_t(fig)]) {
@@ -679,7 +682,7 @@ bool Town::weapons_order(Combat& combat, int fig, KeySource& keys) {
     const auto finish = [&] {
         text_.set_fg(15);
         text_.select_window(4);
-        text_.clear_window();
+        clear_window();
         text_.frame(4);
         text_.set_fg(15);
         text_.select_window(3);
@@ -692,7 +695,7 @@ bool Town::weapons_order(Combat& combat, int fig, KeySource& keys) {
         // On foot: the weapon's target now, and whether to change it.
         show_unit(combat, fig, true);
         text_.select_window(4);
-        text_.clear_window();
+        clear_window();
         const int t = std::int8_t(targets[0]);
         const int w = std::int8_t(characters_[std::size_t(fig - 4)][0x0b]);
         bool change = true;
@@ -730,7 +733,7 @@ bool Town::weapons_order(Combat& combat, int fig, KeySource& keys) {
         if (count < 12 && t >= 0x10 && t <= 0x20) items[std::size_t(count++)] = rec[std::size_t(b)];
     }
     text_.select_window(4);
-    text_.clear_window();
+    clear_window();
     if (combat_.heat[std::size_t(fig)] == 0x1e) {
         // Shut down: every weapon held this round.
         print_id("weapons.shut_down");
@@ -813,7 +816,7 @@ bool Town::weapons_order(Combat& combat, int fig, KeySource& keys) {
             // 1e31:1057: in window 4, a key, then back.
             const int previous = text_.window_number();
             text_.select_window(4);
-            text_.clear_window();
+            clear_window();
             print_id(id);
             const bool got = read_key(keys).has_value();
             text_.clear_window();
@@ -830,7 +833,7 @@ bool Town::weapons_order(Combat& combat, int fig, KeySource& keys) {
             bool go = true;
             if (targets[std::size_t(choice)] != 0xff) {
                 text_.select_window(4);
-                text_.clear_window();
+                clear_window();
                 print_id("weapons.already_firing");
                 const auto yes = yes_no(true, keys);
                 if (!yes) {
@@ -850,7 +853,7 @@ bool Town::weapons_order(Combat& combat, int fig, KeySource& keys) {
                 text_.select_window(3);
                 text_.clear_window();
                 text_.select_window(4);
-                text_.clear_window();
+                clear_window();
             }
         }
     } while (choice != count);
@@ -875,7 +878,7 @@ bool Town::scan_order(Combat& combat, int fig, KeySource& keys) {
     bool any = true;
     if (c == 1) {
         text_.select_window(4);
-        text_.clear_window();
+        clear_window();
         if (fig >= 4) {
             bool enemy_mech = false;
             for (int i = 12; i < 16; ++i)
@@ -899,7 +902,7 @@ bool Town::scan_order(Combat& combat, int fig, KeySource& keys) {
         if (figs_.active[std::size_t(i)] != 0 && figs_.x[std::size_t(i)] != 0xffff) any = true;
     if (!any && !mechs && c == 1) {
         text_.select_window(4);
-        text_.clear_window();
+        clear_window();
         print_id("scan.no_humans");
         if (!press_key(keys)) return false;  // 1000:2a4f
     }
@@ -925,7 +928,7 @@ bool Town::scan_list(Combat& combat, int fig, int base, bool mechs, KeySource& k
             figs_.y[std::size_t(t)] != 0xffff) {
             unseen = 0;
             text_.select_window(4);
-            text_.clear_window();
+            clear_window();
             text_.set_fg(15);
             if (t < 12) {
                 if (!print_unit_heading(t, true, true)) return false;  // 15ab:18e8(t, 1, 1)
@@ -1000,7 +1003,7 @@ bool Town::scan_list(Combat& combat, int fig, int base, bool mechs, KeySource& k
 // goes back to Kick.
 bool Town::kick_order(Combat& combat, int fig, KeySource& keys) {
     text_.select_window(4);
-    text_.clear_window();
+    clear_window();
     const auto& rec = mechs_[std::size_t(fig)];
     if ((rec[mech::kLeftActuators] & 8) && (rec[mech::kRightActuators] & 8)) {
         print_id("orders.choose_kick");
@@ -1123,7 +1126,7 @@ bool Town::move_order(Combat& combat, int fig, int type, KeySource& keys) {
     const int current = std::int8_t(orders[0]);
     if (fig < 4 && current != -1 && !(type == 2 && no_jump_jets()) && current != type) {
         text_.select_window(4);
-        text_.clear_window();
+        clear_window();
         print_id("orders.now");
         std::string doing = lookup(texts_, "orders.mode." + std::to_string(current));
         if (current == 1) doing += lookup(texts_, "orders.now_n");
@@ -1155,7 +1158,7 @@ bool Town::move_order(Combat& combat, int fig, int type, KeySource& keys) {
     else combat.person_mp(fig);
     combat.simulate_path(fig);
     text_.select_window(4);
-    text_.clear_window();
+    clear_window();
     if (combat.mp() == 0) {
         // Why not, and a key.
         if (type == 2 && no_jump_jets()) {
@@ -1276,7 +1279,7 @@ Combat Town::combat_rules() {
     hooks.select_box = [this] { text_.select_window(4); };
     hooks.clear_box = [this] {
         text_.select_window(4);
-        text_.clear_window();
+        clear_window();
     };
     hooks.walk = [this](formats::MapPosition to) { walk_position(to); };
     hooks.draw_view = [this](bool shown) {

@@ -258,8 +258,10 @@ the purchase (flag 1e), PARTY's first visit (flag 1c, the timer flag 1d = ff), a
 the door and back on for the second visit. The timer drops one a game tick, one per 11 idle
 passes, and is 0 after 2792 passes in chr whatever the random numbers; the case waits 2800, a
 margin of 8. The ticks make encounter checks too (map 2 counts as outdoors): every group they
-meet up to 3000 passes is out of reach, which needs no key. The branch ends at the scene's last
-screen: special 1e (the companion, then a fight of kind -1) is not rebuilt yet.
+meet up to 3000 passes is out of reach, which needs no key. Then special 1e (combat.md 1.6):
+the companion joins and five soldiers attack in the alley. The computer fighting gets Jason
+killed in chr; Flee from the first orders menu escapes on this draw, both unhurt, and the party
+is walked back to the alley's entry position with the companion.
 
 Open: a walk from map 3's jail door to its Hospital (entrance 1, 0d11,700b) stopped short of the
 door on both programs, so that Hospital has not been seen yet.
