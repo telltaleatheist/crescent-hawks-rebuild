@@ -269,6 +269,18 @@ script's blocking read, so the feeder's key comes after 3 empty polls (`arm:4`),
 draws a number; on this draw he is not the double agent. Then the menu again: the apprentice
 course (specials 0f and 10) is not rebuilt, so the case leaves (the last item), and the party
 stands at the map's second position for entrance 3.
+Then the walk to the garage (entrance 0) and its fee: with the Commando held there, leaving
+costs 150 and the party has 135, so the manager keeps the 'Mechs (docs/scripts.md). The money
+comes from a won fight at the garage door. Flag 24 is 7f by then, so an encounter can start one
+tick in 128 (about one per 1400 idle passes), and most are out of reach. The planner waits for
+each group in reach, at most 33,000 passes for each and 12 groups in all, and lets the computer
+fight it (Yes, Yes, no messages, no graphics; a pass for each round's poll). It keeps the first
+fight that ends with all three alive and at least 150 C-Bills, and evades the others. Here it
+evades five groups (two and four soldiers; each fight would have cost Jason or Edward) and wins
+against the sixth, two soldiers, after 34,352 passes of waiting in all: ten rounds, 32 C-Bills
+from their pockets (167), and two weapons offered (17dc:15e6). Enter alone would never end the
+offer: Jason takes the second weapon and his first comes back to him, and round again; the case
+gives the second to Edward instead. Then the healing and the walk back.
 
 Open: a walk from map 3's jail door to its Hospital (entrance 1, 0d11,700b) stopped short of the
 door on both programs, so that Hospital has not been seen yet.

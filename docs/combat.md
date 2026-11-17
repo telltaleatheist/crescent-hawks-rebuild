@@ -826,12 +826,28 @@ in light green (`1000:28a2`), then colour 15 and DG:10b5; the sum is added
 to the C-Bills (F:d370) without redrawing them; the weapons line (DG:10c6) if any were found;
 "." (DG:051d, `1000:2a7e`); the message pause and a key (`273d:086a`, `0259`). Then, only if
 weapons were found, for each beaten enemy person 0-7 in order: with a second party member,
-`17dc:15e6` with that person's weapon (not rebuilt); with Jason alone, the window is cleared and,
+`17dc:15e6` with that person's weapon (below); with Jason alone, the window is cleared and,
 if the person's weapon is not 0, the swap question (DG:10e5), Jason's weapon's name, DG:10ff, the
 found one's name, DG:1113, and a yes/no with No first; Yes swaps them. The
 weapons test reads character s + 12 for figure s + 12 (s = 4-11), past the sixteen records into
 'Mech record 0, whose name and armour bytes are seldom 0: so Jason is usually offered a swap even
-when the soldiers carried nothing. Rebuilt (`Town::loot`), except `17dc:15e6`.
+when the soldiers carried nothing. Rebuilt (`Town::loot`).
+
+**A found weapon offered to the party** (`17dc:15e6`, FUN_17dc_15e6; its argument is a weapon
+number w). The party is the character records 0-7 whose byte 0 is not ff, in order: n of them.
+With n = 1, record 0's weapon (byte 0x0b) becomes w and it ends (the loot never calls it so).
+Otherwise, while w is not 0:
+1. The current window is cleared (`2656:0388`); "Give " (DG:16ae), w's name (the weapons table
+   at DG:2ed8), " to:" and a line end (DG:16b4).
+2. For each member: his name, the cursor to column 10 (F:3748), his weapon's name, a line end
+   (`24d3:181e`). Then "Drop it" (DG:16ba).
+3. Menu 4's item count (F:00d6) is set to n + 1, and menu 4 runs (`2656:0b5e`).
+4. The last item (Drop it): it ends, the weapon is left. A member: his weapon becomes w. If it
+   already was w, "He already has that weapon." (DG:16c2) is printed at column 0, row 20 in
+   white (`1000:2867`), then the message pause and a key (`273d:086a`, `0259`). Either way his
+   old weapon becomes w, and the loop offers it next: so the old one goes round until someone
+   is given a 0 (no weapon) or it is dropped. A member who already had w gets w again, and w is
+   offered again.
 
 **Healing** (`1c31:000a`, FUN_1c31_000a; its argument is a doctor's level, 0 after a fight). With
 flag 29 set it only opens the message box with "Your characters need more time to recover."

@@ -32,6 +32,7 @@
 #include <cstdlib>
 #include <filesystem>
 #include <string>
+#include <string_view>
 
 #include <SDL3/SDL.h>
 
@@ -463,6 +464,7 @@ int main(int argc, char** argv) {
                 for (const auto& line : town->log()) std::printf("%s\n", line.c_str());
                 if (town->question_open()) std::printf("(waiting for an answer)\n");
                 if (town->place_open()) std::printf("(waiting in a place)\n");
+                if (town->poll_open()) std::printf("(polling for a key)\n");
                 if (town->start_up_open()) std::printf("(waiting in the start-up)\n");
             }
             if (options.state) print_state(*town);
@@ -499,6 +501,12 @@ int main(int argc, char** argv) {
         };
 
         bool running = status == 0;
+        // A script under a headless video driver has no one to press
+        // Escape: without a screenshot to take, it ends with the script.
+        if (!options.script.empty() && options.screenshot.empty()) {
+            const std::string_view driver = SDL_GetCurrentVideoDriver() ? SDL_GetCurrentVideoDriver() : "";
+            if (driver == "dummy" || driver == "offscreen") running = false;
+        }
         bool reported = false;
         chr::game::FrameClock clock;
         Uint64 last = SDL_GetTicksNS();

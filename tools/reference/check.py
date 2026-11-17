@@ -1185,6 +1185,47 @@ CHAIN_PARTY_CASES = [dict(case, compare=False) for case in
     # Not the apprentice course (specials 0f and 10, not rebuilt): leave.
     {"name": "chain_party_repair_leave", "keys": "up", "match": SCREEN},
     {"name": "chain_party_repair_out", "keys": "enter", "match": SCREEN},
+    # To the garage (entrance 0): with the Commando held, leaving costs 150
+    # and the party has 135 (docs/scripts.md, the garage fee).
+    {"name": "chain_party_to_garage", "keys": "right pgdn right*4 pgup up right up pgup up*7 home*10", "match": SCREEN},
+    {"name": "chain_party_garage", "keys": "y", "match": SCREEN},
+    {"name": "chain_party_garage_fee", "keys": "y", "match": SCREEN},
+    {"name": "chain_party_garage_out", "keys": "enter", "match": SCREEN},
+    # Money for the fee: wait at the garage door (flag 24 is 7f here: an
+    # encounter can come one tick in 128). The planner's bounded search
+    # (docs/reference.md) evades five groups in reach and lets the computer
+    # fight the sixth, two soldiers: all three live, and the loot leaves 167.
+    # Two weapons are found: the first to Jason (his cudgel, weapon 0, ends
+    # the offer), the second to Edward (Jason again would hand the first back).
+    {"name": "chain_party_wait_1", "keys": "idle:4970", "match": SCREEN},
+    {"name": "chain_party_evade_1", "keys": "n", "match": SCREEN},
+    {"name": "chain_party_eluded_1", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_back_1", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_wait_2", "keys": "idle:1989", "match": SCREEN},
+    {"name": "chain_party_evade_2", "keys": "n", "match": SCREEN},
+    {"name": "chain_party_eluded_2", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_back_2", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_wait_3", "keys": "idle:14188", "match": SCREEN},
+    {"name": "chain_party_evade_3", "keys": "n", "match": SCREEN},
+    {"name": "chain_party_eluded_3", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_back_3", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_wait_4", "keys": "idle:9", "match": SCREEN},
+    {"name": "chain_party_evade_4", "keys": "n", "match": SCREEN},
+    {"name": "chain_party_eluded_4", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_back_4", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_wait_5", "keys": "idle:6356", "match": SCREEN},
+    {"name": "chain_party_evade_5", "keys": "n", "match": SCREEN},
+    {"name": "chain_party_eluded_5", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_back_5", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_wait_fight", "keys": "idle:6840", "match": SCREEN},
+    {"name": "chain_party_fight", "keys": "y y enter arm:1 n", "match": {}, "fight": True},
+]  + [{"name": "chain_party_round_%d" % n, "keys": "idle:1", "match": {}, "fight": True} for n in range(1, 11)] + [
+    {"name": "chain_party_won", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_pockets", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_offer_1", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_offer_2", "keys": "down down enter", "match": SCREEN},
+    {"name": "chain_party_healing", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_return", "keys": "enter", "match": SCREEN},
 ]
 
 # The long unpoked run: its own tier (`--campaign`, ctest label campaign).

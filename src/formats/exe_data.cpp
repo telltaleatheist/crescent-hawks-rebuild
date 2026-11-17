@@ -254,6 +254,11 @@ constexpr std::array kDos103 = {
     ExeSpan{ExeSpan::Kind::Text, "unit.weapon_armour", 0x46db, 0x1245, 18, "7abfec3ed2c06183"},
     ExeSpan{ExeSpan::Kind::Text, "unit.ruined", 0x46db, 0x1257, 9, "78b7eeff36c60f0e"},
     ExeSpan{ExeSpan::Kind::Text, "unit.none", 0x46db, 0x1260, 5, "a51ad9ee4c1a4600"},
+    // A found weapon offered to the party (17dc:15e6).
+    ExeSpan{ExeSpan::Kind::Text, "offer.give", 0x46db, 0x16ae, 6, "4bab2e3777e939a2"},
+    ExeSpan{ExeSpan::Kind::Text, "offer.to", 0x46db, 0x16b4, 6, "fc653f69fd89a523"},
+    ExeSpan{ExeSpan::Kind::Text, "offer.drop", 0x46db, 0x16ba, 8, "8a92a66f9e007a00"},
+    ExeSpan{ExeSpan::Kind::Text, "offer.already", 0x46db, 0x16c2, 28, "0553948b51fb4426"},
     // What a recruit's arrival prints (19b8:0d58).
     ExeSpan{ExeSpan::Kind::Text, "recruit.name_is", 0x46db, 0x1e2f, 13, "a4dbe6be3d592b3e"},
     ExeSpan{ExeSpan::Kind::Text, "recruit.will_be", 0x46db, 0x1e3c, 17, "d412e3ba466aeef1"},

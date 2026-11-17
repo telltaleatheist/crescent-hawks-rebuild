@@ -657,9 +657,8 @@ bool Town::loot(KeySource& keys) {
         if (!figs_.destroyed[std::size_t(16 + p)]) continue;
         const int found = std::int8_t(characters_[std::size_t(8 + p)][character::kWeapon]);
         if (characters_[1][0] != 0xff) {
-            log_.push_back("a found weapon offered to the party (17dc:15e6): not rebuilt");
-            fight_unfinished_ = true;
-            return false;
+            if (!offer_weapon(found, keys)) return false;
+            continue;
         }
         // Jason alone: a swap for his own weapon.
         clear_window();
@@ -676,6 +675,56 @@ bool Town::loot(KeySource& keys) {
             return false;
         }
         if (*swap) characters_[0][character::kWeapon] = std::uint8_t(found);
+    }
+    return true;
+}
+
+// BTECH.EXE 17dc:15e6 (Ghidra FUN_17dc_15e6)
+// A found weapon offered to the party: whoever takes it hands his old one
+// on to be offered next (docs/combat.md, after the loot).
+bool Town::offer_weapon(int weapon, KeySource& keys) {
+    std::vector<int> members;
+    for (int i = 0; i < 8; ++i)
+        if (characters_[std::size_t(i)][character::kName] != character::kEmpty) members.push_back(i);
+    const int n = int(members.size());
+    if (n <= 1) {
+        characters_[0][character::kWeapon] = std::uint8_t(weapon);
+        return true;
+    }
+    while (weapon != 0) {
+        clear_window();  // 2656:0388
+        print_id("offer.give");
+        print_id(formats::weapon_text_id(weapon));
+        print_id("offer.to");
+        for (const int m : members) {
+            const auto& r = characters_[std::size_t(m)];
+            print_id("character." + std::to_string(r[character::kName]));
+            text_.set_cursor(10, text_.window().row);  // F:3748
+            print_id(formats::weapon_text_id(std::int8_t(r[character::kWeapon])));
+            print_id("talk.line_end");  // 24d3:181e
+        }
+        print_id("offer.drop");
+        menus_[4].items = n + 1;  // F:00d6
+        const auto chosen = menu(4, keys);
+        if (!chosen) {
+            place_open_ = true;
+            return false;
+        }
+        if (*chosen >= n) break;  // Drop it
+        auto& r = characters_[std::size_t(members[std::size_t(*chosen)])];
+        const int old = std::int8_t(r[character::kWeapon]);
+        r[character::kWeapon] = std::uint8_t(weapon);
+        if (old == weapon) {
+            // 1000:2867: at column 0, row 20, in white.
+            text_.set_cursor(0, 20);
+            text_.set_fg(15);
+            print_id("offer.already");
+            if (!read_key(keys)) {  // 273d:086a, 273d:0259
+                place_open_ = true;
+                return false;
+            }
+        }
+        weapon = old;
     }
     return true;
 }
