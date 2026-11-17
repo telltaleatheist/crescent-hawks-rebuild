@@ -262,6 +262,13 @@ meet up to 3000 passes is out of reach, which needs no key. Then special 1e (com
 the companion joins and five soldiers attack in the alley. The computer fighting gets Jason
 killed in chr; Flee from the first orders menu escapes on this draw, both unhurt, and the party
 is walked back to the alley's entry position with the companion.
+From there the walk west to the Repair Center (map 2 entrance 3, 96 keys, no group in reach on
+the way; the door is entered from the row below the entrance), its first menu item and the
+recruit (new_member 5, scripts.md "A new member"). The recruit's key wait starts right after the
+script's blocking read, so the feeder's key comes after 3 empty polls (`arm:4`), and each one
+draws a number; on this draw he is not the double agent. Then the menu again: the apprentice
+course (specials 0f and 10) is not rebuilt, so the case leaves (the last item), and the party
+stands at the map's second position for entrance 3.
 
 Open: a walk from map 3's jail door to its Hospital (entrance 1, 0d11,700b) stopped short of the
 door on both programs, so that Hospital has not been seen yet.

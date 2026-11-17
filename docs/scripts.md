@@ -121,15 +121,28 @@ starting answer.
 
 ### A new member (BTECH.EXE 19b8:0d58)
 
-The first free record of the 8 (byte 0 = ff) gets:
-- the next name number (F:d456, from 2 to 9 and round again);
-- three random attributes (`1000:19dd`), and random 0/1 for each of 7 skills;
-- skill `skill` set to 3 (a mech-tech also loses some of an attribute);
-- a 'Mech slot if one is free.
-
-Then it prints who joined, redraws the panel, and waits for a key. With flag 26 (d332) clear and
-an odd random number, it also marks that member for something later (d330–d333). Not rebuilt
-yet: neither the Citadel nor the training center uses it; the rebuild logs it.
+`E9 s`: the first free character record k (0-7, byte 0 = ff); with none, nothing but step 8.
+1. The random generator's state is set from the next name number: F:d456 x 0x187, its low
+   three bytes (`1000:a9de`). So the recruit's rolls depend only on which name it gets.
+2. Byte 0 = F:d456, which goes up by one and from 10 back to 2 (a new game starts it at 1,
+   which only the alley companion takes: combat.md 1.6).
+3. Bytes 0x0b, 0x0d, 0x0e and 0x10 = 0; bytes 1, 2 and 3 = 2d6 each (`1000:19dd`); byte 0x0f
+   (hit points) = 10 x byte 1; the sprite set F:d562 + k = 0; byte 0x0c = 8 (on foot).
+4. The seven skills: r & 1 each; then Piloting (byte 8) = 0 and skill `s` = 3. With s = 4
+   (Piloting) the hit points also lose 2 x byte 1.
+5. A seat: the first 'Mech record m (0-3) in use whose second seat (byte 0x7a) is ff gets
+   k there, and byte 0x0c = m.
+6. "His name is " (DG:1e2f), the name, " and he will be " (DG:1e3c), then "on foot." (DG:1e4d),
+   or "riding as a passenger in " (DG:1e56), the pilot's name (the character in the 'Mech's
+   byte 0x79) and "'s 'Mech." (DG:1e70). The panel is drawn (`1000:4cac(1)`).
+7. Unless keys are being played back (F:3938), it waits for a key by polling, **drawing one
+   random number each time no key is waiting** (`1000:a960`). Then the buffer is flushed
+   (`1000:2a2b`), which eats that key, and a key is read (`273d:0259`): two keys in all. Then,
+   with flag 26 (F:d332) clear, one draw: if odd, the recruit is the double agent (flag 25,
+   F:d331 = k; flags 26 and 27 = 1; F:d330 = 0x1f; combat.md 2.9).
+8. The party position is set from the map's second position table (F:39b4 / F:39d4, MTP
+   0x1c5 / 0x1e5, formats/mtp.md) at the entrance last entered (F:4584). On map 2 entrance 3
+   (REPAIR) is the one place where it is not the entrance itself: 0a13,8046 for 0a14,8044.
 
 ### The picture (BTECH.EXE 1000:48b7)
 

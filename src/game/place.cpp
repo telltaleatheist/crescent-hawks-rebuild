@@ -206,8 +206,7 @@ bool Town::run_script(int file, KeySource& keys) {
             // 1000:19bf: a sound effect, with sound on (docs/scripts.md).
             break;
         case formats::Op::NewMember:
-            // 19b8:0d58: a new member joins (docs/scripts.md).
-            log_.push_back("new member: not rebuilt");
+            if (!new_member(in.bytes[0], keys)) return false;
             break;
         }
         pc = next;
@@ -242,6 +241,84 @@ std::optional<int> Town::menu(int m, KeySource& keys, std::optional<int> start) 
     // it, but only Enter and space end the loop.)
     last = chosen;
     return chosen;
+}
+
+// BTECH.EXE 19b8:0d58 (Ghidra FUN_19b8_0d58)
+// Script op E9 s: a new member joins in the first free record, with skill s
+// at 3 (docs/scripts.md, "A new member").
+bool Town::new_member(int skill, KeySource& keys) {
+    int k = 0;
+    while (k < 8 && characters_[std::size_t(k)][character::kName] != character::kEmpty) ++k;
+    if (k < 8) {
+        // 1000:a9de: the generator's state from the name number.
+        const std::uint32_t seed = std::uint32_t(next_name_) * 0x187;
+        random_ = Random({std::uint8_t(seed), std::uint8_t(seed >> 8), std::uint8_t(seed >> 16)});
+        auto& r = characters_[std::size_t(k)];
+        r[character::kName] = next_name_++;
+        if (next_name_ >= 10) next_name_ = 2;
+        r[0x10] = 0;
+        r[character::kArmour] = 0;
+        r[character::kArmourType] = 0;
+        r[character::kWeapon] = 0;
+        r[character::kB] = std::uint8_t(two_d6(random_));
+        r[character::kD] = std::uint8_t(two_d6(random_));
+        r[character::kC] = std::uint8_t(two_d6(random_));
+        r[character::kHitPoints] = std::uint8_t(10 * r[character::kB]);
+        figs_.sprite_base[std::size_t(4 + k)] = 0;
+        r[character::kMech] = character::kOnFoot;
+        for (int i = 0; i < character::kSkillCount; ++i) r[std::size_t(character::kSkills + i)] = std::uint8_t(random_.next() & 1);
+        r[character::kSkills + 4] = 0;
+        if (skill >= 0 && skill < character::kSkillCount) r[std::size_t(character::kSkills + skill)] = 3;
+        if (skill == 4) r[character::kHitPoints] = std::uint8_t(r[character::kHitPoints] - 2 * r[character::kB]);
+        // A seat: the second seat (byte 0x7a) of the first 'Mech in use with
+        // it free.
+        for (int m = 0; m < 4; ++m) {
+            auto& mech = mechs_[std::size_t(m)];
+            if (mech[0] == 0xff || mech[0x7a] != 0xff) continue;
+            mech[0x7a] = std::uint8_t(k);
+            r[character::kMech] = std::uint8_t(m);
+            break;
+        }
+        print_id("recruit.name_is");
+        print_id("character." + std::to_string(r[character::kName]));
+        print_id("recruit.will_be");
+        if (r[character::kMech] == character::kOnFoot) {
+            print_id("recruit.on_foot");
+        } else {
+            const auto pilot = mechs_[std::size_t(r[character::kMech])][0x79];
+            print_id("recruit.passenger");
+            print_id("character." + std::to_string(characters_[std::size_t(pilot)][character::kName]));
+            print_id("recruit.mech");
+        }
+        draw_panel(true);  // 1000:4cac(1)
+        // 1000:a960: a draw for every poll with no key waiting; the flush
+        // (1000:2a2b) eats the key that ends it, and another is read.
+        for (;;) {
+            const auto waiting = keys.poll();
+            if (!waiting) {
+                place_open_ = true;
+                poll_open_ = true;
+                return false;
+            }
+            if (*waiting) break;
+            random_.next();
+        }
+        if (!read_key(keys)) {
+            place_open_ = true;
+            return false;
+        }
+        // The double agent (combat.md 2.9).
+        if (flags_[0x26] == 0 && (random_.next() & 1) != 0) {
+            flags_[0x25] = std::uint8_t(k);
+            flags_[0x26] = 1;
+            flags_[0x27] = 1;
+            flags_[0x24] = 0x1f;
+        }
+        log_.push_back("new member: record " + std::to_string(k) + ", name " + std::to_string(r[character::kName]));
+    }
+    // F:39b4 / F:39d4 at F:4584 (formats/mtp.md).
+    position_ = map_.second_positions[std::size_t(place_number_)];
+    return true;
 }
 
 // BTECH.EXE 24d3:0004 (Ghidra FUN_24d3_0004), the cases the Citadel uses.

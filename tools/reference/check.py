@@ -1169,6 +1169,22 @@ CHAIN_PARTY_CASES = [dict(case, compare=False) for case in
     {"name": "chain_party_flee", "keys": "up enter", "match": SCREEN, "fight": True},
     {"name": "chain_party_eluded", "keys": "enter", "match": SCREEN},
     {"name": "chain_party_back", "keys": "enter", "match": SCREEN},
+    # West to REPAIR (entrance 3; the door is entered from its own row,
+    # one below the entrance's), whose first recruit needs a member and
+    # flag 18 (docs/scripts.md): new_member 5. The recruit's wait draws a
+    # number for each poll, then its key is flushed and another read. It
+    # starts right after the script's blocking read, with no flush between:
+    # the feeder's key comes on the 4th poll, so 3 draws (arm:4).
+    {"name": "chain_party_to_repair", "keys": "left*19 home*7 left*8 home*10 left*4", "match": SCREEN},
+    {"name": "chain_party_repair_door", "keys": "left*4 home*2 left*28 home*6 up left pgup up right home right*2", "match": SCREEN},
+    {"name": "chain_party_repair", "keys": "y", "match": SCREEN},
+    {"name": "chain_party_repair_tech", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_recruit", "keys": "arm:4 enter", "match": SCREEN},
+    {"name": "chain_party_recruit_key", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_recruit_key_2", "keys": "enter", "match": SCREEN},
+    # Not the apprentice course (specials 0f and 10, not rebuilt): leave.
+    {"name": "chain_party_repair_leave", "keys": "up", "match": SCREEN},
+    {"name": "chain_party_repair_out", "keys": "enter", "match": SCREEN},
 ]
 
 # The long unpoked run: its own tier (`--campaign`, ctest label campaign).

@@ -254,6 +254,12 @@ constexpr std::array kDos103 = {
     ExeSpan{ExeSpan::Kind::Text, "unit.weapon_armour", 0x46db, 0x1245, 18, "7abfec3ed2c06183"},
     ExeSpan{ExeSpan::Kind::Text, "unit.ruined", 0x46db, 0x1257, 9, "78b7eeff36c60f0e"},
     ExeSpan{ExeSpan::Kind::Text, "unit.none", 0x46db, 0x1260, 5, "a51ad9ee4c1a4600"},
+    // What a recruit's arrival prints (19b8:0d58).
+    ExeSpan{ExeSpan::Kind::Text, "recruit.name_is", 0x46db, 0x1e2f, 13, "a4dbe6be3d592b3e"},
+    ExeSpan{ExeSpan::Kind::Text, "recruit.will_be", 0x46db, 0x1e3c, 17, "d412e3ba466aeef1"},
+    ExeSpan{ExeSpan::Kind::Text, "recruit.on_foot", 0x46db, 0x1e4d, 9, "e6d51eb90eb22c7f"},
+    ExeSpan{ExeSpan::Kind::Text, "recruit.passenger", 0x46db, 0x1e56, 26, "166c03341754c9cb"},
+    ExeSpan{ExeSpan::Kind::Text, "recruit.mech", 0x46db, 0x1e70, 10, "f0678ba9171ea829"},
     // What special 0a prints after the money (24d3:096f).
     ExeSpan{ExeSpan::Kind::Text, "shop.cbills_end", 0x46db, 0x4c18, 4, "0fee949ff0d918ca"},
     // 17dc:0629, the training missions:
