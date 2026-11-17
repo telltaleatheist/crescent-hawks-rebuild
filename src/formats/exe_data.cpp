@@ -249,6 +249,8 @@ constexpr std::array kDos103 = {
     ExeSpan{ExeSpan::Kind::Text, "unit.weapon_armour", 0x46db, 0x1245, 18, "7abfec3ed2c06183"},
     ExeSpan{ExeSpan::Kind::Text, "unit.ruined", 0x46db, 0x1257, 9, "78b7eeff36c60f0e"},
     ExeSpan{ExeSpan::Kind::Text, "unit.none", 0x46db, 0x1260, 5, "a51ad9ee4c1a4600"},
+    // What special 0a prints after the money (24d3:096f).
+    ExeSpan{ExeSpan::Kind::Text, "shop.cbills_end", 0x46db, 0x4c18, 4, "0fee949ff0d918ca"},
     // 17dc:0629, the training missions:
     ExeSpan{ExeSpan::Kind::Text, "mission.failed", 0x46db, 0x1434, 55, "9fe5ba45e070d5e2"},
     ExeSpan{ExeSpan::Kind::Text, "mission.not_done", 0x46db, 0x146b, 54, "6449395b589999d5"},

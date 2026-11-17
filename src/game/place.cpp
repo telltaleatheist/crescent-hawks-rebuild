@@ -316,6 +316,13 @@ bool Town::special(int n, KeySource& keys) {
         figs_.y[16] = w.at.y;
         return true;
     }
+    case 10:
+        // 24d3:096f: the money in decimal at the cursor, in colour 2 (1 when
+        // DG:4fba, the display, is 0), then shop.cbills_end.
+        text_.set_fg(2);
+        text_.print(std::to_string(money_.cbills));
+        text_.print(lookup(texts_, "shop.cbills_end"));
+        return true;
     case 12:
         return talk(keys);
     case 14:

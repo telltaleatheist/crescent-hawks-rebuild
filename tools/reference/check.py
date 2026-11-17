@@ -1107,9 +1107,61 @@ CHAIN_TOWN_CASES = [dict(case, compare=False) for case in
     {"name": "chain_town_jail", "keys": "y", "match": SCREEN},
 ]
 
+# From chain_town_garage_out_2 (inside map 2, flag 18 set): the first
+# companion (docs/scripts.md, "The first companion"). Three groups evaded on
+# the way to CLOTHES, where Jason buys clothes (flag 1e); PARTY's first visit
+# sets flag 1c and the timer, flag 1d = ff. The timer drops by one a game
+# tick, one per 11 idle passes: in chr it reaches 0 after 2792 passes from
+# chain_party_party_out (it does not depend on the random numbers); 2800 for
+# a margin. The ticks' encounter checks fire too (map 2 counts as outdoors):
+# every group up to 3000 passes is out of reach. Then off the door and back
+# on, and PARTY's scene up to special 1e (not rebuilt yet: it makes the
+# companion, then a fight of kind -1).
+CHAIN_PARTY_CASES = [dict(case, compare=False) for case in
+                     CHAIN_TOWN_CASES[:[c["name"] for c in CHAIN_TOWN_CASES].index("chain_town_garage_out_2") + 1]] + [
+    {"name": "chain_party_walk", "keys": "down pgdn*4 right*52 pgdn*8 right*2", "match": SCREEN},
+    {"name": "chain_party_1_no", "keys": "n", "match": SCREEN},
+    {"name": "chain_party_1_eluded", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_1_back", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_walk_2", "keys": "right", "match": SCREEN},
+    {"name": "chain_party_2_no", "keys": "n", "match": SCREEN},
+    {"name": "chain_party_2_eluded", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_2_back", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_walk_3", "keys": "right", "match": SCREEN},
+    {"name": "chain_party_3_no", "keys": "n", "match": SCREEN},
+    {"name": "chain_party_3_eluded", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_3_back", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_clothes_door", "keys": "right", "match": SCREEN},
+    {"name": "chain_party_clothes", "keys": "y", "match": SCREEN},
+    {"name": "chain_party_clothes_buy", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_clothes_out", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_to_party", "keys": "down pgdn*3 down*6 pgdn*6 down*4 pgdn*8 right*7", "match": SCREEN},
+    {"name": "chain_party_party", "keys": "y", "match": SCREEN},
+    {"name": "chain_party_party_key", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_party_key_2", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_party_out", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_wait", "keys": "idle:2800", "match": SCREEN},
+    {"name": "chain_party_off", "keys": "left", "match": SCREEN},
+    {"name": "chain_party_door_2", "keys": "right", "match": SCREEN},
+    {"name": "chain_party_party_2", "keys": "y", "match": SCREEN},
+    {"name": "chain_party_scene_1", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_scene_2", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_scene_3", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_scene_4", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_scene_5", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_scene_6", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_scene_7", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_scene_8", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_scene_9", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_scene_10", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_scene_11", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_scene_12", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_scene_13", "keys": "enter", "match": SCREEN},
+]
+
 # The long unpoked run: its own tier (`--campaign`, ctest label campaign).
 CAMPAIGN = {"chain", "chain_death", "chain_mech_poked", "chain_heal_poked", "chain_repair_poked",
-            "chain_salvage_poked", "chain_orders_poked", "chain_town"}
+            "chain_salvage_poked", "chain_orders_poked", "chain_town", "chain_party"}
 
 SEQUENCES = [("town", CASES, FULL_CASES, []), ("training", TRAINING_CASES, [], []),
              ("quiz", QUIZ_CASES, [], ["--show-quiz"]), ("mission", MISSION_CASES, MISSION_FULL_CASES, []),
@@ -1135,6 +1187,7 @@ SEQUENCES = [("town", CASES, FULL_CASES, []), ("training", TRAINING_CASES, [], [
              ("chain_salvage_poked", [], CHAIN_SALVAGE_POKED_CASES, []),
              ("chain_orders_poked", [], CHAIN_ORDERS_POKED_CASES, []),
              ("chain_town", [], CHAIN_TOWN_CASES, []),
+             ("chain_party", [], CHAIN_PARTY_CASES, []),
              ("handover", [], HANDOVER_CASES, [])]
 
 # The feeder (tools/capture/snap.asm, docs/reference.md) hands over a key at

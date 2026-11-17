@@ -251,6 +251,18 @@ into the row of map 3's area and east along it. In segment 18 most step patterns
 soldiers that can be neither evaded nor fled; two steps east then one up-right is in among map 3's
 buildings by then and comes to the Armor Shop's door instead. No there, then 23 steps inside the
 town to the jail's door (entrance 6), and in.
+
+`chain_party` branches from `chain_town_garage_out_2`, inside map 2, towards the first companion
+(docs/scripts.md, "The first companion"): three groups evaded on the way to the Clothes Shop,
+the purchase (flag 1e), PARTY's first visit (flag 1c, the timer flag 1d = ff), a wait, then off
+the door and back on for the second visit. The timer drops one a game tick, one per 11 idle
+passes, and is 0 after 2792 passes in chr whatever the random numbers; the case waits 2800, a
+margin of 8. The ticks make encounter checks too (map 2 counts as outdoors): every group they
+meet up to 3000 passes is out of reach, which needs no key. The branch ends at the scene's last
+screen: special 1e (the companion, then a fight of kind -1) is not rebuilt yet.
+
+Open: a walk from map 3's jail door to its Hospital (entrance 1, 0d11,700b) stopped short of the
+door on both programs, so that Hospital has not been seen yet.
 `chain_orders_poked` is that fight up to the hand-back, then Next Unit to Rex and his orders: the
 person menu, Use Weapon (the override question, the target picker from the Wasp, Cancel), Scan
 Unit (Friends: the Chameleon and Rex's details; Enemies: "humans only" and the enemy person),

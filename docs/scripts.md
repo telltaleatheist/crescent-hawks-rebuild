@@ -236,12 +236,39 @@ door is reachable from the rear exit, 24 to 100 steps; `if_flag` jumps when the 
 - JAIL (map 3) is not open to him either (an earlier reading had the branch backwards). Flag 2a
   (set by its recruit) goes to 0277; flag 27 (a traitor in the party, F:d333) to 0063; otherwise
   special 0e with a member goes to 01fb, the jailkeeper's menu, whose item 07dc leads to
-  `new_member 4`, and alone to 0277: Jason is recognised and the script ends in special 25.
-  Seen in chr on the chain (special 25 not rebuilt yet), the original's screens matching up to
-  the entry.
-- Nothing else adds a member: 19b8:0d58 is called only by the script op E9, and special 0e
+  `new_member 4`, and alone to 0277: Jason is recognised and executed. On the original the
+  script ends in "Jason has died" and the play-again question (seen on the chain, past the
+  jail's door).
+- The script op E9 (19b8:0d58) adds a member only behind those menus, and special 0e
   (24d3:0af2) counts character records 1-7 whose first byte is not ff, as rebuilt. A new game
-  has none, so every recruit needs a member the party of one does not have.
+  has none.
+
+**The first companion: CLOTHES, then PARTY.** Outside 19b8:0d58 one routine fills a party
+record: 19b8:104e, called only by special 1e, which only PARTY.BLD uses (map 2, entrance 8).
+It writes record 1 by its fixed address (F:c625, its first byte from the counter at F:d456,
+which it then increases), with fixed skill and stat bytes, gives the party a 'Mech slot ('C' at
+F:d452, with its 'Mech record), sets the walkers' records and puts the party at 0a69,805e. The
+other writes to records 1-7 put back values saved earlier (F:3fe9, mode 9 and ARENA's 23), and
+the only whole-table uses are loading and saving a game (1000:32b3, 1000:35d3). The way there
+for a party of one:
+
+1. CLOTHES (map 2, entrance 9): the purchase (`pay 0x23`, 35 C-Bills) sets flag 1e.
+2. PARTY, first visit (flags 1c and 0e clear): its opening, then with flag 1e set, 025b sets
+   flag 1c = 1 and flag 1d = ff.
+3. Flag 1d is a timer: each game tick lowers it while it is not 0 (1000:02ba, with 14-16;
+   docs/town_loop.md).
+4. PARTY again with flag 1c: while flag 1d is not 0 the visit just ends (178e). At 0, a long
+   scene, then special 1e and the end. With a member already (flag 0e), every visit ends
+   (17ba).
+5. Special 1e does not end with the companion: 19b8:104e also fills enemy people, records 8
+   up to 10-13 (2 + a random 0-3 of them, on foot, random stats, a 2d6 roll), placed around
+   0a72/0a73,805d/805e by the offsets at DG:1e7a / DG:1e82, then calls the fight routine
+   `203b:000a` with kind -1. On the original the scene's last screen stays up and the fight
+   begins at "Do you want the computer to fight for you?", with no encounter box: Jason and
+   the new companion (record 1) against the soldiers. Kind -1 counts as not 0 where the routine
+   tests for kind 0 and as below 1 where it compares (docs/combat.md, not written up yet).
+
+So every recruit (HOSPITAL, REPAIR, JAIL) comes after this one.
 
 ## Not rebuilt yet
 
