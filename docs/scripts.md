@@ -177,7 +177,7 @@ each one.
 | 37 | 24d3:139a | JAIL | the game is over: DG:014a = 0 and character record 0 emptied (byte 0 = ff); not rebuilt |
 | 38 | 24d3:13c6 | JAIL | prints the name the next recruit will get: name number F:d456 (scripts.md, "A new member") |
 | 39 | 24d3:13e6 | JAIL | the crew screen with argument 1: everyone on foot, every seat empty first (below); not rebuilt |
-| 40 | 24d3:13ec | JAIL | Jason alone on foot for the impounded 'Mech (`19b8:152f`, mode 9, combat.md); then flag 28 = 1 if the game goes on (DG:014a not 0); not rebuilt |
+| 40 | 24d3:13ec | JAIL | Jason alone on foot for the impounded 'Mech (`19b8:152f`, mode 9, combat.md); then flag 28 = 1 if he fell (DG:014a = 0, the leader down: combat.md); not rebuilt |
 | 46 | 24d3:0e2c | GARAGE | the held 'Mechs back and the crew screen (below) |
 | 43 | 24d3:157e | TRAINING | after mission 5 is won (+1672, with flag 2d = 1): townsperson 0 is put at the Lounge's entrance (MAP entrance 7; record +0/+2 and figure 16), inside (+9 = ff), its route 0x70 (last the Lounge, next entrance 0) and its target entrance 0, the Training Center. Talk to others in the Lounge lets it out (below) |
 | others | see the table above | the other places | read with those places |
@@ -349,6 +349,23 @@ for a party of one:
    tests for kind 0 and as below 1 where it compares (docs/combat.md, not written up yet).
 
 So every recruit (HOSPITAL, REPAIR, JAIL) comes after this one.
+
+**JAIL after its recruit: one chance at the impounded 'Mech.** The recruit's branch (07dc) sets
+flag 2a before anything else, and the script's first test (0005) sends every later visit with
+flag 2a to 0277, the execution branch: whichever way flag 1e and flag 2a steer its text (0331,
+037d), it reaches 0402 and then 01f6, special 37 (Jason's record emptied, the game over). So the
+jail can be entered safely only once. The impounded 'Mech's question (106c, `if_yes 050c`,
+Yes first) comes at the end of that one visit:
+
+- **Yes** (050c): the jail break, special 40 (`19b8:152f`, mode 9). If Jason fell (flag 28) the
+  script ends (10c4); otherwise the escape scene and special 39, the crew screen with
+  everyone on foot (0703-07db).
+- **No** (106f): a short scene and the end; the party is outside with flag 2a set.
+
+Special 40 is used nowhere else (every script searched for specials 37-40 and flags 28 and
+2a: only JAIL, plus ARENA reading flag 28 at 06a7). So No gives up the impounded 'Mech for
+good, and coming back to the jail afterwards ends the game. (Read from the script, whose ops chr
+runs as the original does; the return visit itself is not captured.) The chain takes Yes.
 
 ## Not rebuilt yet
 
