@@ -323,6 +323,13 @@ bool Town::special(int n, KeySource& keys) {
     case 23:
         flags_[0x19] = anyone_hurt() ? 1 : 0;
         return true;
+    case 17: {
+        // 24d3:0ca4: flag 10 = how many of 'Mech records 0-3 are in use.
+        int in_use = 0;
+        for (const bool e : mech_records()) in_use += e ? 1 : 0;
+        flags_[0x10] = std::uint8_t(in_use);
+        return true;
+    }
     default:
         log_.push_back("special " + std::to_string(n) + ": not rebuilt");
         return true;

@@ -1051,6 +1051,12 @@ CHAIN_TOWN_CASES = [dict(case, compare=False) for case in
     {"name": "chain_town_13_back", "keys": "enter", "match": SCREEN},
     {"name": "chain_town_walk_14", "keys": "up*32", "match": SCREEN},
     {"name": "chain_town_walk_14b", "keys": "up right*8", "match": SCREEN},
+    # The garage (GARAGE.BLD) on foot: special 11 finds no 'Mech records in
+    # use, so flag 18 is set and the party is put inside, at the rear exit.
+    {"name": "chain_town_garage", "keys": "y", "match": SCREEN},
+    {"name": "chain_town_garage_key", "keys": "enter", "match": SCREEN},
+    {"name": "chain_town_garage_out", "keys": "up", "match": SCREEN},
+    {"name": "chain_town_garage_out_2", "keys": "up", "match": SCREEN},
 ]
 
 # The long unpoked run: its own tier (`--campaign`, ctest label campaign).

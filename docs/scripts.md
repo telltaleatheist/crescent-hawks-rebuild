@@ -229,11 +229,13 @@ same side is a pocket closed by the compound's wall. The rest of the town is rea
 - **EB/EC** read F:d451 and d450, which nothing rebuilt sets yet (0 in a new game); the
   rebuild never jumps. UnBattletech names them "training complete" and a milestone.
 - **E4** (sound) and **E9** (new member) do nothing but log.
-- The specials other than 1-5, 12 and 14.
+- The specials other than 01-05, 0c, 0e, 11, 17 and 2b (in hex, as in the table above; chr's log
+  prints them in decimal).
 - Talk outdoors (`17dc:17b9`): one of eight rumours (DGROUP:4e5e) at random. No rebuilt place
   is outdoors; the rebuild makes the draw and logs it.
-- The follow-on places (the garage, and the second barracks into VIEWDISK) need flags that no
-  rebuilt place sets yet.
+- The second barracks' follow-on (into VIEWDISK) needs flags that no rebuilt place sets yet. The
+  garage on foot is rebuilt (special 11, then flag 18 and the party put inside at the rear exit);
+  its 'Mech paths (specials 1c, 1d, 2e) are not.
 
 ## Other descriptions
 

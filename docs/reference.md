@@ -238,7 +238,7 @@ groups of five and three, declined and evaded; segment 6 walks up-left until map
 the grids (the townspeople's headings there are left as the last encounter set them); segments
 7-10 go on north-west and north, three groups evaded, until map 2 is loaded; segments 11-14 reach
 map 2's only door on foot (docs/scripts.md, "After the raid"), with a flee and two evades, and end
-at its question.
+at its question; then the garage on foot (special 11, flag 18), which puts the party inside.
 `chain_orders_poked` is that fight up to the hand-back, then Next Unit to Rex and his orders: the
 person menu, Use Weapon (the override question, the target picker from the Wasp, Cancel), Scan
 Unit (Friends: the Chameleon and Rex's details; Enemies: "humans only" and the enemy person),
