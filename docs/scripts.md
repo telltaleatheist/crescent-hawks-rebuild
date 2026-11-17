@@ -140,6 +140,10 @@ starting answer.
    (`1000:2a2b`), which eats that key, and a key is read (`273d:0259`): two keys in all. Then,
    with flag 26 (F:d332) clear, one draw: if odd, the recruit is the double agent (flag 25,
    F:d331 = k; flags 26 and 27 = 1; F:d330 = 0x1f; combat.md 2.9).
+   For the player: the generator moves on for as long as the "who joined" text waits for a key,
+   so whether this recruit turns out to be the double agent depends on how long the player
+   waits before pressing it. Only the first recruit to come up odd is chosen; after that
+   (flag 26 set) no later recruit can be.
 8. The party position is set from the map's second position table (F:39b4 / F:39d4, MTP
    0x1c5 / 0x1e5, formats/mtp.md) at the entrance last entered (F:4584). On map 2 entrance 3
    (REPAIR) is the one place where it is not the entrance itself: 0a13,8046 for 0a14,8044.
@@ -252,6 +256,14 @@ door is reachable from the rear exit, 24 to 100 steps; `if_flag` jumps when the 
   `new_member 4`, and alone to 0277: Jason is recognised and executed. On the original the
   script ends in "Jason has died" and the play-again question (seen on the chain, past the
   jail's door).
+- After the alley (combat.md 1.6) the companion's Commando is held at the garage (F:d452 = 'C'),
+  so GARAGE with flag 18 set no longer just lets the party out (0010: special 1d, flag 10 = 1):
+  the manager asks 150 C-Bills (0074, `if_cbills 0x96`), and short of it he keeps the 'Mechs
+  and the party stays inside (flag 18 still set). The money floor is 50, so a party with 50 or
+  more gets no 15 C-Bills a tick. Inside, only a fight's loot ((r & 0xf) + 3 per soldier beaten)
+  or scrap adds money (ARENA costs 250 to enter). On the chain the party has 135 here, after
+  CLOTHES' 35: so HOSPITAL's recruit (flag 18 clear), the other towns and the jail all wait on
+  a won fight or 15 C-Bills found some other way. (Seen in chr; on the original, not yet.)
 - The script op E9 (19b8:0d58) adds a member only behind those menus, and special 0e
   (24d3:0af2) counts character records 1-7 whose first byte is not ff, as rebuilt. A new game
   has none.
