@@ -202,6 +202,7 @@ bool Town::load_town_map(int number, int grid) {
         // the walkers leaves them as the last fight set them up.
         auto placed = Townspeople::place(map_, number, random_, tables_);
         for (std::size_t i = 0; i < 8; ++i) placed.walkers()[i].heading = people_.walkers()[i].heading;
+        placed.keep_wander_from(people_);
         people_ = placed;
     }
     else people_.place_during_fight(map_, number, random_);

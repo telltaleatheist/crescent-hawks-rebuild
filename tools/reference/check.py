@@ -1057,6 +1057,11 @@ CHAIN_TOWN_CASES = [dict(case, compare=False) for case in
     {"name": "chain_town_garage_key", "keys": "enter", "match": SCREEN},
     {"name": "chain_town_garage_out", "keys": "up", "match": SCREEN},
     {"name": "chain_town_garage_out_2", "keys": "up", "match": SCREEN},
+    # Time in town before setting out: outdoors only steps draw, so the walk
+    # to map 3 meets a group Jason can neither evade nor flee (twice) at a
+    # fixed draw; 1280 or more idle passes here use that draw up in town
+    # (swept 0-2500; docs/reference.md). 1300 for a margin.
+    {"name": "chain_town_wait", "keys": "idle:1300", "match": SCREEN},
     # Out by the garage's front door (entrance 0) towards map 3's jail, the
     # recruit open to a party of one (docs/scripts.md): with flag 18 set,
     # special 1d finds no 'Mech held, so flag 18 is cleared and the party is
@@ -1066,6 +1071,40 @@ CHAIN_TOWN_CASES = [dict(case, compare=False) for case in
     {"name": "chain_town_garage_2", "keys": "y", "match": SCREEN},
     {"name": "chain_town_garage_2_key", "keys": "enter", "match": SCREEN},
     {"name": "chain_town_outside", "keys": "left", "match": SCREEN},
+    # Segments 15-17: north into the row of map 3's area, then east along
+    # it towards the jail; two groups evaded.
+    {"name": "chain_town_walk_15", "keys": "up*32", "match": SCREEN},
+    {"name": "chain_town_walk_15b", "keys": "up*32", "match": SCREEN},
+    {"name": "chain_town_walk_15c", "keys": "up*32", "match": SCREEN},
+    {"name": "chain_town_walk_15d", "keys": "up", "match": SCREEN},
+    {"name": "chain_town_15_no", "keys": "n", "match": SCREEN},
+    {"name": "chain_town_15_eluded", "keys": "enter", "match": SCREEN},
+    {"name": "chain_town_15_back", "keys": "enter", "match": SCREEN},
+    {"name": "chain_town_walk_16", "keys": "pgup*32", "match": SCREEN},
+    {"name": "chain_town_walk_16b", "keys": "pgup*32", "match": SCREEN},
+    {"name": "chain_town_walk_16c", "keys": "right*32", "match": SCREEN},
+    {"name": "chain_town_walk_16d", "keys": "right*32", "match": SCREEN},
+    {"name": "chain_town_walk_16e", "keys": "right*32", "match": SCREEN},
+    {"name": "chain_town_walk_16f", "keys": "right*14", "match": SCREEN},
+    {"name": "chain_town_16_no", "keys": "n", "match": SCREEN},
+    {"name": "chain_town_16_eluded", "keys": "enter", "match": SCREEN},
+    {"name": "chain_town_16_back", "keys": "enter", "match": SCREEN},
+    {"name": "chain_town_walk_17", "keys": "right*32", "match": SCREEN},
+    {"name": "chain_town_walk_17b", "keys": "right*32", "match": SCREEN},
+    # Segment 18: east into map 3. Most step patterns meet three soldiers
+    # in reach 37 steps in (neither evaded nor fled); right, right, up-right
+    # is in among the buildings by then and comes to the Armor Shop's door
+    # instead. No there, then inside the town to the jail's door (entrance 6).
+    {"name": "chain_town_walk_18", "keys": "right*32", "match": SCREEN},
+    {"name": "chain_town_walk_18b", "keys": "right*32", "match": SCREEN},
+    {"name": "chain_town_walk_18c", "keys": "right*32", "match": SCREEN},
+    {"name": "chain_town_walk_18d", "keys": "right*32", "match": SCREEN},
+    {"name": "chain_town_walk_18e", "keys": "right*2 pgup right*2 pgup right*2 pgup right*2 pgup right*2 pgup right*2 pgup right*2 pgup right*2 pgup right*2 pgup right*2 pgup right*2", "match": SCREEN},
+    {"name": "chain_town_walk_18f", "keys": "pgup right*2 pgup right*2 pgup right*2 pgup right*2 pgup right*2 pgup right*2 pgup right*2 pgup", "match": SCREEN},
+    {"name": "chain_town_armor_no", "keys": "n", "match": SCREEN},
+    {"name": "chain_town_to_jail", "keys": "left*2 end*8 down*5 end*7", "match": SCREEN},
+    {"name": "chain_town_jail_door", "keys": "end", "match": SCREEN},
+    {"name": "chain_town_jail", "keys": "y", "match": SCREEN},
 ]
 
 # The long unpoked run: its own tier (`--campaign`, ctest label campaign).

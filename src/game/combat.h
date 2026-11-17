@@ -139,6 +139,9 @@ public:
         std::function<void()> select_box;
         std::function<void()> clear_box;
         std::function<void(int colour)> set_fg;
+        // DGROUP:315c, shared with the townspeople's step: 1e31:0006 called
+        // with its last argument 0 (the reach test, the paths) clears it.
+        std::function<void()> clear_wander;
         std::function<void()> pause;
         std::function<void(const std::string&)> log;
     };

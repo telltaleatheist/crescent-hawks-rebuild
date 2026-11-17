@@ -78,6 +78,13 @@ next entry of DGROUP:310a read backwards: straight on, one eighth right, one lef
 two left, three right, three left, behind. Every 30 steps (any person's, DGROUP:315a, 100 at a
 new game) the pattern flips to start left first (DGROUP:315c).
 
+Only the townspeople's caller (1000:26e9) passes 1 as the step's last argument, which counts the
+step and may flip the pattern. The fights' callers pass 0 (the reach test, 203b:28db, at every
+random encounter, out of reach or not, and a fight path routine in 203b): that clears 315c to
+right first and leaves the count alone. Nothing else touches either; a map load keeps both. Both
+are in the compared state (`state wander`). Found on the original: on map 3 a person whose way
+west was taken went south-west (left first) where a reset count would have sent it north-west.
+
 A direction is taken if:
 
 - the map cell under the new half-cell (the cell holding x + 1, as for the party's leader) is

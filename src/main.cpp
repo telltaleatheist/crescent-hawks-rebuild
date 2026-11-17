@@ -170,6 +170,7 @@ void print_state(const chr::game::Town& town) {
     std::printf("state random %02x %02x %02x\n", r[0], r[1], r[2]);
     std::printf("state cbills %d\n", int(town.money().cbills));
     std::printf("state counters %d %d\n", town.town_ticks(), town.mission_ticks());
+    std::printf("state wander %d %d\n", town.townspeople().wander_count(), town.townspeople().wander_pattern());
     int i = 0;
     const auto& figs = town.fight_figures();
     for (const auto& w : town.townspeople().walkers()) {

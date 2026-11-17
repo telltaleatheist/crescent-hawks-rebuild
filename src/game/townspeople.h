@@ -91,6 +91,18 @@ public:
         }
     }
 
+    // DGROUP:315c back to right first, its count (315a) left as it is: what
+    // a 1e31:0006 step with last argument 0 (the fights' paths) does.
+    void clear_wander() { wobble_ = 0; }
+    int wander_count() const { return wobble_count_; }
+    // A map load places new people but keeps the pattern (DGROUP:315a/315c
+    // are only reset by a new game).
+    void keep_wander_from(const Townspeople& before) {
+        wobble_count_ = before.wobble_count_;
+        wobble_ = before.wobble_;
+    }
+    int wander_pattern() const { return wobble_; }
+
     const std::array<Walker, 8>& walkers() const { return walkers_; }
     std::array<Walker, 8>& walkers() { return walkers_; }
 

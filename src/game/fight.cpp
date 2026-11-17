@@ -1181,6 +1181,7 @@ Combat Town::combat_rules() {
         text_.print(line);
     };
     hooks.set_fg = [this](int colour) { text_.set_fg(colour); };
+    hooks.clear_wander = [this] { people_.clear_wander(); };
     hooks.select_box = [this] { text_.select_window(4); };
     hooks.clear_box = [this] {
         text_.select_window(4);

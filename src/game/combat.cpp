@@ -390,8 +390,9 @@ bool Combat::place_taken(int f, bool squash) {
 
 void Combat::step_toward(int f, std::uint16_t tx, std::uint16_t ty, int rel_x, int rel_y) {
     // The planner's paths never wobble (the townspeople's do: 1e31:0006's
-    // last argument).
+    // last argument), and each of their steps clears the shared pattern.
     const int wobble = 0;
+    if (hooks_.clear_wander) hooks_.clear_wander();
     int d = figs_.heading[std::size_t(f & 0x7f)];
     step_dx_ = step_dy_ = 0;
     const bool mech = (f & 0x7f) < 4 || (f >= 12 && f < 16);

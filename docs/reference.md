@@ -239,7 +239,18 @@ the grids (the townspeople's headings there are left as the last encounter set t
 7-10 go on north-west and north, three groups evaded, until map 2 is loaded; segments 11-14 reach
 map 2's only door on foot (docs/scripts.md, "After the raid"), with a flee and two evades, and end
 at its question; then the garage on foot (special 11, flag 18), which puts the party inside, and
-out again by its front door (special 1d, flag 18 cleared) towards map 3's jail.
+out again by its front door (special 1d, flag 18 cleared) towards map 3's jail. Before that,
+`chain_town_wait` idles 1300 passes inside map 2. Outdoors only steps draw, one each for the
+encounter check, on a single-cycle generator, so idling or a different step pattern only moves
+where the walk starts on the sequence: the walk north met five soldiers at a fixed draw that
+Jason could neither evade nor flee (Flee failed in rounds 1 and 2, then he was shot). Swept 0-2500
+idle passes (0-63 by 1, 100-1600 by 100, 1210-1290 by 10, 1700-2500 sparsely): up to 1270 the same
+fight comes, a step earlier per 11 passes; from 1280 its draw is used up in town and the walk
+meets only groups that can be evaded. 1300 leaves a margin of 20. Segments 15-17 then go north
+into the row of map 3's area and east along it. In segment 18 most step patterns meet three
+soldiers that can be neither evaded nor fled; two steps east then one up-right is in among map 3's
+buildings by then and comes to the Armor Shop's door instead. No there, then 23 steps inside the
+town to the jail's door (entrance 6), and in.
 `chain_orders_poked` is that fight up to the hand-back, then Next Unit to Rex and his orders: the
 person menu, Use Weapon (the override question, the target picker from the Wasp, Cancel), Scan
 Unit (Friends: the Chameleon and Rex's details; Enemies: "humans only" and the enemy person),

@@ -25,7 +25,9 @@ def original_state(path, fight=False):
     lines = ["state random %02x %02x %02x" % tuple(r),
              "state cbills %d" % struct.unpack("<i", m.read(far, 0xd370, 4))[0],
              # the townspeople's tick counters: the town's, a mission walk's
-             "state counters %d %d" % (m.word(m.ds, 0x57fe), m.word(m.ds, 0x5802))]
+             "state counters %d %d" % (m.word(m.ds, 0x57fe), m.word(m.ds, 0x5802)),
+             # 1e31:0006's wander pattern: its step count and its flip (docs/townspeople.md)
+             "state wander %d %d" % (m.word(m.ds, 0x315a), m.byte(m.ds, 0x315c))]
     for i in range(8):
         rec = 0xd390 + 0x1a * i
         heading = struct.unpack("b", m.read(heads, 0x3920 + 0x10 + i, 1))[0]
