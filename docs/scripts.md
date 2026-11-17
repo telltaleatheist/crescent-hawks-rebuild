@@ -183,6 +183,41 @@ Special 05's texts are imported from BTECH.EXE as `course.*` (docs/import.md).
   shown); a fix would need to know what the jump was meant to test.
 - **if_party_x** compares only x. No original script uses E7, so nothing shows the effect.
 
+## After the raid: what the scripts offer
+
+Read from the scripts' control flow (`tools/bld.py`) and the specials' code; not yet run in the
+rebuild except where a section above says so.
+
+**Map 11** (the ruined town, area 0xcc) has map 1's entrance table except entrance 0, which runs
+BARRACK2 (0x13) instead of TRAINING. But only entrance 0 has a position (0x0c11, 0xc009): the
+other fifteen are (0, 0), which no step lands on, so BARRACK2 is the only place the party can
+enter there. Its money stays as the raid left it, and town ticks still draw random numbers. What
+the same scripts offer where their entrances are open (map 1, and the other towns that use them):
+
+| place | what it offers | specials |
+|---|---|---|
+| BARRACK2 | one of two texts by the party count (special 14, flag 0e) | 0e |
+| CITADEL | the skill courses (special 4's prices, special 5) | 04, 05, 0c |
+| COMSTAR | the money and a list of three 32-bit amounts at F:d374 (special 6); menus over them (7, 8) | 06, 07, 08, 0c |
+| WEAPON | buying a weapon: special 0b takes the price (DG:4f44, by the choice) if the money covers it and sets flag 0b | 0a, 0b, 0c |
+| ARMOR | buying armour: special 09, the same with DG:4f26; specials 1f / 20 not read | 09, 0a, 0d, 0e, 1f, 20, 0c |
+| REPAIR | apprenticeship: alone, special 10 / 0f, a Tech course for 500 (Tech + 1 once, character byte 0x10 bit 0); with a party and flag 18, a recruit (`new_member 5`, flag 20 once, or Tech 3+ and a random bit). Repairs (12), the speed shop (13, 14: the upgrades, 19b8:0925) and ammunition (2c) need a 'Mech: special 11 counts the 'Mech records in use, special 1d (with flag 18) the letters at F:d452..d455 | 0a, 0c-0f, 10-14, 1d, 2c |
+| BARRACKS, LOUNGE | talk, and the flags of the Lounge's let-out (2d, 2e, 2f) | 0c |
+
+Special 0a prints the money (F:d370, 32-bit). At the end of the unpoked chain Jason has 170.
+None of these places pays the party: money comes from fights (scrap, 2.15) and the town's money
+step (docs/town_loop.md), whose 15 C-Bills come only in a town; the ruined town counts as outdoors
+(flag 04), where the step changes only the three amounts.
+
+**Where the story goes next.** The recruits are HOSPITAL (`new_member 6`; maps 2-9), REPAIR
+(`new_member 5`, which needs flag 18, set only by GARAGE: map 2) and JAIL (`new_member 4`; map 3).
+The only code that writes a new 'Mech record outside the fights and the shops is reached from
+ARENA's specials 21, 22 and 23 (`17dc:1c9b`, `17dc:1a26`, `17dc:1b41`) and PARTY's special 1e
+(`19b8:104e`), both on map 2 (area 0x8a: four areas north and two west of map 11). Map 3
+(area 0x7d), with the jail and mode 9, comes after that. The towns by area: 0x28 map 9, 0x4b 8,
+0x62 10, 0x66 13, 0x7d 3, 0x8a 2, 0xa6 7, 0xb9 4, 0xc2 5, 0xcc 1 (and 11), 0xd5 6
+(`tables.area_maps`).
+
 ## Not rebuilt yet
 
 - **EB/EC** read F:d451 and d450, which nothing rebuilt sets yet (0 in a new game); the

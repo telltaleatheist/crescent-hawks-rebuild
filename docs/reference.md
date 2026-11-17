@@ -223,6 +223,13 @@ no unpoked fight hurts him and lives. `chain_salvage_poked` adds Rex as characte
 fight (name number 1, attributes, Piloting 2, on foot, hit points; our own test values too) and
 walks to the same Wasp: Rex fights on foot as figure 5, and afterwards he is a pilot without a
 'Mech, so the salvage question comes, and Jason salvages the Wasp into record 1.
+`chain_town` (campaign tier) is the unpoked chain carried on from the ruined town towards map 2
+(docs/scripts.md, "After the raid"). It branches at `chain_raid_key_57`, so `chain_death` and the
+poked sequences keep their prefix. Map 11's shops cannot be entered, and of the idle counts tried
+there before leaving (0-255) none lets the walk to map 2 avoid every encounter in reach, so Jason
+flees those (2.7). With no idle the walk out is the chain's own (shared, not compared again); the
+first segment is `chain_death`'s encounter declined, the three questions, Flee from the orders menu,
+the escape, its key and the return to the position before the fight.
 `chain_orders_poked` is that fight up to the hand-back, then Next Unit to Rex and his orders: the
 person menu, Use Weapon (the override question, the target picker from the Wasp, Cancel), Scan
 Unit (Friends: the Chameleon and Rex's details; Enemies: "humans only" and the enemy person),

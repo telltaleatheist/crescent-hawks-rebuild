@@ -950,9 +950,33 @@ CHAIN_ORDERS_POKED_CASES = [dict(case, compare=False) for case in
     {"name": "chain_orders_round_3", "keys": "enter", "match": SCREEN, "fight": True},
 ]
 
+# The unpoked chain on from the ruined town (docs/scripts.md, "After the
+# raid"): branched at chain_raid_key_57 so chain_death and the poked
+# sequences keep their prefix. With no idle there (N = 0 in the sweep of
+# 0-255 idle passes) the walk out is the chain's own, so those cases are
+# shared. Jason, alone on foot, flees every encounter in reach (2.7: three
+# in four escape) on the way to map 2 (area 0x8a). Built a segment at a time.
+CHAIN_TOWN_CASES = [dict(case, compare=False) for case in
+                    CHAIN_CASES[:[c["name"] for c in CHAIN_CASES].index("chain_out_area") + 1]] + [
+    # Segment 1: chain_death's encounter (four soldiers in reach), declined,
+    # the computer not fighting, no messages, no graphics, then Flee from the
+    # orders menu: eluded, a key, and the party back where it was.
+    {"name": "chain_town_enc", "keys": "home", "match": SCREEN},
+    {"name": "chain_town_enc_no", "keys": "n", "match": SCREEN},
+    {"name": "chain_town_computer", "keys": "n", "match": SCREEN},
+    {"name": "chain_town_messages", "keys": "enter", "match": SCREEN},
+    {"name": "chain_town_graphics", "keys": "n", "match": SCREEN},
+    {"name": "chain_town_menu", "keys": "up enter", "match": SCREEN, "fight": True},
+    {"name": "chain_town_orders", "keys": "enter", "match": SCREEN, "fight": True},
+    {"name": "chain_town_flee", "keys": "up enter", "match": SCREEN, "fight": True},
+    {"name": "chain_town_eluded", "keys": "enter", "match": SCREEN},
+    {"name": "chain_town_back", "keys": "enter", "match": SCREEN},
+    {"name": "chain_town_back_2", "keys": "enter", "match": SCREEN},
+]
+
 # The long unpoked run: its own tier (`--campaign`, ctest label campaign).
 CAMPAIGN = {"chain", "chain_death", "chain_mech_poked", "chain_heal_poked", "chain_repair_poked",
-            "chain_salvage_poked", "chain_orders_poked"}
+            "chain_salvage_poked", "chain_orders_poked", "chain_town"}
 
 SEQUENCES = [("town", CASES, FULL_CASES, []), ("training", TRAINING_CASES, [], []),
              ("quiz", QUIZ_CASES, [], ["--show-quiz"]), ("mission", MISSION_CASES, MISSION_FULL_CASES, []),
@@ -977,6 +1001,7 @@ SEQUENCES = [("town", CASES, FULL_CASES, []), ("training", TRAINING_CASES, [], [
              ("chain_repair_poked", [], CHAIN_REPAIR_POKED_CASES, []),
              ("chain_salvage_poked", [], CHAIN_SALVAGE_POKED_CASES, []),
              ("chain_orders_poked", [], CHAIN_ORDERS_POKED_CASES, []),
+             ("chain_town", [], CHAIN_TOWN_CASES, []),
              ("handover", [], HANDOVER_CASES, [])]
 
 # The feeder (tools/capture/snap.asm, docs/reference.md) hands over a key at
