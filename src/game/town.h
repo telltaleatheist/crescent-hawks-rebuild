@@ -435,6 +435,9 @@ private:
         for (auto& r : m) r[0] = 0xff;
         return m;
     }();
+    // F:d452: the first bytes of 'Mech records 0-3 while they are set aside
+    // (mode 9, the garage); a letter means a 'Mech is held there.
+    std::array<std::uint8_t, 4> held_mechs_{};
     // F:c614: the sixteen character records.
     std::array<CharacterRecord, 16> characters_ = new_game_characters();
     FightFigures figs_;

@@ -13,7 +13,8 @@ Answering Yes at an entrance calls `17dc:0008(n)` with the map's place number:
    offset 0x205, loaded at F:4602; docs/formats/mtp.md). Numbers 0x12 and 0x16 and up are used
    as they are. On map 1, entrance 1 is the Citadel.
 3. Asks for the right game disk (1000:28cc). The rebuild drops this: there are no disks.
-4. **The training center's quiz.** For entrance 0, while flag 14 (d320) is 0 and no demo is
+4. **The training center's quiz.** For script 0 (the entrance already turned into its script, so
+   the training center only, not entrance 0 of every map), while flag 14 (d320) is 0 and no demo is
    playing (F:3938, F:458c), `1c67:08a8` runs first; if it returns nonzero, the place isn't
    entered at all. A failed quiz sets flag 14 to ff, and so does TRAINING.BLD as each mission
    starts; it counts down in the town's ticks, so the quiz comes back on the first visit after it

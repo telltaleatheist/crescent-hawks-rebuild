@@ -1288,7 +1288,8 @@ memory the rebuild holds (the next figure's orders), so it is kept like the othe
 
 ## 7. The copy-protection check
 
-`1c67:08a8` (FUN_1c67_08a8) runs on entering the training center (entrance 0) while flag 14 is 0 and
+`1c67:08a8` (FUN_1c67_08a8) runs on entering the training center (script 0: 17dc:0008 turns the entrance into its script
+before the test, so entrance 0 of another map, such as map 2's garage, does not run it) while flag 14 is 0 and
 no demo plays (docs/scripts.md, "Entering a place"). It is the original's copy protection: a quiz
 on the 'Mech parts pictured in the manual.
 

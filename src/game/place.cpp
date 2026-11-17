@@ -44,12 +44,13 @@ bool Town::visit_place(int entrance, KeySource& keys) {
     place_number_ = entrance;
     int file = entrance;
     if (entrance != 0x12 && entrance < 0x16) file = map_.place_scripts[std::size_t(entrance)];
-    // 1000:28cc asks for the game disk; there are no disks. Entrance 0 first
-    // runs the training center's quiz, 1c67:08a8, while flag 14 is clear and
+    // 1000:28cc asks for the game disk; there are no disks. Script 0 (the
+    // entrance is turned into its script first: the training center, not
+    // entrance 0 of any map) first runs the quiz, 1c67:08a8, while flag 14 is clear and
     // no demo plays (F:3938, F:458c). It has no check here (docs/rules.md,
     // rule 3; docs/combat.md 7): its draws are made, and with --show-quiz its
     // scene is shown.
-    if (entrance == 0 && flags_[flag::kQuizLock] == 0) {
+    if (file == 0 && flags_[flag::kQuizLock] == 0) {
         if (show_quiz_ && rules_) {
             if (!show_quiz(keys)) return false;
         } else {
@@ -323,6 +324,13 @@ bool Town::special(int n, KeySource& keys) {
     case 23:
         flags_[0x19] = anyone_hurt() ? 1 : 0;
         return true;
+    case 29: {
+        // 24d3:0e9b: flag 10 = how many of F:d452..d455 hold a letter A-Z.
+        int held = 0;
+        for (const auto b : held_mechs_) held += (b >= 'A' && b <= 'Z') ? 1 : 0;
+        flags_[0x10] = std::uint8_t(held);
+        return true;
+    }
     case 17: {
         // 24d3:0ca4: flag 10 = how many of 'Mech records 0-3 are in use.
         int in_use = 0;

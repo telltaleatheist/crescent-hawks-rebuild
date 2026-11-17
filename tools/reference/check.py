@@ -1057,6 +1057,15 @@ CHAIN_TOWN_CASES = [dict(case, compare=False) for case in
     {"name": "chain_town_garage_key", "keys": "enter", "match": SCREEN},
     {"name": "chain_town_garage_out", "keys": "up", "match": SCREEN},
     {"name": "chain_town_garage_out_2", "keys": "up", "match": SCREEN},
+    # Out by the garage's front door (entrance 0) towards map 3's jail, the
+    # recruit open to a party of one (docs/scripts.md): with flag 18 set,
+    # special 1d finds no 'Mech held, so flag 18 is cleared and the party is
+    # put outside the front door.
+    {"name": "chain_town_to_garage", "keys": "down down left left left", "match": SCREEN},
+    {"name": "chain_town_garage_door", "keys": "left", "match": SCREEN},
+    {"name": "chain_town_garage_2", "keys": "y", "match": SCREEN},
+    {"name": "chain_town_garage_2_key", "keys": "enter", "match": SCREEN},
+    {"name": "chain_town_outside", "keys": "left", "match": SCREEN},
 ]
 
 # The long unpoked run: its own tier (`--campaign`, ctest label campaign).
