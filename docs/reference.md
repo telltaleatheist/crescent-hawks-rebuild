@@ -294,6 +294,14 @@ It evades four groups in reach and ends at the Hospital's question after 516 key
 Search medical records, the nurse and the doctor, and new_member 6 (its wait after the scene's
 blocking read, so arm:4 as at REPAIR): Russ, riding in Rex's Commando; not the double agent on
 this draw (flag 26 still clear). Healing costs 25 and the party has 17, so it leaves.
+Then the jail (map 3 entrance 6), 20 keys from the Hospital (the planner's search, 176 runs).
+This walk found the step check's slots: with Rex in the Commando, the original checks Edward at
+the second slot's offset, not his own (docs/movement.md); chr asked at the jail a step early
+until that was fixed. Inside: ask the jailkeeper about Rex's friend (menu 0x1f, item 07dc), the
+scenes, and new_member 4 (arm:4 after the scene's read): Rick, on foot. On this draw he is the
+double agent: flags 24 = 0x1f, 25 = 4, 26 = 1, 27 = 1 on the original. The question about the
+impounded 'Mech gets No: Yes runs special 0x28, the jail break (mode 9, Jason alone on foot, not
+rebuilt). The party ends outside the jail.
 
 Open: a walk from map 3's jail door to its Hospital (entrance 1, 0d11,700b) stopped short of the
 door on both programs, so that Hospital has not been seen yet.

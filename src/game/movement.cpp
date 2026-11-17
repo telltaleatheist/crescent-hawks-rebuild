@@ -100,9 +100,15 @@ StepResult take_step(const formats::MtpMap& map, int map_number, const MapPositi
     // the tile under its feet, read from the window as the 'Mechs' are.
     bool asked = false;  // F:d55c: one question per turn
     const int limit = blocking_tile(map_number);
+    // The loop runs over the figures 4-11 that are active: 1000:0bd8 gives
+    // the k-th character on foot figure 4 + k at the k-th formation offset,
+    // so a character in a 'Mech leaves no gap. The entrance is matched at
+    // the figure's position (F:400c / F:403e + 2k) plus the step.
+    int k = 0;
     for (int i = 0; i < 8; ++i) {
         if (!party.present[i]) continue;
-        const int fx = tables.formation_x[std::size_t(i)] + step.dx, fy = tables.formation_y[std::size_t(i)] + step.dy;
+        const int slot = k++;
+        const int fx = tables.formation_x[std::size_t(slot)] + step.dx, fy = tables.formation_y[std::size_t(slot)] + step.dy;
         // The tile is read first (1000:1d9e), the entrances after: a place
         // entered here leaves the tile as it was before the place.
         const int under = tile(window_offset(from, fx, fy));

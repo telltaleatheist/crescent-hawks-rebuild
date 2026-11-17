@@ -63,8 +63,12 @@ It returns "blocked" or "free". In order:
      that tile number is at least DG:0150 the step is blocked. DG:0150 is 0x55 on every map but
      map 14, where it is 0x21 (`1000:2da8` sets it). Outdoors the window holds terrain, so the
      party walks on it as on the map.
-   The characters are those with an active figure 4-11 (F:4072): `1000:051b` makes the figure of
-   each character on foot active and clears the rest.
+   The loop runs over the active figures 4-11 (F:4072), not over the characters: `1000:051b`
+   makes the figure of each character on foot active and clears the rest, and `1000:0bd8` gives
+   the k-th character on foot figure 4 + k at the k-th offset above. A character in a 'Mech leaves
+   no gap: with Rex (character 1) in the Commando, Edward (character 2) is figure 5 at (0,-1),
+   not (0,1). The tile is read at that slot's offset; the entrance is matched at the figure's own
+   position (F:400c / F:403e + 2k) plus the step, which 0bd8 set to the same place.
 3. **The 'Mechs.** Only when no character was blocked. For each active 'Mech figure 0-3 (F:406a,
    also set by `051b`, for the 'Mechs of records 0-3), at its offset from the party in half-cells
    (DG:045c / 0474, `tables.mech_step_x/y`: (0,-2), (0,4), (3,1), (-3,1)) plus the step: two cells

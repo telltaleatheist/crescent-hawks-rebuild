@@ -598,6 +598,10 @@ bool Town::special(int n, KeySource& keys) {
         return true;
     case 30:
         return alley_fight(keys);  // game/fight.cpp
+    case 38:
+        // 24d3:13c6: the name the next recruit will get (F:d456).
+        print_id("character." + std::to_string(next_name_));
+        return true;
     case 46:
         // 24d3:0e2c: the held 'Mechs back in their records, then the crew
         // screen (docs/scripts.md).

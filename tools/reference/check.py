@@ -1268,6 +1268,24 @@ CHAIN_PARTY_CASES = [dict(case, compare=False) for case in
     {"name": "chain_party_hospital_recruit_key_2", "keys": "enter", "match": SCREEN},
     {"name": "chain_party_hospital_leave", "keys": "up", "match": SCREEN},
     {"name": "chain_party_hospital_out", "keys": "enter", "match": SCREEN},
+    # On to the jail (entrance 6): ask about Rex's friend (the jailkeeper's menu,
+    # item 07dc), the scenes, new_member 4 (arm:4 after the scene's read), and
+    # No at the impounded 'Mech's question: Yes runs special 0x28, mode 9.
+    {"name": "chain_party_to_jail", "keys": "down*13 end*7", "match": SCREEN},
+    {"name": "chain_party_jail", "keys": "y", "match": SCREEN},
+    {"name": "chain_party_jail_ask", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_jail_keeper", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_jail_cubicle", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_jail_rick", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_jail_rick_2", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_jail_recruit", "keys": "arm:4 enter", "match": SCREEN},
+    {"name": "chain_party_jail_recruit_key", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_jail_holocard", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_jail_keys", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_jail_barrier", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_jail_alarm", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_jail_no", "keys": "n", "match": SCREEN},
+    {"name": "chain_party_jail_out", "keys": "enter", "match": SCREEN},
 ]
 
 # The long unpoked run: its own tier (`--campaign`, ctest label campaign).

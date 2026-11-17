@@ -172,10 +172,17 @@ each one.
 | 12 | 24d3:0aea | ten places | "talk to others": `17dc:17b9`, below |
 | 14 | 24d3:0af2 | ten places, and after every visit | flag 0e = how many of the party records 1–7 are in use |
 | 23 | 24d3:0cf8 | healing (`1c31:000a`) | flag 19 = 1 if any party member's hit points differ from 10 x B, else 0 |
+| 30 | 19b8:104e | PARTY | the first companion joins and the alley fight (kind -1, combat.md 1.6) |
+| 36 | 24d3:13b2 | JAIL | prints the double agent's name: character F:d331's name (the `character.*` table) |
+| 37 | 24d3:139a | JAIL | the game is over: DG:014a = 0 and character record 0 emptied (byte 0 = ff); not rebuilt |
+| 38 | 24d3:13c6 | JAIL | prints the name the next recruit will get: name number F:d456 (scripts.md, "A new member") |
+| 39 | 24d3:13e6 | JAIL | the crew screen with argument 1: everyone on foot, every seat empty first (below); not rebuilt |
+| 40 | 24d3:13ec | JAIL | Jason alone on foot for the impounded 'Mech (`19b8:152f`, mode 9, combat.md); then flag 28 = 1 if the game goes on (DG:014a not 0); not rebuilt |
+| 46 | 24d3:0e2c | GARAGE | the held 'Mechs back and the crew screen (below) |
 | 43 | 24d3:157e | TRAINING | after mission 5 is won (+1672, with flag 2d = 1): townsperson 0 is put at the Lounge's entrance (MAP entrance 7; record +0/+2 and figure 16), inside (+9 = ff), its route 0x70 (last the Lounge, next entrance 0) and its target entrance 0, the Training Center. Talk to others in the Lounge lets it out (below) |
 | others | see the table above | the other places | read with those places |
 
-Specials 6–11, 13, 15–22 and 24–47 (but 43) belong to the other places and are read with them. The rebuild logs an
+Specials 6–11, 13, 15–22, 24–29, 31–35, 41, 42, 44, 45 and 47 belong to the other places and are read with them. The rebuild logs an
 unrebuilt special and goes on.
 
 Special 05's texts are imported from BTECH.EXE as `course.*` (docs/import.md).
