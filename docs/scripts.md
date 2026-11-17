@@ -224,6 +224,18 @@ anywhere is the west side at rows 27-31 (cells 0-5), and it reaches 25 cells and
 10, the second entrance of the 'Mech Garage (GARAGE, which sets flag 18). The rows 50-51 gap on the
 same side is a pocket closed by the compound's wall. The rest of the town is reached from inside.
 
+What map 2 offers Jason alone, inside (after the garage on foot, flag 18 set, 170 C-bills; every
+door is reachable from the rear exit, 24 to 100 steps; `if_flag` jumps when the flag is not 0):
+
+- HOSPITAL's recruit (menu item 3, 0623): flag 18 set goes to a refusal and back to the menu;
+  with it clear, special 0e must find a member after Jason. Alone, never.
+- REPAIR's recruit (0c1a): special 0e must find a member; alone it offers the Tech course (500).
+- ARENA (03a0): entering costs 250 (`if_cbills 0xfa`); the prize (`earn 0x1f4`) and the 'Mech
+  record specials 21-23 are all behind it.
+- JAIL (map 3) is the recruit open to Jason alone: special 0e with a member goes to 01fb
+  (special 25, end); alone it reaches the menu at 0277, whose item 07dc leads to `new_member 4`.
+  So the story's first recruit is on map 3, and map 2's recruits and arena come after it.
+
 ## Not rebuilt yet
 
 - **EB/EC** read F:d451 and d450, which nothing rebuilt sets yet (0 in a new game); the
