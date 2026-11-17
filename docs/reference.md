@@ -285,6 +285,15 @@ Then back onto the garage's door ("down up"), Yes, and Yes to the fee: 150 paid 
 flag 18 clear, the party put outside at 0a00,8039, and special 2e gives the Commando back and
 opens the crew screen (docs/scripts.md). Rex already pilots it from the alley, so Done (the last
 item) ends the screen at once.
+Then out to map 3's Hospital with the Commando. The on-foot route's first step north is
+blocked: moving up, the 'Mech's figure checks the cells two half-cells ahead and beside it
+(docs/movement.md), and the garage's edge is there. The planner's search, with chr judging each
+step, goes by the positions the on-foot route passed (097e,7058, 0a3e,7018, 0b2c,7018,
+0c6c,7018, 0d0c,700e), one at a time, best-first on the distance; bound 8000 runs, used 4564.
+It evades four groups in reach and ends at the Hospital's question after 516 keys. Inside:
+Search medical records, the nurse and the doctor, and new_member 6 (its wait after the scene's
+blocking read, so arm:4 as at REPAIR): Russ, riding in Rex's Commando; not the double agent on
+this draw (flag 26 still clear). Healing costs 25 and the party has 17, so it leaves.
 
 Open: a walk from map 3's jail door to its Hospital (entrance 1, 0d11,700b) stopped short of the
 door on both programs, so that Hospital has not been seen yet.

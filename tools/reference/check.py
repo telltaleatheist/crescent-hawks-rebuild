@@ -1235,6 +1235,39 @@ CHAIN_PARTY_CASES = [dict(case, compare=False) for case in
     {"name": "chain_party_crew", "keys": "enter", "match": SCREEN},
     {"name": "chain_party_crew_bar", "keys": "up", "match": SCREEN},
     {"name": "chain_party_crew_done", "keys": "enter", "match": SCREEN},
+    # With the Commando, out to map 3's Hospital (entrance 1, 0d11,700b): the
+    # on-foot route's first step north is blocked for the 'Mech's figure, so
+    # the planner's search (docs/reference.md) goes by that route's
+    # positions, evading four groups, and ends at the Hospital's question.
+    {"name": "chain_party_map3_walk_1", "keys": "home left home*10", "match": SCREEN},
+    {"name": "chain_party_map3_no_1", "keys": "n", "match": SCREEN},
+    {"name": "chain_party_map3_eluded_1", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_map3_back_1", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_map3_walk_2", "keys": "home*38 pgup*109 pgdn*45", "match": SCREEN},
+    {"name": "chain_party_map3_no_2", "keys": "n", "match": SCREEN},
+    {"name": "chain_party_map3_eluded_2", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_map3_back_2", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_map3_walk_3", "keys": "pgdn*10 pgup*55 pgdn*96 pgup*14", "match": SCREEN},
+    {"name": "chain_party_map3_no_3", "keys": "n", "match": SCREEN},
+    {"name": "chain_party_map3_eluded_3", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_map3_back_3", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_map3_walk_4", "keys": "pgup*27", "match": SCREEN},
+    {"name": "chain_party_map3_no_4", "keys": "n", "match": SCREEN},
+    {"name": "chain_party_map3_eluded_4", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_map3_back_4", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_map3_walk_5", "keys": "pgup*55 pgdn*11 pgup*21 pgdn pgup*2 right*5 pgup*2 home", "match": SCREEN},
+    # The Hospital: Search medical records (the third item), the nurse and the
+    # doctor, then new_member 6 (docs/scripts.md): its wait follows the
+    # scene's blocking read, so arm:4 as at REPAIR. Then leave (the last item).
+    {"name": "chain_party_hospital", "keys": "y", "match": SCREEN},
+    {"name": "chain_party_hospital_records", "keys": "down down", "match": SCREEN},
+    {"name": "chain_party_hospital_nurse", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_hospital_doctor", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_hospital_recruit", "keys": "arm:4 enter", "match": SCREEN},
+    {"name": "chain_party_hospital_recruit_key", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_hospital_recruit_key_2", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_hospital_leave", "keys": "up", "match": SCREEN},
+    {"name": "chain_party_hospital_out", "keys": "enter", "match": SCREEN},
 ]
 
 # The long unpoked run: its own tier (`--campaign`, ctest label campaign).
