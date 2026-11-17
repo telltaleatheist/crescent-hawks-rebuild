@@ -299,6 +299,65 @@ FUN_17dc_0d49. `a` is the number of enemy 'Mechs, `b` the number of enemy people
   first (2.4), one more story line per round (2.11), and fleeing only by walking out of the
   area (2.7).
 
+### 1.6 The alley fight: special 1e and kind -1
+
+PARTY's second visit (docs/scripts.md, "The first companion") ends in special 1e, which calls
+`19b8:104e` (FUN_19b8_104e). It sets everything up itself and then calls the fight routine with
+kind -1. Its steps, in order:
+
+1. The party position becomes 0a69,805e (this is the fight's entry position).
+2. The companion, character record 1: byte 0 = F:d456, which is then increased (the next name
+   number); byte 1 = 12, byte 2 = 9, byte 3 = 8, the seven skills (bytes 4-10) from DG:1e7a,
+   byte 0x0b = 7, byte 0x0c = 8 (on foot), bytes 0x0d and 0x0e = 0, byte 0x0f = 120 (hit
+   points), byte 0x10 = 0. Figure 5's sprite set F:d55e + 5 = 0.
+3. A 'Mech for him: the first slot k (0-3) whose letter F:d452 + k is ff. 'Mech record k is a
+   copy of template 3 (37e8:0467) with byte 0 = ff, so it is not in use; byte 0x79 = 1, the
+   letter F:d452 + k = 'C', the sprite set F:d55e + k = 0x92. With no free slot the search
+   stops at k = 4, which would write 'Mech record 4 and, as the "letter", F:d456 (the name
+   number). Kept, not reached on our routes.
+4. The townspeople's positions (figures 16-23) are saved in their records (F:d390 + 0x1a i,
+   +0 and +2), as the fight routine does for kind 0 (2.1).
+5. Enemy 'Mech records 4-7 and character records 8-15: byte 0 = ff.
+6. All 24 figures: destroyed and active words 0, x = y = ffff. Then figures 4 and 5 (Jason and
+   the companion on foot) get active = 1, and their computer-control flags F:3994 + 4/5 = 0.
+7. Three draws: the base x = 0a72 + (r & 1), the base y = 805d + (r & 1), and the last record
+   = 10 + (r & 3), so records 8 up to 9-12: two to five soldiers.
+8. For each soldier, record i (from 8) and figure i + 8 (the townspeople's figures 16-20):
+   - record byte 0 = 0 (a name number of 0), byte 0x0c = 8 (on foot);
+   - figure: sprite set F:d55e + (i + 8) = fe, walking frame F:409a + (i + 8) = 0x1c, figure
+     script DG:01f6 + 4(i + 8) = 37e8:02e0, heading F:3920 and facing F:396c = 6, active = 1;
+     x = base x + DG:1e7a[i], y = base y + DG:1e82[i] (fixed offsets: a short block of
+     three soldiers by two rows);
+   - six draws: record bytes 4-9 = r & 1 each; then byte 1 = 2d6 (`1000:19dd`) and byte 0x0f
+     = 10 x byte 1; then byte 0x0b = r mod 8.
+   Bytes 2, 3, 0x0a, 0x0d, 0x0e and 0x10 are not written: they keep what the last fight left in
+   that record.
+9. `203b:000a(-1)`.
+
+How kind -1 goes through the fight routine. The routine tests the kind 16 times, in 14 places;
+-1 is "not 0" where it tests for 0, and "below" where it compares, so it takes kind 0's way
+in some places and kinds 1-3's in others. The kind is not stored anywhere else.
+
+| where | the test | kind -1 |
+|---|---|---|
+| 203b:005c | kind 0 saves the townspeople's positions (2.1) | no (step 4 above did it) |
+| 203b:0116 | kind 0 clears every figure (2.1) | no (step 6 above did it) |
+| 203b:02db | kind 0 builds the encounter and tests the reach (2.3) | no: an enemy is "reached" at once |
+| 203b:0476 | any other kind has an enemy present | yes: it always fights, no Attacking-force box, no Engage question |
+| 203b:04e6 | kind 2 draws the view on the party (2.4) | no |
+| 203b:0680 | kinds 2 and 3 cannot flee (2.7) | it can flee, with the same draw |
+| 203b:06cb | escaped in kinds 1-3 sets F:3992 (2.7) | not set |
+| 203b:087b | the round's argument, 1 for kinds 1-3 (3) | 0, as kind 0 |
+| 203b:0d7c | kind 0's enemy people run (2.10) | no: the soldiers never run |
+| 203b:0ef6 | kind 1 ends when figure 0 is gone (2.8) | no |
+| 203b:0f13 | kind 2 ends when the Arena is lost (2.8) | no |
+| 203b:1051 | kinds below 1 and kind 3 go on to the after-fight steps (2.12) | yes: the win text, 2.15, healing, or "eluded" |
+| 203b:12f1 | kinds below 1 and kind 3: "You return to where you were..." and the walk back (2.12) | yes, to 0a69,805e |
+| 203b:1388 | kind 1: "You should return to base now." | not reached (kinds 1-2 only) |
+
+So the alley fight runs like a won or fled random encounter, with no encounter box: the computer
+question first (2.4), Flee allowed, and kind 0's ending, which walks the party back to 0a69,805e.
+
 ## 2. The fight routine `203b:000a`
 
 FUN_203b_000a, 5240 bytes. No return value.
