@@ -281,6 +281,10 @@ against the sixth, two soldiers, after 34,352 passes of waiting in all: ten roun
 from their pockets (167), and two weapons offered (17dc:15e6). Enter alone would never end the
 offer: Jason takes the second weapon and his first comes back to him, and round again; the case
 gives the second to Edward instead. Then the healing and the walk back.
+Then back onto the garage's door ("down up"), Yes, and Yes to the fee: 150 paid (17 left),
+flag 18 clear, the party put outside at 0a00,8039, and special 2e gives the Commando back and
+opens the crew screen (docs/scripts.md). Rex already pilots it from the alley, so Done (the last
+item) ends the screen at once.
 
 Open: a walk from map 3's jail door to its Hospital (entrance 1, 0d11,700b) stopped short of the
 door on both programs, so that Hospital has not been seen yet.

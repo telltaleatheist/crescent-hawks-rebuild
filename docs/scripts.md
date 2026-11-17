@@ -194,6 +194,54 @@ Special 05's texts are imported from BTECH.EXE as `course.*` (docs/import.md).
    name from the map, `talk.end`), then a key. Outdoors it is a random rumour instead (not
    rebuilt: there are no townspeople outdoors yet).
 
+### The crew screen (BTECH.EXE 1c67:0002)
+
+Who pilots and who rides each 'Mech. 'Mech records 0-3 (byte 0 not ff) have a pilot (byte 0x79)
+and a rider (byte 0x7a), each a character record or ff; character byte 0x0c names the 'Mech a
+character is in (8: on foot). Its argument says where to start: 0 rebuilds each character's byte
+0x0c from the seats (pilot and rider of every 'Mech in use); anything else first puts everyone on
+foot and empties every seat.
+
+Then, until the player is done:
+1. Window 6, cleared and framed, colour from `1000:28a2`: the heading
+   (DG:2622). Menu 23's first row is the cursor row. For each character record in use, in order:
+   his name, then " on foot" (DG:2643), or a space, the 'Mech's name (the record's first 19
+   bytes, trailing spaces trimmed) and " pilot" (DG:264d) or " rider" (DG:2655). Then "Done"
+   (DG:265d); menu 23 gets as many items as there are characters, plus one.
+2. From row 10, for each 'Mech in use: its name, then "Pilot:" (DG:2663) and the pilot's name or
+   "None" (DG:2670), "Rider:" (DG:2675) and the rider's or "None" (DG:2682), and a line end
+   (`24d3:181e`). The names of the people are in colour 2 and the labels in 15 (colour codes
+   in the strings); after each 'Mech the colour is set to 15. So the first 'Mech's name is in
+   step 1's light green and the others in white; on CGA (F:4fba = 0) each is in colour 1.
+3. Menu 23 (`2656:0b5e`).
+4. **Done**: every 'Mech in use with a pilot ends the screen. Otherwise, in window 4:
+   that not every 'Mech has a pilot (DG:2687). If fewer characters can pilot (Piloting,
+   byte 8, not 0) than there are 'Mechs: a pause and a key, DG:26af, a key, DG:26ed (the
+   `24d3:17ea` box) and the yes/no question (`1000:1a13`). Yes abandons each 'Mech with no
+   pilot (byte 0 = ff, anyone in it put on foot). Either way the screen goes round again, and
+   Done ends it once every 'Mech left has a pilot. With enough pilots: DG:271e (assign a
+   pilot to each) and a key, and round again.
+5. **A character**: in window 4, his name, " is " (DG:2736), "not " (DG:273b, after the colour
+   call) when his Piloting is 0, and DG:2740 (the end of "is (not) a qualified pilot"). Window 3: the vehicle
+   question (DG:275b), then each 'Mech in use's name and "None" (DG:2775); menu 3 gets one
+   item per 'Mech, plus one. He is taken out of every seat first. "None": on foot. A 'Mech: the
+   rider's seat, unless he can pilot; then the pilot's seat, but if the 'Mech has a pilot,
+   the question whether to make him the pilot (DG:277a) and No gives the rider's seat. Whoever had the
+   seat: a rider goes on foot; a pilot becomes the rider, and the rider he displaces goes on
+   foot. Then the seat and his byte 0x0c are set.
+   **The double agent's tell**: if flag 27 (F:d333) is set and he is the agent (F:d331), the
+   message box (`24d3:17c6`), DG:279d, his name and DG:27ae (a remark that he seems untrustworthy in a cockpit), and a key.
+6. Window 4 is cleared, and round again.
+
+When it ends: the held 'Mech letters F:d452-d455 are all ff, and flag 18 (F:d324) is 0.
+
+Its callers: special 2e (24d3:0e2c), after GARAGE's fee, with 0: 'Mech records 0-3 take back
+their held letters (byte 0 = F:d452 + i), the sprite bases F:d55e + i are 0 for an 'L' and 0x92
+otherwise, then the screen. And the Space command menu's second item (1000:2c50, `1000:4d57`):
+if none of the nine blocks around the party (P:07a4) has bit 0x80, the screen with 0, the panel
+(`1000:4cac(1)`) and window 4 cleared; otherwise DG:0ace in the message box (dismounting near a
+town is refused) and a key.
+
 ## Original quirks
 
 - **WEAPON's unreached block.** A `goto 0220` at 015d always jumps over 0160–021f, which has

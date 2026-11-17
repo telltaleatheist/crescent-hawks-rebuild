@@ -1226,6 +1226,15 @@ CHAIN_PARTY_CASES = [dict(case, compare=False) for case in
     {"name": "chain_party_offer_2", "keys": "down down enter", "match": SCREEN},
     {"name": "chain_party_healing", "keys": "enter", "match": SCREEN},
     {"name": "chain_party_return", "keys": "enter", "match": SCREEN},
+    # The fee paid: flag 18 clear, the party outside at 0a00,8039, then
+    # special 2e gives the 'Mechs back and the crew screen (docs/scripts.md).
+    # Rex already pilots the Commando, so Done (the last item) ends it.
+    {"name": "chain_party_fee_door", "keys": "down up", "match": SCREEN},
+    {"name": "chain_party_fee", "keys": "y", "match": SCREEN},
+    {"name": "chain_party_fee_pay", "keys": "y", "match": SCREEN},
+    {"name": "chain_party_crew", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_crew_bar", "keys": "up", "match": SCREEN},
+    {"name": "chain_party_crew_done", "keys": "enter", "match": SCREEN},
 ]
 
 # The long unpoked run: its own tier (`--campaign`, ctest label campaign).

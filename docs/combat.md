@@ -848,6 +848,10 @@ Otherwise, while w is not 0:
    old weapon becomes w, and the loop offers it next: so the old one goes round until someone
    is given a 0 (no weapon) or it is dropped. A member who already had w gets w again, and w is
    offered again.
+For the player: the menu starts on the member last chosen, so Enter after Enter gives every
+weapon to the same member, and when he already had a found weapon the two go back and forth
+for ever. Choosing someone else, or Drop it, ends it. Seen on the original (docs/reference.md,
+chain_party); this is how the offer works, not a fault in it, so it is not in the bug list.
 
 **Healing** (`1c31:000a`, FUN_1c31_000a; its argument is a doctor's level, 0 after a fight). With
 flag 29 set it only opens the message box with "Your characters need more time to recover."

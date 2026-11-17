@@ -321,6 +321,194 @@ bool Town::new_member(int skill, KeySource& keys) {
     return true;
 }
 
+// BTECH.EXE 1c67:0002 (Ghidra FUN_1c67_0002)
+// The crew screen: who pilots and who rides each 'Mech, until Done finds
+// every 'Mech piloted (docs/scripts.md, "The crew screen").
+bool Town::crew_screen(int start, KeySource& keys) {
+    constexpr std::size_t kPilotSeat = 0x79, kRiderSeat = 0x7a;
+    const auto in_use = [this](int m) { return mechs_[std::size_t(m)][0] != character::kEmpty; };
+    const auto can_pilot = [this](int c) { return characters_[std::size_t(c)][character::kSkills + 4] != 0; };
+    const auto stop = [this] {
+        place_open_ = true;
+        return false;
+    };
+    if (start == 0) {
+        for (int m = 0; m < 4; ++m) {
+            if (!in_use(m)) continue;
+            for (const auto seat : {kPilotSeat, kRiderSeat}) {
+                const auto c = mechs_[std::size_t(m)][seat];
+                if (c != character::kEmpty) characters_[c][character::kMech] = std::uint8_t(m);
+            }
+        }
+    } else {
+        for (auto& c : characters_) c[character::kMech] = character::kOnFoot;
+        for (int m = 0; m < 4; ++m) mechs_[std::size_t(m)][kPilotSeat] = mechs_[std::size_t(m)][kRiderSeat] = character::kEmpty;
+    }
+    const auto name = [this](int c) { return "character." + std::to_string(characters_[std::size_t(c)][character::kName]); };
+    const auto mech_name = [this](int m) {
+        if (const auto id = mech_name_id(m)) print_id(*id);
+        else log_.push_back("a 'Mech record with no template's name");
+    };
+    for (;;) {
+        bool done = false;
+        text_.select_window(6);
+        clear_window();
+        text_.frame(0);
+        text_.set_fg(10);  // 1000:28a2
+        print_id("crew.heading");
+        menus_[23].first_row = text_.window().row;  // F:0202
+        std::vector<int> people;
+        for (int c = 0; c < 8; ++c) {
+            const auto& r = characters_[std::size_t(c)];
+            if (r[character::kName] == character::kEmpty) continue;
+            people.push_back(c);
+            print_id(name(c));
+            const int m = std::int8_t(r[character::kMech]);
+            if (m == character::kOnFoot) {
+                print_id("crew.on_foot");
+            } else {
+                // A space and the 'Mech's name, its trailing spaces cut.
+                text_.print(" ");  // 1c67:0795 puts a space before the copy
+                if (const auto id = mech_name_id(m)) {
+                    std::string n = lookup(texts_, *id);
+                    while (!n.empty() && n.back() == ' ') n.pop_back();
+                    text_.print(n);
+                } else {
+                    log_.push_back("a 'Mech record with no template's name");
+                }
+                print_id(mechs_[std::size_t(m)][kPilotSeat] == c ? "crew.pilot" : "crew.rider");
+            }
+        }
+        print_id("crew.done");
+        menus_[23].items = int(people.size()) + 1;  // F:0206
+        text_.set_cursor(text_.window().col, 10);  // F:374e
+        for (int m = 0; m < 4; ++m) {
+            if (!in_use(m)) continue;
+            mech_name(m);
+            print_id("crew.pilot_label");
+            const auto p = mechs_[std::size_t(m)][kPilotSeat];
+            print_id(p == character::kEmpty ? "crew.no_pilot" : name(p));
+            print_id("crew.rider_label");
+            const auto r = mechs_[std::size_t(m)][kRiderSeat];
+            print_id(r == character::kEmpty ? "crew.no_rider" : name(r));
+            text_.set_fg(15);
+            print_id("talk.line_end");  // 24d3:181e
+        }
+        const auto chosen = menu(23, keys);
+        if (!chosen) return stop();
+        if (*chosen == int(people.size())) {
+            // Done.
+            done = true;
+            for (int m = 0; m < 4; ++m)
+                if (in_use(m) && mechs_[std::size_t(m)][kPilotSeat] == character::kEmpty) done = false;
+            if (!done) {
+                text_.select_window(4);
+                clear_window();
+                print_id("crew.not_all");
+                int pilots = 0, mechs = 0;
+                for (const int c : people) pilots += can_pilot(c) ? 1 : 0;
+                for (int m = 0; m < 4; ++m) mechs += in_use(m) ? 1 : 0;
+                if (pilots < mechs) {
+                    if (!read_key(keys)) return stop();  // 273d:086a, 273d:0259
+                    clear_window();
+                    print_id("crew.abandon_warning");  // 24d3:17ea
+                    if (!read_key(keys)) return stop();
+                    clear_window();
+                    print_id("crew.abandon_question");  // 24d3:17ea
+                    const auto yes = yes_no(true, keys);  // 1000:1a13
+                    if (!yes) return stop();
+                    if (*yes) {
+                        for (int m = 0; m < 4; ++m) {
+                            if (!in_use(m) || mechs_[std::size_t(m)][kPilotSeat] != character::kEmpty) continue;
+                            mechs_[std::size_t(m)][0] = character::kEmpty;
+                            for (auto& c : characters_)
+                                if (c[character::kMech] == m) c[character::kMech] = character::kOnFoot;
+                        }
+                    }
+                } else {
+                    print_id("crew.assign_each");  // 24d3:17ea
+                    if (!read_key(keys)) return stop();
+                }
+            }
+        } else {
+            // A character: which 'Mech, and which seat.
+            const int c = people[std::size_t(*chosen)];
+            const bool pilot = can_pilot(c);
+            text_.select_window(4);
+            clear_window();
+            text_.set_fg(15);
+            print_id(name(c));
+            print_id("crew.is");
+            if (!pilot) {
+                text_.set_fg(10);  // 1000:28a2
+                print_id("crew.not");
+            }
+            print_id("crew.qualified");
+            text_.select_window(3);
+            clear_window();
+            print_id("crew.which_vehicle");
+            menus_[3].first_row = text_.window().row;  // F:00c2
+            std::vector<int> vehicles;
+            for (int m = 0; m < 4; ++m) {
+                if (!in_use(m)) continue;
+                mech_name(m);  // its padding wraps the line
+                vehicles.push_back(m);
+            }
+            print_id("crew.no_vehicle");
+            menus_[3].items = int(vehicles.size()) + 1;  // F:00c6
+            for (int m = 0; m < 4; ++m) {
+                for (const auto seat : {kPilotSeat, kRiderSeat})
+                    if (mechs_[std::size_t(m)][seat] == c) mechs_[std::size_t(m)][seat] = character::kEmpty;
+            }
+            const auto v = menu(3, keys);
+            if (!v) return stop();
+            if (*v == int(vehicles.size())) {
+                characters_[std::size_t(c)][character::kMech] = character::kOnFoot;
+            } else {
+                const int m = vehicles[std::size_t(*v)];
+                auto& mech = mechs_[std::size_t(m)];
+                std::size_t seat = kRiderSeat;
+                if (pilot) {
+                    seat = kPilotSeat;
+                    if (mech[kPilotSeat] != character::kEmpty) {
+                        clear_window();
+                        print_id("crew.as_pilot");
+                        const auto yes = yes_no(true, keys);  // 1000:1a13
+                        if (!yes) return stop();
+                        if (!*yes) seat = kRiderSeat;
+                    }
+                }
+                const auto had = mech[seat];
+                if (had != character::kEmpty) {
+                    if (seat == kPilotSeat) {
+                        if (mech[kRiderSeat] != character::kEmpty) characters_[mech[kRiderSeat]][character::kMech] = character::kOnFoot;
+                        mech[kRiderSeat] = had;
+                    } else {
+                        characters_[had][character::kMech] = character::kOnFoot;
+                    }
+                }
+                // The double agent's tell (flag 27, F:d331).
+                if (flags_[0x27] != 0 && flags_[0x25] == c) {
+                    open_message_box();  // 24d3:17c6
+                    print_id("crew.uneasy");
+                    print_id(name(c));
+                    print_id("crew.uneasy_end");  // 24d3:17ea
+                    if (!read_key(keys)) return stop();
+                }
+                mech[seat] = std::uint8_t(c);
+                characters_[std::size_t(c)][character::kMech] = std::uint8_t(m);
+            }
+        }
+        if (!done) {
+            clear_window();  // whichever window is current
+            continue;
+        }
+        for (auto& h : held_mechs_) h = character::kEmpty;
+        flags_[0x18] = 0;
+        return true;
+    }
+}
+
 // BTECH.EXE 24d3:0004 (Ghidra FUN_24d3_0004), the cases the Citadel uses.
 bool Town::special(int n, KeySource& keys) {
     switch (n) {
@@ -410,6 +598,14 @@ bool Town::special(int n, KeySource& keys) {
         return true;
     case 30:
         return alley_fight(keys);  // game/fight.cpp
+    case 46:
+        // 24d3:0e2c: the held 'Mechs back in their records, then the crew
+        // screen (docs/scripts.md).
+        for (int i = 0; i < 4; ++i) {
+            mechs_[std::size_t(i)][0] = held_mechs_[std::size_t(i)];
+            figs_.sprite_base[std::size_t(i)] = mechs_[std::size_t(i)][0] == 'L' ? 0 : 0x92;
+        }
+        return crew_screen(0, keys);
     case 29: {
         // 24d3:0e9b: flag 10 = how many of F:d452..d455 hold a letter A-Z.
         int held = 0;
