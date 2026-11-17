@@ -318,6 +318,7 @@ private:
     void set_map_cell(std::size_t index, int tile, bool rebuild = true);
     void place_mission(int mechs, int people);
     bool fight(int kind, KeySource& keys);
+    bool alley_fight(KeySource& keys);
     void fight_ends();
     bool random_encounter(KeySource& keys);
     bool place_encounter();
@@ -437,7 +438,9 @@ private:
     }();
     // F:d452: the first bytes of 'Mech records 0-3 while they are set aside
     // (mode 9, the garage); a letter means a 'Mech is held there.
-    std::array<std::uint8_t, 4> held_mechs_{};
+    std::array<std::uint8_t, 4> held_mechs_ = {0xff, 0xff, 0xff, 0xff};  // ff at a new game (1000:4dc7)
+    // F:d456: the next character name number, 1 at a new game (1000:4ebc).
+    std::uint8_t next_name_ = 1;
     // F:c614: the sixteen character records.
     std::array<CharacterRecord, 16> characters_ = new_game_characters();
     FightFigures figs_;

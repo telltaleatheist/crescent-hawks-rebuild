@@ -331,6 +331,8 @@ bool Town::special(int n, KeySource& keys) {
     case 23:
         flags_[0x19] = anyone_hurt() ? 1 : 0;
         return true;
+    case 30:
+        return alley_fight(keys);  // game/fight.cpp
     case 29: {
         // 24d3:0e9b: flag 10 = how many of F:d452..d455 hold a letter A-Z.
         int held = 0;

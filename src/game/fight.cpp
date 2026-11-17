@@ -312,6 +312,83 @@ void Town::place_mission(int mechs, int people) {
     }
 }
 
+// BTECH.EXE 19b8:104e (Ghidra FUN_19b8_104e), special 1e (docs/combat.md 1.6)
+// PARTY's alley: the first companion joins, then two to five soldiers on
+// foot attack, a fight of kind -1.
+bool Town::alley_fight(KeySource& keys) {
+    position_ = {0x0a69, 0x805e};
+    // The companion, record 1.
+    auto& rex = characters_[1];
+    rex[character::kName] = next_name_++;
+    rex[character::kB] = 12;
+    rex[character::kD] = 9;
+    rex[character::kC] = 8;
+    for (int i = 0; i < character::kSkillCount; ++i)
+        rex[std::size_t(character::kSkills + i)] = std::uint8_t(tables_.alley_companion_skills[std::size_t(i)]);
+    rex[character::kWeapon] = 7;
+    rex[character::kMech] = character::kOnFoot;
+    rex[character::kArmourType] = 0;
+    rex[character::kArmour] = 0;
+    rex[character::kHitPoints] = 120;
+    rex[0x10] = 0;
+    figs_.sprite_base[5] = 0;
+    // His 'Mech, held: the first free letter slot (k = 4 with none free
+    // would write past them; not reached).
+    int k = 0;
+    while (k < 4 && held_mechs_[std::size_t(k)] != 0xff) ++k;
+    if (k < 4 && rules_ && rules_->mechs.size() > 3) {
+        mechs_[std::size_t(k)] = rules_->mechs[3].record;
+        held_mechs_[std::size_t(k)] = 'C';
+        mechs_[std::size_t(k)][0] = 0xff;
+        mechs_[std::size_t(k)][0x79] = 1;
+        figs_.sprite_base[std::size_t(k)] = 0x92;
+    } else {
+        log_.push_back("the alley companion's 'Mech with no free slot: not rebuilt");
+    }
+    // The townspeople's places kept in their records; the enemy records
+    // emptied; every figure emptied, then Jason and the companion active.
+    people_.leave_for_fight();
+    townspeople_away_ = true;
+    for (int m = 4; m < 8; ++m) mechs_[std::size_t(m)][0] = 0xff;
+    for (int c = 8; c < 16; ++c) characters_[std::size_t(c)][character::kName] = character::kEmpty;
+    for (int f = 0; f < FightFigures::kCount; ++f) {
+        figs_.destroyed[std::size_t(f)] = false;
+        figs_.active[std::size_t(f)] = 0;
+        figs_.x[std::size_t(f)] = figs_.y[std::size_t(f)] = 0xffff;
+    }
+    figs_.active[4] = figs_.active[5] = 1;
+    figs_.computer[4] = figs_.computer[5] = false;
+    // The soldiers: records 8 to 9-12, figures 16-20.
+    const int base_x = 0x0a72 + (random_.next() & 1);
+    const int base_y = 0x805d + (random_.next() & 1);
+    const int last = 10 + (random_.next() & 3);
+    for (int c = 8; c < last; ++c) {
+        const int f = c + 8;
+        auto& r = characters_[std::size_t(c)];
+        r[character::kName] = 0;
+        r[character::kMech] = character::kOnFoot;
+        figs_.sprite_base[std::size_t(f)] = 0xfe;
+        animation_.set_frame(f, 0x1c);
+        animation_.start_script(f, 0x2e0);
+        figs_.heading[std::size_t(f)] = 6;
+        people_.walkers()[std::size_t(f - 16)].heading = 6;  // one table (F:3920)
+        animation_.set_direction(f, 6);
+        figs_.active[std::size_t(f)] = 1;
+        figs_.x[std::size_t(f)] = std::uint16_t(base_x + tables_.alley_offset_x[std::size_t(c - 8)]);
+        figs_.y[std::size_t(f)] = std::uint16_t(base_y + tables_.alley_offset_y[std::size_t(c - 8)]);
+        for (int i = 0; i < 6; ++i) r[std::size_t(character::kSkills + i)] = std::uint8_t(random_.next() & 1);
+        r[character::kB] = std::uint8_t(two_d6(random_));
+        r[character::kHitPoints] = std::uint8_t(10 * r[character::kB]);
+        r[character::kWeapon] = std::uint8_t(random_.next() % 8);
+    }
+    log_.push_back("the alley fight: " + std::to_string(last - 8) + " soldiers");
+    // 2.1, 3: the window's nine block values, for the after-fight steps.
+    const auto& blocks = terrain_.held_window(window_at_).blocks;
+    for (std::size_t i = 0; i < encounter_blocks_.size(); ++i) encounter_blocks_[i] = std::uint8_t(blocks[i]);
+    encounter_entry_ = position_;
+    return fight(-1, keys);
+}
+
 // BTECH.EXE 203b:000a (Ghidra FUN_203b_000a), a fight of kind 1 (a training
 // mission) or 0 (a random encounter) up to its first orders menu: for kind 1
 // the party's 'Mechs placed around the party (kind 0 has placed its figures
@@ -341,8 +418,22 @@ bool Town::fight(int kind, KeySource& keys) {
         ++figs_.active[std::size_t(k)];
         ++k;
     }
-    for (int c = 0; c < 8; ++c)
-        if (on_foot(c)) log_.push_back("a character on foot in a fight: not rebuilt");
+    if (kind == -1) {
+        // 2.2: the characters on foot at the formation's places, before
+        // the 'Mechs in the program; no 'Mech is in use in the alley.
+        int p = 0;
+        for (int c = 0; c < 8; ++c) {
+            if (!on_foot(c)) continue;
+            const int f = 4 + c;
+            figs_.x[std::size_t(f)] = move_x(at.x, tables_.foot_formation_x[std::size_t(p)]);
+            figs_.y[std::size_t(f)] = move_y(at.y, tables_.foot_formation_y[std::size_t(p)]);
+            ++figs_.active[std::size_t(f)];
+            ++p;
+        }
+    } else {
+        for (int c = 0; c < 8; ++c)
+            if (on_foot(c)) log_.push_back("a character on foot in a fight: not rebuilt");
+    }
     }
 
     // F:009e = 0; then 15ab:0b5e: "Do you want the computer to fight for
@@ -1373,7 +1464,7 @@ bool Town::fight_rounds(int kind, KeySource& keys) {
             place_open_ = true;
             return false;
         }
-    } else if (kind == 0) {
+    } else if (kind == 0 || kind == -1) {
         return encounter_end(fled_how == 0, keys);
     } else if (kind != 1) {
         log_.push_back("the ending of a fight of kind " + std::to_string(kind) + ": not rebuilt");

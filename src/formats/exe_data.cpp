@@ -110,6 +110,11 @@ constexpr std::array kDos103 = {
     ExeSpan{ExeSpan::Kind::Table, "tables.encounter_weapons", 0x46db, 0x2cf4, 22, "e715fbca48ead8b7"},
     ExeSpan{ExeSpan::Kind::Table, "tables.heal_dice", 0x46db, 0x2602, 32, "cab6c5404e723ff5"},
     ExeSpan{ExeSpan::Kind::Table, "tables.foot_formation_x", 0x46db, 0x3a16, 8, "7edd3039cea710f9"},
+    // 19b8:104e's tables (docs/combat.md 1.6): the companion's skills, then
+    // the alley soldiers' places (read from DG:1e7a + i and DG:1e82 + i, i 8-12).
+    ExeSpan{ExeSpan::Kind::Table, "tables.alley_companion_skills", 0x46db, 0x1e7a, 7, "8e861ba75d1288db"},
+    ExeSpan{ExeSpan::Kind::Table, "tables.alley_offset_x", 0x46db, 0x1e82, 5, "9c8526f0819fb2ba"},
+    ExeSpan{ExeSpan::Kind::Table, "tables.alley_offset_y", 0x46db, 0x1e8a, 5, "769b52acf79c621b"},
     ExeSpan{ExeSpan::Kind::Table, "tables.foot_formation_y", 0x46db, 0x3a1e, 8, "54a0cc86c63b8864"},
     ExeSpan{ExeSpan::Kind::Table, "tables.terrain_templates", 0x2c6c, 0x0c1d, 1024, "c5cddf08c0924d94"},
     ExeSpan{ExeSpan::Kind::Table, "tables.plain_block", 0x2c6c, 0x209d, 64, "e3a878f25dc4ae8e"},

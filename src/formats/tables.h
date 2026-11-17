@@ -125,6 +125,9 @@ struct Tables {
     std::array<int, 32> heal_dice{};             // DG:2602: healing by skill s (0-7) and care c (1-4) at 4s + c - 1: d6 count, x multiplier
 
     std::array<int, 8> foot_formation_x{};       // DG:3a16: the k-th character on foot's half-cells from the party in a fight
+    std::array<int, 7> alley_companion_skills{}; // DG:1e7a: the alley companion's seven skills (19b8:104e)
+    std::array<int, 5> alley_offset_x{};         // DG:1e82: the alley soldiers' half-cells from the base x, records 8-12
+    std::array<int, 5> alley_offset_y{};         // DG:1e8a: and from the base y
     std::array<int, 8> foot_formation_y{};       // DG:3a1e
     std::array<int, 1024> terrain_templates{};   // 2c6c:0c1d: 16 blocks of 8x8, one per neighbour mask
     std::array<int, 64> plain_block{};           // 2c6c:209d: the block every type-0x10 block is

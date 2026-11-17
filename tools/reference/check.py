@@ -1157,6 +1157,10 @@ CHAIN_PARTY_CASES = [dict(case, compare=False) for case in
     {"name": "chain_party_scene_11", "keys": "enter", "match": SCREEN},
     {"name": "chain_party_scene_12", "keys": "enter", "match": SCREEN},
     {"name": "chain_party_scene_13", "keys": "enter", "match": SCREEN},
+    # Special 1e: the companion (record 1), the soldiers, then the fight
+    # (kind -1) at its first question (docs/combat.md 1.6).
+    {"name": "chain_party_member", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_member_2", "keys": "enter", "match": SCREEN},
 ]
 
 # The long unpoked run: its own tier (`--campaign`, ctest label campaign).
