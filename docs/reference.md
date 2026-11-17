@@ -25,7 +25,8 @@ Both kinds of waiting occur:
 
 ## The key feeder (tools/capture/snap.asm)
 
-`SNAP 0 K` loads KEYS.BIN (written by `run.py`) and hooks int 16h and int 21h. It puts the next
+`SNAP 0 K` loads KEYS.BIN (written by `run.py`, at most `MAX_KEYS` words: 4096; `run.py` refuses a
+longer script, since SNAP would not load and nothing would be captured) and hooks int 16h and int 21h. It puts the next
 key in the BIOS buffer (int 16h function 5) only when the program is waiting for one:
 
 - int 16h function 0/10h is called and the buffer is empty; or
@@ -221,7 +222,11 @@ loses to every group in reach, even with a poked rifle and the most hit points a
 no unpoked fight hurts him and lives. `chain_salvage_poked` adds Rex as character 1 after the first
 fight (name number 1, attributes, Piloting 2, on foot, hit points; our own test values too) and
 walks to the same Wasp: Rex fights on foot as figure 5, and afterwards he is a pilot without a
-'Mech, so the salvage question comes, and Jason salvages the Wasp into record 1. `fourth` (long only) is mission 4 (flag 00
+'Mech, so the salvage question comes, and Jason salvages the Wasp into record 1.
+`chain_orders_poked` is that fight up to the hand-back, then Next Unit to Rex and his orders: the
+person menu, Use Weapon (the override question, the target picker from the Wasp, Cancel), Scan
+Unit (Friends: the Chameleon and Rex's details; Enemies: "humans only" and the enemy person),
+Clear Moves, Computer, a two-cell Move, Begin Fight and two rounds. `fourth` (long only) is mission 4 (flag 00
 poked to 4): no computer question (F:0090), the Locust flees at the first orders menu, the walk
 back, the verdict and the town. `raid` (long only) is mission 7 (flag 00 poked to 7), the
 Kurita raid: the computer question (only mission 4 skips it), then Begin Fight round after round

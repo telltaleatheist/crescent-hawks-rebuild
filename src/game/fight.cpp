@@ -317,6 +317,7 @@ void Town::place_mission(int mechs, int people) {
 // the party's 'Mechs placed around the party (kind 0 has placed its figures
 // already, random_encounter), then three questions in the party box.
 bool Town::fight(int kind, KeySource& keys) {
+    picked_ = 0x0c;  // 2.1, 1: DG:2b20
     const formats::MapPosition at = position_;
     if (kind != 0) {
     // 2.1: every figure's path ends at once, no targets, no orders; the
@@ -395,16 +396,69 @@ bool Town::fight(int kind, KeySource& keys) {
     return fight_rounds(kind, keys);
 }
 
-// BTECH.EXE 15ab:18e8 (Ghidra FUN_15ab_18e8), for a 'Mech: its pilot's
-// name, "'s" and a new line, and the 'Mech's name, in the upper box.
-void Town::print_unit_heading(int fig) {
+// BTECH.EXE 1e31:02e4 (Ghidra FUN_1e31_02e4)
+// A person's condition: the line for hit points / B (character byte 1).
+bool Town::print_condition(int c) {
+    const auto& r = characters_[std::size_t(c)];
+    const int b = std::int8_t(r[1]);
+    const int hp = std::int8_t(r[character::kHitPoints]);
+    if (b == 0 || hp / b < 0 || hp / b > 10) {
+        log_.push_back("a person's condition past the table (hit points / B): not rebuilt");
+        fight_unfinished_ = true;
+        return false;
+    }
+    print_id("condition." + std::to_string(hp / b));
+    return true;
+}
+
+// BTECH.EXE 15ab:18e8 (Ghidra FUN_15ab_18e8), in the upper box. For a
+// 'Mech: its pilot's name, "'s" and a new line, and the 'Mech's name (the
+// flags unused). For a person: the character's name; with `details` (the
+// scan list) then its condition, weapon and armour, unless it is the double
+// agent found out (`agent_check`). The orders menu passes both flags 0.
+bool Town::print_unit_heading(int fig, bool agent_check, bool details) {
     text_.set_fg(15);
+    if (fig >= 4) {
+        const int c = fig - 4;
+        const auto& r = characters_[std::size_t(c)];
+        print_id("character." + std::to_string(r[character::kName]));
+        if (!details) return true;
+        if (flags_[0x27] != 0 && std::int8_t(flags_[0x25]) == c && agent_check) {
+            log_.push_back("the double agent found out in a scan: not rebuilt");
+            fight_unfinished_ = true;
+            return false;
+        }
+        if (!print_condition(c)) return false;
+        text_.set_cursor(0, 7);
+        text_.set_fg(10);  // 1000:28a2
+        print_id("unit.weapon_armour");
+        text_.set_cursor(0, 8);
+        print_id(formats::weapon_text_id(std::int8_t(r[0x0b])));
+        text_.set_cursor(0, 10);
+        const int armour = std::int8_t(r[0x0d]);
+        if (armour == 0) {
+            print_id("unit.none");
+        } else if (r[0x0e] == 0) {
+            text_.set_fg(8);
+            print_id("unit.ruined");
+        } else {
+            if (armour < 0 || armour >= int(rules_->combat.personal_armour.size())) {
+                log_.push_back("a person's armour type past the table: not rebuilt");
+                fight_unfinished_ = true;
+                return false;
+            }
+            if (std::int8_t(rules_->combat.personal_armour[std::size_t(armour)]) != std::int8_t(r[0x0e])) text_.set_fg(14);
+            print_id("armour." + std::to_string(armour));
+        }
+        return true;
+    }
     const auto& rec = mechs_[std::size_t(fig)];
     const auto& pilot = characters_[std::size_t(rec[kPilot])];
     print_id("character." + std::to_string(pilot[character::kName]));
     print_id("unit.possessive");
     if (const auto name = mech_name_id(fig)) print_id(*name);
     else log_.push_back("a 'Mech record with no template's name");
+    return true;
 }
 
 std::optional<std::string> Town::mech_name_id(int record) const {
@@ -432,10 +486,9 @@ std::optional<int> Town::orders_menu(Combat& combat, KeySource& keys) {
     if (no_computer_order_) figs_.computer[std::size_t(fig)] = false;
     bool entered = true;
     for (;;) {
-        if (fig >= 4) return stop("orders for a unit on foot");
         text_.select_window(4);
         text_.clear_window();
-        print_unit_heading(fig);
+        print_unit_heading(fig, false, false);
         text_.set_fg(15);
         if (figs_.computer[std::size_t(fig)]) {
             print_id("orders.computer_moving");
@@ -783,27 +836,29 @@ bool Town::scan_list(Combat& combat, int fig, int base, bool mechs, KeySource& k
             text_.select_window(4);
             text_.clear_window();
             text_.set_fg(15);
-            if (t >= 4 && t < 12) {
-                log_.push_back("a person in the scan list: not rebuilt");
-                fight_unfinished_ = true;
-                return false;
-            }
-            if (t >= 16) {
-                log_.push_back("an enemy person in the scan list: not rebuilt");
-                fight_unfinished_ = true;
-                return false;
-            }
-            if (t < 4) {
-                print_unit_heading(t);  // 15ab:18e8(t, 1, 1)
+            if (t < 12) {
+                if (!print_unit_heading(t, true, true)) return false;  // 15ab:18e8(t, 1, 1)
             } else {
-                // An enemy 'Mech: its record's name as the record holds it
-                // (padded with spaces), and the direction it lies in.
-                print_id("scan.enemy");
-                const auto& rec = mechs_[std::size_t(t - 8)];
-                std::string name;
-                for (int i = 0; i < formats::kMechNameSize && rec[std::size_t(i)] != 0; ++i)
-                    name += char(rec[std::size_t(i)]);
-                text_.print(name);
+                if (t < 16) {
+                    // An enemy 'Mech: its record's name as the record holds
+                    // it (padded with spaces).
+                    print_id("scan.enemy");
+                    const auto& rec = mechs_[std::size_t(t - 8)];
+                    std::string name;
+                    for (int i = 0; i < formats::kMechNameSize && rec[std::size_t(i)] != 0; ++i)
+                        name += char(rec[std::size_t(i)]);
+                    text_.print(name);
+                } else {
+                    // An enemy person: its condition and its weapon.
+                    print_id("scan.enemy_human");
+                    if (!print_condition(t - 8)) return false;  // 1e31:02e4
+                    text_.set_cursor(0, 7);
+                    text_.set_fg(10);  // 1000:28a2
+                    print_id("scan.weapon");
+                    text_.set_cursor(0, 8);
+                    print_id(formats::weapon_text_id(std::int8_t(characters_[std::size_t(t - 8)][0x0b])));
+                }
+                // Then the direction it lies in.
                 text_.set_fg(10);  // 1000:28a2
                 print_id("scan.direction");
                 const int d = direction_toward({figs_.x[std::size_t(fig)], figs_.y[std::size_t(fig)]},

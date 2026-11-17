@@ -917,9 +917,42 @@ CHAIN_SALVAGE_POKED_CASES = [dict(case, compare=False) for case in CHAIN_MECH_PO
     {"name": "chain_salvage_back", "keys": "enter", "match": SCREEN},
 ]
 
+# Poked: chain_salvage_poked's fight up to the hand-back, then the orders
+# for Rex on foot (figure 5): the person menu (DG:3abc) and its orders.
+# Only the tail is compared.
+CHAIN_ORDERS_POKED_CASES = [dict(case, compare=False) for case in
+                            CHAIN_SALVAGE_POKED_CASES[:[c["name"] for c in CHAIN_SALVAGE_POKED_CASES].index("chain_salvage_player") + 1]] + [
+    {"name": "chain_orders_rex", "keys": "up*2 enter", "match": SCREEN, "fight": True},
+    {"name": "chain_orders_weapon", "keys": "up*3 enter", "match": SCREEN, "fight": True},
+    {"name": "chain_orders_weapon_2", "keys": "enter", "match": SCREEN, "fight": True},
+    {"name": "chain_orders_weapon_3", "keys": "enter", "match": SCREEN, "fight": True},
+    # Scan Unit: Friends (Jason's Chameleon, then Rex's condition, weapon
+    # and armour), Done; Enemies ("humans only" while the Wasp stands, a
+    # key, then the enemy person), Done.
+    {"name": "chain_orders_scan", "keys": "down*2 enter", "match": SCREEN, "fight": True},
+    {"name": "chain_orders_friends", "keys": "enter", "match": SCREEN, "fight": True},
+    {"name": "chain_orders_friends_rex", "keys": "enter", "match": SCREEN, "fight": True},
+    {"name": "chain_orders_friends_back", "keys": "enter", "match": SCREEN, "fight": True},
+    {"name": "chain_orders_friends_done", "keys": "down*2 enter", "match": SCREEN, "fight": True},
+    {"name": "chain_orders_scan_2", "keys": "enter", "match": SCREEN, "fight": True},
+    {"name": "chain_orders_enemies", "keys": "down enter", "match": SCREEN, "fight": True},
+    {"name": "chain_orders_enemy_human", "keys": "enter", "match": SCREEN, "fight": True},
+    {"name": "chain_orders_enemies_done", "keys": "down enter", "match": SCREEN, "fight": True},
+    # Clear Moves, Computer (the plan shown again), Move two cells left and
+    # accept, then Begin Fight and two rounds.
+    {"name": "chain_orders_clear", "keys": "up*3 enter", "match": SCREEN, "fight": True},
+    {"name": "chain_orders_computer", "keys": "down*2 enter", "match": SCREEN, "fight": True},
+    {"name": "chain_orders_move", "keys": "up*3 enter", "match": SCREEN, "fight": True},
+    {"name": "chain_orders_move_left", "keys": "left*2", "match": SCREEN, "fight": True},
+    {"name": "chain_orders_moved", "keys": "enter", "match": SCREEN, "fight": True},
+    {"name": "chain_orders_begin", "keys": "down*7 enter", "match": SCREEN, "fight": True},
+    {"name": "chain_orders_round_2", "keys": "enter", "match": SCREEN, "fight": True},
+    {"name": "chain_orders_round_3", "keys": "enter", "match": SCREEN, "fight": True},
+]
+
 # The long unpoked run: its own tier (`--campaign`, ctest label campaign).
 CAMPAIGN = {"chain", "chain_death", "chain_mech_poked", "chain_heal_poked", "chain_repair_poked",
-            "chain_salvage_poked"}
+            "chain_salvage_poked", "chain_orders_poked"}
 
 SEQUENCES = [("town", CASES, FULL_CASES, []), ("training", TRAINING_CASES, [], []),
              ("quiz", QUIZ_CASES, [], ["--show-quiz"]), ("mission", MISSION_CASES, MISSION_FULL_CASES, []),
@@ -943,6 +976,7 @@ SEQUENCES = [("town", CASES, FULL_CASES, []), ("training", TRAINING_CASES, [], [
              ("chain_heal_poked", [], CHAIN_HEAL_POKED_CASES, []),
              ("chain_repair_poked", [], CHAIN_REPAIR_POKED_CASES, []),
              ("chain_salvage_poked", [], CHAIN_SALVAGE_POKED_CASES, []),
+             ("chain_orders_poked", [], CHAIN_ORDERS_POKED_CASES, []),
              ("handover", [], HANDOVER_CASES, [])]
 
 # The feeder (tools/capture/snap.asm, docs/reference.md) hands over a key at

@@ -129,6 +129,17 @@ def build_snap(dest):
     subprocess.run(["nasm", "-f", "bin", "-o", dest, src], check=True)
 
 
+def max_keys():
+    """SNAP's key buffer in words (snap.asm's MAX_KEYS). A longer KEYS.BIN
+    is refused, SNAP stays out and nothing is captured."""
+    with open(os.path.join(TOOLS, "capture", "snap.asm")) as f:
+        for line in f:
+            parts = line.split()
+            if len(parts) == 3 and parts[0] == "MAX_KEYS" and parts[1] == "equ":
+                return int(parts[2])
+    raise ValueError("snap.asm has no MAX_KEYS")
+
+
 # The DOSBox-X process groups running now, so a stopped run can kill them.
 # DOSBox-X answers anything but SIGKILL with a "Quit DOSBox-X" dialog on
 # screen, so they are only ever stopped with SIGKILL.
@@ -161,6 +172,8 @@ def stop_on_signals():
 
 def run(game_dir, script, out_dir, timeout=120, keep=False):
     words, names = compile_script(script)
+    if len(words) > max_keys():
+        raise ValueError(f"run.py: the key script is {len(words)} words; SNAP holds {max_keys()} (snap.asm MAX_KEYS)")
     os.makedirs(out_dir, exist_ok=True)
     scratch = os.environ.get("CHR_SCRATCH")
     if scratch:

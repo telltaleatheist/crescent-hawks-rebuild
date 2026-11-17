@@ -159,8 +159,8 @@ machines of the day each probably took several display frames. The platform hold
 sounds are recorded but not played yet (no sound is rebuilt). A story picture is held 50 frames
 at its last frame.
 
-Not rebuilt yet: the sounds, people on foot in a fight and their orders, Scan's Detail (the stats screen, 2.6), the Arena's spectator, the double agent, and what follows the fight (2.13 is
-done; 2.15 is not).
+Not rebuilt yet: the sounds, Scan's Detail (the stats screen, 2.6), the Arena's spectator, the double agent, and the rest of what follows the fight (`17dc:15e6`'s offer of a found
+weapon).
 
 **The cell window in a fight.** The planner's path (3.3) and the line of sight (3.6) read map
 cells from the 24x24-cell window P:07ad by index, as the townspeople do. The window and its
@@ -534,7 +534,17 @@ instead.
     (x or y ffff). Each is shown in window 4: a party unit's heading (`15ab:18e8`); an enemy
     'Mech, "Enemy", the record's name as it is stored (padded with spaces) and in light green
     "Direction:" with the direction from the scanning unit (`287f:0971`, DG:01aa's names); an
-    enemy person, its condition (`1e31:02e4`) and weapon. Then the unit's screen
+    enemy person, the enemy-human label (DG:114f), its condition (`1e31:02e4`), at row 7 in light green
+    the weapon label (DG:115b), at row 8 its weapon's name, then the direction as for a 'Mech.
+    The heading is called with both flags 1 here: for a party person it is the character's name,
+    then (unless it is the double agent found out: flag 0x27 set, F:d331 the character, the
+    first flag, which shows DG:1222, waits for a key and sets F:374a) its condition, at row 7 in
+    light green the weapon and armour labels (DG:1245, which ends in white), at row 8 the weapon's
+    name and at row 10 its armour: DG:1260 with no armour type (byte 0x0d), DG:1257 in grey
+    when the armour's points (byte 0x0e) are 0, else the type's name (F:4e8a), yellow when the
+    points differ from the type's full value (DG:4ddb). For a 'Mech the flags are not used. The
+    condition (`1e31:02e4`) is the line hit points / B (character bytes 0x0f / 1) of the eleven
+    at DG:2e0c. Then the unit's screen
     (`203b:1774(t, 1)`), and in window 3 Next Unit, Detail Scan (a 'Mech, while the list holds
     'Mechs) and Done. Detail opens the stats screen (`15ab:1afe`) and redraws the screen
     (`1e31:032f`), then shows the same figure again. In the Arena (F:e48e) the enemy list jumps

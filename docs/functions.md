@@ -85,10 +85,10 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 15ab:0c8f | 0x1673f | `FUN_15ab_0c8f` | 131 |  | - |
 | 15ab:0d12 | 0x167c2 | `FUN_15ab_0d12` | 43 |  | - |
 | 15ab:0d3d | 0x167ed | `FUN_15ab_0d3d` | 1834 | Sets up a random encounter: soldiers and 'Mechs, placed 10-17 cells away | rebuilt |
-| 15ab:1467 | 0x16f17 | `FUN_15ab_1467` | 741 | The scan list: each figure of a side in turn, Next / Detail / Done | rebuilt in part (no people, no Detail) |
+| 15ab:1467 | 0x16f17 | `FUN_15ab_1467` | 741 | The scan list: each figure of a side in turn, Next / Detail / Done | rebuilt in part (no Detail) |
 | 15ab:174c | 0x171fc | `FUN_15ab_174c` | 268 |  | - |
 | 15ab:1858 | 0x17308 | `FUN_15ab_1858` | 144 |  | - |
-| 15ab:18e8 | 0x17398 | `FUN_15ab_18e8` | 534 |  | - |
+| 15ab:18e8 | 0x17398 | `FUN_15ab_18e8` | 534 | A unit's heading: a 'Mech's pilot and name; a person's name, with the details flag its condition, weapon and armour | rebuilt (not the double agent) |
 | 15ab:1afe | 0x175ae | `FUN_15ab_1afe` | 2074 | Character stats screen (cycles its own palette, then restores 37e8:0000) | read |
 
 ## CODE_3: segment 17dc, 7,610 bytes
@@ -172,7 +172,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | Address | Linear | Ghidra name | Span | Label | Status |
 |---|---|---|---|---|---|
 | 1e31:0006 | 0x1e316 | `FUN_1e31_0006` | 734 | A figure's step toward a target: turn one eighth, try 8 directions (wander pattern flips every 30), free cell and no figure there | rebuilt |
-| 1e31:02e4 | 0x1e5f4 | `FUN_1e31_02e4` | 75 |  | - |
+| 1e31:02e4 | 0x1e5f4 | `FUN_1e31_02e4` | 75 | A person's condition: line hit points / B of DG:2e0c | rebuilt |
 | 1e31:032f | 0x1e63f | `FUN_1e31_032f` | 124 |  | - |
 | 1e31:03ab | 0x1e6bb | `FUN_1e31_03ab` | 2058 | The computer's orders for a unit: target, waypoint, weapons; with show, the unit's screen (docs/combat.md) | rebuilt |
 | 1e31:0bb5 | 0x1eec5 | `FUN_1e31_0bb5` | 174 | Distance from the party position: min + max/2 | rebuilt |
@@ -202,7 +202,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 |---|---|---|---|---|---|
 | 203b:000a | 0x203ba | `FUN_203b_000a` | 5240 | The fight: set-up, engage question, the round loop, the end, the after-fight steps (docs/combat.md) | read |
 | 203b:1482 | 0x21832 | `FUN_203b_1482` | 65 |  | - |
-| 203b:14c3 | 0x21873 | `FUN_203b_14c3` | 689 | The player's orders menu for each unit; 1 = flee | rebuilt in part (people's orders need people in fights) |
+| 203b:14c3 | 0x21873 | `FUN_203b_14c3` | 689 | The player's orders menu for each unit; 1 = flee | rebuilt |
 | 203b:1774 | 0x21b24 | `FUN_203b_1774` | 455 | A unit on the orders screen: the view on it, the box, its path as arrows | rebuilt |
 | 203b:193b | 0x21ceb | `FUN_203b_193b` | 740 | A figure's path from its orders, and its movement cost | rebuilt |
 | 203b:1c1f | 0x21fcf | `FUN_203b_1c1f` | 1554 | A move order: the type question, the reasons, the map cursor and one waypoint | rebuilt |

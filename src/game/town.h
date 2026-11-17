@@ -374,7 +374,8 @@ private:
     std::vector<Figure> walk_in_figures();
     Figure party_mech_figure(int m, int k) const;
     std::vector<Figure> fight_figures_drawn(bool marks = true);
-    void print_unit_heading(int fig);
+    bool print_unit_heading(int fig, bool agent_check, bool details);
+    bool print_condition(int character);
     bool on_foot(int character) const;
     // The screen as it was last drawn, while the program draws nothing new
     // over the map (the questions before a fight).
