@@ -233,9 +233,15 @@ door is reachable from the rear exit, 24 to 100 steps; `if_flag` jumps when the 
 - REPAIR's recruit (0c1a): special 0e must find a member; alone it offers the Tech course (500).
 - ARENA (03a0): entering costs 250 (`if_cbills 0xfa`); the prize (`earn 0x1f4`) and the 'Mech
   record specials 21-23 are all behind it.
-- JAIL (map 3) is the recruit open to Jason alone: special 0e with a member goes to 01fb
-  (special 25, end); alone it reaches the menu at 0277, whose item 07dc leads to `new_member 4`.
-  So the story's first recruit is on map 3, and map 2's recruits and arena come after it.
+- JAIL (map 3) is not open to him either (an earlier reading had the branch backwards). Flag 2a
+  (set by its recruit) goes to 0277; flag 27 (a traitor in the party, F:d333) to 0063; otherwise
+  special 0e with a member goes to 01fb, the jailkeeper's menu, whose item 07dc leads to
+  `new_member 4`, and alone to 0277: Jason is recognised and the script ends in special 25.
+  Seen in chr on the chain (special 25 not rebuilt yet), the original's screens matching up to
+  the entry.
+- Nothing else adds a member: 19b8:0d58 is called only by the script op E9, and special 0e
+  (24d3:0af2) counts character records 1-7 whose first byte is not ff, as rebuilt. A new game
+  has none, so every recruit needs a member the party of one does not have.
 
 ## Not rebuilt yet
 
