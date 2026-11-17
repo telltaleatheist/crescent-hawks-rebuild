@@ -983,6 +983,20 @@ CHAIN_TOWN_CASES = [dict(case, compare=False) for case in
     # with no encounter in reach; in halves.
     {"name": "chain_town_walk_3", "keys": "left home " * 15 + "left home", "match": SCREEN},
     {"name": "chain_town_walk_3b", "keys": "left home " * 15 + "left home", "match": SCREEN},
+    # Segments 4 and 5: up-left to a group in reach (five, then three),
+    # declined and evaded each time.
+    {"name": "chain_town_walk_4", "keys": "home*9", "match": SCREEN},
+    {"name": "chain_town_4_no", "keys": "n", "match": SCREEN},
+    {"name": "chain_town_4_eluded", "keys": "enter", "match": SCREEN},
+    {"name": "chain_town_4_back", "keys": "enter", "match": SCREEN},
+    {"name": "chain_town_walk_5", "keys": "home*27", "match": SCREEN},
+    {"name": "chain_town_5_no", "keys": "n", "match": SCREEN},
+    {"name": "chain_town_5_eluded", "keys": "enter", "match": SCREEN},
+    {"name": "chain_town_5_back", "keys": "enter", "match": SCREEN},
+    # Segment 6: 51 steps up-left into area 0xaa, where map 4 (area 0xb9)
+    # comes into the grids (docs/wilderness.md, the map loads).
+    {"name": "chain_town_walk_6", "keys": "home*26", "match": SCREEN},
+    {"name": "chain_town_walk_6b", "keys": "home*25", "match": SCREEN},
 ]
 
 # The long unpoked run: its own tier (`--campaign`, ctest label campaign).

@@ -233,7 +233,9 @@ the escape, its key and the return to the position before the fight. Each later 
 in chr from the state the original reached (`flee: escaped` / `flee: failed` and `encounter: eluded
 without a fight` in chr's log tell the outcomes apart), then captured and compared: segment 2 is 16
 steps north-west to five soldiers in reach, declined and evaded (2.12, one draw); segment 3 is 64
-steps west and north-west with every encounter out of reach.
+steps west and north-west with every encounter out of reach; segments 4 and 5 walk up-left to
+groups of five and three, declined and evaded; segment 6 walks up-left until map 4 is loaded into
+the grids (the townspeople's headings there are left as the last encounter set them).
 `chain_orders_poked` is that fight up to the hand-back, then Next Unit to Rex and his orders: the
 person menu, Use Weapon (the override question, the target picker from the Wasp, Cancel), Scan
 Unit (Friends: the Chameleon and Rex's details; Enemies: "humans only" and the enemy person),

@@ -88,8 +88,7 @@ Townspeople Townspeople::place(const formats::MtpMap& map, int map_number, Rando
         w.wait = 1;
         w.route = std::uint8_t(r << 4 | next);
         w.target = map.entrances[std::size_t(next)];
-        w.at = w.target;
-        w.heading = 0;
+        w.at = w.target;  // the heading is left as it is (F:3920)
         if (map_number > 10) {
             w.wait = 0;
             w.at = {};
@@ -102,7 +101,9 @@ void Townspeople::place_during_fight(const formats::MtpMap& map, int map_number,
     auto placed = place(map, map_number, random, *tables_);
     blocking_ = placed.blocking_;
     for (std::size_t i = 0; i < walkers_.size(); ++i) {
+        const std::int8_t heading = walkers_[i].heading;
         walkers_[i] = placed.walkers_[i];
+        walkers_[i].heading = heading;
         kept_[i] = walkers_[i].target;
         walkers_[i].at = {0xffff, 0xffff};
     }

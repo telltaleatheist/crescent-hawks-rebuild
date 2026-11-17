@@ -197,7 +197,13 @@ bool Town::load_town_map(int number, int grid) {
     terrain_.hold_window();
     terrain_.place_map(map_, grid);
     terrain_.link_blocks();
-    if (!townspeople_away_) people_ = Townspeople::place(map_, number, random_, tables_);
+    if (!townspeople_away_) {
+        // The headings are the fight figures' (F:3920 + 16 + i); placing
+        // the walkers leaves them as the last fight set them up.
+        auto placed = Townspeople::place(map_, number, random_, tables_);
+        for (std::size_t i = 0; i < 8; ++i) placed.walkers()[i].heading = people_.walkers()[i].heading;
+        people_ = placed;
+    }
     else people_.place_during_fight(map_, number, random_);
     {
         for (int i = 0; i < 8; ++i) {

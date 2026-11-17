@@ -27,7 +27,11 @@ new game's, a mission's, the raid's, and a load into another grid as the party n
 a map (docs/wilderness.md). Person i draws a random number r:
 its target and position are entrance `shuffle[r & 7]` (the .MTP's 8 bytes at 0x215), its last
 entrance r & 7, and it is inside for 1 round. Its frame is 0x10 and its script direction none.
-On maps above 10 nobody is out.
+On maps above 10 nobody is out. The heading is not touched: it is the fight figures' table, so it
+keeps whatever was last written. The new game's set-up (1000:34xx) writes 0 for every figure; a
+random encounter's set-up (203b:000a, kind 0) writes ff for all 24, whether the encounter is then
+fought, evaded or fled; a fight's end hands figures 16-23's back. So people placed by a map load
+after an encounter start with heading ff (seen at map 4's load on the walk from the ruined town).
 
 So the first round brings each person out at entrance r & 7, which is usually not where it was
 placed, and it then walks to `shuffle[r & 7]`.
