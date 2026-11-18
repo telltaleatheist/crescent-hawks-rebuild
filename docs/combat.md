@@ -1222,8 +1222,12 @@ person or above a 'Mech.
 
 Marks go into a 64-entry ring (`203b:27c9`: F:d457 code, F:d497 area, F:d4d7 x, F:d517 y; write
 index F:d557, the oldest overwritten). Codes: 0x7c fire, 0x7e a body, 0x7f a missed shot into a
-building, 0x80 / 0x81 a wreck (two sprite sets). The ring is probably the map objects that
-`1000:2a93` draws (docs/town_loop.md).
+building, 0x80 / 0x81 a wreck (two sprite sets). `1000:2a93` draws them (docs/town_loop.md): for each
+entry, column x - party x + 0x1a and row y - party y + 0x0c (16-bit positions, the area in
+the high byte); skipped past -0x73..0xa7 or -0xf80..0xf98, or, in the party's own area, outside
+the view (columns 0x0d..0x27, rows 0..0x18); then drawn at column & 0x7f, row & 0x7f (8 pixels
+each). The & 0x7f folds the area gap out, so a mark one half-cell into the next area is drawn
+one half-cell from the party.
 
 ### 3.14 After the shot: kills, wrecks, pictures
 

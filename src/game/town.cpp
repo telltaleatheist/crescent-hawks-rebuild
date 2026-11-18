@@ -243,8 +243,10 @@ void Town::draw_marks() {
         if (col < -0x73 || col > 0xa7 || row < -0x0f80 || row > 0x0f98 || off_x || off_y) continue;
         Figure f;
         f.sprite = sprite(m.code);
-        f.half_x = formats::MapPosition{x, y}.half_cell_x() + 1;
-        f.half_y = formats::MapPosition{x, y}.half_cell_y();
+        // Placed from the party, its column and row each & 0x7f, so a mark
+        // in the next area lands beside the party.
+        f.half_x = (col & 0x7f) + (px & 0x7f) - 0x1a + 1;
+        f.half_y = (row & 0x7f) + (py & 0x7f) - 0x0c;
         drawn_marks_.push_back(f);
         if ((m.code & 0x7e) == 0x7c) m.code ^= 1;
     }
