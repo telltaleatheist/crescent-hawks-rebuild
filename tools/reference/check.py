@@ -1338,9 +1338,28 @@ CHAIN_JAIL_FIGHT_CASES = [dict(case, compare=False) for case in
     {"name": "chain_jail_fight_round_2", "keys": "idle:1", "match": {}, "fight": True},
 ]
 
+# The double agent found out, its own sequence: on the jail break's crew
+# screen Rick is seated as the COMMANDO's rider, which shows his tell and sets
+# F:374a (docs/scripts.md). The first random encounter after it (one person,
+# 119 passes out) is fought by the computer; after round 1 he acts from the
+# rider's seat (the box; docs/combat.md 2.9). The sequence ends at the box:
+# what follows its key is an open item (docs/reference.md).
+CHAIN_AGENT_CASES = [dict(case, compare=False) for case in
+                     CHAIN_PARTY_CASES[:[c["name"] for c in CHAIN_PARTY_CASES].index("chain_party_crew_rex_pick") + 1]] + [
+    {"name": "chain_agent_rick", "keys": "down*3", "match": SCREEN},
+    {"name": "chain_agent_vehicle", "keys": "enter", "match": SCREEN},
+    {"name": "chain_agent_commando", "keys": "enter", "match": SCREEN},
+    {"name": "chain_agent_tell", "keys": "n", "match": SCREEN},
+    {"name": "chain_agent_tell_key", "keys": "enter", "match": SCREEN},
+    {"name": "chain_agent_done", "keys": "down enter", "match": SCREEN},
+    {"name": "chain_agent_encounter", "keys": "idle:119", "match": SCREEN},
+    {"name": "chain_agent_fight", "keys": "y y enter arm:1 n", "match": {}, "fight": True},
+]
+
+
 # The long unpoked run: its own tier (`--campaign`, ctest label campaign).
 CAMPAIGN = {"chain", "chain_death", "chain_mech_poked", "chain_heal_poked", "chain_repair_poked",
-            "chain_salvage_poked", "chain_orders_poked", "chain_town", "chain_party", "chain_jail_no", "chain_jail_fight"}
+            "chain_salvage_poked", "chain_orders_poked", "chain_town", "chain_party", "chain_jail_no", "chain_jail_fight", "chain_agent"}
 
 SEQUENCES = [("town", CASES, FULL_CASES, []), ("training", TRAINING_CASES, [], []),
              ("quiz", QUIZ_CASES, [], ["--show-quiz"]), ("mission", MISSION_CASES, MISSION_FULL_CASES, []),
@@ -1369,6 +1388,7 @@ SEQUENCES = [("town", CASES, FULL_CASES, []), ("training", TRAINING_CASES, [], [
              ("chain_party", [], CHAIN_PARTY_CASES, []),
              ("chain_jail_no", [], CHAIN_JAIL_NO_CASES, []),
              ("chain_jail_fight", [], CHAIN_JAIL_FIGHT_CASES, []),
+             ("chain_agent", [], CHAIN_AGENT_CASES, []),
              ("handover", [], HANDOVER_CASES, [])]
 
 # The feeder (tools/capture/snap.asm, docs/reference.md) hands over a key at

@@ -343,7 +343,16 @@ counts, DG:014a and the map marks).
   same random state, while chr reads the key and plays on. The box waits through `273d:0259`, the
   same blocking read that other boxes take keys at. The sequence goes round it by sending the key
   before round 1 ends, which hands the fight back to the player, then Begin Fight each round.
-  Whether the feeder or the program drops the key is not known.
+  The same happens at the double agent's box after round 1 (`chain_agent`, docs/combat.md 2.9),
+  and there the cause is the feeder: the box's `273d:086a` waits display frames (no poll), then
+  flushes (`1000:2a2b`, one int 21h 0Bh). The computer-fought round asks for no key in between,
+  so `arm:1` before `n` hands the next key to that flush, which reads and drops it; the box's
+  own read (`273d:0259`) then takes the key after. Without `arm:1`, or with `arm:2`, the
+  original takes the first key at the box (flags and the agent's emptied record match chr).
+  Still open: after that key the original runs round 2 before it next waits, while chr's next
+  capture comes before round 2, so each later capture of chr's is one round behind the
+  original's (chr's key n+1 is the original's key n). `chain_agent` ends at the box until the
+  round loop's handling of a key after the box is read.
 - **The map behind the game-over box after the jail break** (`chain_jail_fight_round_2`): the
   state matches, but the original's play area still shows the fight's view around the bays,
   while chr's shows the town map drawn at another window. Only the state is compared there.
