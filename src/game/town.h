@@ -406,6 +406,9 @@ private:
     formats::MapPosition position_;
     const TextProvider& texts_;
     const formats::Tables& tables_;
+    // 27e8:0030: each area's map, the imported table at a new game; the
+    // raid makes area 0xcc map 11 (27e8:00fc), and it stays so.
+    std::array<int, 256> area_maps_ = tables_.area_maps;
     // The party: characters 0-7 whose record is in use (byte 0, the name
     // number, not ff), as the original tests it everywhere.
     Party party() const {

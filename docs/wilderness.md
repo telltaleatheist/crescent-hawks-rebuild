@@ -93,8 +93,12 @@ also places the eight townspeople again with eight random numbers, at the new ma
 Each area's map comes from a 256-entry table (at the segment in DG:53d0, offset 0x30 + area;
 flags change two entries first, 1000:3419-3435: area 0xcc map 11, area 0x34 map 12). A
 load into all nine areas (1000:3469, 1000:3edc) loads each grid's map in turn. None of the areas
-around 0xcc has a map. Not rebuilt yet: the rebuild loads into grid 4 only, map 1 as the new game
-does, and map 11 in the raid (docs/combat.md 2.11).
+around 0xcc has a map. The table is game state, not a constant: the raid's third story line makes area
+0xcc map 11 (27e8:00fc) for the rest of the game, so a party coming back finds the ruined town,
+whose north wall is broken (map 1's is whole, and blocks a 'Mech's step along the whole edge).
+The rebuild keeps the table in the town (`area_maps_`) and the raid writes it; the area loads
+read it. Not rebuilt yet: the nine-map load of a saved game, and the VIEWDISK follow-on's write
+(area 0x34, map 12; docs/scripts.md).
 
 ## The masks: 287f:1886 and 287f:11bb
 

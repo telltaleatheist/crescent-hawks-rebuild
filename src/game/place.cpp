@@ -692,7 +692,8 @@ bool Town::talk(KeySource& keys) {
     const auto chosen = menu(20, keys);
     if (!chosen) return false;
     if (*chosen == count) return true;
-    if (flags_[flag::kLetOut] != 0 && last_home == 7 && *chosen == 0 && inside[0]) {
+    const int let_out_place = fixes_.fix_talk_let_out ? here : last_home;  // bug 38
+    if (flags_[flag::kLetOut] != 0 && let_out_place == 7 && *chosen == 0 && inside[0]) {
         // Someone is let out of jail (the second map's story).
         flags_[flag::kLetOutDone] = 1;
         people_.walkers()[0].wait = 0;

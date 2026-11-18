@@ -1351,9 +1351,12 @@ bool Town::raid_lines(bool over, KeySource& keys) {
             place_open_ = true;
             return false;
         }
-        if (raid_line_ == 3 && !load_town_map(11)) {
-            fight_unfinished_ = true;
-            return false;
+        if (raid_line_ == 3) {
+            area_maps_[0xcc] = 11;
+            if (!load_town_map(11)) {
+                fight_unfinished_ = true;
+                return false;
+            }
         }
         text_.select_window(4);
         clear_window();

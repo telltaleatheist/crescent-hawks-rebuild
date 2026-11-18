@@ -1382,6 +1382,30 @@ CHAIN_AGENT_CASES = [dict(case, compare=False) for case in
     {"name": "chain_lounge_talk", "keys": "enter", "match": SCREEN},
     {"name": "chain_lounge_talked", "keys": "enter", "match": SCREEN},
     {"name": "chain_lounge_leave", "keys": "down enter", "match": SCREEN},
+    # Then south to the ruined home town (map 11, area 0xcc) and its only
+    # door, BARRACK2 (entrance 0, 0c11,c009), which with a party runs
+    # VIEWDISK after it (docs/scripts.md). Planned in segments of up to 64
+    # steps with chr judging each; two groups in reach on the way, both
+    # evaded. Since the raid area 0xcc is map 11 (27e8:00fc), whose north
+    # wall is broken: map 1's would block the 'Mechs along the whole edge.
+    {"name": "chain_barrack_walk_1", "keys": " ".join(["down end"] * 32), "match": SCREEN},
+    {"name": "chain_barrack_walk_2", "keys": " ".join(["down end"] * 32), "match": SCREEN},
+    {"name": "chain_barrack_walk_3", "keys": "end*64", "match": SCREEN},
+    {"name": "chain_barrack_walk_4", "keys": "end*64", "match": SCREEN},
+    {"name": "chain_barrack_walk_5", "keys": "down*64", "match": SCREEN},
+    {"name": "chain_barrack_walk_6", "keys": "down*64", "match": SCREEN},
+    {"name": "chain_barrack_walk_7", "keys": " ".join(["down pgdn"] * 15) + " down", "match": SCREEN},
+    {"name": "chain_barrack_7_no", "keys": "n", "match": SCREEN},
+    {"name": "chain_barrack_7_eluded", "keys": "enter", "match": SCREEN},
+    {"name": "chain_barrack_7_back", "keys": "enter", "match": SCREEN},
+    {"name": "chain_barrack_walk_8", "keys": "down*64", "match": SCREEN},
+    {"name": "chain_barrack_walk_9", "keys": "down*64", "match": SCREEN},
+    {"name": "chain_barrack_walk_10", "keys": "down*45", "match": SCREEN},
+    {"name": "chain_barrack_10_no", "keys": "n", "match": SCREEN},
+    {"name": "chain_barrack_10_eluded", "keys": "enter", "match": SCREEN},
+    {"name": "chain_barrack_10_back", "keys": "enter", "match": SCREEN},
+    {"name": "chain_barrack_walk_11", "keys": "down*64", "match": SCREEN},
+    {"name": "chain_barrack_door", "keys": "end left end left end", "match": SCREEN},
 ]
 
 

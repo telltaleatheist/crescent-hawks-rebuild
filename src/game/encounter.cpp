@@ -214,9 +214,9 @@ void Town::reload_areas() {
     const int area = ((position_.y >> 8) & 0xf0) | ((position_.x >> 8) & 0x0f);
     for (int k = 0; k < 9; ++k) {
         const int a = area - 0x11 + 16 * (k / 3) + k % 3;
-        if (a < 0 || a >= 0x100 || tables_.area_maps[std::size_t(a)] == 0) continue;
+        if (a < 0 || a >= 0x100 || area_maps_[std::size_t(a)] == 0) continue;
         if (terrain_.grids()[std::size_t(k * Terrain::kGridBlocks)] == 0x90) continue;
-        load_town_map(tables_.area_maps[std::size_t(a)], k);
+        load_town_map(area_maps_[std::size_t(a)], k);
     }
     terrain_.link_blocks();
 }

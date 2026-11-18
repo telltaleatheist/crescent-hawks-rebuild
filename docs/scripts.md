@@ -28,10 +28,11 @@ Answering Yes at an entrance calls `17dc:0008(n)` with the map's place number:
    - leaving the garage (8) with flag 30 set and flag 0e set, and flag 32 clear, shows a text
      (DGROUP:1384, 13b6) and runs place 12 (VIEWDISK);
    - leaving place 13 (BARRACK2) with flag 0e set runs place 12 too.
-   In both cases 27e8:0064 is set to 0c. VIEWDISK sets flag 32 at its end (0dce), the only write
+   In both cases 27e8:0064 is set to 0c: area 0x34's entry in the area-to-map table (27e8:0030 +
+   area, docs/wilderness.md) becomes map 12, the HUT. VIEWDISK sets flag 32 at its end (0dce), the only write
    to that flag: no other script sets it, and the program's only indexed flag writes are the new
-   game's clear (1000:4e4f) and the script ops (1000:80c9, 811f). A load with flag 32 set sets
-   27e8:0064 to 0c again (1000:3429). ENTRANCE (map 13) tests flag 32 first, and FROB's last
+   game's clear (1000:4e4f) and the script ops (1000:80c9, 811f). A load with flag 32 set makes
+   area 0x34 map 12 again (1000:3429). ENTRANCE (map 13) tests flag 32 first, and FROB's last
    branch tests it too.
 8. Puts the screen back: window 4 cleared, window 3, the panel redrawn (`1000:4cac(1)`).
 9. Leaving place 14 (ENTRANCE) with flag 36 set clears the 8 party records' first byte and calls
@@ -266,7 +267,7 @@ town is refused) and a key.
   this place. On map 1 the Lounge is entrance 7, and while Rick is the only one waiting the
   two agree. With someone waiting elsewhere after him, the test follows that one's place: the
   Lounge's let-out can fail, and on a map whose Lounge has another entrance it can still pass.
-  Kept; a fix would compare this place.
+  Kept; `fix_talk_let_out` (bug 38, off) compares this place.
 - **if_party_x** compares only x. No original script uses E7, so nothing shows the effect.
 
 ## After the raid: what the scripts offer

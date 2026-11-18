@@ -623,13 +623,13 @@ void Town::turn(int k, KeySource& keys) {
 }
 
 // BTECH.EXE 1000:218f, after each axis's move: each queued grid whose area
-// has a map in the area-to-map table (37e8:0030, imported as
-// tables.area_maps) gets it (1000:2da8, 287f:1da8); the entry is emptied
+// has a map in the area-to-map table (27e8:0030 in memory: area_maps_)
+// gets it (1000:2da8, 287f:1da8); the entry is emptied
 // either way.
 void Town::run_map_loads() {
     for (std::size_t i = 0; i < 3; ++i) {
         if (terrain_.queued_grids[i] == 0xff) continue;
-        const int map = tables_.area_maps[terrain_.queued_areas[i]];
+        const int map = area_maps_[terrain_.queued_areas[i]];
         if (map != 0) load_town_map(map, terrain_.queued_grids[i]);
         terrain_.queued_grids[i] = 0xff;
     }
