@@ -595,6 +595,14 @@ void Town::move_townspeople() {
         people_.outside_window = false;
         log_.push_back("a person's step looked outside the cell window: read the map instead");
     }
+    // A townsperson's place and heading are figure 16 + i's (F:4004 / 4036,
+    // F:3920; docs/townspeople.md): one memory in the original.
+    for (int i = 0; i < 8; ++i) {
+        const auto& w = people_.walkers()[std::size_t(i)];
+        figs_.x[std::size_t(16 + i)] = w.at.x;
+        figs_.y[std::size_t(16 + i)] = w.at.y;
+        figs_.heading[std::size_t(16 + i)] = w.heading;
+    }
 }
 
 void Town::turn(int k, KeySource& keys) {

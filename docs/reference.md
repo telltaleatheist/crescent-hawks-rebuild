@@ -344,6 +344,11 @@ counts, DG:014a and the map marks).
   same blocking read that other boxes take keys at. The sequence goes round it by sending the key
   before round 1 ends, which hands the fight back to the player, then Begin Fight each round.
   Whether the feeder or the program drops the key is not known.
+- **The map behind the game-over box after the jail break** (`chain_jail_fight_round_2`): the
+  state matches, but the original's play area still shows the fight's view around the bays,
+  while chr's shows the town map drawn at another window. Only the state is compared there.
+  Which window the original keeps when Jason falls in mode 9 (`19b8:152f` restores the party at
+  0d00,7014 and draws nothing with DG:014a at 0) is not yet read.
 
 ## Findings
 

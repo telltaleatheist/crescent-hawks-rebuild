@@ -1328,13 +1328,14 @@ CHAIN_JAIL_NO_CASES = [dict(case, compare=False) for case in
 # 80 steps off the bays' row (each key is a tick), then the 81st brings a
 # fight of kind 3, eight people against Jason alone (docs/combat.md 1.7).
 # The computer fights. On the original Jason falls in this first round
-# (DG:014a = 0, his record emptied), as in chr. The pass after it differs
-# in one enemy figure's last step (reported; not compared yet).
+# (DG:014a = 0, his record emptied), as in chr; then one pass, the
+# townspeople back and walking.
 CHAIN_JAIL_FIGHT_CASES = [dict(case, compare=False) for case in
                           CHAIN_PARTY_CASES[:[c["name"] for c in CHAIN_PARTY_CASES].index("chain_party_jail_break") + 1]] + [
     {"name": "chain_jail_fight_steps", "keys": " ".join(["up down"] * 40), "match": SCREEN},
     {"name": "chain_jail_fight", "keys": "up", "match": SCREEN},
     {"name": "chain_jail_fight_round_1", "keys": "y enter arm:1 n", "match": {}, "fight": True},
+    {"name": "chain_jail_fight_round_2", "keys": "idle:1", "match": {}, "fight": True},
 ]
 
 # The long unpoked run: its own tier (`--campaign`, ctest label campaign).
