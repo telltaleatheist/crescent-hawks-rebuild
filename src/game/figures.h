@@ -96,6 +96,13 @@ struct Figure {
     int sink = 0;                // rows cut from the bottom: standing in water
 };
 
+// BTECH.EXE 1000:051b, 1000:0d30, 1000:0e4b and 1000:2a93 all place a
+// figure the same way: its column (x - party x + 0x1a) and row
+// (y - party y + 0x0c), each & 0x7f, times 8 pixels (docs/combat.md 3.13).
+// As a half-cell in the party's own area, for the renderer.
+inline int folded_half_x(int col, std::uint16_t party_x) { return (col & 0x7f) + (party_x & 0x7f) - 0x1a; }
+inline int folded_half_y(int row, std::uint16_t party_y) { return (row & 0x7f) + (party_y & 0x7f) - 0x0c; }
+
 // BTECH.EXE 1000:051b (Ghidra FUN_1000_051b), the party's part.
 // The present characters, in order, the k-th one drawn at the k-th
 // formation place (DGROUP:02ae/02be: by the count drawn so far, not the

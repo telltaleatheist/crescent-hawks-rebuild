@@ -1362,9 +1362,7 @@ CHAIN_AGENT_CASES = [dict(case, compare=False) for case in
     # flees from the orders menu: escaped, and back in town with Rick gone
     # (flag 27 = 0, flag 24 = 0x7f, his record empty). The same soldier is
     # in reach again straight after.
-    # State only: the original's view also shows a small red figure at
-    # about (164, 105) that chr does not draw (docs/reference.md).
-    {"name": "chain_agent_flee", "keys": "up enter", "match": {}, "fight": True},
+    {"name": "chain_agent_flee", "keys": "up enter", "match": SCREEN, "fight": True},
     {"name": "chain_agent_eluded", "keys": "enter", "match": SCREEN},
     {"name": "chain_agent_back", "keys": "enter", "match": SCREEN},
 ]

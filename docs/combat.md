@@ -1229,6 +1229,14 @@ the view (columns 0x0d..0x27, rows 0..0x18); then drawn at column & 0x7f, row & 
 each). The & 0x7f folds the area gap out, so a mark one half-cell into the next area is drawn
 one half-cell from the party.
 
+Every figure on the map is placed by the same rule. The people of `1000:051b` (townspeople and
+the figures beside them) and of the fight view `1000:0e4b` use the same view test (in the
+party's own area, per axis) and wide ranges, then fold. The fight's 'Mechs (`0e4b`, second
+loop) use columns 0x0b..0x27, rows 0..0x1a and -0x75..0xa7, -0xf80..0xf9a, then fold, and
+draw two half-cells higher. The bays (`1000:0d30`) test the view in every area, then the wide
+ranges, then fold. A figure that has crossed into the next area is drawn beside the party,
+not at its place within its own area.
+
 ### 3.14 After the shot: kills, wrecks, pictures
 
 `22e8:12c7` (FUN_22e8_12c7):

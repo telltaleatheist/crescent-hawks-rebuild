@@ -215,9 +215,8 @@ std::vector<Figure> Townspeople::figures(const formats::MtpMap& map, MapPosition
         if (rel_x < -0x73 || rel_x > 0xa7 || rel_y < -0xf80 || rel_y > 0xf98 || hidden) continue;
         Figure fig;
         fig.sprite = sprite(kWalkerSprite + animation.frame(kFirstWalker + i));
-        // Drawn where the party's leader would be if it stood there.
-        fig.half_x = w.at.half_cell_x() + 1;
-        fig.half_y = w.at.half_cell_y();
+        fig.half_x = folded_half_x(rel_x, party.x) + 1;
+        fig.half_y = folded_half_y(rel_y, party.y);
         const int tile = tile_at(map, w.at);
         const int quarters = tables_->person_water[std::size_t((w.at.y & 1) * 2 + ((w.at.x + 1) & 1))];
         if (tile >= 0 && tile < 0xf6 && (tile & quarters) != 0 && (tile & 0xf0) < 0x30)

@@ -64,19 +64,18 @@ std::vector<Figure> Town::walk_in_figures() {
     }
     // 1000:0d30: with F:398e, the bays at (0x0d13 + 4i, 0x702c), each only
     // when all of it is in the view (x 0d-27, y 00-18 in half-cells, the
-    // party at 1a, 0c): sprite 0x92 (F:39fa + 4 x 0x92 = F:3c42), a 'Mech
-    // standing.
+    // party at 1a, 0c, tested in every area, then the wide ranges):
+    // sprite 0x92 (F:39fa + 4 x 0x92 = F:3c42), a 'Mech standing.
     if (bays_drawn_)
         for (int i = 0; i < 4; ++i) {
-            const formats::MapPosition bay{std::uint16_t(0x0d13 + 4 * i), 0x702c};
-            const int dx = int(bay.x) - int(position_.x) + 0x1a, dy = int(bay.y) - int(position_.y) + 0x0c;
+            const std::uint16_t bx = std::uint16_t(0x0d13 + 4 * i), by = 0x702c;
+            const int dx = wrap16(bx - position_.x + 0x1a), dy = wrap16(by - position_.y + 0x0c);
             if (dx < 0x0d || dx > 0x27 || dy < 0 || dy > 0x18) continue;
+            if (dx < -0x73 || dx > 0xa7 || dy < wrap16(0xf080) || dy > 0x0f98) continue;
             Figure f;
             f.sprite = sprite(0x92);
-            // Drawn at x' x 8: one half-cell right of the renderer's place
-            // for that half-cell, as the party's figures are (party_figures).
-            f.half_x = bay.half_cell_x() + 1;
-            f.half_y = bay.half_cell_y();
+            f.half_x = folded_half_x(dx, position_.x) + 1;
+            f.half_y = folded_half_y(dy, position_.y);
             all.push_back(f);
         }
     return all;
@@ -143,8 +142,8 @@ std::vector<Figure> Town::fight_figures_drawn(bool marks) {
             Figure fig;
             // A 16-bit sum: 0xfe + a frame reaches row 40's grey people.
             fig.sprite = sprite(figs_.sprite_base[std::size_t(f)] + animation_.frame(f));
-            fig.half_x = formats::MapPosition{fx, fy}.half_cell_x() + 1;
-            fig.half_y = formats::MapPosition{fx, fy}.half_cell_y();
+            fig.half_x = folded_half_x(col, px) + 1;
+            fig.half_y = folded_half_y(row, py);
             fig.sink = sink;
             out.push_back(fig);
         }
@@ -185,8 +184,8 @@ std::vector<Figure> Town::fight_figures_drawn(bool marks) {
         c.screen_y[std::size_t(f)] = rm << 3;
         Figure fig;
         fig.sprite = sprite((figs_.sprite_base[std::size_t(f)] + animation_.frame(f)) & 0xff);
-        fig.half_x = formats::MapPosition{fx, fy}.half_cell_x();
-        fig.half_y = formats::MapPosition{fx, fy}.half_cell_y() - 2;
+        fig.half_x = folded_half_x(col, px);
+        fig.half_y = folded_half_y(row, py) - 2;
         fig.sink = sink;
         mechs.push_back({fig, 8 * rm - 16});
     }
