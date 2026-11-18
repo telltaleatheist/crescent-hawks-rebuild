@@ -301,7 +301,18 @@ private:
         std::optional<std::uint8_t> saved_cell;  // [bp-18]: a map cell the mission changed
         std::size_t cell = 0;                    // [bp-4]: that cell, in the map store
         int spot = 0;                            // [bp-22]: mission 1's spot
+        bool end = false;                        // [bp-10]: the walk ends
+        std::array<bool, 4> bays{};              // [bp-c]: mode 9's bays visited
+        int found = 0;                           // [bp-24]: mode 9's bays tried
     };
+    bool jail_break(KeySource& keys);
+    bool failed_start();
+    bool jail_bays(MissionWalk& w, KeySource& keys);
+    // The bars as the panel last drew them, while the records they came from
+    // are hidden (the jail break: docs/combat.md 1.7).
+    std::optional<std::vector<StatBar>> held_bars_;
+    // F:398e: the figure drawing adds the jail's four bays.
+    bool bays_drawn_ = false;
     bool mission_walk(MissionWalk& w, KeySource& keys);
     void mission_tick();
     void mission_draw();

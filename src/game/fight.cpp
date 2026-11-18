@@ -62,6 +62,23 @@ std::vector<Figure> Town::walk_in_figures() {
         figs_.active[std::size_t(k)] = 1;
         ++k;
     }
+    // 1000:0d30: with F:398e, the bays at (0x0d13 + 4i, 0x702c), each only
+    // when all of it is in the view (x 0d-27, y 00-18 in half-cells, the
+    // party at 1a, 0c): sprite 0x92 (F:39fa + 4 x 0x92 = F:3c42), a 'Mech
+    // standing.
+    if (bays_drawn_)
+        for (int i = 0; i < 4; ++i) {
+            const formats::MapPosition bay{std::uint16_t(0x0d13 + 4 * i), 0x702c};
+            const int dx = int(bay.x) - int(position_.x) + 0x1a, dy = int(bay.y) - int(position_.y) + 0x0c;
+            if (dx < 0x0d || dx > 0x27 || dy < 0 || dy > 0x18) continue;
+            Figure f;
+            f.sprite = sprite(0x92);
+            // Drawn at x' x 8: one half-cell right of the renderer's place
+            // for that half-cell, as the party's figures are (party_figures).
+            f.half_x = bay.half_cell_x() + 1;
+            f.half_y = bay.half_cell_y();
+            all.push_back(f);
+        }
     return all;
 }
 
@@ -221,11 +238,13 @@ bool Town::walk_in(KeySource& keys) {
     return run_mission(flags_[0], keys);
 }
 
-// BTECH.EXE 17dc:0d49 (Ghidra FUN_17dc_0d49), for a training mission (no
-// bit 0x80 in either count): `mechs` enemy Locusts in records 4 on, as
-// figures 12 on, and `people` enemy people in character records 8 on, as
-// figures 16 on.
+// BTECH.EXE 17dc:0d49 (Ghidra FUN_17dc_0d49), for a training mission or the
+// jail break (bit 0x80 in `people`; not the Arena's bit in `mechs`):
+// `mechs` enemy Locusts in records 4 on, as figures 12 on, and `people`
+// enemy people in character records 8 on, as figures 16 on.
 void Town::place_mission(int mechs, int people) {
+    const bool on_foot = (people & 0x80) != 0;
+    people &= 0x7f;
     figs_.computer[0] = false;
     // The townspeople keep their places in their records; every figure is
     // emptied.
@@ -238,11 +257,17 @@ void Town::place_mission(int mechs, int people) {
         figs_.active[std::size_t(f)] = 0;
         figs_.x[std::size_t(f)] = figs_.y[std::size_t(f)] = 0xffff;
     }
-    figs_.active[0] = 1;
+    // Jason's 'Mech, or Jason on foot.
+    figs_.active[on_foot ? 4 : 0] = 1;
     // Where the enemy starts: two draws, the first thrown away on the
-    // course of mission 2, which always starts at x 0c72.
+    // course of mission 2, which always starts at x 0c72; both thrown away
+    // in the jail break.
     std::uint16_t x0 = std::uint16_t(0x0c65 + (random_.next() & 7));
-    const std::uint16_t y0 = std::uint16_t(0xc059 + (random_.next() & 7));
+    std::uint16_t y0 = std::uint16_t(0xc059 + (random_.next() & 7));
+    if (on_foot) {
+        x0 = 0x0d10;
+        y0 = 0x7024;
+    }
     if (flags_[0] == 2) x0 = 0x0c72;
     // In the raid (F:3772): four 'Mechs, JENNERs (27e8:0561, template 5),
     // and flag 03 set to 0.
@@ -421,9 +446,9 @@ bool Town::fight(int kind, KeySource& keys) {
         ++figs_.active[std::size_t(k)];
         ++k;
     }
-    if (kind == -1) {
+    {
         // 2.2: the characters on foot at the formation's places, before
-        // the 'Mechs in the program; no 'Mech is in use in the alley.
+        // the 'Mechs in the program.
         int p = 0;
         for (int c = 0; c < 8; ++c) {
             if (!on_foot(c)) continue;
@@ -433,11 +458,10 @@ bool Town::fight(int kind, KeySource& keys) {
             ++figs_.active[std::size_t(f)];
             ++p;
         }
-    } else {
-        for (int c = 0; c < 8; ++c)
-            if (on_foot(c)) log_.push_back("a character on foot in a fight: not rebuilt");
     }
     }
+    // 2.1: the entry position, where kind 3 walks back to.
+    if (kind == 3) encounter_entry_ = at;
 
     // F:009e = 0; then 15ab:0b5e: "Do you want the computer to fight for
     // you?" with F:009e as the default, so always No; not asked with
@@ -1467,7 +1491,8 @@ bool Town::fight_rounds(int kind, KeySource& keys) {
             place_open_ = true;
             return false;
         }
-    } else if (kind == 0 || kind == -1) {
+    } else if (kind == 0 || kind == -1 || kind == 3) {
+        // 203b:1401 / 16a1: kinds below 1 and kind 3.
         return encounter_end(fled_how == 0, keys);
     } else if (kind != 1) {
         log_.push_back("the ending of a fight of kind " + std::to_string(kind) + ": not rebuilt");

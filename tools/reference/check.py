@@ -1284,13 +1284,49 @@ CHAIN_PARTY_CASES = [dict(case, compare=False) for case in
     {"name": "chain_party_jail_keys", "keys": "enter", "match": SCREEN},
     {"name": "chain_party_jail_barrier", "keys": "enter", "match": SCREEN},
     {"name": "chain_party_jail_alarm", "keys": "enter", "match": SCREEN},
-    {"name": "chain_party_jail_no", "keys": "n", "match": SCREEN},
-    {"name": "chain_party_jail_out", "keys": "enter", "match": SCREEN},
+    # Yes at the impounded 'Mech's question (the only chance: docs/scripts.md,
+    # "JAIL after its recruit"): the jail break, mode 9 (docs/combat.md 1.7).
+    # Jason alone walks to the bays on row 702d before the first fight (the
+    # 81st tick): the first two won't start, the third does. The escape, then
+    # the crew screen with everyone on foot: Jason pilots the STINGER, Rex the
+    # COMMANDO, the rest on foot.
+    {"name": "chain_party_jail_yes", "keys": "y", "match": SCREEN},
+    {"name": "chain_party_jail_gunfire", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_jail_break", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_jail_walk_1", "keys": "pgdn*4", "match": SCREEN},
+    {"name": "chain_party_jail_walk_2", "keys": "down*5", "match": SCREEN},
+    {"name": "chain_party_jail_bay_1", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_jail_bay_1_key", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_jail_walk_3", "keys": "right*4", "match": SCREEN},
+    {"name": "chain_party_jail_bay_2", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_jail_bay_2_key", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_jail_walk_4", "keys": "right*4", "match": SCREEN},
+    {"name": "chain_party_jail_bay_3", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_jail_escape", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_jail_crew", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_crew_jason", "keys": "up up up", "match": SCREEN},
+    {"name": "chain_party_crew_jason_seat", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_crew_jason_stinger", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_crew_rex", "keys": "down", "match": SCREEN},
+    {"name": "chain_party_crew_rex_seat", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_crew_rex_commando", "keys": "up", "match": SCREEN},
+    {"name": "chain_party_crew_rex_pick", "keys": "enter", "match": SCREEN},
+    {"name": "chain_party_crew_to_done", "keys": "down*4", "match": SCREEN},
+    {"name": "chain_party_crew_done_2", "keys": "enter", "match": SCREEN},
+]
+
+# The jail's other answer, its own sequence: No at the impounded 'Mech's
+# question gives the 'Mech up for good (docs/scripts.md, "JAIL after its
+# recruit"); the script ends and the party is outside.
+CHAIN_JAIL_NO_CASES = [dict(case, compare=False) for case in
+                       CHAIN_PARTY_CASES[:[c["name"] for c in CHAIN_PARTY_CASES].index("chain_party_jail_alarm") + 1]] + [
+    {"name": "chain_jail_no", "keys": "n", "match": SCREEN},
+    {"name": "chain_jail_no_out", "keys": "enter", "match": SCREEN},
 ]
 
 # The long unpoked run: its own tier (`--campaign`, ctest label campaign).
 CAMPAIGN = {"chain", "chain_death", "chain_mech_poked", "chain_heal_poked", "chain_repair_poked",
-            "chain_salvage_poked", "chain_orders_poked", "chain_town", "chain_party"}
+            "chain_salvage_poked", "chain_orders_poked", "chain_town", "chain_party", "chain_jail_no"}
 
 SEQUENCES = [("town", CASES, FULL_CASES, []), ("training", TRAINING_CASES, [], []),
              ("quiz", QUIZ_CASES, [], ["--show-quiz"]), ("mission", MISSION_CASES, MISSION_FULL_CASES, []),
@@ -1317,6 +1353,7 @@ SEQUENCES = [("town", CASES, FULL_CASES, []), ("training", TRAINING_CASES, [], [
              ("chain_orders_poked", [], CHAIN_ORDERS_POKED_CASES, []),
              ("chain_town", [], CHAIN_TOWN_CASES, []),
              ("chain_party", [], CHAIN_PARTY_CASES, []),
+             ("chain_jail_no", [], CHAIN_JAIL_NO_CASES, []),
              ("handover", [], HANDOVER_CASES, [])]
 
 # The feeder (tools/capture/snap.asm, docs/reference.md) hands over a key at

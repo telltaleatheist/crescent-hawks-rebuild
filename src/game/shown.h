@@ -19,6 +19,7 @@ namespace chr::game {
 // A place's picture in the upper left box (1000:48b7): O<number>.ANM.
 struct PlacePicture {
     int number = 0;
+    int frame = 0xffff;  // the frame left showing; 0xffff, the last
     bool operator==(const PlacePicture&) const = default;
 };
 

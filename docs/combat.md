@@ -223,7 +223,7 @@ pass counts. The callers: special 1 (modes 0-7 from flag 00), ARENA.BLD's specia
 | 3 | 3-6 enemy people (`0d49(0, (r & 3) + 3)`: the random count is pushed first, so it is the second argument), fight kind 1. | as below |
 | 4-7 | 1-4 enemy 'Mechs (`0d49(mode - 3, 0)`), fight kind 1. Mode 4 alone sets F:0090 = 1 (no "computer fights for you" question, no Computer order): the switch (17dc:086f) sends mode 4 to 17dc:0765, which sets it, and modes 5-7 to 0770, just after. Mode 6: one r, the raid if r & 1. Mode 7: always the raid. In the raid F:3772 = 1 and the 16 cells P:101d + 0ff0..0fff are set to tile 0x40 (a gap in a wall: a guess; map 11's load in the fight replaces them). F:0090 = 0 afterwards. | as below |
 | 8 | The Arena: `0d49(0x81, 0)`: one enemy 'Mech by the bit-0x80 branch of 1.4 (two, the second the spectator, when F:d452..d455 holds an ff), figure 0 active, fight kind 2. | not set by this mode |
-| 9 | Jason alone on foot (`19b8:152f` first hides characters 1-7 and the four 'Mechs, saving their first bytes at F:3fe9 + p and F:d452 + m, and puts the party at (0x0d10, 0x7024)). F:398e = 1. Every key is a step; on every 80th step `0d49(0, 0x88)` (eight enemy people) and fight kind 3. The mode ends when DG:014a is 0 after a fight. On y = 0x702d, at x = 0x0d14 + 4i (i < 4), texts DG:155d, 159a, 15d4 the first time and a call to `19b8:16b2`. | not set by this mode |
+| 9 | The jail break: Jason alone on foot, a fight of kind 3 every 81 ticks, and the four bays on row 702d (1.7). | not set by this mode |
 
 The results step (all modes): flag 01 (F:d30d) = 0 first.
 - Modes 2-7 pass when Jason's 'Mech still exists (F:c724 != ff) and F:3992 is 0 (the party did
@@ -357,6 +357,68 @@ in some places and kinds 1-3's in others. The kind is not stored anywhere else.
 
 So the alley fight runs like a won or fled random encounter, with no encounter box: the computer
 question first (2.4), Flee allowed, and kind 0's ending, which walks the party back to 0a69,805e.
+
+### 1.7 The jail break: special 0x28 and mode 9
+
+JAIL.BLD's special 0x28 (40), only on the recruit's visit and only after Yes at the impounded
+'Mech's question (docs/scripts.md, "JAIL after its recruit"), calls `19b8:152f`:
+
+1. **Alone.** For characters 1-7, the first byte of the record is saved at F:3fe9 + p and set to
+   ff; for 'Mech records 0-3, the first byte at F:d452 + m (where the held 'Mechs' letters live)
+   and set to ff. The party is put at (0x0d10, 0x7024) and Jason on foot (record 0 byte 0x0c =
+   8, F:c620).
+2. **The walk:** the mission driver with mode 9 (below).
+3. **Back.** The party is put at (0x0d00, 0x7014). Records 1-7 and the 'Mech records get their first bytes back, and F:d452-d455 are
+   set to ff: no 'Mech is held any more.
+4. **The impounded 'Mech.** If Jason is up (DG:014a not 0), the 0x7d bytes at 27e8:03ea (the
+   segment in DG:54f2) are copied into the first 'Mech record 0-3 whose first byte is ff. That
+   is 'Mech template 2, the STINGER (27e8:02f0 + 2 x 0x7d, `rules.mech_templates`,
+   formats/mech.md). Only one: the loop stops there.
+
+Special 0x28 then sets flag 28 = 1 if Jason fell (DG:014a = 0), and the script ends at 10c4.
+Otherwise it goes on to the escape scene and special 0x27 (39), the crew screen started with 1:
+everyone on foot and every seat empty first.
+
+**Mode 9 in the driver** (`17dc:0629`, 1.3). Set-up: the tick counter and the found count are
+0, the four bays unvisited, F:398e = 1; the window is rebuilt at the party (`287f:1314`) and the
+figures drawn (`1000:051b`). Then the walk shared with every mode: a key is a step (`218f`),
+and with no key, every eleventh empty poll is a tick. After each step or tick:
+
+- **A fight.** The counter is compared before it goes up: at 80 or more, `0d49(0, 0x88)` places
+  eight enemy people (1.4, bit 0x80) and the fight routine runs with kind 3, then the counter is
+  0 again. So the first fight comes on the 81st tick of the walk, and one every 81 after that.
+  If Jason fell (DG:014a = 0), the mode ends.
+- **The bays.** On row y = 0x702d, at x = 0x0d14 + 4i (i = 0-3), a bay not visited before: it is
+  marked visited, window 6 is cleared and two texts (DG:155d, 159a) say Jason climbs aboard;
+  `173d:086a`, a key, and a third text (DG:15d4) says he tries to start it. The found count
+  is then compared before it goes up:
+  - **0 or 1:** `19b8:16b2` (below), then window 6 and DG:1611, the 'Mech will not start
+    (`24d3:17ea`, with its pause), and a key.
+  - **2:** the picture box, O0.ANM's last frame (`1000:48b7(0, 0)`), window 6 and DG:15f8, the
+    'Mech starts (`17ea`), and the mode ends with a key.
+
+  So the third bay Jason visits always holds the 'Mech that starts, whichever bays they are
+  and in whatever order: it is a count, not a place.
+
+`19b8:16b2` plays the failed start: the disk check (`1000:28cc(1)`, no disks in the rebuild),
+O0.ANM loaded at P:42c3 (`173d:0814`), its frame buffer (0x1e78 bytes at P:244b) cleared, the
+list cursor F:e48a at 0 and the frames' data at 42f6. Then `1000:1afd` shows frames until the
+frame list entry at the cursor is 0x49 or more. Then sound 14 (`1000:19bf`), a wait of 60 ticks
+(`173d:0006`), and window 4 cleared.
+
+The results step does not set flag 01 for mode 9; F:398e goes back to 0 (`17dc:0d21`).
+
+**The bays drawn (F:398e).** While F:398e is set, the figure drawing (`1000:051b` at 0d30, and
+`1000:161a` likewise) adds the four bays after the 'Mechs: at (0x0d13 + 4i, 0x702c), only when
+the whole of it is in the view (half-cells 0d-27 across and 00-18 down, the party at 1a, 0c).
+Each is sprite 0x92 (the sprite table F:39fa, entry 0x92 at F:3c42), the first frame of the
+'Mechs' sprites: a 'Mech standing, facing the viewer. `287f:28eb` draws it onto the back buffer
+P:244b (its first argument is the destination), the buffer `19b8:16b2` clears for O0.ANM's
+frames.
+
+**The panel.** Nothing draws the party box during the jail break, so it keeps the bars of the
+whole party, though records 1-7 are hidden (the rebuild holds the bars as last drawn until the
+panel is drawn again).
 
 ## 2. The fight routine `203b:000a`
 

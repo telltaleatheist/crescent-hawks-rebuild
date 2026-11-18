@@ -593,7 +593,7 @@ int main(int argc, char** argv) {
                     drawn = chr::platform::draw_xor_box(renderer, view, town->figures(), box, palette) && drawn;
                 // A place's picture, in the upper left box (inside window 4).
                 if (const auto picture = town->picture())
-                    drawn = renderer.draw({"O" + std::to_string(picture->number) + ".ANM", 0xffff}, 8, 8) && drawn;
+                    drawn = renderer.draw({"O" + std::to_string(picture->number) + ".ANM", std::uint16_t(picture->frame)}, 8, 8) && drawn;
             } else {
                 drawn = renderer.draw(title, 0, 0);
             }

@@ -273,6 +273,7 @@ std::vector<Figure> Town::figures() const {
 std::vector<StatBar> Town::bars() const {
     std::vector<StatBar> bars;
     if (!party_box_shown_) return bars;  // the party box was cleared (a fight's questions)
+    if (held_bars_) return *held_bars_;  // the party box was cleared (a fight's questions)
     int line = 0;
     for (int i = 0; i < 8 && line < 4; ++i) {
         if (!party().present[i]) continue;
@@ -289,6 +290,7 @@ std::vector<StatBar> Town::bars() const {
 
 void Town::draw_panel(bool clear) {
     party_box_shown_ = true;
+    held_bars_.reset();
     text_.fill(0, 0, 13, kTextRows, 0);  // the panel starts black
     text_.select_window(3);
     text_.frame(3);

@@ -602,6 +602,12 @@ bool Town::special(int n, KeySource& keys) {
         // 24d3:13c6: the name the next recruit will get (F:d456).
         print_id("character." + std::to_string(next_name_));
         return true;
+    case 39:
+        // 24d3:13e6: the crew screen with everyone on foot first.
+        return crew_screen(1, keys);
+    case 40:
+        // 24d3:13ec
+        return jail_break(keys);
     case 46:
         // 24d3:0e2c: the held 'Mechs back in their records, then the crew
         // screen (docs/scripts.md).
@@ -727,10 +733,9 @@ void Town::show_picture(int number, int mode) {
     // stays as its last frame shows it. Mode 0 (a story picture) waits 50
     // frames after it (none for picture 8) and clears the box again.
     if (mode == 0) {
-        if (number != 0) {
-            picture_ = PlacePicture{number};
-            hold_screen(number == 8 ? 0 : 50);
-        }
+        // Picture 0 is followed by sound 12 (1000:19bf), not played here.
+        picture_ = PlacePicture{number};
+        hold_screen(number == 8 ? 0 : 50);
         text_.select_window(kPanelPictureWindow);
         text_.clear_window();
         picture_.reset();

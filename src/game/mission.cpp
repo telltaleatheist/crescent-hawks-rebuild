@@ -1,5 +1,6 @@
 // The training missions' driver (docs/combat.md 1.3): a mission's set-up,
 // the walk it shares with every mode, and the results.
+#include "formats/anm.h"
 #include "formats/game_files.h"
 #include "formats/mtp.h"
 #include "game/text_provider.h"
@@ -108,6 +109,15 @@ bool Town::run_mission(int mode, KeySource& keys) {
         w.done = true;
         no_computer_order_ = false;
         break;
+    case 9:
+        // The jail break (17dc:05d4): F:398e = 1 has the figure drawing add
+        // the four bays (docs/combat.md 1.7); the window built at the party
+        // (287f:1314) and everything drawn.
+        bays_drawn_ = true;
+        window_at_ = position_;
+        terrain_.map_changed();
+        mission_draw();
+        break;
     default:
         log_.push_back("mission " + std::to_string(mode) + ": not rebuilt");
         fight_unfinished_ = true;
@@ -122,7 +132,7 @@ bool Town::mission_walk(MissionWalk& w, KeySource& keys) {
     // The raid (F:3772) and the Arena go straight to the results.
     bool end = raid_ || w.mode == 8;
     int countdown = 0;  // [bp-1e]
-    while (!end) {
+    while (!end && !w.end) {
         if (at_the_door(position_)) {
             if (w.done) {
                 end = true;
@@ -220,6 +230,45 @@ bool Town::load_town_map(int number, int grid) {
     return true;
 }
 
+// BTECH.EXE 24d3:13ec, special 0x28 (40), and 19b8:152f (Ghidra
+// FUN_19b8_152f)
+// The jail break: Jason alone on foot at 0d10,7024 (the others' first
+// record bytes kept aside, the held 'Mechs' letters in F:d452), mode 9,
+// then the party at 0d00,7014, everyone back and no 'Mech held. If Jason is up he has the STINGER,
+// 'Mech template 2 (27e8:03ea), in the first empty 'Mech record; if he
+// fell, flag 28 = 1 (docs/combat.md 1.7).
+bool Town::jail_break(KeySource& keys) {
+    held_bars_ = bars();  // the panel is not drawn again until after
+    std::array<std::uint8_t, 8> kept{};  // F:3fe9 + p
+    for (int p = 1; p < 8; ++p) {
+        kept[std::size_t(p)] = characters_[std::size_t(p)][character::kName];
+        characters_[std::size_t(p)][character::kName] = character::kEmpty;
+    }
+    for (int m = 0; m < 4; ++m) {
+        held_mechs_[std::size_t(m)] = mechs_[std::size_t(m)][0];
+        mechs_[std::size_t(m)][0] = 0xff;
+    }
+    position_ = {0x0d10, 0x7024};
+    characters_[0][character::kMech] = character::kOnFoot;
+    if (!run_mission(9, keys)) return false;
+    position_ = {0x0d00, 0x7014};
+    for (int p = 1; p < 8; ++p) characters_[std::size_t(p)][character::kName] = kept[std::size_t(p)];
+    for (int m = 0; m < 4; ++m) {
+        mechs_[std::size_t(m)][0] = held_mechs_[std::size_t(m)];
+        held_mechs_[std::size_t(m)] = 0xff;
+    }
+    if (combat_.fight_on) {
+        for (int m = 0; m < 4; ++m) {
+            if (mechs_[std::size_t(m)][0] != 0xff) continue;
+            mechs_[std::size_t(m)] = rules_->mechs[2].record;
+            break;
+        }
+    } else {
+        flags_[0x28] = 1;
+    }
+    return true;
+}
+
 // BTECH.EXE 17dc:134b (Ghidra FUN_17dc_134b)
 // After a fight the party stands where Jason's figure is: his 'Mech's
 // (figure 0, two half-cells down, into the next area if that crosses its
@@ -277,9 +326,77 @@ bool Town::mission_step_done(MissionWalk& w, KeySource& keys) {
         }
         return read_key(keys).has_value();  // 273d:086a, 273d:0259
     }
+    case 9:
+        return jail_bays(w, keys);
     default:
         return true;
     }
+}
+
+// 17dc:0868..09af, mode 9's part of the walk (docs/combat.md 1.7): a fight
+// of kind 3 every 81 ticks, and the bays on row 702d. The third bay tried
+// holds the 'Mech that starts, whichever it is.
+bool Town::jail_bays(MissionWalk& w, KeySource& keys) {
+    if (w.count++ >= 80) {
+        place_mission(0, 0x88);
+        if (!fight(3, keys)) return false;
+        w.count = 0;
+        if (!combat_.fight_on) {
+            w.end = true;
+            w.done = true;
+        }
+    }
+    if (!combat_.fight_on) return true;
+    if (position_.y != 0x702d) return true;
+    for (int i = 0; i < 4; ++i) {
+        if (position_.x != 0x0d14 + 4 * i || w.bays[std::size_t(i)]) continue;
+        w.bays[std::size_t(i)] = true;
+        text_.select_window(6);
+        clear_window();           // 2656:0388
+        text_.frame(0);           // 2656:0004(0)
+        print_id("mission.board");
+        print_id("mission.board_2");
+        if (!read_key(keys)) return false;  // 273d:086a, 273d:0259
+        print_id("mission.switch");
+        if (w.found++ != 2) {
+            if (!failed_start()) return false;
+            text_.select_window(6);
+            print_id("mission.wont_start");  // 24d3:17ea, with its pause
+        } else {
+            show_picture(0, 0);   // 1000:48b7(0, 0)
+            text_.select_window(6);
+            print_id("mission.starts");
+            w.done = true;
+            w.end = true;
+        }
+        if (!read_key(keys)) return false;  // 273d:0259
+    }
+    return true;
+}
+
+// BTECH.EXE 19b8:16b2 (Ghidra FUN_19b8_16b2)
+// The 'Mech that won't start: O0.ANM's frames while the frame list's entry
+// is below 0x49, sound 14 (1000:19bf, not played here), a wait of 60 and
+// the picture box cleared. 1000:28cc asks for the disk; there are no disks.
+bool Town::failed_start() {
+    int last = 0;
+    if (game_dir_)
+        if (const auto path = formats::find_game_file(*game_dir_, "O0.ANM")) {
+            const auto anm = formats::read_anm(*path);
+            int ticks = 0;
+            for (std::size_t k = 0; k < anm.sequence.size() && k < anm.delays.size(); ++k) {
+                if (k > 0 && anm.sequence[k] >= 0x49) break;
+                last = int(k);
+                ticks += anm.delays[k];
+            }
+            picture_ = PlacePicture{0, last};
+            hold_screen(ticks);
+        }
+    hold_screen(60);  // 273d:0006(0x3c)
+    text_.select_window(4);
+    clear_window();
+    picture_.reset();
+    return true;
 }
 
 // 17dc:0bf2: flag 01 says whether the mission was passed.
@@ -324,6 +441,7 @@ void Town::mission_results(const MissionWalk& w) {
     }
     // The town's own drawing takes over again.
     frozen_.reset();
+    bays_drawn_ = false;  // F:398e = 0
     // F:398e = 0. F:4594 has the place's script deciphered again
     // (17dc:1d30); the rebuild keeps the script apart from the fight.
     log_.push_back("mission " + std::to_string(w.mode) + ": " + (flags_[flag::kPassed] ? "passed" : "not passed") +

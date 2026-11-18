@@ -300,8 +300,11 @@ the second slot's offset, not his own (docs/movement.md); chr asked at the jail 
 until that was fixed. Inside: ask the jailkeeper about Rex's friend (menu 0x1f, item 07dc), the
 scenes, and new_member 4 (arm:4 after the scene's read): Rick, on foot. On this draw he is the
 double agent: flags 24 = 0x1f, 25 = 4, 26 = 1, 27 = 1 on the original. The question about the
-impounded 'Mech gets No: Yes runs special 0x28, the jail break (mode 9, Jason alone on foot, not
-rebuilt). The party ends outside the jail.
+impounded 'Mech gets Yes, the jail break (mode 9, docs/combat.md 1.7): Jason alone walks to the
+bays on row 702d, 23 steps, well before the first fight (the 81st tick), so no fight is involved;
+the first two bays won't start, the third does. The escape, then the crew screen with everyone on
+foot: Jason pilots the STINGER, Rex the COMMANDO. No is kept as its own short sequence,
+chain_jail_no (the shared prefix not compared): the 'Mech given up, the party outside.
 
 Open: a walk from map 3's jail door to its Hospital (entrance 1, 0d11,700b) stopped short of the
 door on both programs, so that Hospital has not been seen yet.
