@@ -1335,7 +1335,7 @@ CHAIN_JAIL_FIGHT_CASES = [dict(case, compare=False) for case in
     {"name": "chain_jail_fight_steps", "keys": " ".join(["up down"] * 40), "match": SCREEN},
     {"name": "chain_jail_fight", "keys": "up", "match": SCREEN},
     {"name": "chain_jail_fight_round_1", "keys": "y enter arm:1 n", "match": {}, "fight": True},
-    {"name": "chain_jail_fight_round_2", "keys": "idle:1", "match": {}, "fight": True},
+    {"name": "chain_jail_fight_round_2", "keys": "idle:1", "match": SCREEN, "fight": True},
 ]
 
 # The main chain from the jail on (chain_party is its prefix, with Rick on

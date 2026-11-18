@@ -439,8 +439,10 @@ void Town::mission_results(const MissionWalk& w) {
         raid_ = false;
         break;
     }
-    // The town's own drawing takes over again.
-    frozen_.reset();
+    // The town's own drawing takes over again, unless the leader fell: the
+    // main loop then skips its drawing (1000:0467) for the game over, and
+    // the fight's last page stays.
+    if (combat_.fight_on) frozen_.reset();
     bays_drawn_ = false;  // F:398e = 0
     // F:398e = 0. F:4594 has the place's script deciphered again
     // (17dc:1d30); the rebuild keeps the script apart from the fight.

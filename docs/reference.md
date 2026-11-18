@@ -354,11 +354,6 @@ counts, DG:014a and the map marks).
   chr, with no item left, stops at its first poll between rounds (`ScriptKeys::poll`). That is
   where the captures are taken, not a difference in the round loop: `chain_agent` gives the
   box's key `arm:2` and matches the original through four more keys.
-- **The map behind the game-over box after the jail break** (`chain_jail_fight_round_2`): the
-  state matches, but the original's play area still shows the fight's view around the bays,
-  while chr's shows the town map drawn at another window. Only the state is compared there.
-  Which window the original keeps when Jason falls in mode 9 (`19b8:152f` restores the party at
-  0d00,7014 and draws nothing with DG:014a at 0) is not yet read.
 
 ## Findings
 
