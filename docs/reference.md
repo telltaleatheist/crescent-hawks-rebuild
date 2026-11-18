@@ -354,7 +354,10 @@ counts, DG:014a and the map marks).
   one `arm:N` names, so the original plays on through rounds before its next capture, while
   chr, with no item left, stops at its first poll between rounds (`ScriptKeys::poll`). That is
   where the captures are taken, not a difference in the round loop: `chain_agent` gives the
-  box's key `arm:2` and matches the original through four more keys.
+  box's key `arm:2` and matches the original through four more keys. The "all fled" box
+  (DG:38e0, `chain_return_fight`) is the same: with `arm:1 n` the original's next capture
+  still shows the box (the key went to the box's flush), with the same game state; `arm:2 n`
+  gives the box's read the key, as in chr.
 
 ## Findings
 

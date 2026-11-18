@@ -578,6 +578,7 @@ bool Town::heal(int doctor, KeySource& keys) {
         print_id("heal.no_skill");
     }
     print_id("heal.to_assist");
+    held_bars_ = bars();  // the bars are drawn again only by 1000:4cac below
     text_.set_fg(10);  // 1000:28a2
     for (int c = 0; c < 8; ++c) {
         auto& r = characters_[std::size_t(c)];
@@ -609,7 +610,7 @@ bool Town::heal(int doctor, KeySource& keys) {
     }
     text_.set_fg(15);
     if (!press_key(keys)) return false;  // 273d:086a, 1000:2a4f
-    draw_panel(false);  // 1000:4cac(0)
+    draw_panel(false, false);  // 1000:4cac(0)
     flags_[0x29] = 0x3f;
     return true;
 }

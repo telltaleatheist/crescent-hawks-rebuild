@@ -1475,6 +1475,55 @@ CHAIN_AGENT_CASES = [dict(case, compare=False) for case in
     {"name": "chain_money_2_healed", "keys": "enter", "match": SCREEN},
     {"name": "chain_money_2_return", "keys": "enter", "match": SCREEN},
     {"name": "chain_money_2_back", "keys": "enter", "match": SCREEN},
+    # Back to map 3 for the courses. Encounters with no 'Mechs are fought only while
+    # Edward and Russ ride (no one steps out); every 'Mech encounter is evaded
+    # (n, then a key for each of two pages).
+    {"name": "chain_return_walk_1", "keys": "left*22 up*32", "match": SCREEN},
+    {"name": "chain_return_met", "keys": "n", "match": SCREEN},
+    {"name": "chain_return_computer", "keys": "enter", "match": SCREEN},
+    {"name": "chain_return_fight", "keys": "y enter arm:2 n", "match": {}, "fight": True},
+    {"name": "chain_return_won", "keys": "enter", "match": SCREEN},
+    {"name": "chain_return_pockets", "keys": "enter", "match": SCREEN},
+    {"name": "chain_return_aid", "keys": "enter", "match": SCREEN},
+    {"name": "chain_return_healed", "keys": "enter", "match": SCREEN},
+    {"name": "chain_return_back", "keys": "enter", "match": SCREEN},
+    {"name": "chain_return_walk_2", "keys": "up*6", "match": SCREEN},
+    {"name": "chain_return_evade_1", "keys": "n enter enter", "match": SCREEN},
+    {"name": "chain_return_walk_3", "keys": "up*119", "match": SCREEN},
+    {"name": "chain_return_evade_2", "keys": "n enter enter", "match": SCREEN},
+    {"name": "chain_return_walk_4", "keys": "up*5", "match": SCREEN},
+    {"name": "chain_return_evade_3", "keys": "n enter enter", "match": SCREEN},
+    {"name": "chain_return_walk_5", "keys": "up*62 " + " ".join(["up home"] * 15) + " up*14", "match": SCREEN},
+    {"name": "chain_return_evade_4", "keys": "n enter enter", "match": SCREEN},
+    {"name": "chain_return_walk_6", "keys": "up*115 pgup*31", "match": SCREEN},
+    {"name": "chain_return_evade_5", "keys": "n enter enter", "match": SCREEN},
+    {"name": "chain_return_walk_7", "keys": "pgup*43 " + " ".join(["up pgup"] * 3) + " up", "match": SCREEN},
+    # Heal from the command menu (the bar starts on the item last chosen, Allocate).
+    # It changes the draws, so the walk on misses a 'Mech fight.
+    {"name": "chain_return_space", "keys": "space", "match": SCREEN},
+    {"name": "chain_return_heal", "keys": "down down enter", "match": SCREEN},
+    {"name": "chain_return_heal_done", "keys": "enter", "match": SCREEN},
+    {"name": "chain_return_walk_8", "keys": " ".join(["pgup up"] * 56), "match": SCREEN},
+    {"name": "chain_return_walk_9", "keys": "right*34 pgup*8", "match": SCREEN},
+    # REPAIR's question comes on a step from its door cell, not onto it.
+    {"name": "chain_return_repair_door", "keys": "right", "match": SCREEN},
+    {"name": "chain_return_repair", "keys": "enter", "match": SCREEN},
+    {"name": "chain_tech_who", "keys": "up*5 enter", "match": SCREEN},
+    {"name": "chain_tech_fee", "keys": "down down enter", "match": SCREEN},
+    {"name": "chain_tech_paid", "keys": "enter", "match": SCREEN},
+    {"name": "chain_tech_menu", "keys": "enter", "match": SCREEN},
+    {"name": "chain_tech_leave", "keys": "up enter", "match": SCREEN},
+    {"name": "chain_hospital_walk_1", "keys": "left*8 home up left up home up home up*16 home*5 up left home up left "
+     "home end up left home end up left home end up left home left*5 home*8 up left up home up home up*3 home*3",
+     "match": SCREEN},
+    {"name": "chain_hospital_evade", "keys": "n enter enter", "match": SCREEN},
+    {"name": "chain_hospital_walk_2", "keys": "home", "match": SCREEN},
+    {"name": "chain_hospital_door", "keys": "down", "match": SCREEN},
+    {"name": "chain_hospital", "keys": "enter", "match": SCREEN},
+    {"name": "chain_seminar_fee", "keys": "up*5 enter", "match": SCREEN},
+    {"name": "chain_seminar_who", "keys": "enter", "match": SCREEN},
+    {"name": "chain_seminar_paid", "keys": "down*3 enter", "match": SCREEN},
+    {"name": "chain_seminar_menu", "keys": "enter", "match": SCREEN},
 ]
 
 
