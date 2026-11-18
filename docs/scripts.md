@@ -350,6 +350,14 @@ for a party of one:
 
 So every recruit (HOSPITAL, REPAIR, JAIL) comes after this one.
 
+**The double agent closes the town.** Flag 27 (a traitor in the party, set by `new_member`'s
+draw) is the first test in ARENA, ARMOR, CLOTHES, LOUNGE, REPAIR and WEAPON, and GARAGE's with
+flag 18 clear (02c6), HOSPITAL's at 040d: each prints a refusal and ends. No script clears it.
+Only a fight does (docs/combat.md 2.9): Scan Unit on the party's side showing the agent sets
+F:374a, and after that round he acts and is removed, flag 27 = 0, flag 24 = 0x7f. Until then
+those places stay shut, and the encounter mask stays at 0x1f (four times the encounters). So
+ARENA's test of flag 28 at 06a7, after its own fight, is never reached with a traitor aboard.
+
 **JAIL after its recruit: one chance at the impounded 'Mech.** The recruit's branch (07dc) sets
 flag 2a before anything else, and the script's first test (0005) sends every later visit with
 flag 2a to 0277, the execution branch: whichever way flag 1e and flag 2a steer its text (0331,
