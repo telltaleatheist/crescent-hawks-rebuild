@@ -65,6 +65,23 @@ bool Town::visit_place(int entrance, KeySource& keys) {
     if (!run_script(file, keys)) return false;
     // Special 14 after every visit.
     count_members();
+    // 1000:7e8f..7f17: the two ways into VIEWDISK (place 0x12), each by
+    // this routine again, then area 0x34 becomes map 12 (27e8:0064). After
+    // the garage only before flag 32, with flag 30 and a party, and after a
+    // text and a key; after BARRACK2 (0x13) whenever there is a party.
+    if (flags_[flag::kDiskSeen] == 0 && file == 8 && flags_[flag::kFrobPaid] != 0 && flags_[flag::kMembers] != 0) {
+        text_.select_window(6);
+        clear_window();
+        print_id("place.follow_on.0");
+        print_id("place.follow_on.1");  // 14d3:17ea
+        if (!read_key(keys)) return false;
+        if (!visit_place(0x12, keys)) return false;
+        area_maps_[0x34] = 12;
+    }
+    if (file == 0x13 && flags_[flag::kMembers] != 0) {
+        if (!visit_place(0x12, keys)) return false;
+        area_maps_[0x34] = 12;
+    }
     text_.select_window(kPanelPictureWindow);
     text_.clear_window();
     picture_.reset();

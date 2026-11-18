@@ -1406,6 +1406,13 @@ CHAIN_AGENT_CASES = [dict(case, compare=False) for case in
     {"name": "chain_barrack_10_back", "keys": "enter", "match": SCREEN},
     {"name": "chain_barrack_walk_11", "keys": "down*64", "match": SCREEN},
     {"name": "chain_barrack_door", "keys": "end left end left end", "match": SCREEN},
+    # Yes: BARRACK2 with a party (flag 0e) is one page and a key, and after
+    # it 17dc:0008 runs VIEWDISK (place 0x12): thirteen pages, flag 32 set
+    # at its end, then area 0x34 becomes map 12 (27e8:0064). The step that
+    # asked goes on as after No.
+    {"name": "chain_barrack_in", "keys": "enter", "match": SCREEN},
+] + [{"name": "chain_viewdisk_%d" % n, "keys": "enter", "match": SCREEN} for n in range(1, 14)] + [
+    {"name": "chain_viewdisk_done", "keys": "enter", "match": SCREEN},
 ]
 
 

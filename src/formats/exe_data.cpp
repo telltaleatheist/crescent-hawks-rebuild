@@ -191,6 +191,9 @@ constexpr std::array kDos103 = {
     ExeSpan{ExeSpan::Kind::Text, "intro.notice.3", 0x46db, 0x0be2, 43, "4b63835bd8295376"},
     ExeSpan{ExeSpan::Kind::Text, "intro.first_time", 0x46db, 0x0c0d, 44, "29640df170975cbc"},
     ExeSpan{ExeSpan::Kind::Text, "intro.load_old_game", 0x46db, 0x0c39, 95, "bb1c956763c88c90"},
+    // Before VIEWDISK after the garage (17dc:0008 at 1000:7ec2, 7ecf).
+    ExeSpan{ExeSpan::Kind::Text, "place.follow_on.0", 0x46db, 0x1384, 50, "83e880e5ab13237c"},
+    ExeSpan{ExeSpan::Kind::Text, "place.follow_on.1", 0x46db, 0x13b6, 44, "50a0a217ac94a2a3"},
     // Talking to the townspeople inside (17dc:17b9); the reasons are by
     // place (pointers at DGROUP:4e32).
     ExeSpan{ExeSpan::Kind::Text, "talk.nobody", 0x46db, 0x16de, 48, "b1478517be074391"},

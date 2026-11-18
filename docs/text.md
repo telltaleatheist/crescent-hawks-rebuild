@@ -130,7 +130,7 @@ narration of what happened, descriptions and flavour, and the original's own not
 | shot.* but shot.squashed, shot.arena_damaged, shot.urbanmechs | 26 | the pieces of a shot's message, hit and miss, critical, kill |
 | location.0-10 | 11 | the hit locations, as labels |
 
-### Imported only (604 IDs)
+### Imported only (606 IDs)
 
 | IDs | Count | Why |
 |---|---|---|
@@ -142,6 +142,7 @@ narration of what happened, descriptions and flavour, and the original's own not
 | intro.notice.0-3 | 4 | the original's trademark and copyright notice: ours would not be theirs |
 | course.* | 16 | the teacher's dialogue |
 | talk.hello, talk.going_to, talk.reason.0-11 | 14 | the townspeople's dialogue |
+| place.follow_on.0-1 | 2 | the narration before VIEWDISK after the garage (17dc:0008) |
 | after.* but the seven above | 11 | narration: repairs, scrap, salvage, loot |
 | unit.suspicious | 1 | the double agent's clue (story) |
 | fight.* but the six above | 35 | the encounter descriptions, the double agent's story, how a fight ended |

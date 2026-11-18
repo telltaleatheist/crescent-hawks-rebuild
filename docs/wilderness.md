@@ -96,9 +96,9 @@ load into all nine areas (1000:3469, 1000:3edc) loads each grid's map in turn. N
 around 0xcc has a map. The table is game state, not a constant: the raid's third story line makes area
 0xcc map 11 (27e8:00fc) for the rest of the game, so a party coming back finds the ruined town,
 whose north wall is broken (map 1's is whole, and blocks a 'Mech's step along the whole edge).
-The rebuild keeps the table in the town (`area_maps_`) and the raid writes it; the area loads
-read it. Not rebuilt yet: the nine-map load of a saved game, and the VIEWDISK follow-on's write
-(area 0x34, map 12; docs/scripts.md).
+The rebuild keeps the table in the town (`area_maps_`); the raid writes it, and so do the
+follow-ons into VIEWDISK (area 0x34 becomes map 12, the HUT; docs/scripts.md); the area loads
+read it. Not rebuilt yet: the nine-map load of a saved game.
 
 ## The masks: 287f:1886 and 287f:11bb
 

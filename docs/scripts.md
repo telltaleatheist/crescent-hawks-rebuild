@@ -399,9 +399,9 @@ runs as the original does; the return visit itself is not captured.) The chain t
   prints them in decimal).
 - Talk outdoors (`17dc:17b9`): one of eight rumours (DGROUP:4e5e) at random. No rebuilt place
   is outdoors; the rebuild makes the draw and logs it.
-- The second barracks' follow-on (into VIEWDISK) needs flags that no rebuilt place sets yet. The
-  garage on foot is rebuilt (special 11, then flag 18 and the party put inside at the rear exit);
-  its 'Mech paths (specials 1c, 1d, 2e) are not.
+- The garage on foot is rebuilt (special 11, then flag 18 and the party put inside at the rear
+  exit); its 'Mech paths (specials 1c, 1d, 2e) are not. Both follow-ons into VIEWDISK (step 7 of
+  "Entering a place") are rebuilt; the main chain runs the second barracks' one.
 
 ## Other descriptions
 
