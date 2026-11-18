@@ -1421,7 +1421,7 @@ mistake; "quirk" means it may be intended.
 | # | what happens | where | fix switch |
 |---|---|---|---|
 | 1 | Distance is min + max/2, not the usual max + min/2: straight lines count half, diagonals relatively long. Quirk; it may be meant. | `1e31:0bb5` | `fix_distance` |
-| 2 | The Kick's to-hit counts missing actuators of 'Mech record s, the figure number; for an enemy kicker (figures 12-15) that reads past the eight records. Probable. | `22e8:000c` to-hit, `1e31:1b44` | `fix_kick_actuators` |
+| 2 | The Kick's to-hit counts missing actuators of 'Mech record s, the figure number; for an enemy kicker (figures 12-15) that reads past the eight records, into the program's stack (F:cd24 + 0x7d (s - 12), bytes 0x24 / 0x25). Below the stack's deepest use, F:ce89 in every capture the rig has taken, those bytes are 0: all six actuators count as missing (T + 6), and the rebuild reads them so. Figure 15's (F:ce9b / ce9c) lie in stack the program has used: the rebuild takes 0 there too and logs it (open question). Probable. | `22e8:000c` to-hit, `1e31:1b44` | `fix_kick_actuators` (off; on: the kicker's own record) |
 | 3 | Every damaged internal location gets at least one critical; the board game gives none below 8. Probable. | `1e31:11ab` | `fix_critical_count` |
 | 4 | Against people, D is not reset between the shots of one weapon: armour halving carries on. Probable. | `22e8:000c` | `fix_person_damage` |
 | 5 | A personal weapon at a 'Mech: no roll, no effect, and the hit flag passed to the animation is left from the round's last shot (unset at the round's first: 22e8:000c's stack, taken as a miss with a log line). With graphics on it picks between a miss's redraw and the explosion, so only the tiles' frame differs. The fix shows a miss. | `22e8:000c`, `22e8:12c7` | `fix_stale_hit_flag` |
@@ -1565,6 +1565,10 @@ sequence compares the scene with the original's, over the whole screen and the s
 18. Answered: special 43 (scripts.md) is compared in the campaign run (`chain`, docs/reference.md),
     which wins mission 5 by orders. Its walker stays inside while flag 2d is set
     (docs/townspeople.md).
+19. Figure 15's Kick (bug 2) reads 'Mech record 15's bytes 0x24 / 0x25, F:ce9b / ce9c, in stack the
+    program has used (its deepest use in the rig's captures is F:ce89). What they hold depends on the
+    calls before; the rebuild takes 0, as below the deepest use, and logs it. A difference there shows
+    as a state difference after that fight.
 
 ## Functions
 

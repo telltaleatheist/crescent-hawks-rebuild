@@ -339,6 +339,8 @@ private:
     bool new_member(int skill, KeySource& keys);
     bool offer_weapon(int weapon, KeySource& keys);
     bool crew_screen(int start, KeySource& keys);
+    bool command_menu(KeySource& keys);
+    bool allocate_crew(KeySource& keys);
     void fight_ends();
     bool random_encounter(KeySource& keys);
     bool place_encounter();

@@ -41,9 +41,10 @@ struct Fixes {
                                                 //     combat graphics, as with them
     bool fix_terrain_noise = false;        // 37: 287f:0df8, a right side's noise unscaled
     bool fix_talk_let_out = false;         // 38: 17dc:17b9, the last one waiting's place, not this one
+    bool fix_kick_actuators = false;       // 2: 22e8:000c, an enemy kicker's actuators read from
+                                           //    'Mech record s, in the stack
 
     // Fixed by default (on): memory the rebuild does not hold, or a hang.
-    bool fix_kick_actuators = true;   // 2: 1e31:1b44 reads 'Mech records 12-15, past the eight
     bool fix_path_bound = true;       // 18: 203b:193b, a path of more than 12 steps
     bool fix_flee_target = true;      // 21: 203b:000a, figure -1 (F:4002 / F:4034)
     bool fix_weapon_count = true;     // 23: 15ab:0002, a count left from the stack

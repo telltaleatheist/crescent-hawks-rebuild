@@ -527,6 +527,70 @@ bool Town::crew_screen(int start, KeySource& keys) {
     }
 }
 
+// BTECH.EXE 1000:2c50 (Ghidra FUN_1000_2c50)
+// The Space command menu: menu 1 in window 1, one row higher and one item
+// longer when any of 'Mech records 0-3 is in use (the crew item). Only the
+// crew item and the healing are rebuilt; the others are logged.
+bool Town::command_menu(KeySource& keys) {
+    bool mechs = false;
+    for (int m = 0; m < 4; ++m) mechs = mechs || mechs_[std::size_t(m)][0] != character::kEmpty;
+    text_.place_window(1, mechs ? 12 : 13, mechs ? 8 : 7);
+    menus_[1].items = mechs ? 8 : 7;
+    text_.select_window(1);
+    clear_window();
+    text_.frame(1);
+    print_id("space.items.0");
+    if (mechs) print_id("space.items.allocate");
+    print_id("space.items.1");
+    print_id("space.items.2");
+    const auto chosen = menu(1, keys);
+    if (!chosen) {
+        place_open_ = true;
+        return false;
+    }
+    // Numbered as with the crew item.
+    const int item = !mechs && *chosen >= 2 ? *chosen + 1 : *chosen;
+    switch (item) {
+    case 0:
+        break;
+    case 2:
+        if (!allocate_crew(keys)) return false;
+        break;
+    case 4:
+        if (!heal(0, keys)) return false;  // 1c31:000a(0)
+        break;
+    default:
+        log_.push_back("the command menu's item " + std::to_string(item) + ": not rebuilt");
+        break;
+    }
+    // 273d:06c3 copies the page's map columns back over the windows; the
+    // tick that follows draws the map again (1000:046e).
+    return true;
+}
+
+// BTECH.EXE 1000:4d57 (Ghidra FUN_1000_4d57)
+// The command menu's crew item: the crew screen, unless a map block (bit
+// 0x80 of any of the window's nine block values) is near; then a refusal
+// in the message box and a key.
+bool Town::allocate_crew(KeySource& keys) {
+    const auto& blocks = terrain_.held_window(window_at_).blocks;
+    bool near_map = false;
+    for (const auto b : blocks) near_map = near_map || (b & 0x80) != 0;
+    if (near_map) {
+        open_message_box();  // 24d3:17c6, 17ea
+        print_id("space.no_dismount");
+        if (!read_key(keys)) {  // 273d:0259
+            place_open_ = true;
+            return false;
+        }
+        return true;
+    }
+    if (!crew_screen(0, keys)) return false;
+    draw_panel(true);  // 1000:4cac(1)
+    clear_window();    // 2656:0388
+    return true;
+}
+
 // BTECH.EXE 24d3:0004 (Ghidra FUN_24d3_0004), the cases the Citadel uses.
 bool Town::special(int n, KeySource& keys) {
     switch (n) {

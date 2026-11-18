@@ -56,6 +56,36 @@ In order (`1000:020a`..`050d`):
    yet the question (its capture after the key still shows the box). A new game from there is not
    rebuilt yet, and quitting stops the rebuild's game.
 
+## The command menu (Space)
+
+The key half calls `1000:2c50` for key 0x20 (at `1000:0101`), after the step and the walking
+frames and before the tick, which still follows. It sets window 1 to row 13, height 7, and menu 1
+to 7 items; if any of 'Mech records 0-3 is in use (byte 0 not ff), one row higher, one row taller
+and 8 items, and the crew line is printed among the others (DG:051f, then 0543 with 'Mechs,
+055b, 0592). Window 1 is selected, cleared and framed (style 1), and menu 1 is read
+(`2656:0b5e`). Its jump table (`1000:2d91`) is numbered as with the crew item; without
+'Mechs, items from 2 on are one lower:
+
+| item | what |
+|---|---|
+| 0 | back to the game |
+| 1 | game settings (`1000:3bd0`) |
+| 2 | the crew, with 'Mechs only (`1000:4d57`) |
+| 3 | inspect a character (`1000:378d`, docs/combat.md 2.9) |
+| 4 | healing, `1c31:000a(0)` (docs/combat.md) |
+| 5 | load a game (`1000:32b3`) |
+| 6 | save a game (`1000:35d3`) |
+| 7 | the overhead map (`1000:3d40`) |
+
+`1000:4d57`: if any of the window's nine block values (P:07a4) has bit 0x80 (a map block
+near the party), the message box with DG:0ace and a key. Otherwise the crew screen with
+argument 0 (docs/scripts.md), the panel (`1000:4cac(1)`) and window 1 cleared. After any item
+`273d:06c3` copies the page's map columns back over the windows.
+
+Rebuilt: items 0, 2 and 4 (`Town::command_menu`, `Town::allocate_crew`); the others are logged.
+A rider ('Mech byte 0x7a) is not on foot, so soldiers can't shoot at him; the repairs still pick the
+best tech among all the party's characters (docs/combat.md 2.15).
+
 ## Timers
 
 These bytes are script flags (docs/scripts.md: flag f is F:d30c + f), so the places' scripts

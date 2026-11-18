@@ -1431,6 +1431,50 @@ CHAIN_AGENT_CASES = [dict(case, compare=False) for case in
     {"name": "chain_barrack_in", "keys": "enter", "match": SCREEN},
 ] + [{"name": "chain_viewdisk_%d" % n, "keys": "enter", "match": SCREEN} for n in range(1, 14)] + [
     {"name": "chain_viewdisk_done", "keys": "enter", "match": SCREEN},
+    # Money for the courses: 'Mech wrecks. Flag 24 is 0x7f here (combat.md 1.1), so an encounter
+    # can start one tick in 128; idle passes and blocked steps draw nothing, so only the route
+    # chooses the fight. This one, 57 steps north of BARRACK2's door, is 2 'Mechs and 4
+    # soldiers, won by the computer with everyone alive; Edward (character 2) is the tech.
+    {"name": "chain_money_walk_1", "keys": "right*6 pgup*4 up*47", "match": SCREEN},
+    {"name": "chain_money_1_fight", "keys": "y y enter arm:1 n", "match": {}, "fight": True},
+] + [{"name": "chain_money_1_key_%d" % n, "keys": "enter", "match": {}, "fight": True} for n in range(1, 5)] + [
+    {"name": "chain_money_1_won", "keys": "enter", "match": SCREEN},
+    {"name": "chain_money_1_tech", "keys": "enter", "match": SCREEN},
+    {"name": "chain_money_1_scrap", "keys": "enter", "match": SCREEN},
+    {"name": "chain_money_1_pockets", "keys": "enter", "match": SCREEN},
+    # The loot: the bar starts on Edward. Giving him the Rifle offers his Crossbow, and
+    # giving that back offers the Rifle again, for as long as the default is taken.
+    {"name": "chain_money_1_loot", "keys": "enter", "match": SCREEN},
+    {"name": "chain_money_1_swap", "keys": "enter", "match": SCREEN},
+    {"name": "chain_money_1_swap_back", "keys": "enter", "match": SCREEN},
+    {"name": "chain_money_1_rifle_russ", "keys": "down enter", "match": SCREEN},
+    {"name": "chain_money_1_rifle_edward", "keys": "up enter", "match": SCREEN},
+    {"name": "chain_money_1_drop", "keys": "down down enter", "match": SCREEN},
+    {"name": "chain_money_1_drop_2", "keys": "enter", "match": SCREEN},
+    {"name": "chain_money_1_healed", "keys": "enter", "match": SCREEN},
+    {"name": "chain_money_1_back", "keys": "enter", "match": SCREEN},
+    {"name": "chain_money_1_end", "keys": "enter", "match": SCREEN},
+    # Space: the command menu (1000:2c50), eight items with 'Mechs. Allocate men in 'Mechs
+    # (1000:4d57) opens the crew screen: Edward and Russ, who can't pilot, become riders in
+    # the Commando and the Stinger, out of the soldiers' reach.
+    {"name": "chain_space_menu", "keys": "space", "match": SCREEN},
+    {"name": "chain_space_crew", "keys": "down down enter", "match": SCREEN},
+    {"name": "chain_crew_edward", "keys": "down down enter", "match": SCREEN},
+    {"name": "chain_crew_edward_rides", "keys": "enter", "match": SCREEN},
+    {"name": "chain_crew_russ", "keys": "down enter", "match": SCREEN},
+    {"name": "chain_crew_russ_rides", "keys": "down enter", "match": SCREEN},
+    {"name": "chain_crew_done", "keys": "down enter", "match": SCREEN},
+    # Fight 2: 2 'Mechs and 7 soldiers. The soldiers run, both 'Mechs are wrecked, Edward
+    # (riding) is still the tech.
+    {"name": "chain_money_walk_2", "keys": "end*6 pgdn*183", "match": SCREEN},
+    {"name": "chain_money_2_fight", "keys": "y y enter arm:1 n", "match": {}, "fight": True},
+] + [{"name": "chain_money_2_key_%d" % n, "keys": "enter", "match": {}, "fight": True} for n in range(1, 5)] + [
+    {"name": "chain_money_2_won", "keys": "enter", "match": SCREEN},
+    {"name": "chain_money_2_tech", "keys": "enter", "match": SCREEN},
+    {"name": "chain_money_2_scrap", "keys": "enter", "match": SCREEN},
+    {"name": "chain_money_2_healed", "keys": "enter", "match": SCREEN},
+    {"name": "chain_money_2_return", "keys": "enter", "match": SCREEN},
+    {"name": "chain_money_2_back", "keys": "enter", "match": SCREEN},
 ]
 
 

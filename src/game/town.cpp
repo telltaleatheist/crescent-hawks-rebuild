@@ -488,6 +488,8 @@ void Town::key(int k, KeySource& more) {
     // BTECH.EXE 1000:00fb: the figures' walking frames move on, then the key
     // half goes straight on to a game tick.
     animation_.key(k, mech_records());
+    // BTECH.EXE 1000:0101: Space opens the command menu, before the tick.
+    if (k == key::kSpace && !command_menu(more)) return;
     game_tick(&more);
 }
 

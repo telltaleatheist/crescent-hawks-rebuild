@@ -1274,16 +1274,18 @@ bool Combat::fire(int s, int slot, bool mission, const std::array<std::int8_t, 2
             // Bug 2: the original counts the missing leg actuators of 'Mech
             // record s, the figure number, which for an enemy kicker is
             // past the eight records.
-            int m = s;
-            if (s > 3) {
-                if (!fixes_.fix_kick_actuators) note("an enemy kick reads past the 'Mech records: the kicker's own used");
-                m = mech_of(s);
-            }
-            const auto& r = mechs_[std::size_t(m)];
             to_hit = 3;
-            for (const int b : {mech::kLeftActuators, mech::kRightActuators})
-                for (int bit = 4; bit > 0; bit >>= 1)
-                    if (!(r[std::size_t(b)] & bit)) ++to_hit;
+            if (s > 3 && !fixes_.fix_kick_actuators) {
+                // Record s (F:cd24 + 0x7d (s - 12)) is in the stack, zero
+                // below its deepest use: all six count as missing.
+                if (s == 15) note("figure 15's kick reads stack the program has used: taken as 0");
+                to_hit += 6;
+            } else {
+                const auto& r = mechs_[std::size_t(mech_of(s))];
+                for (const int b : {mech::kLeftActuators, mech::kRightActuators})
+                    for (int bit = 4; bit > 0; bit >>= 1)
+                        if (!(r[std::size_t(b)] & bit)) ++to_hit;
+            }
         }
         to_hit += std::int8_t(s_.orders[std::size_t(s)][0]) + 1;
         to_hit += rules_.combat.target_movement[std::size_t(std::clamp<int>(moved[std::size_t(t)], 0, 12))];

@@ -257,6 +257,12 @@ constexpr std::array kDos103 = {
     ExeSpan{ExeSpan::Kind::Text, "unit.weapon_armour", 0x46db, 0x1245, 18, "7abfec3ed2c06183"},
     ExeSpan{ExeSpan::Kind::Text, "unit.ruined", 0x46db, 0x1257, 9, "78b7eeff36c60f0e"},
     ExeSpan{ExeSpan::Kind::Text, "unit.none", 0x46db, 0x1260, 5, "a51ad9ee4c1a4600"},
+    // The Space command menu (1000:2c50) and its crew item (1000:4d57).
+    ExeSpan{ExeSpan::Kind::Text, "space.items.0", 0x46db, 0x051f, 36, "6540d259539720ac"},
+    ExeSpan{ExeSpan::Kind::Text, "space.items.allocate", 0x46db, 0x0543, 24, "dcea796194bb7cec"},
+    ExeSpan{ExeSpan::Kind::Text, "space.items.1", 0x46db, 0x055b, 55, "f9f795eb515149ec"},
+    ExeSpan{ExeSpan::Kind::Text, "space.items.2", 0x46db, 0x0592, 19, "c4b9c5eb1e2a2b05"},
+    ExeSpan{ExeSpan::Kind::Text, "space.no_dismount", 0x46db, 0x0ace, 64, "42834e59cec1702f"},
     // The crew screen (1c67:0002).
     ExeSpan{ExeSpan::Kind::Text, "crew.heading", 0x46db, 0x2622, 33, "616ca99f3ce05c91"},
     ExeSpan{ExeSpan::Kind::Text, "crew.on_foot", 0x46db, 0x2643, 10, "c31036879c6c8682"},
