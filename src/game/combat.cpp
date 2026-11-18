@@ -1241,6 +1241,9 @@ bool Combat::fire(int s, int slot, bool mission, const std::array<std::int8_t, 2
     }
     int dir = direction_toward(party_, {figs_.x[std::size_t(t)], figs_.y[std::size_t(t)]}, tables_);
     if (dir == -1) dir = 0;
+    // Back to where the round stood, then walked to the shooter, so the
+    // grids step at an area edge.
+    party_ = saved;
     walk({figs_.x[std::size_t(s)], figs_.y[std::size_t(s)]});  // 1000:17bb
     const bool sight = line_of_sight(s, t, figs_.x[std::size_t(t)], figs_.y[std::size_t(t)]);
     if (sight) {
@@ -1328,9 +1331,12 @@ bool Combat::fire(int s, int slot, bool mission, const std::array<std::int8_t, 2
         if (hooks_.pause) hooks_.pause();
         s_.targets[std::size_t(s)][std::size_t(slot)] |= 0x80;
         arm_off_ = false;
+        walk(saved);  // 1000:17bb
         party_ = saved;
         return true;
     }
+    // Blocked: the same walk back (22e8:0d9f).
+    walk(saved);  // 1000:17bb
     party_ = saved;
     return false;
 }

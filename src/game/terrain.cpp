@@ -281,10 +281,11 @@ Terrain::Window Terrain::window(formats::MapPosition position, const formats::Mt
 const Terrain::Window& Terrain::window(formats::MapPosition position) const {
     static const formats::MtpMap kNoMap{};
     const int column = (position.x & 0xff) >> 4, row = (position.y & 0xff) >> 4;
-    if (!built_ || column != built_column_ || row != built_row_) {
+    if (!built_ || column != built_column_ || row != built_row_ || area_of(position) != built_area_) {
         built_ = window(position, map_ ? *map_ : kNoMap);
         built_column_ = column;
         built_row_ = row;
+        built_area_ = area_of(position);
     }
     return *built_;
 }

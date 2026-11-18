@@ -166,7 +166,12 @@ weapon).
 cells from the 24x24-cell window P:07ad by index, as the townspeople do. The window and its
 corner index (P:09ed) are not moved with the party position: `1000:17bb` walks P:a44b / P:a44d
 there with the step routines `287f:158c` etc., which change only the area grids, at an area
-edge. The line of sight reloads both at the shooter itself (`287f:1314`, then `287f:1df8`, which
+edge. For a shot (`22e8:000c`'s firing loop) the round keeps the position it stands at, sets it
+to the shooter for the direction to the target (`287f:0971`), puts the kept position back and
+only then walks to the shooter, so a shooter across an area edge has its area in grid 4; after the line
+of sight, clear (the shot fired) or blocked, it walks back to the kept position (`22e8:0d9f`) and
+sets it; the other ways out (out of range, no weapon) only set it, leaving the grids where they
+were. The line of sight reloads both at the shooter itself (`287f:1314`, then `287f:1df8`, which
 sets P:09ed..09f1, at `1e31:1c24`), and the planner calls it for the figure it plans before it
 simulates the path, so both read the window around that figure. The rebuild builds the same
 window from the terrain (docs/wilderness.md: `Terrain::window`, read through `window_cell`), so the

@@ -75,6 +75,7 @@ public:
         held_ = built_;
         held_column_ = built_column_;
         held_row_ = built_row_;
+        held_area_ = built_area_;
     }
     // BTECH.EXE 287f:1ece (Ghidra FUN_287f_1ece)
     // The fight saves the window's cells after a round's movement
@@ -93,7 +94,7 @@ public:
     // The window the original's memory holds for `position`'s block.
     Window held_window(formats::MapPosition position) const {
         const int column = (position.x & 0xff) >> 4, row = (position.y & 0xff) >> 4;
-        if (held_ && column == held_column_ && row == held_row_) return *held_;
+        if (held_ && column == held_column_ && row == held_row_ && area_of(position) == held_area_) return *held_;
         if (restored_) {
             static const formats::MtpMap kNoMap{};
             Window w = window(position, map_ ? *map_ : kNoMap);
@@ -156,9 +157,11 @@ private:
     // P:09f9: where the generator's noise index was left (287f:0bfb).
     mutable std::uint16_t noise_cursor_ = 0;
     mutable std::optional<Window> built_;
-    mutable int built_column_ = -1, built_row_ = -1;
+    mutable int built_column_ = -1, built_row_ = -1, built_area_ = -1;
     mutable std::optional<Window> held_;
-    int held_column_ = -1, held_row_ = -1;
+    int held_column_ = -1, held_row_ = -1, held_area_ = -1;
+    // 0xYX: the area a position is in.
+    static int area_of(formats::MapPosition p) { return ((p.y >> 8) & 0xf0) | ((p.x >> 8) & 0x0f); }
     mutable std::optional<std::array<std::uint8_t, kWindowCells * kWindowCells>> saved_, restored_;
 };
 
