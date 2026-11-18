@@ -354,6 +354,12 @@ counts, DG:014a and the map marks).
   chr, with no item left, stops at its first poll between rounds (`ScriptKeys::poll`). That is
   where the captures are taken, not a difference in the round loop: `chain_agent` gives the
   box's key `arm:2` and matches the original through four more keys.
+- **An extra figure in the fight view at the flee** (`chain_agent_flee`, compared on state
+  only): with Rex's unit shown and "You have eluded your enemies!", the original draws a small
+  red standing figure at about (164, 105) on the 320x200 screen that chr does not. The state
+  matches: every figure's position and drawn record, and the mark ring (the agent's body mark is
+  drawn the same on both, at column 20, row 7). Probably the same as the item below: something
+  the original's fight view keeps on its page that chr does not model.
 - **The map behind the game-over box after the jail break** (`chain_jail_fight_round_2`): the
   state matches, but the original's play area still shows the fight's view around the bays,
   while chr's shows the town map drawn at another window. Only the state is compared there.

@@ -1338,7 +1338,8 @@ CHAIN_JAIL_FIGHT_CASES = [dict(case, compare=False) for case in
     {"name": "chain_jail_fight_round_2", "keys": "idle:1", "match": {}, "fight": True},
 ]
 
-# The double agent found out, its own sequence: on the jail break's crew
+# The main chain from the jail on (chain_party is its prefix, with Rick on
+# foot): the double agent found out, its own sequence: on the jail break's crew
 # screen Rick is seated as the COMMANDO's rider, which shows his tell and sets
 # F:374a (docs/scripts.md). The first random encounter after it (one person,
 # 119 passes out) is fought by the computer; after round 1 he acts from the
@@ -1356,7 +1357,17 @@ CHAIN_AGENT_CASES = [dict(case, compare=False) for case in
     {"name": "chain_agent_encounter", "keys": "idle:119", "match": SCREEN},
     {"name": "chain_agent_fight", "keys": "y y enter n", "match": {}, "fight": True},
     {"name": "chain_agent_acted", "keys": "arm:2 enter", "match": {}, "fight": True},
-] + [{"name": "chain_agent_key_%d" % n, "keys": "enter", "match": {}, "fight": True} for n in range(2, 6)]
+] + [{"name": "chain_agent_key_%d" % n, "keys": "enter", "match": {}, "fight": True} for n in range(2, 6)] + [
+    # Nobody can reach the last soldier past the buildings, so the party
+    # flees from the orders menu: escaped, and back in town with Rick gone
+    # (flag 27 = 0, flag 24 = 0x7f, his record empty). The same soldier is
+    # in reach again straight after.
+    # State only: the original's view also shows a small red figure at
+    # about (164, 105) that chr does not draw (docs/reference.md).
+    {"name": "chain_agent_flee", "keys": "up enter", "match": {}, "fight": True},
+    {"name": "chain_agent_eluded", "keys": "enter", "match": SCREEN},
+    {"name": "chain_agent_back", "keys": "enter", "match": SCREEN},
+]
 
 
 # The long unpoked run: its own tier (`--campaign`, ctest label campaign).
