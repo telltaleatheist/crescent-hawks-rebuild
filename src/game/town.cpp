@@ -15,7 +15,8 @@ void ScriptKeys::apply_pokes() {
         const auto item = items_.front();
         items_.pop_front();
         if (!poke_) throw std::invalid_argument("a mech: or char: item with nothing to poke");
-        poke_(item.poke_character, item.poke_record, item.poke_byte, item.poke_value);
+        // record -1: the C-Bills (cbills:), the value the amount.
+        poke_(item.poke_character, item.poke_cbills ? -1 : item.poke_record, item.poke_byte, item.poke_value);
     }
 }
 
@@ -83,6 +84,23 @@ std::deque<ScriptItem> parse_key_script(const std::string& script) {
             if (f == flag::kQuizLock)
                 throw std::invalid_argument("\"" + t + "\": flag 14 decides whether the training quiz runs; not settable");
             keys.push_back({0, 0, f, v});
+            return;
+        }
+        if (t.rfind("cbills:", 0) == 0) {
+            // cbills:VVVV: the C-Bills (F:d370), hex, at most 0xffff.
+            int v = -1;
+            try {
+                std::size_t used = 0;
+                v = std::stoi(t.substr(7), &used, 16);
+                if (used != t.size() - 7) v = -1;
+            } catch (const std::exception&) {
+            }
+            if (v < 0 || v > 0xffff) throw std::invalid_argument("bad C-Bills poke \"" + t + "\" (use cbills:VVVV, hex)");
+            ScriptItem item;
+            item.poke_cbills = true;
+            item.poke_record = 0;
+            item.poke_value = v;
+            keys.push_back(item);
             return;
         }
         const bool character = t.rfind("char:", 0) == 0;

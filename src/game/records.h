@@ -23,6 +23,7 @@ inline constexpr int kMech = 0x0c;        // the 'Mech record it is in, or kOnFo
 inline constexpr int kArmourType = 0x0d;
 inline constexpr int kArmour = 0x0e;      // armour points left
 inline constexpr int kHitPoints = 0x0f;   // 0: killed
+inline constexpr int kCourses = 0x10;     // bit 0: REPAIR's Tech course taken, bit 1: HOSPITAL's seminar
 inline constexpr int kOnFoot = 8;
 inline constexpr std::uint8_t kEmpty = 0xff;
 }  // namespace character

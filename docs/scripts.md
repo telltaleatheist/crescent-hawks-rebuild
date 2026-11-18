@@ -175,6 +175,11 @@ each one.
 | 04 | 24d3:0231 | CITADEL | prints the three courses' prices: for skill i (0–2), 125 × Jason's skill i + 75, right-aligned to column 39 on row 5 + i |
 | 05 | 24d3:02a5 | CITADEL | takes the course in flag 08: prints DGROUP:491a and the level and course names (tables DGROUP:4ea2, 4eb6). At level 4 it prints 4948 and sets flag 09 = 0. With enough C-Bills: flag 09 = 1, the skill + 1, the price paid. Otherwise it prints 4999 and sets flag 09 = 0. |
 | 12 | 24d3:0aea | ten places | "talk to others": `17dc:17b9`, below |
+| 13 | 24d3:0b26 | REPAIR, HOSPITAL | who attends: special 14, then menu 0x17 at the cursor's row, one item per present character (its name and a line end), the bar on the first; flag 0e = the chosen character's record |
+| 15 | 24d3:0bfc | REPAIR | the Tech course: with 500 C-Bills, the character in flag 0e pays, gets Tech + 1 and byte 0x10 bit 0; flag 0e = 1 and the C-Bills redrawn (it ends through special 21's tail, 0c9b). Short of 500: flag 0e = 0, nothing else |
+| 16 | 24d3:0be1 | REPAIR | flag 0f = byte 0x10 bit 0 of the character in flag 0e (the Tech course taken) |
+| 21 | 24d3:0c5c | HOSPITAL | the seminar: as special 15, with Medical + 1 and bit 1 |
+| 22 | 24d3:0c46 | HOSPITAL | flag 0f = byte 0x10 bit 1 of the character in flag 0e (the seminar taken) |
 | 14 | 24d3:0af2 | ten places, and after every visit | flag 0e = how many of the party records 1–7 are in use |
 | 23 | 24d3:0cf8 | healing (`1c31:000a`) | flag 19 = 1 if any party member's hit points differ from 10 x B, else 0 |
 | 30 | 19b8:104e | PARTY | the first companion joins and the alley fight (kind -1, combat.md 1.6) |
@@ -187,7 +192,7 @@ each one.
 | 43 | 24d3:157e | TRAINING | after mission 5 is won (+1672, with flag 2d = 1): townsperson 0 is put at the Lounge's entrance (MAP entrance 7; record +0/+2 and figure 16), inside (+9 = ff), its route 0x70 (last the Lounge, next entrance 0) and its target entrance 0, the Training Center. Talk to others in the Lounge lets it out (below) |
 | others | see the table above | the other places | read with those places |
 
-Specials 6–11, 13, 15–22, 24–29, 31–35, 41, 42, 44, 45 and 47 belong to the other places and are read with them. The rebuild logs an
+Specials 6–11, 17–20, 24–29, 31–35, 41, 42, 44, 45 and 47 belong to the other places and are read with them. The rebuild logs an
 unrebuilt special and goes on.
 
 Special 05's texts are imported from BTECH.EXE as `course.*` (docs/import.md).
@@ -288,7 +293,7 @@ the same scripts offer where their entrances are open (map 1, and the other town
 | COMSTAR | the money and a list of three 32-bit amounts at F:d374 (special 6); menus over them (7, 8) | 06, 07, 08, 0c |
 | WEAPON | buying a weapon: special 0b takes the price (DG:4f44, by the choice) if the money covers it and sets flag 0b | 0a, 0b, 0c |
 | ARMOR | buying armour: special 09, the same with DG:4f26; specials 1f / 20 not read | 09, 0a, 0d, 0e, 1f, 20, 0c |
-| REPAIR | apprenticeship: alone, special 10 / 0f, a Tech course for 500 (Tech + 1 once, character byte 0x10 bit 0); with a party and flag 18, a recruit (`new_member 5`, flag 20 once, or Tech 3+ and a random bit). Repairs (12), the speed shop (13, 14: the upgrades, 19b8:0925) and ammunition (2c) need a 'Mech: special 11 counts the 'Mech records in use, special 1d (with flag 18) the letters at F:d452..d455 | 0a, 0c-0f, 10-14, 1d, 2c |
+| REPAIR | apprenticeship: the Tech course for 500, once per character, who chosen by special 13 (specials 16, 15; Tech + 1, character byte 0x10 bit 0); with a party and flag 18, a recruit (`new_member 5`, flag 20 once, or Tech 3+ and a random bit). Repairs (12), the speed shop (13, 14: the upgrades, 19b8:0925) and ammunition (2c) need a 'Mech: special 11 counts the 'Mech records in use, special 1d (with flag 18) the letters at F:d452..d455 | 0a, 0c-0f, 10-14, 1d, 2c |
 | BARRACKS, LOUNGE | talk, and the flags of the Lounge's let-out (2d, 2e, 2f) | 0c |
 
 Special 0a prints the money (F:d370, 32-bit). At the end of the unpoked chain Jason has 170.

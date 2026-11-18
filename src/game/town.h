@@ -61,6 +61,7 @@ struct ScriptItem {
     int set_value = 0;
     int poke_record = -1;  // >= 0: a test aid, write poke_value to byte poke_byte of this record
     bool poke_character = false;  // a character record (char:), else a 'Mech record (mech:)
+    bool poke_cbills = false;     // the C-Bills (cbills:), poke_value the amount
     int poke_byte = 0;
     int poke_value = 0;
     bool is_set() const { return set_flag >= 0; }
@@ -213,6 +214,11 @@ public:
     void poke_mech(int record, int byte, int value) {
         mechs_[std::size_t(record)][std::size_t(byte)] = std::uint8_t(value);
         log_.push_back("test aid: 'Mech record " + std::to_string(record) + " byte " + std::to_string(byte) + " set");
+    }
+    // A test aid: the C-Bills (the script's cbills: items).
+    void poke_cbills(int value) {
+        money_.cbills = value;
+        log_.push_back("test aid: C-Bills set to " + std::to_string(value));
     }
     // A test aid: one byte of a character record (the script's char: items).
     void poke_character(int record, int byte, int value) {

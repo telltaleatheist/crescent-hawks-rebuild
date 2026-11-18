@@ -108,8 +108,9 @@ keys in `check.py`. `mech:R:BB=VV` (hex) likewise writes byte BB of 'Mech record
 0x7d R + BB), for damage that no case can cause yet. Both check.py and chr refuse anything
 outside the eight records (R 0-7, BB below 0x7d, so F:c724-cb0b). `char:R:BB=VV` writes byte BB
 of character record R (F:c614 + 0x11 R + BB), for a party the story has not given yet; both
-refuse anything outside the 16 records (R 0-f, BB below 0x11, so F:c614-c723). Neither reaches
-flag 14 (F:d320) or any code. A sequence that uses them says so in its name (`_poked`).
+refuse anything outside the 16 records (R 0-f, BB below 0x11, so F:c614-c723). `cbills:VVVV`
+(hex, at most ffff) sets the C-Bills (F:d370, all four bytes), for money that play would take long
+to earn. None of them reaches flag 14 (F:d320) or any code. A sequence that uses them says so in its name (`_poked`).
 
 - **The original:** run.py's `@poke:SEG:OFFSET=BYTES` (here `@poke:F:d30c+NN=VV`). SNAP writes the
   bytes into the running copy's memory in DOSBox-X at that point; nothing is written to the

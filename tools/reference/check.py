@@ -917,6 +917,24 @@ CHAIN_SALVAGE_POKED_CASES = [dict(case, compare=False) for case in CHAIN_MECH_PO
     {"name": "chain_salvage_back", "keys": "enter", "match": SCREEN},
 ]
 
+# Poked: chain_salvage_poked with Rex also given Tech 2 (character 1 byte 9,
+# our own test value), above Jason's. Rex makes the repairs, and the scrap
+# money is multiplied by his character number, 1 (bug 24). The fight is the
+# same; only the tail is compared.
+CHAIN_SCRAP_POKED_CASES = [dict(case, compare=False) for case in
+                           CHAIN_SALVAGE_POKED_CASES[:[c["name"] for c in CHAIN_SALVAGE_POKED_CASES].index("chain_salvage_key_15") + 1]]
+CHAIN_SCRAP_POKED_CASES[[c["name"] for c in CHAIN_SCRAP_POKED_CASES].index("chain_salvage_poked")] = {
+    "name": "chain_scrap_poked", "keys": SALVAGE_POKES + " char:1:09=02 idle:1", "match": {}, "compare": False}
+CHAIN_SCRAP_POKED_CASES += [
+    {"name": "chain_scrap_over", "keys": "enter", "match": SCREEN},
+    {"name": "chain_scrap_repair", "keys": "enter", "match": SCREEN},
+    {"name": "chain_scrap", "keys": "enter", "match": SCREEN},
+    {"name": "chain_scrap_question", "keys": "enter", "match": SCREEN},
+    {"name": "chain_scrap_salvage", "keys": "enter", "match": SCREEN},
+    {"name": "chain_scrap_none", "keys": "enter", "match": SCREEN},
+    {"name": "chain_scrap_back", "keys": "enter", "match": SCREEN},
+]
+
 # Poked: chain_salvage_poked's fight up to the hand-back, then the orders
 # for Rex on foot (figure 5): the person menu (DG:3abc) and its orders.
 # Only the tail is compared.
@@ -1416,9 +1434,44 @@ CHAIN_AGENT_CASES = [dict(case, compare=False) for case in
 ]
 
 
+# Poked: from chain_lounge_leave, 1000 C-Bills (our own test value) and the
+# two courses that raise a skill, both on map 3. REPAIR's Apprentice item
+# (menu 0x17's who list, special 0d) asks who, then the fee (special 0f);
+# the second try for the same member is refused (special 10). HOSPITAL's
+# seminar asks the fee first, then who (specials 0d, 16, 15). With the
+# money gone, special 15 sends the member away unpaid. Each menu comes back
+# with the bar on the item last chosen.
+CHAIN_COURSES_POKED_CASES = [dict(case, compare=False) for case in
+                             CHAIN_AGENT_CASES[:[c["name"] for c in CHAIN_AGENT_CASES].index("chain_lounge_leave") + 1]] + [
+    {"name": "chain_courses_walk", "keys": "end down*25 pgdn*3 right pgdn down right pgup pgdn right*8 pgup up right",
+     "match": SCREEN},
+    {"name": "chain_courses_repair", "keys": "cbills:03e8 enter", "match": SCREEN},
+    {"name": "chain_courses_tech_who", "keys": "down enter", "match": SCREEN},
+    {"name": "chain_courses_tech_fee", "keys": "down down enter", "match": SCREEN},
+    {"name": "chain_courses_tech_paid", "keys": "enter", "match": SCREEN},
+    {"name": "chain_courses_tech_menu", "keys": "enter", "match": SCREEN},
+    {"name": "chain_courses_tech_again", "keys": "enter down down enter", "match": SCREEN},
+    {"name": "chain_courses_tech_back", "keys": "enter", "match": SCREEN},
+    {"name": "chain_courses_repair_leave", "keys": "up enter", "match": SCREEN},
+    {"name": "chain_courses_walk_2", "keys": "left*8 home up left up home up home up*16 home*5 up left home up left home end",
+     "match": SCREEN},
+    {"name": "chain_courses_walk_3", "keys": "up left home end up left home end up left home left*5 home*8 up left up "
+     "home up home up*3 home*5", "match": SCREEN},
+    {"name": "chain_courses_hospital", "keys": "enter", "match": SCREEN},
+    {"name": "chain_courses_seminar_fee", "keys": "down down enter", "match": SCREEN},
+    {"name": "chain_courses_seminar_who", "keys": "enter", "match": SCREEN},
+    {"name": "chain_courses_seminar_paid", "keys": "down*3 enter", "match": SCREEN},
+    {"name": "chain_courses_seminar_menu", "keys": "enter", "match": SCREEN},
+    {"name": "chain_courses_seminar_again", "keys": "enter enter down*3 enter", "match": SCREEN},
+    {"name": "chain_courses_seminar_back", "keys": "enter", "match": SCREEN},
+    {"name": "chain_courses_seminar_short", "keys": "enter enter down enter", "match": SCREEN},
+    {"name": "chain_courses_seminar_short_back", "keys": "enter", "match": SCREEN},
+]
+
 # The long unpoked run: its own tier (`--campaign`, ctest label campaign).
 CAMPAIGN = {"chain", "chain_death", "chain_mech_poked", "chain_heal_poked", "chain_repair_poked",
-            "chain_salvage_poked", "chain_orders_poked", "chain_town", "chain_party", "chain_jail_no", "chain_jail_fight", "chain_agent"}
+            "chain_salvage_poked", "chain_scrap_poked", "chain_orders_poked", "chain_town", "chain_party",
+            "chain_jail_no", "chain_jail_fight", "chain_agent", "chain_courses_poked"}
 
 SEQUENCES = [("town", CASES, FULL_CASES, []), ("training", TRAINING_CASES, [], []),
              ("quiz", QUIZ_CASES, [], ["--show-quiz"]), ("mission", MISSION_CASES, MISSION_FULL_CASES, []),
@@ -1442,12 +1495,14 @@ SEQUENCES = [("town", CASES, FULL_CASES, []), ("training", TRAINING_CASES, [], [
              ("chain_heal_poked", [], CHAIN_HEAL_POKED_CASES, []),
              ("chain_repair_poked", [], CHAIN_REPAIR_POKED_CASES, []),
              ("chain_salvage_poked", [], CHAIN_SALVAGE_POKED_CASES, []),
+             ("chain_scrap_poked", [], CHAIN_SCRAP_POKED_CASES, []),
              ("chain_orders_poked", [], CHAIN_ORDERS_POKED_CASES, []),
              ("chain_town", [], CHAIN_TOWN_CASES, []),
              ("chain_party", [], CHAIN_PARTY_CASES, []),
              ("chain_jail_no", [], CHAIN_JAIL_NO_CASES, []),
              ("chain_jail_fight", [], CHAIN_JAIL_FIGHT_CASES, []),
              ("chain_agent", [], CHAIN_AGENT_CASES, []),
+             ("chain_courses_poked", [], CHAIN_COURSES_POKED_CASES, []),
              ("handover", [], HANDOVER_CASES, [])]
 
 # The feeder (tools/capture/snap.asm, docs/reference.md) hands over a key at
@@ -1505,6 +1560,21 @@ def char_poke(token):
     return "@poke:F:%04x=%02x" % (CHARACTERS_AT + 0x11 * r + b, v)
 
 
+CBILLS_AT = 0xD370  # F:d370, the C-Bills, 32 bits
+
+
+def cbills_poke(token):
+    """The original's poke for a cbills:VVVV token: the four bytes of the
+    C-Bills, nothing else."""
+    try:
+        v = int(token[len("cbills:"):], 16)
+    except ValueError:
+        raise ValueError(f"bad C-Bills poke {token!r}: use cbills:VVVV (hex)")
+    if not 0 <= v <= 0xffff:
+        raise ValueError(f"refused C-Bills poke {token!r}: at most ffff")
+    return "@poke:F:%04x=%02x%02x0000" % (CBILLS_AT, v & 0xff, v >> 8)
+
+
 def original_token(k):
     """A case's key as the original's script has it: flag: is a poke, and
     orig: marks input that only the original asks for (the training quiz,
@@ -1515,6 +1585,8 @@ def original_token(k):
         return mech_poke(k)
     if k.startswith("char:"):
         return char_poke(k)
+    if k.startswith("cbills:"):
+        return cbills_poke(k)
     if k.startswith("orig:"):
         return k[len("orig:"):]
     if k.startswith("arm:"):

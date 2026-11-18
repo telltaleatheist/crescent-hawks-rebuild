@@ -611,6 +611,54 @@ bool Town::special(int n, KeySource& keys) {
     case 14:
         count_members();
         return true;
+    case 13: {
+        // 24d3:0b26: who attends. Special 14 first, then menu 23 (0x17) at
+        // the cursor's row with one item for each present character, its
+        // name and a line end, the bar on the first; flag 0e = the
+        // chosen one's record.
+        count_members();
+        auto& rec = menus_[0x17];
+        rec.first_row = text_.window().row;
+        rec.items = flags_[flag::kMembers] + 1;
+        menu_last_[0x17] = 0;
+        std::vector<int> listed;
+        for (int i = 0; i < 8; ++i) {
+            if (characters_[std::size_t(i)][character::kName] == character::kEmpty) continue;
+            print_id("character." + std::to_string(characters_[std::size_t(i)][character::kName]));
+            print_id("talk.line_end");  // 24d3:181e
+            listed.push_back(i);
+        }
+        const auto chosen = menu(0x17, keys);
+        if (!chosen) return false;
+        flags_[flag::kMembers] = std::uint8_t(listed.at(std::size_t(*chosen)));
+        return true;
+    }
+    case 15:
+    case 21: {
+        // 24d3:0bfc (REPAIR's Tech course) and 24d3:0c5c (HOSPITAL's
+        // seminar): with 500 C-Bills, the character in flag 0e pays them,
+        // gains a point of Tech or Medical and is marked (byte 0x10, bit 0
+        // or 1); flag 0e = 1 and the C-Bills line drawn again
+        // (1e31:1fdf). Short of 500, flag 0e = 0 and nothing else.
+        const bool tech = n == 15;
+        if (money_.cbills < 500) {
+            flags_[flag::kMembers] = 0;
+            return true;
+        }
+        money_.cbills -= 500;
+        auto& c = characters_[std::size_t(flags_[flag::kMembers])];
+        ++c[std::size_t(character::kSkills + (tech ? 5 : 6))];
+        c[character::kCourses] |= tech ? 1 : 2;
+        flags_[flag::kMembers] = 1;  // the Tech course's end jumps into the seminar's, 24d3:0c9b
+        draw_cbills();
+        return true;
+    }
+    case 16:
+    case 22:
+        // 24d3:0be1 and 0c46: flag 0f = whether the character in flag 0e
+        // has taken that course (byte 0x10, bit 0 or bit 1).
+        flags_[0x0f] = characters_[std::size_t(flags_[flag::kMembers])][character::kCourses] & (n == 16 ? 1 : 2);
+        return true;
     case 23:
         flags_[0x19] = anyone_hurt() ? 1 : 0;
         return true;
