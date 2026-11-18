@@ -667,9 +667,12 @@ bool Town::talk(KeySource& keys) {
     text_.clear_window();
     std::array<bool, 8> inside{};
     int count = 0;
+    int last_home = 0;  // the local at 1000:95dd: the last one inside anywhere
     const auto& walkers = people_.walkers();
     for (std::size_t i = 0; i < 8; ++i) {
-        if (walkers[i].wait != 0 && (walkers[i].route >> 4 & 7) == here) {
+        if (walkers[i].wait == 0) continue;
+        last_home = walkers[i].route >> 4 & 7;
+        if (last_home == here) {
             inside[i] = true;
             ++count;
         }
@@ -689,7 +692,7 @@ bool Town::talk(KeySource& keys) {
     const auto chosen = menu(20, keys);
     if (!chosen) return false;
     if (*chosen == count) return true;
-    if (flags_[flag::kLetOut] != 0 && here == 7 && *chosen == 0 && inside[0]) {
+    if (flags_[flag::kLetOut] != 0 && last_home == 7 && *chosen == 0 && inside[0]) {
         // Someone is let out of jail (the second map's story).
         flags_[flag::kLetOutDone] = 1;
         people_.walkers()[0].wait = 0;

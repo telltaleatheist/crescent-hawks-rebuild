@@ -1365,6 +1365,23 @@ CHAIN_AGENT_CASES = [dict(case, compare=False) for case in
     {"name": "chain_agent_flee", "keys": "up enter", "match": SCREEN, "fight": True},
     {"name": "chain_agent_eluded", "keys": "enter", "match": SCREEN},
     {"name": "chain_agent_back", "keys": "enter", "match": SCREEN},
+    # Then map 3's Lounge (entrance 4), the one reopened place that can set
+    # a story flag (2f, after Talk's let-out: docs/scripts.md). One step
+    # east is map 3; the 'Mechs ask at the Weapons Shop three times on the
+    # way (No each time). No route passes the jail's doors (5-7): any visit
+    # there now ends the game (flag 2a).
+    {"name": "chain_lounge_walk", "keys": "right*25 pgup pgdn right*5", "match": SCREEN},
+    {"name": "chain_lounge_weapon_no", "keys": "n", "match": SCREEN},
+    {"name": "chain_lounge_walk_2", "keys": "right", "match": SCREEN},
+    {"name": "chain_lounge_weapon_no_2", "keys": "n", "match": SCREEN},
+    {"name": "chain_lounge_walk_3", "keys": "right", "match": SCREEN},
+    {"name": "chain_lounge_weapon_no_3", "keys": "n", "match": SCREEN},
+    {"name": "chain_lounge_walk_4", "keys": "right*4 pgdn*5", "match": SCREEN},
+    {"name": "chain_lounge_door", "keys": "right right", "match": SCREEN},
+    {"name": "chain_lounge_in", "keys": "enter", "match": SCREEN},
+    {"name": "chain_lounge_talk", "keys": "enter", "match": SCREEN},
+    {"name": "chain_lounge_talked", "keys": "enter", "match": SCREEN},
+    {"name": "chain_lounge_leave", "keys": "down enter", "match": SCREEN},
 ]
 
 

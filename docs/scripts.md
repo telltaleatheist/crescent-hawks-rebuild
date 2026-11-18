@@ -28,7 +28,11 @@ Answering Yes at an entrance calls `17dc:0008(n)` with the map's place number:
    - leaving the garage (8) with flag 30 set and flag 0e set, and flag 32 clear, shows a text
      (DGROUP:1384, 13b6) and runs place 12 (VIEWDISK);
    - leaving place 13 (BARRACK2) with flag 0e set runs place 12 too.
-   In both cases 27e8:0064 is set to 0c.
+   In both cases 27e8:0064 is set to 0c. VIEWDISK sets flag 32 at its end (0dce), the only write
+   to that flag: no other script sets it, and the program's only indexed flag writes are the new
+   game's clear (1000:4e4f) and the script ops (1000:80c9, 811f). A load with flag 32 set sets
+   27e8:0064 to 0c again (1000:3429). ENTRANCE (map 13) tests flag 32 first, and FROB's last
+   branch tests it too.
 8. Puts the screen back: window 4 cleared, window 3, the panel redrawn (`1000:4cac(1)`).
 9. Leaving place 14 (ENTRANCE) with flag 36 set clears the 8 party records' first byte and calls
    `1b5d:0004`.
@@ -195,8 +199,10 @@ Special 05's texts are imported from BTECH.EXE as `course.*` (docs/import.md).
 3. Nobody: `talk.nobody`, wait for a key.
 4. Otherwise `talk.you_see`, each one's name and `talk.line_end`, then `talk.done`, and menu 20
    with its item count set to the number listed + 1. Done returns.
-5. The let-out case: with flag 2d set, place 7 and the first one chosen, flag 2e = 1 and walker 0
-   stops waiting. Otherwise flag 2e = 0, and the one chosen says why it is here
+5. The let-out case: with flag 2d set, the first one chosen being walker 0, and a 7 in the
+   local that step 2's loop leaves behind (1000:9692), flag 2e = 1 and walker 0 stops waiting.
+   That local is the place of the last townsperson waiting anywhere, written before it is
+   compared with this place (1000:95dd), not this place itself (see the quirk below). Otherwise flag 2e = 0, and the one chosen says why it is here
    (`talk.hello`, `talk.reason.<flag 0d>`) and where it goes next (`talk.going_to`, the place's
    name from the map, `talk.end`), then a key. Outdoors it is a random rumour instead (not
    rebuilt: there are no townspeople outdoors yet).
@@ -255,6 +261,12 @@ town is refused) and a key.
 - **WEAPON's unreached block.** A `goto 0220` at 015d always jumps over 0160–021f, which has
   another line from the shopkeeper. The player never sees it. It is kept (not imported, not
   shown); a fix would need to know what the jump was meant to test.
+- **The let-out test reads the wrong place.** Talk to others (17dc:17b9) tests for place 7
+  with the place of the last townsperson waiting anywhere (any index, any place), not with
+  this place. On map 1 the Lounge is entrance 7, and while Rick is the only one waiting the
+  two agree. With someone waiting elsewhere after him, the test follows that one's place: the
+  Lounge's let-out can fail, and on a map whose Lounge has another entrance it can still pass.
+  Kept; a fix would compare this place.
 - **if_party_x** compares only x. No original script uses E7, so nothing shows the effect.
 
 ## After the raid: what the scripts offer
