@@ -494,6 +494,7 @@ bool Town::crew_screen(int start, KeySource& keys) {
                     print_id(name(c));
                     print_id("crew.uneasy_end");  // 24d3:17ea
                     if (!read_key(keys)) return stop();
+                    agent_found_ = true;
                 }
                 mech[seat] = std::uint8_t(c);
                 characters_[std::size_t(c)][character::kMech] = std::uint8_t(m);

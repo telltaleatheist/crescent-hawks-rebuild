@@ -237,7 +237,8 @@ Then, until the player is done:
    seat: a rider goes on foot; a pilot becomes the rider, and the rider he displaces goes on
    foot. Then the seat and his byte 0x0c are set.
    **The double agent's tell**: if flag 27 (F:d333) is set and he is the agent (F:d331), the
-   message box (`24d3:17c6`), DG:279d, his name and DG:27ae (a remark that he seems untrustworthy in a cockpit), and a key.
+   message box (`24d3:17c6`), DG:279d, his name and DG:27ae (a remark that he seems untrustworthy in a cockpit), a key, and
+   F:374a = 1: he is found out and acts in the next fight (combat.md 2.9).
 6. Window 4 is cleared, and round again.
 
 When it ends: the held 'Mech letters F:d452-d455 are all ff, and flag 18 (F:d324) is 0.
@@ -353,8 +354,9 @@ So every recruit (HOSPITAL, REPAIR, JAIL) comes after this one.
 **The double agent closes the town.** Flag 27 (a traitor in the party, set by `new_member`'s
 draw) is the first test in ARENA, ARMOR, CLOTHES, LOUNGE, REPAIR and WEAPON, and GARAGE's with
 flag 18 clear (02c6), HOSPITAL's at 040d: each prints a refusal and ends. No script clears it.
-Only a fight does (docs/combat.md 2.9): Scan Unit on the party's side showing the agent sets
-F:374a, and after that round he acts and is removed, flag 27 = 0, flag 24 = 0x7f. Until then
+Only a fight does (docs/combat.md 2.9), once F:374a is set: by Scan Unit showing him on foot in
+a fight, by his tell on the crew screen, or by `1000:378d` from the Space menu. After a fight's
+round with F:374a set he acts and is removed, flag 27 = 0, flag 24 = 0x7f. Until then
 those places stay shut, and the encounter mask stays at 0x1f (four times the encounters). So
 ARENA's test of flag 28 at 06a7, after its own fight, is never reached with a traitor aboard.
 

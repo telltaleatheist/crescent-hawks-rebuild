@@ -733,16 +733,38 @@ A flight ends it at once (2.7), before the round runs.
 
 ### 2.9 The double agent
 
-After the round, if DG:014a, flag 27 (F:d333, a traitor exists) and F:374a (set by `15ab:18e8`
-when the player has looked at the traitor: "looks very suspicious") are all set, the traitor
-(character number in flag 25, F:d331) acts. Texts DG:34e9 to DG:387a, chosen by where he is:
-- on foot: he is dealt with; a mark 0x7e at his place, his figure removed;
-- piloting 'Mech m: with nobody else inside, or a second occupant whose Piloting is 0, the 'Mech
-  is lost (record emptied, a wreck mark); if a second occupant is there he ejects (on foot,
-  placed at the 'Mech). With a second occupant who has Piloting, the companion throws him out
-  and takes the 'Mech;
-- a passenger in 'Mech m: thrown out by the pilot.
-Then his record is emptied, his figure inactive, flag 27 = 0, flag 24 = 0x7f.
+After the round (`203b:08a4`..`0cdb`, right after `22e8:000c`), if DG:014a, flag 27 (F:d333, a
+traitor exists) and F:374a are all set, the traitor (character number in flag 25, F:d331) acts.
+
+F:374a means the player has seen through him. Three places set it: the scan list's heading
+(`15ab:18e8` with its first flag, in a fight: his name, then DG:1222 in place of his condition,
+weapon and armour, and a key), the crew screen's tell (`2c67`, docs/scripts.md) and a third
+screen, `1000:378d`, from the Space command menu (`1000:2c50`: its third item when the menu has
+seven, its second when it has six; DG:07ff; not rebuilt). It is cleared only by a
+new game (`1000:4dc7`) and a load (`1000:32b3`), not by a fight's start or end, and it is not in
+the save: seen in one fight, he acts after the first round of the next fight he is in.
+
+Window 6 is cleared and framed (`2656:0388`, `2656:0004(0)`), then by where he is
+(the character's 'Mech byte, 0x0c):
+- on foot: DG:34e9, his name, DG:34f6, DG:3510, DG:3555, DG:358e; mark 0x7e at his figure
+  (4 + him), whose position becomes ffff;
+- pilot of 'Mech m: his name, DG:35d1, then by the second seat (byte 0x7a):
+  - empty: DG:3610, DG:3653; the 'Mech is lost;
+  - someone whose Piloting (character byte 8) is 0: that one's name, DG:3666, DG:36a9; that one
+    gets out on foot (byte 0x0c = 8, figure 4 + that one active at the 'Mech's position); the
+    'Mech is lost;
+  - someone with Piloting: that one's name, DG:36f6, DG:3731, DG:3774; that one becomes the pilot,
+    the second seat ff, mark 0x7e at the 'Mech's position;
+  - the 'Mech lost: record byte 0 = ff, mark 0x80 (0x81 when the figure's sprite set F:d55e + m
+    is not 0) at the 'Mech's position (not moved back a cell as a destroyed 'Mech's wreck is,
+    3.13), position ffff, figure inactive;
+- in the second seat of 'Mech m: the seat ff, mark 0x7e at the 'Mech's position, his name,
+  DG:37b8, DG:37fd, the pilot's name, DG:3830, DG:387a.
+
+Then a key (`273d:086a`, `273d:0259`), his record emptied (byte 0 = ff), figure 4 + him
+inactive, flag 27 = 0 and flag 24 = 0x7f. The mark is only added to the mark ring: his figure's
+frame is not set to the body as a killed person's is. Rebuilt (`Town::double_agent_acts`); the
+`1000:378d` screen is not.
 
 ### 2.10 Enemy people run (kind 0)
 

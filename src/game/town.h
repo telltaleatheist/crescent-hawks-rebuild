@@ -373,6 +373,7 @@ private:
     void build_window();
     void run_map_loads();
     bool enemy_people_run(KeySource& keys, bool& over);
+    bool double_agent_acts(KeySource& keys);
     bool anyone_hurt() const;
     bool heal(int doctor, KeySource& keys);
     bool repair(KeySource& keys);
@@ -389,7 +390,7 @@ private:
     std::vector<Figure> walk_in_figures();
     Figure party_mech_figure(int m, int k) const;
     std::vector<Figure> fight_figures_drawn(bool marks = true);
-    bool print_unit_heading(int fig, bool agent_check, bool details);
+    bool print_unit_heading(int fig, bool agent_check, bool details, KeySource* keys = nullptr);
     bool print_condition(int character);
     bool on_foot(int character) const;
     // The screen as it was last drawn, while the program draws nothing new
@@ -495,6 +496,7 @@ private:
     void settle_boxes();
     bool party_box_shown_ = true;
     bool fight_unfinished_ = false;
+    bool agent_found_ = false;  // F:374a
     MechParty step_mechs_;            // the step check's 'Mechs, read again after a visit
     formats::MapPosition window_at_;  // where 287f:1314 last built the window
     bool window_stale_ = false;       // the map changed since

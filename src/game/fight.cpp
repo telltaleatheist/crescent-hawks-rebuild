@@ -534,7 +534,7 @@ bool Town::print_condition(int c) {
 // flags unused). For a person: the character's name; with `details` (the
 // scan list) then its condition, weapon and armour, unless it is the double
 // agent found out (`agent_check`). The orders menu passes both flags 0.
-bool Town::print_unit_heading(int fig, bool agent_check, bool details) {
+bool Town::print_unit_heading(int fig, bool agent_check, bool details, KeySource* keys) {
     text_.set_fg(15);
     if (fig >= 4) {
         const int c = fig - 4;
@@ -542,9 +542,13 @@ bool Town::print_unit_heading(int fig, bool agent_check, bool details) {
         print_id("character." + std::to_string(r[character::kName]));
         if (!details) return true;
         if (flags_[0x27] != 0 && std::int8_t(flags_[0x25]) == c && agent_check) {
-            log_.push_back("the double agent found out in a scan: not rebuilt");
-            fight_unfinished_ = true;
-            return false;
+            print_id("unit.suspicious");
+            if (!keys || !read_key(*keys)) {  // 273d:086a, 273d:0259
+                place_open_ = true;
+                return false;
+            }
+            agent_found_ = true;
+            return true;
         }
         if (!print_condition(c)) return false;
         text_.set_cursor(0, 7);
@@ -955,7 +959,7 @@ bool Town::scan_list(Combat& combat, int fig, int base, bool mechs, KeySource& k
             clear_window();
             text_.set_fg(15);
             if (t < 12) {
-                if (!print_unit_heading(t, true, true)) return false;  // 15ab:18e8(t, 1, 1)
+                if (!print_unit_heading(t, true, true, &keys)) return false;  // 15ab:18e8(t, 1, 1)
             } else {
                 if (t < 16) {
                     // An enemy 'Mech: its record's name as the record holds
@@ -1439,7 +1443,7 @@ bool Town::fight_rounds(int kind, KeySource& keys) {
             combat.plan_side(12);
             position_ = start;
             combat.round(kind > 0);
-            if (combat_.fight_on && flags_[0x27] != 0) log_.push_back("the double agent: not rebuilt");
+            if (combat_.fight_on && flags_[0x27] != 0 && agent_found_ && !double_agent_acts(keys)) return false;
             // 2.8: the end tests.
             bool exit_zone = false;
             if (flags_[0x23] != 0 && figs_.active[0] != 0 && figs_.x[0] > 0x0900 && figs_.x[0] < 0x0a07)
@@ -1507,6 +1511,81 @@ bool Town::fight_rounds(int kind, KeySource& keys) {
 // An enemy person planned against a 'Mech this round: with an enemy 'Mech
 // still up, the people too far from their first target leave; with none,
 // a coin toss ends the fight.
+// BTECH.EXE 203b:08a4..0cdb, in the fight loop (Ghidra FUN_203b_0418)
+// The double agent, found out, acts after the round (combat.md 2.9).
+bool Town::double_agent_acts(KeySource& keys) {
+    text_.select_window(6);
+    clear_window();   // 2656:0388
+    text_.frame(0);   // 2656:0004(0)
+    const auto character_name = [this](int c) {
+        return "character." + std::to_string(characters_[std::size_t(c)][character::kName]);
+    };
+    const int agent = std::int8_t(flags_[0x25]);
+    const int m = characters_[std::size_t(agent)][character::kMech];
+    if (m == character::kOnFoot) {
+        const std::size_t f = std::size_t(4 + agent);
+        print_id("fight.agent.0");
+        print_id(character_name(agent));
+        for (const char* id : {"fight.agent.1", "fight.agent.2", "fight.agent.3", "fight.agent.4"}) print_id(id);
+        marks_.add(0x7e, figs_.x[f], figs_.y[f]);
+        figs_.x[f] = figs_.y[f] = 0xffff;
+    } else {
+        auto& rec = mechs_[std::size_t(m)];
+        const std::size_t mf = std::size_t(m);
+        if (rec[mech::kPilot] == agent) {
+            const int other = rec[mech::kSecond];
+            print_id(character_name(agent));
+            print_id("fight.agent.5");
+            if (other != 0xff && characters_[std::size_t(other)][character::kSkills + 4] != 0) {
+                // The companion throws him out and takes the controls.
+                print_id(character_name(other));
+                for (const char* id : {"fight.agent.10", "fight.agent.11", "fight.agent.12"}) print_id(id);
+                rec[mech::kPilot] = std::uint8_t(other);
+                rec[mech::kSecond] = 0xff;
+                marks_.add(0x7e, figs_.x[mf], figs_.y[mf]);
+            } else {
+                if (other == 0xff) {
+                    print_id("fight.agent.6");
+                    print_id("fight.agent.7");
+                } else {
+                    // The companion, who cannot pilot, gets out on foot.
+                    print_id(character_name(other));
+                    print_id("fight.agent.8");
+                    print_id("fight.agent.9");
+                    characters_[std::size_t(other)][character::kMech] = character::kOnFoot;
+                    figs_.active[std::size_t(4 + other)] = 1;
+                    figs_.x[std::size_t(4 + other)] = figs_.x[mf];
+                    figs_.y[std::size_t(4 + other)] = figs_.y[mf];
+                }
+                // The 'Mech is lost.
+                rec[0] = 0xff;
+                marks_.add(figs_.sprite_base[mf] != 0 ? 0x81 : 0x80, figs_.x[mf], figs_.y[mf]);
+                figs_.x[mf] = figs_.y[mf] = 0xffff;
+                figs_.active[mf] = 0;
+            }
+        } else {
+            // A passenger: the pilot throws him out.
+            rec[mech::kSecond] = 0xff;
+            marks_.add(0x7e, figs_.x[mf], figs_.y[mf]);
+            print_id(character_name(agent));
+            print_id("fight.agent.13");
+            print_id("fight.agent.14");
+            print_id(character_name(rec[mech::kPilot]));
+            print_id("fight.agent.15");
+            print_id("fight.agent.16");
+        }
+    }
+    if (!read_key(keys)) {  // 273d:086a, 273d:0259
+        place_open_ = true;
+        return false;
+    }
+    characters_[std::size_t(agent)][character::kName] = character::kEmpty;
+    figs_.active[std::size_t(4 + agent)] = 0;
+    flags_[0x27] = 0;
+    flags_[0x24] = 0x7f;
+    return true;
+}
+
 bool Town::enemy_people_run(KeySource& keys, bool& over) {
     bool mech_up = false;
     for (int f = 12; f < 16; ++f)
