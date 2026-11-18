@@ -71,9 +71,10 @@ Key names are as for `chr --script`, plus `esc`, digits and `@snap:NAME`.
 `check.py` (ctest `reference_compare`) runs the cases in it: each lists the rectangles that must
 be identical and the differences still known, and the game state (random numbers, C-Bills, the
 townspeople's records) must be identical too. `--full` (ctest `reference_compare_full`, labelled
-`long`: `ctest -LE long` leaves it out) adds the long cases. The sequences (below) run side by side, each in its own copy of the game
-folder, and their reports are printed in order: about 25 seconds for the quick cases and two
-minutes with `--full` on the Mac Studio. A third tier, `--campaign`, runs only the long
+`long`: `ctest -LE long` leaves it out) adds the long cases. The sequences (below) run side by
+side, at most `--jobs` at once (default 4: each is a DOSBox-X window), each in its own copy of
+the game folder, and their reports are printed in order: about 25 seconds for the quick cases
+and two minutes with `--full` on the Mac Studio. A third tier, `--campaign`, runs only the long
 unpoked run (`chain`), all its cases, which `--full` leaves out: about four and a half minutes
 now, growing with the run. Its ctest `reference_compare_campaign` (label `campaign`) exists only
 when configured with `-DCHR_REFERENCE_CAMPAIGN=ON`. `--sequence chain` also runs it. It skips
@@ -358,6 +359,11 @@ counts, DG:014a and the map marks).
   (DG:38e0, `chain_return_fight`) is the same: with `arm:1 n` the original's next capture
   still shows the box (the key went to the box's flush), with the same game state; `arm:2 n`
   gives the box's read the key, as in chr.
+- **Where the original blanks the panel's column** (`Town::draw_panel`): chr blacks out columns
+  0-12 before drawing the party box, which `1000:4cac` itself never does. The heal's `4cac(0)`
+  leaves the column as it is (the direction lines stay, `chain_return_heal_done`), so it skips
+  the blackout. The other callers keep it, and their captures match; which of the original's
+  code clears the column on those paths is not yet found.
 
 ## Findings
 

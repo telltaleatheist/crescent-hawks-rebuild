@@ -954,13 +954,15 @@ flag 29 set it only opens the message box with "Your characters need more time t
   (F:d450), 3 with a field surgery kit (F:d451) and skill 3 or more. A doctor sets the care to 2,
   or 4 above level 2, and the skill to the doctor's level, and the line starts DG:252d instead of
   the medic's name.
-- With skill: DG:2538, the skill's name (DG:25e2.. by level: 1, 2 and 3 share the second, 4 the
-  third, 5 and above the fourth), DG:2543 and the care's name. Without: DG:2553. Then DG:256f.
+- With skill: DG:2538, the skill's name (far pointers at DG:25de + 4 x entry; the entry is the
+  skill below 3, the skill - 1 for 3 and 4, and 4 from 5 on: so 1 the first text, 2 and 3 the
+  second, 4 the third, 5 and above the fourth), DG:2543 and the care's name. Without: DG:2553. Then DG:256f.
 - In light green, for each hurt member: a line end, the name, DG:2587, and the hit points go up
   by dice from DG:2601 + 4 x skill + care: the low nibble is a count of d6 (`1000:19f3`: r & 7,
   drawn again above 5, plus 1), and a high nibble, when not 0, multiplies their sum. Never above
   10 x B. Skills above 7 read past the table, into the text after it.
 - Colour 15, the message pause, "Press a key." and a key, the panel (`4cac(0)`), flag 29 = 0x3f.
+  The panel's bars show the hit points from before the healing until that `4cac(0)`.
 
 Nothing rebuilt sets F:d450 or F:d451 yet, so the care is 1 unless a doctor treats. Rebuilt
 (`Town::heal`; special 23 `Town::anyone_hurt`); the doctor's callers are not.

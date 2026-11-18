@@ -570,8 +570,10 @@ bool Town::heal(int doctor, KeySource& keys) {
     }
     if (skill != 0) {
         print_id("heal.uses");
-        print_id(skill < 3 ? "heal.skill." + std::to_string(skill) : skill < 5 ? "heal.skill." + std::to_string(skill - 1)
-                                                                               : std::string("heal.skill.5"));
+        // The far pointers at DG:25de: entry skill below 3, skill - 1 for 3
+        // and 4, entry 4 from 5 on. Entries 1-4 are .1, .2, .4, .5.
+        static constexpr const char* kSkillText[] = {"", "heal.skill.1", "heal.skill.2", "heal.skill.4", "heal.skill.5"};
+        print_id(kSkillText[skill < 3 ? skill : skill < 5 ? skill - 1 : 4]);
         print_id("heal.skill_and");
         print_id("heal.care." + std::to_string(care));
     } else {

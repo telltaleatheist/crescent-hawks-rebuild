@@ -1524,6 +1524,76 @@ CHAIN_AGENT_CASES = [dict(case, compare=False) for case in
     {"name": "chain_seminar_who", "keys": "enter", "match": SCREEN},
     {"name": "chain_seminar_paid", "keys": "down*3 enter", "match": SCREEN},
     {"name": "chain_seminar_menu", "keys": "enter", "match": SCREEN},
+    # To the HUT (area 0x34, map 12 since VIEWDISK): out of map 3 to the west, north along a
+    # lake's east shore, west along the blocks' row 21. 'Mech encounters are evaded; the one
+    # group with no 'Mechs that cannot be evaded is fought with everyone mounted. The HUT's
+    # script wants Tech 4 (Edward) and Medical 4 (Russ), then sets flags 35 and 36.
+    {"name": "chain_hut_leave_hospital", "keys": "up up enter", "match": SCREEN},
+    {"name": "chain_hut_walk_1", "keys": "down*2 end left*80 home*130 left*140 home*3 pgup*8 up*36 pgup*16 up*21", "match": SCREEN},
+    {"name": "chain_hut_evade_1", "keys": "n enter enter", "match": SCREEN},
+    {"name": "chain_hut_walk_2", "keys": "up*8", "match": SCREEN},
+    {"name": "chain_hut_evade_2", "keys": "n enter enter", "match": SCREEN},
+    {"name": "chain_hut_walk_3", "keys": "up*3 pgup*16 up*70", "match": SCREEN},
+    {"name": "chain_hut_evade_3", "keys": "n enter enter", "match": SCREEN},
+    {"name": "chain_hut_walk_4", "keys": "up*170 home*37", "match": SCREEN},
+    {"name": "chain_hut_evade_4", "keys": "n enter enter", "match": SCREEN},
+    {"name": "chain_hut_walk_5", "keys": "home*8", "match": SCREEN},
+    {"name": "chain_hut_evade_5", "keys": "n enter enter", "match": SCREEN},
+    {"name": "chain_hut_walk_6", "keys": "home*42 left*138", "match": SCREEN},
+    {"name": "chain_hut_evade_6", "keys": "n enter enter", "match": SCREEN},
+    {"name": "chain_hut_walk_7", "keys": "left*90", "match": SCREEN},
+    {"name": "chain_hut_evade_7", "keys": "n enter enter", "match": SCREEN},
+    {"name": "chain_hut_walk_8", "keys": "left*69", "match": SCREEN},
+    {"name": "chain_hut_evade_8", "keys": "n enter enter", "match": SCREEN},
+    {"name": "chain_hut_walk_9", "keys": "left*45", "match": SCREEN},
+    {"name": "chain_hut_met", "keys": "n", "match": SCREEN},
+    {"name": "chain_hut_computer", "keys": "enter", "match": SCREEN},
+    {"name": "chain_hut_fight", "keys": "y enter arm:2 n", "match": {}, "fight": True},
+    {"name": "chain_hut_fight_key_1", "keys": "enter", "match": SCREEN},
+    {"name": "chain_hut_fight_key_2", "keys": "enter", "match": SCREEN},
+    {"name": "chain_hut_fight_key_3", "keys": "enter", "match": SCREEN},
+    {"name": "chain_hut_fight_key_4", "keys": "enter", "match": SCREEN},
+    {"name": "chain_hut_fight_key_5", "keys": "enter", "match": SCREEN},
+    {"name": "chain_hut_fight_key_6", "keys": "enter", "match": SCREEN},
+    {"name": "chain_hut_walk_10", "keys": "left*45", "match": SCREEN},
+    {"name": "chain_hut_evade_9", "keys": "n enter enter", "match": SCREEN},
+    {"name": "chain_hut_walk_11", "keys": "left*57", "match": SCREEN},
+    {"name": "chain_hut_evade_10", "keys": "n enter enter", "match": SCREEN},
+    {"name": "chain_hut_walk_12", "keys": "left*10", "match": SCREEN},
+    {"name": "chain_hut_evade_11", "keys": "n enter enter", "match": SCREEN},
+    {"name": "chain_hut_walk_13", "keys": "left*54", "match": SCREEN},
+    {"name": "chain_hut_evade_12", "keys": "n enter enter", "match": SCREEN},
+    {"name": "chain_hut_walk_14", "keys": "left*47", "match": SCREEN},
+    {"name": "chain_hut_evade_13", "keys": "n enter enter", "match": SCREEN},
+    {"name": "chain_hut_walk_15", "keys": "left*135", "match": SCREEN},
+    {"name": "chain_hut_evade_14", "keys": "n enter enter", "match": SCREEN},
+    {"name": "chain_hut_walk_16", "keys": "left*16 end*46 left up*6 pgdn down*4 pgdn end left end left*3", "match": SCREEN},
+    {"name": "chain_hut_door", "keys": "left", "match": SCREEN},
+    {"name": "chain_hut_in", "keys": "enter", "match": SCREEN},
+    {"name": "chain_hut_page_1", "keys": "enter", "match": SCREEN},
+    {"name": "chain_hut_page_2", "keys": "enter", "match": SCREEN},
+    {"name": "chain_hut_page_3", "keys": "enter", "match": SCREEN},
+    {"name": "chain_hut_page_4", "keys": "enter", "match": SCREEN},
+    {"name": "chain_hut_page_5", "keys": "enter", "match": SCREEN},
+    {"name": "chain_hut_page_6", "keys": "enter", "match": SCREEN},
+    {"name": "chain_hut_page_7", "keys": "enter", "match": SCREEN},
+    {"name": "chain_hut_page_8", "keys": "enter", "match": SCREEN},
+    {"name": "chain_hut_page_9", "keys": "enter", "match": SCREEN},
+    {"name": "chain_hut_page_10", "keys": "enter", "match": SCREEN},
+    {"name": "chain_hut_page_11", "keys": "enter", "match": SCREEN},
+    {"name": "chain_hut_page_12", "keys": "enter", "match": SCREEN},
+    {"name": "chain_hut_page_13", "keys": "enter", "match": SCREEN},
+    {"name": "chain_hut_page_14", "keys": "enter", "match": SCREEN},
+    {"name": "chain_hut_page_15", "keys": "enter", "match": SCREEN},
+    {"name": "chain_hut_page_16", "keys": "enter", "match": SCREEN},
+    {"name": "chain_hut_page_17", "keys": "enter", "match": SCREEN},
+    {"name": "chain_hut_page_18", "keys": "enter", "match": SCREEN},
+    {"name": "chain_hut_page_19", "keys": "enter", "match": SCREEN},
+    {"name": "chain_hut_page_20", "keys": "enter", "match": SCREEN},
+    {"name": "chain_hut_page_21", "keys": "enter", "match": SCREEN},
+    {"name": "chain_hut_page_22", "keys": "enter", "match": SCREEN},
+    {"name": "chain_hut_page_23", "keys": "enter", "match": SCREEN},
+    {"name": "chain_hut_page_24", "keys": "enter", "match": SCREEN},
 ]
 
 
@@ -1798,6 +1868,8 @@ def main():
     ap.add_argument("--campaign", action="store_true",
                     help="only the campaign sequences (the long unpoked run), all their cases")
     ap.add_argument("--sequence", action="append", help="run only this sequence (may be repeated)")
+    ap.add_argument("--jobs", type=int, default=4,
+                    help="at most this many sequences (DOSBox-X windows) at once (default 4)")
     a = ap.parse_args()
     run.stop_on_signals()  # a stopped run leaves no DOSBox-X (or its quit dialog)
 
@@ -1811,14 +1883,15 @@ def main():
 
     os.makedirs(a.work, exist_ok=True)
     # The sequences are separate runs of the original, each in its own
-    # copy of the game folder (run.py), so they run side by side.
+    # copy of the game folder (run.py), so they run side by side, --jobs
+    # at a time.
     # The campaign sequences run only with --campaign (or by name): they
     # would make the everyday --full run too long.
     jobs = [(sequence, quick + (full if a.full or a.campaign else []), chr_options)
             for sequence, quick, full, chr_options in SEQUENCES
             if (sequence in a.sequence if a.sequence else (sequence in CAMPAIGN) == a.campaign)]
     ok = True
-    with concurrent.futures.ThreadPoolExecutor(max_workers=len(jobs) or 1) as pool:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, min(a.jobs, len(jobs)))) as pool:
         results = [pool.submit(run_sequence, a, sequence, cases, chr_options)
                    for sequence, cases, chr_options in jobs]
         for result in results:
