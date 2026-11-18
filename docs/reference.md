@@ -349,10 +349,11 @@ counts, DG:014a and the map marks).
   so `arm:1` before `n` hands the next key to that flush, which reads and drops it; the box's
   own read (`273d:0259`) then takes the key after. Without `arm:1`, or with `arm:2`, the
   original takes the first key at the box (flags and the agent's emptied record match chr).
-  Still open: after that key the original runs round 2 before it next waits, while chr's next
-  capture comes before round 2, so each later capture of chr's is one round behind the
-  original's (chr's key n+1 is the original's key n). `chain_agent` ends at the box until the
-  round loop's handling of a key after the box is read.
+  After that key the next one comes where the feeder gives it: the 4th poll in a row, or the
+  one `arm:N` names, so the original plays on through rounds before its next capture, while
+  chr, with no item left, stops at its first poll between rounds (`ScriptKeys::poll`). That is
+  where the captures are taken, not a difference in the round loop: `chain_agent` gives the
+  box's key `arm:2` and matches the original through four more keys.
 - **The map behind the game-over box after the jail break** (`chain_jail_fight_round_2`): the
   state matches, but the original's play area still shows the fight's view around the bays,
   while chr's shows the town map drawn at another window. Only the state is compared there.

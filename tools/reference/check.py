@@ -1342,8 +1342,9 @@ CHAIN_JAIL_FIGHT_CASES = [dict(case, compare=False) for case in
 # screen Rick is seated as the COMMANDO's rider, which shows his tell and sets
 # F:374a (docs/scripts.md). The first random encounter after it (one person,
 # 119 passes out) is fought by the computer; after round 1 he acts from the
-# rider's seat (the box; docs/combat.md 2.9). The sequence ends at the box:
-# what follows its key is an open item (docs/reference.md).
+# rider's seat (the box; docs/combat.md 2.9). Round 1 without arm:1, so the
+# box's key is not fed to 273d:086a's flush; the box's key with arm:2, so both
+# programs take the next key at the same poll (docs/reference.md).
 CHAIN_AGENT_CASES = [dict(case, compare=False) for case in
                      CHAIN_PARTY_CASES[:[c["name"] for c in CHAIN_PARTY_CASES].index("chain_party_crew_rex_pick") + 1]] + [
     {"name": "chain_agent_rick", "keys": "down*3", "match": SCREEN},
@@ -1353,8 +1354,9 @@ CHAIN_AGENT_CASES = [dict(case, compare=False) for case in
     {"name": "chain_agent_tell_key", "keys": "enter", "match": SCREEN},
     {"name": "chain_agent_done", "keys": "down enter", "match": SCREEN},
     {"name": "chain_agent_encounter", "keys": "idle:119", "match": SCREEN},
-    {"name": "chain_agent_fight", "keys": "y y enter arm:1 n", "match": {}, "fight": True},
-]
+    {"name": "chain_agent_fight", "keys": "y y enter n", "match": {}, "fight": True},
+    {"name": "chain_agent_acted", "keys": "arm:2 enter", "match": {}, "fight": True},
+] + [{"name": "chain_agent_key_%d" % n, "keys": "enter", "match": {}, "fight": True} for n in range(2, 6)]
 
 
 # The long unpoked run: its own tier (`--campaign`, ctest label campaign).
