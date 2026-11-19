@@ -236,7 +236,11 @@ std::uint8_t Terrain::copy_block(int column, int row, const formats::MtpMap& map
     const auto stored = [&](int n, int i) -> int {
         if (n < 16) return tables_.terrain_templates[std::size_t(n * 64 + i)];
         const std::size_t b = std::size_t((n - 16) * 64 + i);
-        return b < map.blocks.size() ? map.blocks[b] : 0;
+        if (b < map.blocks.size()) return int(map.blocks[b]);
+        // Past the map store's 64 blocks (P:201d): blocks 0x50 and 0x51 of
+        // the program's own; the cache's grids are all block 0x50 (d0).
+        const std::size_t tail = b - kMapStoreBytes;
+        return b >= kMapStoreBytes && tail < tables_.store_tail.size() ? tables_.store_tail[tail] : 0;
     };
     std::array<int, 64> block{};
     if (entry >= 0x80) {
@@ -320,6 +324,8 @@ std::optional<int> Terrain::window_cell(formats::MapPosition position, int index
         if (at < 16 * 64) return tables_.terrain_templates[std::size_t(at)];
         at -= 16 * 64;
         if (map_ && std::size_t(at) < map_->blocks.size()) return map_->blocks[std::size_t(at)];
+        if (map_ && map_->blocks.size() == kMapStoreBytes && std::size_t(at) - kMapStoreBytes < tables_.store_tail.size())
+            return tables_.store_tail[std::size_t(at) - kMapStoreBytes];
         return std::nullopt;
     }
     if (index >= 0) return window(position).cells[std::size_t(index)];

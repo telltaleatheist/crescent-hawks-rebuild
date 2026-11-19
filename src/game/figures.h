@@ -108,10 +108,12 @@ inline int folded_half_y(int row, std::uint16_t party_y) { return (row & 0x7f) +
 // formation place (DGROUP:02ae/02be: by the count drawn so far, not the
 // character's own slot). Its sprite is its base (F:d562) plus its
 // animation frame. In shallow water a figure sinks 2 rows, in deeper water
-// 4. (The map's objects, the townspeople and the 'Mechs come before and
+// 4, except on a map with tile events (F:d346, the cache: `sinks` false).
+// (The map's objects, the townspeople and the 'Mechs come before and
 // after it: docs/town_loop.md.)
 std::vector<Figure> party_figures(const Terrain& terrain, formats::MapPosition position,
                                   const Party& party, const FigureAnimation& animation,
-                                  const formats::Tables& tables, const std::array<int, 8>& sprite_base);
+                                  const formats::Tables& tables, const std::array<int, 8>& sprite_base,
+                                  bool sinks = true);
 
 }  // namespace chr::game

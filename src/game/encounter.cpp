@@ -40,7 +40,7 @@ bool Town::random_encounter(KeySource& keys) {
     // screen still shows the map as the last tick drew it.
     // The page (the drawing buffer) holds that drawing too.
     if (last_drawn_ && !frozen_) {
-        encounter_frozen_ = true;
+        tick_redraws_ = true;
         frozen_ = last_drawn_;
         page_ = last_drawn_;
         page_sprites_.clear();

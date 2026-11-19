@@ -150,6 +150,7 @@ narration of what happened, descriptions and flavour, and the original's own not
 | shot.squashed, shot.arena_damaged, shot.urbanmechs | 3 | narration of story events |
 | condition.0-10 | 11 | a person's condition, as flavour descriptions |
 | mission.* | 10 | the training missions' story |
+| cache.door_wants.0-2 | 3 | the cache's doors asking for the items they need (1b5d:0ab6): story |
 
 ### The cases decided by hand
 

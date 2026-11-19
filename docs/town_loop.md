@@ -183,7 +183,7 @@ not empty, at the k-th 'Mech place. So a character in a 'Mech is not drawn as a 
 shows as its 'Mech, on every map, in town or out. Rebuilt for every drawing (`Town::figures`,
 `Town::party_mech_figure`).
 
-Sinking: the tile under the figure (the cell holding its half-cell) means water in that quarter
+Sinking (not while F:d346 is set, on map 14: docs/cache.md): the tile under the figure (the cell holding its half-cell) means water in that quarter
 if it is below 0xf6, its high nibble below 3, and it has any of the bits that DG:0332 gives for
 the figure's place k and the position's odd/even half-cells. Then the figure sinks 2 rows, or 4
 if the high nibble is 2: the sprite's height is cut, so its bottom rows are not drawn.

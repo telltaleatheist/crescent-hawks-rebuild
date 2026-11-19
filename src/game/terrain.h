@@ -23,6 +23,7 @@ public:
     static constexpr int kGrids = 9;         // 3x3 areas, the party's in the middle (grid 4)
     static constexpr int kGridBlocks = 64;   // 8x8 blocks an area
     static constexpr int kFirstMapBlock = 0x90;  // a grid entry naming the map's block 0
+    static constexpr std::size_t kMapStoreBytes = 0x1000;  // P:101d: 64 blocks of a map
 
     Terrain(const formats::Tables& tables, const Fixes& fixes);
 
@@ -108,8 +109,8 @@ public:
     // (P:0324); after it the corner words (P:09ed..09f2, as 287f:1df8 sets
     // them for `position`), the map-load queue (P:09f3), the noise cursor
     // (P:09f9), the noise table, the heights and the block store up to the
-    // map's last block. Nothing before or past those (memory the rebuild
-    // does not hold).
+    // map's last block (past a full map, the program's blocks 0x50-0x51).
+    // Nothing before or past those (memory the rebuild does not hold).
     std::optional<int> window_cell(formats::MapPosition position, int index) const;
     // P:09f3..09f8: the grids the last area step queued for a map load (ff:
     // none, or done) and their areas. 0 at a new game, so the first step
@@ -123,6 +124,11 @@ public:
     // a neighbouring area's) if the window around `position` holds it.
     std::optional<int> cell(formats::MapPosition position, int x, int y) const;
 
+    // Every entry of the nine grids set to `entry` (1b5d:0004, 1b5d:055a, 1b5d:079c).
+    void fill_grids(std::uint8_t entry) {
+        grids_.fill(entry);
+        built_.reset();
+    }
     // P:0564: the grids, 64 entries each, row by row.
     const std::array<std::uint8_t, kGrids * kGridBlocks>& grids() const { return grids_; }
     // P:0324: the masks, in the same order.

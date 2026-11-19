@@ -1612,6 +1612,13 @@ CHAIN_CACHE_POKED_CASES = [dict(case, compare=False) for case in CHAIN_AGENT_CAS
      "match": SCREEN},
     # ENTRANCE's question comes on a step from its door cell.
     {"name": "chain_cache_door", "keys": "right", "match": SCREEN},
+    {"name": "chain_cache_enter", "keys": "y", "match": SCREEN},
+    # Leaving ENTRANCE with flag 36 set goes into the cache (1b5d:0004).
+    {"name": "chain_cache_going_in", "keys": "enter", "match": SCREEN},
+    {"name": "chain_cache_instruct", "keys": "enter", "match": SCREEN},
+    {"name": "chain_cache_instruct_2", "keys": "enter", "match": SCREEN},
+    # The step that asked at ENTRANCE's door goes on inside.
+    {"name": "chain_cache_inside", "keys": "enter", "match": SCREEN},
 ]
 
 

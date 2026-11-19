@@ -46,7 +46,8 @@ std::vector<Figure> Town::walk_in_figures() {
     for (int i = 0; i < 8; ++i) walking.present[std::size_t(i)] = walking.present[std::size_t(i)] && on_foot(i);
     draw_marks();
     auto all = drawn_marks_;
-    const auto party = party_figures(terrain_, position_, walking, animation_, tables_, people_sprite_base());
+    const auto party = party_figures(terrain_, position_, walking, animation_, tables_, people_sprite_base(),
+                                     flags_[flag::kTileEvents] == 0);
     all.insert(all.end(), party.begin(), party.end());
     const auto people = people_.figures(map_, position_, animation_);
     all.insert(all.end(), people.begin(), people.end());
@@ -412,7 +413,7 @@ bool Town::alley_fight(KeySource& keys) {
     encounter_entry_ = position_;
     // As after an encounter, the fight's last drawing stays on the screen
     // until the next tick draws the map (2.12).
-    encounter_frozen_ = true;
+    tick_redraws_ = true;
     return fight(-1, keys);
 }
 

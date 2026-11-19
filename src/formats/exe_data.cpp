@@ -89,6 +89,12 @@ constexpr std::array kDos103 = {
     ExeSpan{ExeSpan::Kind::Table, "tables.leg_actuator_keep", 0x46db, 0x3172, 8, "2fa2afa16b05680e"},
     ExeSpan{ExeSpan::Kind::Table, "tables.arm_actuator_bit", 0x46db, 0x317a, 8, "f2da1742dfa01895"},
     ExeSpan{ExeSpan::Kind::Table, "tables.arm_actuator_keep", 0x46db, 0x3182, 8, "25a134f2663c725d"},
+    ExeSpan{ExeSpan::Kind::Table, "tables.door_tiles", 0x46db, 0x246e, 12, "c0b1dd497d669ea0"},
+    ExeSpan{ExeSpan::Kind::Table, "tables.door_x", 0x46db, 0x247a, 12, "1c5e450adcfa8c68"},
+    ExeSpan{ExeSpan::Kind::Table, "tables.door_y", 0x46db, 0x2486, 12, "48ef9e1f1d1ffea0"},
+    ExeSpan{ExeSpan::Kind::Table, "tables.door_item_0", 0x46db, 0x2492, 12, "0da498ea1ea95b7a"},
+    ExeSpan{ExeSpan::Kind::Table, "tables.door_item_1", 0x46db, 0x249e, 12, "ef793f3443b3e683"},
+    ExeSpan{ExeSpan::Kind::Table, "tables.door_item_2", 0x46db, 0x24aa, 12, "3ded72c68ec8857e"},
     ExeSpan{ExeSpan::Kind::Table, "tables.location_slot_first", 0x46db, 0x318a, 8, "9fbd883337f64bcc"},
     ExeSpan{ExeSpan::Kind::Table, "tables.location_slot_count", 0x46db, 0x3192, 8, "79569a0bc1d7d49c"},
     // 22e8:12c7, the shot with combat graphics: the poses' scripts and their
@@ -118,6 +124,7 @@ constexpr std::array kDos103 = {
     ExeSpan{ExeSpan::Kind::Table, "tables.foot_formation_y", 0x46db, 0x3a1e, 8, "54a0cc86c63b8864"},
     ExeSpan{ExeSpan::Kind::Table, "tables.terrain_templates", 0x2c6c, 0x0c1d, 1024, "c5cddf08c0924d94"},
     ExeSpan{ExeSpan::Kind::Table, "tables.plain_block", 0x2c6c, 0x209d, 64, "e3a878f25dc4ae8e"},
+    ExeSpan{ExeSpan::Kind::Table, "tables.store_tail", 0x2c6c, 0x201d, 128, "5f55b86a6b86f94a"},
     ExeSpan{ExeSpan::Kind::Table, "tables.mirror_east_west", 0x2c6c, 0x211d, 32, "513e0371b0a58371"},
     ExeSpan{ExeSpan::Kind::Table, "tables.mirror_north_south", 0x2c6c, 0x213d, 32, "d81bed15e8cec54a"},
     ExeSpan{ExeSpan::Kind::Table, "rules.quiz_answers", 0x46db, 0x28ec, 20, "3fe5abf0257c084c"},
@@ -527,6 +534,9 @@ constexpr std::array kDos103 = {
     ExeSpan{ExeSpan::Kind::Text, "heal.nobody", 0x46db, 0x2591, 19, "1a406fa4b46db7b0"},
     ExeSpan{ExeSpan::Kind::Text, "heal.more_time", 0x46db, 0x25a4, 43, "aedf8b581a931198"},
     ExeSpan{ExeSpan::Kind::Text, "heal.nobody_2", 0x46db, 0x25cf, 19, "1a406fa4b46db7b0"},
+    ExeSpan{ExeSpan::Kind::Text, "cache.door_wants.0", 0x46db, 0x242c, 21, "3fdcb68e36a347cb"},
+    ExeSpan{ExeSpan::Kind::Text, "cache.door_wants.1", 0x46db, 0x2441, 22, "6d8a648fb8435416"},
+    ExeSpan{ExeSpan::Kind::Text, "cache.door_wants.2", 0x46db, 0x2457, 23, "1757d07eee6b5571"},
 };
 
 constexpr std::uint16_t kLoadSegment = 0x1000;

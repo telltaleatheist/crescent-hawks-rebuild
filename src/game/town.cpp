@@ -265,9 +265,10 @@ MapView Town::live_view() const {
 // The map's marks (wrecks, bodies, fires: docs/combat.md 3.13) in view, in
 // ring order, each as its code's sprite at its own place, placed as the
 // people are. A fire drawn changes to its other frame (code 0x7c <-> 0x7d)
-// for the next drawing.
+// for the next drawing. 1000:051b skips it on a map with tile events (F:d346).
 void Town::draw_marks() {
     drawn_marks_.clear();
+    if (flags_[flag::kTileEvents] != 0) return;
     const std::uint16_t px = position_.x, py = position_.y;
     const int party_area = ((px | py) >> 8) & 0xff;
     for (auto& m : marks_.marks) {
@@ -293,7 +294,8 @@ std::vector<Figure> Town::figures() const {
     // Characters in a 'Mech are drawn as their 'Mech, below.
     Party walking = party();
     for (int i = 0; i < 8; ++i) walking.present[std::size_t(i)] = walking.present[std::size_t(i)] && on_foot(i);
-    const auto party = party_figures(terrain_, position_, walking, animation_, tables_, people_sprite_base());
+    const auto party = party_figures(terrain_, position_, walking, animation_, tables_, people_sprite_base(),
+                                     flags_[flag::kTileEvents] == 0);
     all.insert(all.end(), party.begin(), party.end());
     const auto people = people_.figures(map_, position_, animation_);
     all.insert(all.end(), people.begin(), people.end());
@@ -565,9 +567,9 @@ void Town::game_tick(KeySource* keys) {
     // The map and the figures are drawn again (DGROUP:014a is set in town),
     // over any message box (1000:046e), the window first built again at
     // the party's place (287f:1314 at 1000:0480).
-    if (encounter_frozen_) {
+    if (tick_redraws_) {
         frozen_.reset();
-        encounter_frozen_ = false;
+        tick_redraws_ = false;
     }
     build_window();
     text_.forget(13, 0, kTextColumns - 13, kTextRows);

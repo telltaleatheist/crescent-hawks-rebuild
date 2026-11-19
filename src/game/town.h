@@ -287,6 +287,9 @@ private:
     // The places (game/place.cpp, docs/scripts.md). Each returns false if
     // the keys ran out while it waited for one (place_open_ is then set).
     bool visit_place(int entrance, KeySource& keys);
+    // The cache (map 14, docs/cache.md).
+    bool enter_cache(KeySource& keys);
+    bool open_door(int x, int y, int door, KeySource& keys);
     bool run_script(int file, KeySource& keys);
     // `start`: the item the bar starts on instead of the remembered one (the
     // quiz scene's right part); the item chosen is remembered as usual.
@@ -474,6 +477,10 @@ private:
     // F:d452: the first bytes of 'Mech records 0-3 while they are set aside
     // (mode 9, the garage); a letter means a 'Mech is held there.
     std::array<std::uint8_t, 4> held_mechs_ = {0xff, 0xff, 0xff, 0xff};  // ff at a new game (1000:4dc7)
+    // F:3248: the first bytes of 'Mech records 0-3, parked outside the cache.
+    std::array<std::uint8_t, 4> parked_mechs_{};
+    // F:45de: the cache's items a door has used.
+    std::array<std::uint8_t, 33> item_used_{};
     // F:d456: the next character name number, 1 at a new game (1000:4ebc).
     std::uint8_t next_name_ = 1;
     // F:c614: the sixteen character records.
@@ -500,8 +507,8 @@ private:
     bool raid_ = false;               // F:3772: the Kurita raid
     int path_end_col_ = 0, path_end_row_ = 0;  // F:3778/377a: the cell where the shown path ends
     std::optional<Frozen> frozen_;  // the map as the screen shows it
-    std::optional<Frozen> last_drawn_;
-    bool encounter_frozen_ = false;  // frozen_ is the encounter's: the tick's drawing ends it  // the map as the last tick drew it, outdoors
+    std::optional<Frozen> last_drawn_;  // the map as the last tick drew it, outdoors
+    bool tick_redraws_ = false;  // frozen_ is the encounter's or the cache's: the tick's drawing ends it
     // With combat graphics: the page drawn but not shown yet, the sprites on
     // it and on the screen, the line pixels on the screen; and every moment
     // shown so far (game/shown.h).

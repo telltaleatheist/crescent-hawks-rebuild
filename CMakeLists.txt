@@ -49,6 +49,7 @@ add_library(chrgame STATIC
   src/game/map_view.cpp
   src/game/money.cpp
   src/game/movement.cpp
+  src/game/cache.cpp
   src/game/place.cpp
   src/game/startup.cpp
   src/game/random.cpp

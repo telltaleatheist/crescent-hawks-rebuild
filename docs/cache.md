@@ -18,7 +18,9 @@ Leaving place 0x14 (ENTRANCE) with flag 36 set (docs/scripts.md, "Entering a pla
 3. The party is placed at 0c06,c07e, and 27e8:01b0 (a table, through `287f:00d1`) is copied
    in. Then `1000:28cc(2)`, the disk request the rebuild drops.
 4. All nine area grids (P:0564, 0x240 bytes) are filled with block d0, and map 14 is loaded into
-   grid 4 (`1000:2da8(4, 0xe)`). The load queue (P:09f3, three bytes) is cleared to ff. F:4fbc
+   grid 4 (`1000:2da8(4, 0xe)`). Entry d0 names block 0x50 of the block store: map 14 fills all
+   64 map blocks (P:101d-201c), so block 0x50 is the 64 bytes after them, at 2c6c:201d, which
+   the program image fills with tile f5 (imported as `tables.store_tail`, with block 0x51). The load queue (P:09f3, three bytes) is cleared to ff. F:4fbc
    is set to 1.
 5. The tile set named at DG:2068 is loaded (`273d:063b`, `049d`) and, on EGA (F:4fba = 2),
    converted (`287f:0260`). F:3988 = 2.
@@ -30,6 +32,13 @@ Leaving place 0x14 (ENTRANCE) with flag 36 set (docs/scripts.md, "Entering a pla
 9. Place 0x17 (INSTRUCT) runs (`17dc:0008`).
 10. For each door d 0-10 whose flag (F:d34f + d, flags 0x43-0x4d) is set, `1b5d:0ab6(0, 0, d)`
     opens it again without a sound or delay, so a reloaded cache keeps its open doors.
+
+All of this runs inside the step that answered ENTRANCE's question (`1000:1c12`), which then
+goes on as after any place: the rest of the step is checked against the cache's window and the
+party moves one half-cell from 0c06,c07e. The walking frames (`1000:231d`) follow that step.
+
+The records at F:d118 have no other reference by that address in the program; what they hold is
+not yet traced. The rebuild has nothing for them.
 
 ## The step check (BTECH.EXE 1000:1c12)
 
@@ -54,6 +63,9 @@ the step and is dispatched by its number t, with (x, y) the cell the step would 
 The same function also asks at an entrance (DG:0430 / 0444 with the entrance's name) and refuses
 a step off the map's edge where the next area is block 0f (DG:0410), as on any map.
 
+While F:d346 is set, the figure drawer `1000:051b` draws no marks (`1000:2a93`) and sinks no
+figure, person or 'Mech, whatever the tile under it.
+
 ## Items and doors
 
 **Items (`1b5d:03aa`).** 33 items lie on tiles b6/b7. Item i's cell is x DG:21ce + i (a span of
@@ -72,8 +84,9 @@ DG:24aa + d, each minus 1.
 - Called from a step (d = -1), the door at (x, y) is looked up (x as `(x + 1) & 0x7e`, y as
   `y & 0x7e`). Unless it is door 11, the party must carry exactly its three items: for each slot
   that differs the message box shows DG:242c, DG:2441 or DG:2457 in turn, then the box waits
-  (`273d:086a`) and a key (`273d:0259`), and the step ends. A door not in the table does
-  nothing.
+  (`273d:086a`) and a key (`273d:0259`), and the step ends; the door stays shut (its found flag
+  is cleared before the opening part). A door not in the table does nothing. The way in, door
+  11, needs no items.
 - When the door opens: door 11 empties all three slots (F:d347-d349 = ff); any other door marks
   its three items used (F:45de + item = 1). The door's flag (F:d34f + d) is set. Called from a
   step, it plays sound 10 (`1000:19bf`). Three frames follow (from frame 2 when called with a
@@ -142,7 +155,11 @@ The toggle `((t + 1) ^ 1) - 1` maps an odd t to t + 1 and an even t to t - 1.
 
 ## Rebuilt
 
-Nothing yet. The plan, in order, each step compared on the original on the `chain_cache_poked`
-side branch: going in (step 9 and `0004`); the step dispatch; items and doors; the text tiles;
-the second level and the puzzle; ENDMECH, FINDIT and INSTRUCT as ordinary place scripts; the way
-out into WINSCENE and the game's end.
+Going in (`Town::enter_cache`, `src/game/cache.cpp`) and the doors (`Town::open_door`), with the
+tables at DG:246e-24b5 and the three door texts imported from the EXE (`tables.door_*`,
+`cache.door_wants.0-2`). Checked against the original on the `chain_cache_poked` side branch:
+ENTRANCE, the way in, INSTRUCT and the first step inside match screen and state. The door
+opened from a step with the wrong items is rebuilt but not yet met on the branch.
+
+Still to do, in order, each compared the same way: the step dispatch; items; the text tiles; the
+second level and the puzzle; ENDMECH and FINDIT; the way out into WINSCENE and the game's end.

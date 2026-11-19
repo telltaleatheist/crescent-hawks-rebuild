@@ -101,6 +101,12 @@ struct Tables {
     std::array<int, 8> location_slot_first{};       // DG:318a: the location's first item byte
     std::array<int, 8> location_slot_count{};       // DG:3192: how many
 
+    // The cache's doors (docs/cache.md).
+    std::array<int, 12> door_tiles{};               // DG:246e: three frames of four tiles
+    std::array<int, 12> door_x{};                   // DG:247a: door d's half-cells in the area
+    std::array<int, 12> door_y{};                   // DG:2486
+    std::array<std::array<int, 12>, 3> door_items{};  // DG:2492, 249e, 24aa: by slot, the item it needs, plus 1
+
     // The shot with combat graphics (docs/combat.md 3.14).
     static constexpr int kPoseScriptBase = 0x3ef0;
     std::array<int, 0x108> pose_scripts{};   // DG:3ef0: the fire poses', kicks' and missiles' scripts
@@ -130,6 +136,7 @@ struct Tables {
     std::array<int, 5> alley_offset_y{};         // DG:1e8a: and from the base y
     std::array<int, 8> foot_formation_y{};       // DG:3a1e
     std::array<int, 1024> terrain_templates{};   // 2c6c:0c1d: 16 blocks of 8x8, one per neighbour mask
+    std::array<int, 128> store_tail{};           // 2c6c:201d: the block store's blocks 0x50-0x51, after a full map's 64
     std::array<int, 64> plain_block{};           // 2c6c:209d: the block every type-0x10 block is
     std::array<int, 32> mirror_east_west{};      // 2c6c:211d: a template byte with east and west swapped
     std::array<int, 32> mirror_north_south{};    // 2c6c:213d: with north and south swapped

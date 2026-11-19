@@ -87,6 +87,10 @@ bool Town::visit_place(int entrance, KeySource& keys) {
     picture_.reset();
     text_.select_window(3);
     draw_panel();
+    // 1000:7f46: leaving ENTRANCE once its question is answered yes (flag
+    // 36), into the cache. The eight records at F:d118 have byte 0 cleared
+    // first (docs/cache.md).
+    if (file == 0x14 && flags_[flag::kCacheOpen] != 0) return enter_cache(keys);
     return true;
 }
 
