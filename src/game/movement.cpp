@@ -123,6 +123,10 @@ StepResult take_step(const formats::MtpMap& map, int map_number, const MapPositi
             }
         }
         if (under >= limit) {
+            if (map_number == 14) {
+                result.event_tile = under;
+                result.event_at = {std::uint16_t(from.x + fx), std::uint16_t(from.y + fy)};
+            }
             return finish(StepOutcome::Blocked);
         }
     }

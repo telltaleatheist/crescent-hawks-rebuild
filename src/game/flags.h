@@ -34,6 +34,7 @@ inline constexpr int kMoneyFloor = 0x33;      // d33f-d340: a word; the training
 inline constexpr int kCacheOpen = 0x36;       // d342: ENTRANCE answered yes: leaving it goes into the cache (docs/cache.md)
 inline constexpr int kTileEvents = 0x3a;      // d346: a map whose tiles have events (map 14, docs/movement.md)
 inline constexpr int kCacheItems = 0x3b;      // d347-d349: the item carried in each of three slots, or ff
+inline constexpr int kCacheLevel = 0x42;      // d34e: on the cache's second level
 inline constexpr int kCacheDoors = 0x43;      // d34f-d35a: door d open
 inline constexpr int kPictureChance = 0x4f;   // d35b: how often a place's picture shows
 }  // namespace flag

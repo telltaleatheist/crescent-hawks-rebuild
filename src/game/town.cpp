@@ -660,7 +660,7 @@ void Town::turn(int k, KeySource& keys) {
     if (!r) return;
     // The main loop then writes the direction in the upper panel box, unless
     // a message or question came up this turn (F:d55c).
-    if (!r->offered_place && r->outcome != StepOutcome::TooDeep) {
+    if (!r->offered_place && r->outcome != StepOutcome::TooDeep && !turn_message_) {
         text_.select_window(4);
         text_.set_fg(15);
         text_.print(lookup(texts_, direction_text_id(*step)));
@@ -687,11 +687,16 @@ void Town::run_map_loads() {
 // game now waits in a question or a place.
 std::optional<StepResult> Town::step_party(Step step, KeySource& keys) {
     Question question(*this, keys);
+    turn_message_ = false;
     Party walking = party();
     for (int i = 0; i < 8; ++i) walking.present[std::size_t(i)] = walking.present[std::size_t(i)] && on_foot(i);
     step_mechs_ = active_mechs();
     const auto r = take_step(map_, map_number_, position_, walking, step, question, tables_, terrain_, step_mechs_,
                              window_at_);
+    if (r.event_tile && !cache_step(*r.event_tile, r.event_at, keys)) {
+        log_.push_back("waiting in the cache");
+        return std::nullopt;
+    }
     if (place_open_) {
         log_.push_back("waiting in place " + std::to_string(*r.offered_place));
         return std::nullopt;

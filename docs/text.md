@@ -130,7 +130,7 @@ narration of what happened, descriptions and flavour, and the original's own not
 | shot.* but shot.squashed, shot.arena_damaged, shot.urbanmechs | 26 | the pieces of a shot's message, hit and miss, critical, kill |
 | location.0-10 | 11 | the hit locations, as labels |
 
-### Imported only (611 IDs)
+### Imported only (674 IDs)
 
 | IDs | Count | Why |
 |---|---|---|
@@ -144,13 +144,20 @@ narration of what happened, descriptions and flavour, and the original's own not
 | talk.hello, talk.going_to, talk.reason.0-11 | 14 | the townspeople's dialogue |
 | place.follow_on.0-1 | 2 | the narration before VIEWDISK after the garage (17dc:0008) |
 | space.items.0-2, space.items.allocate, space.no_dismount | 5 | the Space command menu and its refusal (1000:2c50, 4d57); menus, but kept imported: interface.json holds only what Owen approved |
-| after.* but the seven above | 11 | narration: repairs, scrap, salvage, loot |
+| after.* but the seven above | 14 | narration: repairs, scrap, salvage, loot |
 | unit.suspicious | 1 | the double agent's clue (story) |
 | fight.* but the six above | 35 | the encounter descriptions, the double agent's story, how a fight ended |
 | shot.squashed, shot.arena_damaged, shot.urbanmechs | 3 | narration of story events |
 | condition.0-10 | 11 | a person's condition, as flavour descriptions |
 | mission.* | 10 | the training missions' story |
 | cache.door_wants.0-2 | 3 | the cache's doors asking for the items they need (1b5d:0ab6): story |
+| heal.* | 17 | healing (1c31:000a): who treats, with what care, and who is still hurt |
+| crew.* | 21 | the crew screen (1c67:0002); a menu, but kept imported: interface.json holds only what Owen approved |
+| recruit.* | 5 | a new member joining (19b8:0d58) |
+| offer.* | 4 | a found weapon offered to the party (17dc:15e6) |
+| over.leader.0-1, over.killed, over.new_game | 4 | the game over when the leader dies (1000:04a4), and its question |
+| ui.press_key, ui.plural_s, ui.full_stop | 3 | message pieces, kept imported: not on Owen's approved list |
+| shop.cbills_end | 1 | the end of a shop's price line, kept imported: not on Owen's approved list |
 
 ### The cases decided by hand
 

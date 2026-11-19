@@ -57,6 +57,10 @@ struct StepResult {
     formats::MapPosition position;     // after the step
     std::optional<int> offered_place;  // the entrance that was asked about
     bool entered = false;              // and the answer was yes
+    // Map 14 (F:d346): the tile that stopped the step and the half-cell it is
+    // at, for the cache's dispatch (docs/cache.md).
+    std::optional<int> event_tile;
+    formats::MapPosition event_at;
 };
 
 class EntranceQuestion {

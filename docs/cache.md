@@ -43,8 +43,14 @@ not yet traced. The rebuild has nothing for them.
 ## The step check (BTECH.EXE 1000:1c12)
 
 `1000:1c12(dx, dy)` checks a party step before it is taken. While F:d346 (flag 3a) is set, which the
-map load `1000:2da8` sets for map 14 and clears for any other (docs/movement.md), a tile at or above the walk threshold (DG:0150) stops
-the step and is dispatched by its number t, with (x, y) the cell the step would reach:
+map load `1000:2da8` sets for map 14 and clears for any other (docs/movement.md), the characters
+on foot are checked in figure order as on any map, but none is asked about an entrance. The
+first whose tile is at or above the walk threshold (DG:0150) stops the step, and its tile is
+dispatched by its number t, with (x, y) that character's half-cell after the step (its
+formation offset, DG:0464 / 047c, plus the step plus the party's place, F:a44b / a44d). The
+characters after it are not checked, and the step is refused whatever the tile did. Any other
+tile at or above the threshold only blocks. All the tests are made on the same t, and the tile
+numbers they name do not overlap, so at most one function runs:
 
 | Level (F:d34e) | Tile | Function |
 |---|---|---|
@@ -60,8 +66,12 @@ the step and is dispatched by its number t, with (x, y) the cell the step would 
 | 1 | 97-f0 | `0913(x, y)`: a puzzle cell |
 | 1 | 8c, 8d | `0980`: the puzzle's check |
 
-The same function also asks at an entrance (DG:0430 / 0444 with the entrance's name) and refuses
-a step off the map's edge where the next area is block 0f (DG:0410), as on any map.
+The same function refuses a step off the map's edge where the next area is block 0f (DG:0410),
+as on any map. Its 'Mech check, which asks at an entrance (DG:0446 / 045a), does not look at
+F:d346, but in the cache no 'Mech walks.
+
+A function that shows a message sets F:d55c, and the main loop then writes no direction in the
+upper panel box for that step.
 
 While F:d346 is set, the figure drawer `1000:051b` draws no marks (`1000:2a93`) and sinks no
 figure, person or 'Mech, whatever the tile under it.
@@ -155,11 +165,13 @@ The toggle `((t + 1) ^ 1) - 1` maps an odd t to t + 1 and an even t to t - 1.
 
 ## Rebuilt
 
-Going in (`Town::enter_cache`, `src/game/cache.cpp`) and the doors (`Town::open_door`), with the
+Going in (`Town::enter_cache`, `src/game/cache.cpp`), the doors (`Town::open_door`) and the step
+dispatch (`Town::cache_step`, called from the step with the tile `take_step` found), with the
 tables at DG:246e-24b5 and the three door texts imported from the EXE (`tables.door_*`,
 `cache.door_wants.0-2`). Checked against the original on the `chain_cache_poked` side branch:
-ENTRANCE, the way in, INSTRUCT and the first step inside match screen and state. The door
-opened from a step with the wrong items is rebuilt but not yet met on the branch.
+ENTRANCE, the way in, INSTRUCT, the first step inside, a walk to door 0 and the door refusing a
+party without its items match screen and state.
 
-Still to do, in order, each compared the same way: the step dispatch; items; the text tiles; the
-second level and the puzzle; ENDMECH and FINDIT; the way out into WINSCENE and the game's end.
+Still to do, in order, each compared the same way: items; the text tiles; the second level and
+the puzzle; ENDMECH and FINDIT; the way out into WINSCENE and the game's end. Until then their
+tiles only block, and the game log names the function they would run.

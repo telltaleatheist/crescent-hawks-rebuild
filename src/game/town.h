@@ -290,6 +290,7 @@ private:
     // The cache (map 14, docs/cache.md).
     bool enter_cache(KeySource& keys);
     bool open_door(int x, int y, int door, KeySource& keys);
+    bool cache_step(int tile, formats::MapPosition at, KeySource& keys);
     bool run_script(int file, KeySource& keys);
     // `start`: the item the bar starts on instead of the remembered one (the
     // quiz scene's right part); the item chosen is remembered as usual.
@@ -481,6 +482,8 @@ private:
     std::array<std::uint8_t, 4> parked_mechs_{};
     // F:45de: the cache's items a door has used.
     std::array<std::uint8_t, 33> item_used_{};
+    // F:d55c: a message came up in this turn's step (no direction is shown).
+    bool turn_message_ = false;
     // F:d456: the next character name number, 1 at a new game (1000:4ebc).
     std::uint8_t next_name_ = 1;
     // F:c614: the sixteen character records.

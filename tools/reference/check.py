@@ -1619,6 +1619,12 @@ CHAIN_CACHE_POKED_CASES = [dict(case, compare=False) for case in CHAIN_AGENT_CAS
     {"name": "chain_cache_instruct_2", "keys": "enter", "match": SCREEN},
     # The step that asked at ENTRANCE's door goes on inside.
     {"name": "chain_cache_inside", "keys": "enter", "match": SCREEN},
+    # Up, east and down to the corridor under door 0, then east below it.
+    {"name": "chain_cache_to_door", "keys": "up up up up up up right right right right right right right right right right right right right right right right right right right right down down down down down right right right right right right right right right right right right right right right right right right right right right right", "match": SCREEN},
+    # A door tile stops the step: without its three items it says which are
+    # wrong and waits for a key (1000:1c12, 1b5d:0ab6).
+    {"name": "chain_cache_door_wrong", "keys": "up", "match": SCREEN},
+    {"name": "chain_cache_door_shut", "keys": "enter", "match": SCREEN},
 ]
 
 

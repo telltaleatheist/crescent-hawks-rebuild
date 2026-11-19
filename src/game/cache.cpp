@@ -1,5 +1,7 @@
 // The Star League cache, map 14: going in and its doors (docs/cache.md).
 
+#include <cstdio>
+
 #include "game/town.h"
 
 namespace chr::game {
@@ -73,6 +75,7 @@ bool Town::open_door(int x, int y, int door, KeySource& keys) {
                     if (flags_[std::size_t(flag::kCacheItems) + s] != std::uint8_t(needs[s]))
                         print_id("cache.door_wants." + std::to_string(s));  // 2656:03f5
                 // 273d:086a, then a key (273d:0259); the step ends (F:d55c).
+                turn_message_ = true;
                 if (!read_key(keys)) return false;
                 return true;
             }
@@ -103,6 +106,35 @@ bool Town::open_door(int x, int y, int door, KeySource& keys) {
         tick_redraws_ = true;
         if (door < 0) hold_screen(20);  // 273d:0006(0x14)
     }
+    return true;
+}
+
+// BTECH.EXE 1000:1c12 (Ghidra FUN_1000_1c12), while F:d346 is set
+// The tile `tile` that stopped a character's step, at half-cell `at`, does
+// what it does on the cache's level; any other tile only blocks.
+bool Town::cache_step(int tile, formats::MapPosition at, KeySource& keys) {
+    const int x = std::int16_t(at.x), y = std::int16_t(at.y);
+    const auto not_yet = [&](const char* what) {
+        char line[64];
+        std::snprintf(line, sizeof line, "cache tile %02x at %04x,%04x: %s", tile, at.x, at.y, what);
+        log_.push_back(line);
+        return true;
+    };
+    if (flags_[flag::kCacheLevel] == 0) {
+        // A door's three tiles, each naming the door from its own cell.
+        if (tile >= 0x7e && tile <= 0x80) return open_door(x - 2 * (tile - 0x7e), y, -1, keys);
+        if (tile == 0xf5 && at.x >= 0x0c01 && at.x <= 0x0c04 && at.y == 0xc054) return not_yet("1b5d:01e9");
+        if (tile == 0xb6 || tile == 0xb7) return not_yet("1b5d:03aa");
+        if (tile >= 0xf6) return not_yet("1b5d:0288");
+        if (tile == 0x83 || (tile >= 0xa5 && tile <= 0xa7)) return not_yet("1b5d:02a8");
+        if (tile == 0x4d) return not_yet("1b5d:04ab");
+        if (tile == 0x3a || tile == 0x3d) return not_yet("1b5d:02d2");
+        if (tile == 0x28) return not_yet("1b5d:055a");
+        return true;
+    }
+    if (tile == 0x94) return not_yet("1b5d:079c");
+    if (tile >= 0x97 && tile <= 0xf0) return not_yet("1b5d:0913");
+    if (tile == 0x8c || tile == 0x8d) return not_yet("1b5d:0980");
     return true;
 }
 
