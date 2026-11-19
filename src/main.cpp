@@ -446,7 +446,8 @@ int main(int argc, char** argv) {
                 for (const auto& [f, v] : options.set_flags) town->set_flag_when_town_starts(f, v);
                 chr::game::ScriptKeys source(keys);
                 source.set_poke([&](bool character, int r, int b, int v) {
-                    if (r < 0) town->poke_cbills(v);
+                    if (r == -2) town->poke_random(v);
+                    else if (r < 0) town->poke_cbills(v);
                     else if (character) town->poke_character(r, b, v);
                     else town->poke_mech(r, b, v);
                 });

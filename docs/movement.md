@@ -80,7 +80,7 @@ It returns "blocked" or "free". In order:
    Then the block, if any. The cells are read from the cell window (P:07ad) at the corner cell
    P:09ed with the same arithmetic as the townspeople's (docs/townspeople.md), the row from the
    table DG:048c (k x 24).
-4. **Map 14** (F:d346 set): blocking tiles run the tile handlers (`1b5d:*`) instead. Not rebuilt.
+4. **Map 14** (F:d346 set): blocking tiles run the tile handlers (`1b5d:*`) instead (docs/cache.md). Not rebuilt.
 
 **After a place.** The question runs the place inside the check, and the check then goes on
 reading memory as the place left it. The character's tile was read before the question, so it

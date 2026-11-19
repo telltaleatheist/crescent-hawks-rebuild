@@ -111,7 +111,8 @@ outside the eight records (R 0-7, BB below 0x7d, so F:c724-cb0b). `char:R:BB=VV`
 of character record R (F:c614 + 0x11 R + BB), for a party the story has not given yet; both
 refuse anything outside the 16 records (R 0-f, BB below 0x11, so F:c614-c723). `cbills:VVVV`
 (hex, at most ffff) sets the C-Bills (F:d370, all four bytes), for money that play would take long
-to earn. None of them reaches flag 14 (F:d320) or any code. A sequence that uses them says so in its name (`_poked`).
+to earn. `random:AABBCC` (hex, three bytes) sets the random generator's state (DG:4fc0-4fc2,
+docs/random.md), for a side branch that starts where a walk would have left the draws. None of them reaches flag 14 (F:d320) or any code. A sequence that uses them says so in its name (`_poked`).
 
 - **The original:** run.py's `@poke:SEG:OFFSET=BYTES` (here `@poke:F:d30c+NN=VV`). SNAP writes the
   bytes into the running copy's memory in DOSBox-X at that point; nothing is written to the
@@ -364,6 +365,12 @@ counts, DG:014a and the map marks).
   leaves the column as it is (the direction lines stay, `chain_return_heal_done`), so it skips
   the blackout. The other callers keep it, and their captures match; which of the original's
   code clears the column on those paths is not yet found.
+
+- **A fleeing enemy person whose target byte is past 0x7f** (`Combat`, docs/combat.md): chr
+  stops a fight with "an enemy person running from a target byte past 0x7f: not rebuilt". Met in
+  the forced 'Mech fight on the walk from the HUT to ENTRANCE (2 'Mechs, 3 people, at
+  0471,4059), a few enters after Begin Fight with the computer fighting. The original plays on
+  (it is a fight the party loses there). To build when that fight path is read.
 
 ## Findings
 

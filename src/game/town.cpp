@@ -15,8 +15,10 @@ void ScriptKeys::apply_pokes() {
         const auto item = items_.front();
         items_.pop_front();
         if (!poke_) throw std::invalid_argument("a mech: or char: item with nothing to poke");
-        // record -1: the C-Bills (cbills:), the value the amount.
-        poke_(item.poke_character, item.poke_cbills ? -1 : item.poke_record, item.poke_byte, item.poke_value);
+        // record -1: the C-Bills (cbills:), the value the amount; -2: the
+        // generator's state (random:), the value its three bytes.
+        poke_(item.poke_character, item.poke_cbills ? -1 : item.poke_random ? -2 : item.poke_record, item.poke_byte,
+              item.poke_value);
     }
 }
 
@@ -98,6 +100,23 @@ std::deque<ScriptItem> parse_key_script(const std::string& script) {
             if (v < 0 || v > 0xffff) throw std::invalid_argument("bad C-Bills poke \"" + t + "\" (use cbills:VVVV, hex)");
             ScriptItem item;
             item.poke_cbills = true;
+            item.poke_record = 0;
+            item.poke_value = v;
+            keys.push_back(item);
+            return;
+        }
+        if (t.rfind("random:", 0) == 0) {
+            // random:AABBCC: the generator's state (DG:4fc0-4fc2), hex, six digits.
+            int v = -1;
+            try {
+                std::size_t used = 0;
+                if (t.size() == 13) v = std::stoi(t.substr(7), &used, 16);
+                if (used != 6) v = -1;
+            } catch (const std::exception&) {
+            }
+            if (v < 0) throw std::invalid_argument("bad random poke \"" + t + "\" (use random:AABBCC, hex)");
+            ScriptItem item;
+            item.poke_random = true;
             item.poke_record = 0;
             item.poke_value = v;
             keys.push_back(item);

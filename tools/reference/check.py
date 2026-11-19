@@ -1597,6 +1597,24 @@ CHAIN_AGENT_CASES = [dict(case, compare=False) for case in
 ]
 
 
+# Poked: from the HUT's door, the generator's state set to 0f1e2d (our own
+# test value) in place of the walk's draws. From there every way to ENTRANCE
+# meets a 'Mech encounter that cannot be evaded (docs/reference.md, open
+# items); this side branch reaches ENTRANCE's door to build map 14 on, until
+# the main chain finds a clean way. One encounter on the way, evaded.
+CHAIN_CACHE_POKED_CASES = [dict(case, compare=False) for case in CHAIN_AGENT_CASES] + [
+    {"name": "chain_cache_poked", "keys": "random:0f1e2d end down*2 end*2 down*2", "match": SCREEN},
+    {"name": "chain_cache_evade", "keys": "n enter enter", "match": SCREEN},
+    {"name": "chain_cache_walk_1", "keys": "right pgdn down end*2 down*93", "match": SCREEN},
+    {"name": "chain_cache_walk_2", "keys": "pgdn*120", "match": SCREEN},
+    {"name": "chain_cache_walk_3", "keys": "pgdn*120", "match": SCREEN},
+    {"name": "chain_cache_walk_4", "keys": "down*16 pgdn*16 down*3 left*2 end down pgdn*3 down left up end up end down*2 pgdn",
+     "match": SCREEN},
+    # ENTRANCE's question comes on a step from its door cell.
+    {"name": "chain_cache_door", "keys": "right", "match": SCREEN},
+]
+
+
 # Poked: from chain_lounge_leave, 1000 C-Bills (our own test value) and the
 # two courses that raise a skill, both on map 3. REPAIR's Apprentice item
 # (menu 0x17's who list, special 0d) asks who, then the fee (special 0f);
@@ -1634,7 +1652,7 @@ CHAIN_COURSES_POKED_CASES = [dict(case, compare=False) for case in
 # The long unpoked run: its own tier (`--campaign`, ctest label campaign).
 CAMPAIGN = {"chain", "chain_death", "chain_mech_poked", "chain_heal_poked", "chain_repair_poked",
             "chain_salvage_poked", "chain_scrap_poked", "chain_orders_poked", "chain_town", "chain_party",
-            "chain_jail_no", "chain_jail_fight", "chain_agent", "chain_courses_poked"}
+            "chain_jail_no", "chain_jail_fight", "chain_agent", "chain_courses_poked", "chain_cache_poked"}
 
 SEQUENCES = [("town", CASES, FULL_CASES, []), ("training", TRAINING_CASES, [], []),
              ("quiz", QUIZ_CASES, [], ["--show-quiz"]), ("mission", MISSION_CASES, MISSION_FULL_CASES, []),
@@ -1666,6 +1684,7 @@ SEQUENCES = [("town", CASES, FULL_CASES, []), ("training", TRAINING_CASES, [], [
              ("chain_jail_fight", [], CHAIN_JAIL_FIGHT_CASES, []),
              ("chain_agent", [], CHAIN_AGENT_CASES, []),
              ("chain_courses_poked", [], CHAIN_COURSES_POKED_CASES, []),
+             ("chain_cache_poked", [], CHAIN_CACHE_POKED_CASES, []),
              ("handover", [], HANDOVER_CASES, [])]
 
 # The feeder (tools/capture/snap.asm, docs/reference.md) hands over a key at
@@ -1738,6 +1757,22 @@ def cbills_poke(token):
     return "@poke:F:%04x=%02x%02x0000" % (CBILLS_AT, v & 0xff, v >> 8)
 
 
+RANDOM_AT = 0x4FC0  # DG:4fc0, the generator's three bytes (docs/random.md)
+
+
+def random_poke(token):
+    """The original's poke for a random:AABBCC token: the generator's three
+    bytes, nothing else."""
+    body = token[len("random:"):]
+    try:
+        if len(body) != 6:
+            raise ValueError
+        int(body, 16)
+    except ValueError:
+        raise ValueError(f"bad random poke {token!r}: use random:AABBCC (hex)")
+    return "@poke:DG:%04x=%s" % (RANDOM_AT, body.lower())
+
+
 def original_token(k):
     """A case's key as the original's script has it: flag: is a poke, and
     orig: marks input that only the original asks for (the training quiz,
@@ -1750,6 +1785,8 @@ def original_token(k):
         return char_poke(k)
     if k.startswith("cbills:"):
         return cbills_poke(k)
+    if k.startswith("random:"):
+        return random_poke(k)
     if k.startswith("orig:"):
         return k[len("orig:"):]
     if k.startswith("arm:"):
@@ -1780,7 +1817,7 @@ def chr_script(cases, upto):
             if k.startswith("flag:"):
                 items.append("set:" + k[len("flag:"):])
                 continue
-            if k.startswith(("mech:", "char:")):
+            if k.startswith(("mech:", "char:", "random:")):
                 items.append(k)  # applied as the next key is read; no passes of its own
                 continue
             items.append(k)

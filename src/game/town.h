@@ -62,6 +62,7 @@ struct ScriptItem {
     int poke_record = -1;  // >= 0: a test aid, write poke_value to byte poke_byte of this record
     bool poke_character = false;  // a character record (char:), else a 'Mech record (mech:)
     bool poke_cbills = false;     // the C-Bills (cbills:), poke_value the amount
+    bool poke_random = false;     // the generator's state (random:), poke_value its three bytes
     int poke_byte = 0;
     int poke_value = 0;
     bool is_set() const { return set_flag >= 0; }
@@ -97,6 +98,8 @@ private:
 // town's main loop takes a set: item; a question or the start-up refuses one.
 // mech:R:BB=VV (hex) writes VV to byte BB of 'Mech record R wherever the
 // next key or pass is taken (a test aid standing in for damage).
+// random:AABBCC (hex) sets the generator's three bytes (DG:4fc0-4fc2) the
+// same way (a test aid for a side branch that skips a walk).
 // Throws std::invalid_argument naming the bad token.
 std::deque<ScriptItem> parse_key_script(const std::string& script);
 
@@ -219,6 +222,11 @@ public:
     void poke_cbills(int value) {
         money_.cbills = value;
         log_.push_back("test aid: C-Bills set to " + std::to_string(value));
+    }
+    // A test aid: the random generator's three bytes (the script's random: items).
+    void poke_random(int value) {
+        random_ = Random({std::uint8_t(value >> 16), std::uint8_t(value >> 8), std::uint8_t(value)});
+        log_.push_back("test aid: random state set");
     }
     // A test aid: one byte of a character record (the script's char: items).
     void poke_character(int record, int byte, int value) {
