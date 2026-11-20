@@ -203,6 +203,7 @@ bool Town::load_town_map(int number, int grid) {
     map_ = formats::decode_mtp(formats::read_file(*path));
     map_number_ = number;
     tile_sheet_ = tile_sheet_for_map(number);
+    blocking_ = blocking_tile(number);
     flags_[flag::kTileEvents] = number == 14 ? 1 : 0;
     terrain_.hold_window();
     terrain_.place_map(map_, grid);

@@ -61,7 +61,7 @@ std::uint16_t move_y(std::uint16_t y, int dy) {
 StepResult take_step(const formats::MtpMap& map, int map_number, const MapPosition& from,
                      const Party& party, Step step, EntranceQuestion& question,
                      const formats::Tables& tables, const Terrain& terrain, const MechParty& mechs,
-                     const MapPosition& window_at) {
+                     const MapPosition& window_at, int blocking) {
     StepResult result;
     // A place entered on the way can move the party: what is read after the
     // question is read again, as the original reads its memory.
@@ -99,7 +99,7 @@ StepResult take_step(const formats::MtpMap& map, int map_number, const MapPositi
     // Each character in turn: first an entrance under its new position, then
     // the tile under its feet, read from the window as the 'Mechs' are.
     bool asked = false;  // F:d55c: one question per turn
-    const int limit = blocking_tile(map_number);
+    const int limit = blocking >= 0 ? blocking : blocking_tile(map_number);
     // The loop runs over the figures 4-11 that are active: 1000:0bd8 gives
     // the k-th character on foot figure 4 + k at the k-th formation offset,
     // so a character in a 'Mech leaves no gap. The entrance is matched at

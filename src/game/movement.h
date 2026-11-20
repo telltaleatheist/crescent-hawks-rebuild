@@ -81,9 +81,10 @@ struct MechParty {
 // window, as the original does; the map gives the entrances.
 // `from` and `mechs` are read again after an entrance's question, since the
 // place may have changed them. `window_at`: where the window was last built.
+// `blocking`: the lowest tile that stops a step (DG:0150), if not the map's.
 StepResult take_step(const formats::MtpMap& map, int map_number, const formats::MapPosition& from,
                      const Party& party, Step step, EntranceQuestion& question,
                      const formats::Tables& tables, const Terrain& terrain, const MechParty& mechs,
-                     const formats::MapPosition& window_at);
+                     const formats::MapPosition& window_at, int blocking = -1);
 
 }  // namespace chr::game

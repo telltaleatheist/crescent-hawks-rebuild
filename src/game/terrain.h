@@ -131,6 +131,10 @@ public:
     }
     // P:0564: the grids, 64 entries each, row by row.
     const std::array<std::uint8_t, kGrids * kGridBlocks>& grids() const { return grids_; }
+    void set_grid_entry(std::size_t index, std::uint8_t entry) {
+        grids_[index] = entry;
+        built_.reset();
+    }
     // P:0324: the masks, in the same order.
     const std::array<std::uint8_t, kGrids * kGridBlocks>& masks() const { return masks_; }
 

@@ -294,6 +294,11 @@ private:
     bool open_cache_wall(KeySource& keys);
     bool cache_hint(int x, int y, KeySource& keys);
     bool cache_message(const std::string& id, KeySource& keys);
+    bool cache_stairs(int x, int y, KeySource& keys);
+    bool cache_way_up(KeySource& keys);
+    bool cache_puzzle_cell(int x, int y);
+    bool cache_puzzle_check(KeySource& keys);
+    bool load_lower_level();
     bool take_item(int x, int y, KeySource& keys);
     bool run_script(int file, KeySource& keys);
     // `start`: the item the bar starts on instead of the remembered one (the
@@ -427,6 +432,8 @@ private:
     formats::MtpMap map_;  // the store's map blocks (P:101d), which the missions change
     int map_number_;
     std::string tile_sheet_;
+    int blocking_ = -1;  // DG:0150: the lowest tile that stops a step; -1 is the map's own
+    std::array<std::uint8_t, 0x300> upper_saved_{};  // F:4614: the cache's first twelve blocks while below
     formats::MapPosition position_;
     const TextProvider& texts_;
     const formats::Tables& tables_;

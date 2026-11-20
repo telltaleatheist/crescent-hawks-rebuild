@@ -99,6 +99,7 @@ constexpr std::array kDos103 = {
     ExeSpan{ExeSpan::Kind::Table, "tables.item_y", 0x46db, 0x21f0, 33, "5e90f840ae6e32af"},
     ExeSpan{ExeSpan::Kind::Table, "tables.item_slot", 0x46db, 0x2212, 33, "d9d6c2d044187b62"},
     ExeSpan{ExeSpan::Kind::Table, "tables.cache_wall", 0x46db, 0x20bc, 18, "05201a56b0dad16b"},
+    ExeSpan{ExeSpan::Kind::Table, "tables.puzzle_cells", 0x46db, 0x241e, 14, "ac9deaddb7a7d2e8"},
     ExeSpan{ExeSpan::Kind::Table, "tables.location_slot_first", 0x46db, 0x318a, 8, "9fbd883337f64bcc"},
     ExeSpan{ExeSpan::Kind::Table, "tables.location_slot_count", 0x46db, 0x3192, 8, "79569a0bc1d7d49c"},
     // 22e8:12c7, the shot with combat graphics: the poses' scripts and their
@@ -551,6 +552,12 @@ constexpr std::array kDos103 = {
     ExeSpan{ExeSpan::Kind::Text, "cache.wall_opened", 0x46db, 0x2075, 71, "fbd62eeb73be19a6"},
     ExeSpan{ExeSpan::Kind::Text, "cache.screen", 0x46db, 0x20ce, 69, "9fce65b7cd943e15"},
     ExeSpan{ExeSpan::Kind::Text, "cache.hint", 0x46db, 0x2113, 58, "1d20e5069a29f97a"},
+    ExeSpan{ExeSpan::Kind::Text, "cache.puzzle_done", 0x46db, 0x22c7, 33, "f2f54163aff4f8a3"},
+    ExeSpan{ExeSpan::Kind::Text, "cache.way_down", 0x46db, 0x22e8, 64, "b005b1560117639a"},
+    ExeSpan{ExeSpan::Kind::Text, "cache.way_down_2", 0x46db, 0x2328, 45, "6ec77e784936bad2"},
+    ExeSpan{ExeSpan::Kind::Text, "cache.way_up", 0x46db, 0x2367, 62, "af5670081b505116"},
+    ExeSpan{ExeSpan::Kind::Text, "cache.puzzle_solved", 0x46db, 0x23b2, 87, "48e8a61999d2cf36"},
+    ExeSpan{ExeSpan::Kind::Text, "cache.puzzle_wrong", 0x46db, 0x2409, 20, "a8aafd47acf3da5f"},
 };
 
 constexpr std::uint16_t kLoadSegment = 0x1000;

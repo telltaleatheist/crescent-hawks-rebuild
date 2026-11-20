@@ -130,7 +130,7 @@ narration of what happened, descriptions and flavour, and the original's own not
 | shot.* but shot.squashed, shot.arena_damaged, shot.urbanmechs | 26 | the pieces of a shot's message, hit and miss, critical, kill |
 | location.0-10 | 11 | the hit locations, as labels |
 
-### Imported only (684 IDs)
+### Imported only (690 IDs)
 
 | IDs | Count | Why |
 |---|---|---|
@@ -153,6 +153,7 @@ narration of what happened, descriptions and flavour, and the original's own not
 | cache.door_wants.0-2 | 3 | the cache's doors asking for the items they need (1b5d:0ab6): story |
 | cache.item_kind.0-2, cache.item_take, cache.item_number, cache.item_take_end, cache.item_used | 7 | the cache's terminals offering their items (1b5d:03aa): story |
 | cache.wall_opened, cache.screen, cache.hint | 3 | the cache's text tiles (1b5d:01e9, 02a8, 02d2): story |
+| cache.way_down, cache.way_down_2, cache.puzzle_done, cache.way_up, cache.puzzle_solved, cache.puzzle_wrong | 6 | the cache's second level and puzzle (1b5d:055a, 079c, 0980): story |
 | heal.* | 17 | healing (1c31:000a): who treats, with what care, and who is still hurt |
 | crew.* | 21 | the crew screen (1c67:0002); a menu, but kept imported: interface.json holds only what Owen approved |
 | recruit.* | 5 | a new member joining (19b8:0d58) |

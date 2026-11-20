@@ -1658,6 +1658,44 @@ CHAIN_CACHE_OPEN_CASES = [dict(case, compare=False) for case in CHAIN_CACHE_POKE
     {"name": "chain_cache_to_wall", "keys": "left*3 down left down*17 left down left down*7 right*8 down*68 left*5 down left down*5 left*33 down left down*8 left*31 up left up*14 right*6 down*7 right*16 up*28 right*6 up*4 right*8 up*10 right*2 up*8 left*7 up left up*7 right*6 up*10 left*27 up left up*6 left*25 down left down*21 left*5 down left down*7 left*23 down left down*9", "match": SCREEN},
     {"name": "chain_cache_wall", "keys": "down", "match": SCREEN},
     {"name": "chain_cache_wall_read", "keys": "enter", "match": SCREEN},
+    # To tile 28 at x 48, y 38: down to the second level (1b5d:055a).
+    {"name": "chain_cache_to_down", "keys": "up*13 right*12 up*6 right*16 up*21 right*26 down*8 right*30 down*10 left*5 down left down*7 right*8 down*18 left*7 down left down*3 left*5 down left down*26 left*15 up left up*59 right*10", "match": SCREEN},
+    {"name": "chain_cache_down", "keys": "right", "match": SCREEN},
+    {"name": "chain_cache_down_read", "keys": "enter", "match": SCREEN},
+    {"name": "chain_cache_down_read_2", "keys": "enter", "match": SCREEN},
+    # A cell that is not one of the seven (1b5d:0913).
+    {"name": "chain_cache_to_cell_wrong", "keys": "up right", "match": SCREEN},
+    {"name": "chain_cache_cell_wrong", "keys": "right", "match": SCREEN},
+    # The check: wrong, every cell off again (1b5d:0980).
+    {"name": "chain_cache_to_check_wrong", "keys": "up*4 left*2", "match": SCREEN},
+    {"name": "chain_cache_check_wrong", "keys": "left", "match": SCREEN},
+    {"name": "chain_cache_check_wrong_read", "keys": "enter", "match": SCREEN},
+    # The seven cells of the table at DG:241e.
+    {"name": "chain_cache_to_cell_1", "keys": "up*25 right*24 down right*4 up right*4 down*3 right*4 up*2", "match": SCREEN},
+    {"name": "chain_cache_cell_1", "keys": "up", "match": SCREEN},
+    {"name": "chain_cache_to_cell_2", "keys": "down*8 left*2", "match": SCREEN},
+    {"name": "chain_cache_cell_2", "keys": "left", "match": SCREEN},
+    {"name": "chain_cache_to_cell_3", "keys": "down*4 left*10", "match": SCREEN},
+    {"name": "chain_cache_cell_3", "keys": "left", "match": SCREEN},
+    {"name": "chain_cache_to_cell_4", "keys": "down*2", "match": SCREEN},
+    {"name": "chain_cache_cell_4", "keys": "left", "match": SCREEN},
+    {"name": "chain_cache_to_cell_5", "keys": "up right*6 down*2 right*2 down*2 right*2 down*6 right*2 down*6 left down left*6 up left up*4", "match": SCREEN},
+    {"name": "chain_cache_cell_5", "keys": "left", "match": SCREEN},
+    {"name": "chain_cache_to_cell_6", "keys": "down*5 right*4 up*2 right*4 up*4 right*4", "match": SCREEN},
+    {"name": "chain_cache_cell_6", "keys": "right", "match": SCREEN},
+    {"name": "chain_cache_to_cell_7", "keys": "left*4", "match": SCREEN},
+    {"name": "chain_cache_cell_7", "keys": "left", "match": SCREEN},
+    # The check: solved, flag 3e.
+    {"name": "chain_cache_to_check_solved", "keys": "down*5 left down left*6 up left up*3 left*9 up left up left*18", "match": SCREEN},
+    {"name": "chain_cache_check_solved", "keys": "left", "match": SCREEN},
+    {"name": "chain_cache_check_solved_read", "keys": "enter", "match": SCREEN},
+    # Tile 94: back up (1b5d:079c).
+    {"name": "chain_cache_to_way_up", "keys": "down*5", "match": SCREEN},
+    {"name": "chain_cache_way_up", "keys": "left", "match": SCREEN},
+    {"name": "chain_cache_way_up_read", "keys": "enter", "match": SCREEN},
+    # Tile 28 again: the puzzle solved, it only says so.
+    {"name": "chain_cache_down_again", "keys": "right", "match": SCREEN},
+    {"name": "chain_cache_down_again_read", "keys": "enter", "match": SCREEN},
 ]
 
 

@@ -1,7 +1,9 @@
 // The Star League cache, map 14: going in and its doors (docs/cache.md).
 
+#include <algorithm>
 #include <cstdio>
 
+#include "formats/game_files.h"
 #include "game/town.h"
 
 namespace chr::game {
@@ -12,6 +14,8 @@ constexpr int kCacheMap = 14;
 constexpr std::uint8_t kCacheGrid = 0xd0;  // every grid entry while in the cache
 constexpr int kWayInDoor = 11;             // the door that needs no items
 constexpr int kDoors = 12;
+constexpr std::uint8_t kLowerGrid = 0xd1;  // every grid entry while on the second level
+constexpr std::size_t kLowerBytes = 0x300; // the second level's twelve blocks
 
 }  // namespace
 
@@ -176,6 +180,123 @@ bool Town::cache_message(const std::string& id, KeySource& keys) {
     return read_key(keys).has_value();
 }
 
+// BTECH.EXE 1b5d:055a (Ghidra FUN_1b5d_055a)
+// Tile 28 at two places: FINDIT's (x 7c, y 04 in half-cells), and the way
+// down (x 48, y 38), which once the puzzle is solved only says so, and
+// otherwise takes the party to the second level.
+bool Town::cache_stairs(int x, int y, KeySource& keys) {
+    x = (x + 1) & 0x7e;
+    y &= 0x7e;
+    if (x == 0x7c && y == 0x04) {
+        log_.push_back("cache tile 28: 1b5d:055a FINDIT");
+        return true;
+    }
+    if (x != 0x48 || y != 0x38) return true;
+    open_message_box();  // 24d3:17c6
+    turn_message_ = true;
+    if (flags_[flag::kCachePuzzle] == 1) {
+        print_id("cache.puzzle_done");  // 24d3:17ea
+        return read_key(keys).has_value();
+    }
+    print_id("cache.way_down");
+    if (!read_key(keys)) return false;
+    clear_window();  // 2656:0388
+    print_id("cache.way_down_2");
+    if (!read_key(keys)) return false;
+    // DG:015a = 1: one step a key (docs/movement.md).
+    position_ = {0x0c04, 0xc022};
+    // 287f:00d1 (CGA colours) and 1000:28cc (the disk) have nothing to do here.
+    terrain_.fill_grids(kLowerGrid);
+    tile_sheet_ = "MAP.ICN";  // DG:2355, 273d:0814 / 287f:0260; F:3988 = 3
+    std::copy_n(map_.blocks.begin(), kLowerBytes, upper_saved_.begin());  // to F:4614
+    if (!load_lower_level()) return false;  // DG:235d into P:101d
+    flags_[flag::kCacheLevel] = 1;
+    // Grid 4's first three rows of four name the level's twelve blocks.
+    for (int row = 0; row < 3; ++row)
+        for (int col = 0; col < 4; ++col)
+            terrain_.set_grid_entry(4 * Terrain::kGridBlocks + row * 8 + col, std::uint8_t(0x90 + row * 4 + col));
+    terrain_.link_blocks();  // 287f:1da8
+    build_window();          // 287f:1314
+    mission_draw();          // 287f:18ef, 273d:06c3
+    tick_redraws_ = true;
+    blocking_ = 0x8b;        // DG:0150
+    return true;
+}
+
+// BTECH.EXE 1b5d:079c (Ghidra FUN_1b5d_079c)
+// Tile 94: back up to the first level at 0c45,c039, its blocks as they were.
+bool Town::cache_way_up(KeySource& keys) {
+    open_message_box();  // 24d3:17c6
+    print_id("cache.way_up");
+    if (!read_key(keys)) return false;
+    position_ = {0x0c45, 0xc039};
+    terrain_.fill_grids(kCacheGrid);
+    for (std::size_t i = 0; i < kLowerBytes; ++i) set_map_cell(i, upper_saved_[i]);
+    turn_message_ = true;
+    tile_sheet_ = "STARLEAG.ICN";  // DG:23a5; F:3988 = 2
+    for (int i = 0; i < Terrain::kGridBlocks; ++i)
+        terrain_.set_grid_entry(4 * Terrain::kGridBlocks + i, std::uint8_t(0x90 + i));
+    terrain_.link_blocks();
+    build_window();
+    mission_draw();
+    tick_redraws_ = true;
+    flags_[flag::kCacheLevel] = 0;
+    blocking_ = 0x21;
+    return true;
+}
+
+// BTECH.EXE 1b5d:0913 (Ghidra FUN_1b5d_0913)
+// A puzzle cell turns into its pair (odd t to t + 1, even t to t - 1),
+// in the level's store of four blocks a row; the window shows it when it
+// is next built. Sound 15.
+bool Town::cache_puzzle_cell(int x, int y) {
+    x = (x + 1) & 0x7f;
+    const std::size_t at = std::size_t(((y & 0x70) << 4) + ((y & 0x0e) << 2) + ((x & 0x70) << 2) + ((x >> 1) & 7));
+    set_map_cell(at, ((map_.blocks[at] + 1) ^ 1) - 1, false);
+    return true;
+}
+
+// BTECH.EXE 1b5d:0980 (Ghidra FUN_1b5d_0980)
+// Solved when the seven cells in the table are all on (even) and no other
+// cell of the level is: sound 16, the text, flag 3e. Otherwise sound 17,
+// the text, and every cell turned off again. A key either way.
+bool Town::cache_puzzle_check(KeySource& keys) {
+    const auto on = [](int t) { return t >= 0x97 && t <= 0xf0 && (t & 1) == 0; };
+    bool solved = true;
+    for (const int at : tables_.puzzle_cells)
+        if (map_.blocks[std::size_t(at)] & 1) solved = false;
+    if (solved)
+        for (std::size_t i = 0; i < kLowerBytes; ++i)
+            if (on(map_.blocks[i]) && std::find(tables_.puzzle_cells.begin(), tables_.puzzle_cells.end(), int(i)) == tables_.puzzle_cells.end())
+                solved = false;
+    open_message_box();
+    if (solved) {
+        print_id("cache.puzzle_solved");
+        flags_[flag::kCachePuzzle] = 1;
+    } else {
+        print_id("cache.puzzle_wrong");
+        for (std::size_t i = 0; i < kLowerBytes; ++i)
+            if (on(map_.blocks[i])) set_map_cell(i, map_.blocks[i] - 1, false);
+    }
+    turn_message_ = true;
+    return read_key(keys).has_value();
+}
+
+// BTECH.EXE 287f:0260 and 1000:2da8's file read, for DG:235d
+// MAP15.MTP: the second level's twelve blocks, 0x300 bytes with no header,
+// over the first twelve of the cache's.
+bool Town::load_lower_level() {
+    const auto path = game_dir_ ? formats::find_game_file(*game_dir_, "MAP15.MTP") : std::nullopt;
+    const auto bytes = path ? formats::read_file(*path) : std::vector<std::uint8_t>{};
+    if (bytes.size() < kLowerBytes) {
+        log_.push_back("MAP15.MTP: not found");
+        return false;
+    }
+    std::copy_n(bytes.begin(), kLowerBytes, map_.blocks.begin());
+    terrain_.map_changed();
+    return true;
+}
+
 // BTECH.EXE 1000:1c12 (Ghidra FUN_1000_1c12), while F:d346 is set
 // The tile `tile` that stopped a character's step, at half-cell `at`, does
 // what it does on the cache's level; any other tile only blocks.
@@ -196,12 +317,12 @@ bool Town::cache_step(int tile, formats::MapPosition at, KeySource& keys) {
         if (tile == 0x83 || (tile >= 0xa5 && tile <= 0xa7)) return cache_message("cache.screen", keys);  // 1b5d:02a8
         if (tile == 0x4d) return not_yet("1b5d:04ab");
         if (tile == 0x3a || tile == 0x3d) return cache_hint(x, y, keys);
-        if (tile == 0x28) return not_yet("1b5d:055a");
+        if (tile == 0x28) return cache_stairs(x, y, keys);
         return true;
     }
-    if (tile == 0x94) return not_yet("1b5d:079c");
-    if (tile >= 0x97 && tile <= 0xf0) return not_yet("1b5d:0913");
-    if (tile == 0x8c || tile == 0x8d) return not_yet("1b5d:0980");
+    if (tile == 0x94) return cache_way_up(keys);
+    if (tile >= 0x97 && tile <= 0xf0) return cache_puzzle_cell(x, y);
+    if (tile == 0x8c || tile == 0x8d) return cache_puzzle_check(keys);
     return true;
 }
 

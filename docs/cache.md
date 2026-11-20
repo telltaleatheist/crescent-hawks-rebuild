@@ -48,7 +48,9 @@ on foot are checked in figure order as on any map, but none is asked about an en
 first whose tile is at or above the walk threshold (DG:0150) stops the step, and its tile is
 dispatched by its number t, with (x, y) that character's half-cell after the step (its
 formation offset, DG:0464 / 047c, plus the step plus the party's place, F:a44b / a44d). The
-characters after it are not checked, and the step is refused whatever the tile did. Any other
+characters after it are not checked, and the step is refused whatever the tile did; a place the
+function moves the party to (the way down, the way up) stands, since the step leaves the place in
+memory as it finds it. Any other
 tile at or above the threshold only blocks. All the tests are made on the same t, and the tile
 numbers they name do not overlap, so at most one function runs:
 
@@ -137,7 +139,9 @@ Each of the three opens the message box first, prints its text with `24d3:17ea` 
 
 ## The second level
 
-`1b5d:055a`'s way down sets DG:015a = 1 and the party at 0c04,c022; copies 27e8:01d0
+The way down opens the message box and sets F:d55c first; with the puzzle solved (F:d34a = 1) it
+shows DG:22c7 with a key and goes nowhere. Otherwise, after its two texts, it sets DG:015a = 1
+(one step a key, docs/movement.md; the rebuild always takes one) and the party at 0c04,c022; copies 27e8:01d0
 (`287f:00d1`); `1000:28cc(2)`; fills the nine grids with d1; sets F:4fbc = 1; loads the tile set
 at DG:2355 (converted on EGA); keeps the level's 0x300 map bytes (P:101d) at F:4614; sets F:3988
 = 3; loads DG:235d (`273d:0814`); sets F:d34e = 1; writes 90-9b, three rows of four, to the block
@@ -149,13 +153,23 @@ walk threshold DG:0150 to 0x8b.
 tile set at DG:23a5; F:3988 = 2; the block table P:0664 set to 90-cf in order; the window built
 and drawn (`287f:0ba7(0)` on CGA); F:d34e = 0; the threshold back to 0x21.
 
+The level's file, MAP15.MTP (DG:235d), is only the twelve blocks' 0x300 bytes, with no header,
+and the tile set is MAP.ICN (DG:2355). It overwrites the first twelve of map 14's 64 blocks
+in the store, after they are kept; the other 52 stay, and no grid entry names them while the
+level is shown. The grids' other entries, d1, name block 0x51 past the store (`tables.store_tail`).
+In the twelve blocks, four a row, the level is 32 cells across and 24 down.
+
 `1b5d:0327` swaps 250 bytes at offset 215d with 2257 (level 0) or 2351 (level 1). These are not
 DGROUP's: the segments come from the words at DG:5510, 5512 and 5514. Its only caller is
 `1000:3d40`, the look around the map with the arrow keys (space ends it), which calls it before
 and after while F:d346 is set. What those segments hold is not yet traced.
 
 **The puzzle.** On level 1, tiles 97-f0 are puzzle cells in pairs: `1b5d:0913` turns the cell's
-tile into its pair and plays sound 15. `1b5d:0980` (tiles 8c, 8d) checks: solved when none of the seven cells listed at
+tile into its pair and plays sound 15. It finds the cell in the store as the level lays it out,
+four blocks a row (`((y & 0x70) << 4) + ((y & 0x0e) << 2) + ((x & 0x70) << 2) + ((x >> 1) & 7)`,
+x being `(x + 1) & 0x7f`), and neither it nor `0980` builds the window again: the changed tiles
+show when the window is next built. `0913` shows no message, so the step's direction is still
+written. `1b5d:0980` (tiles 8c, 8d) checks: solved when none of the seven cells listed at
 DG:241e (map offsets) holds an odd tile, and every even tile in 97-f0 on the map is one of those
 seven. Solved: sound 16, DG:23b2, F:d34a = 1. Not solved: sound 17, DG:2409, and every even
 tile in 97-f0 on the map goes down by one (reset). Either way a key, and the step ends.
@@ -193,6 +207,12 @@ Checked against the original on two side branches:
   items), so going in shows them open; then 02d2's text and flag, a screen tile, and the wall
   of 01e9 opening, each on a walk through the open doors.
 
-Still to do, in order, each compared the same way: the second level and the puzzle; ENDMECH
-and FINDIT; the way out into WINSCENE and the game's end. Until then their
+The second level and the puzzle (`Town::cache_stairs`, `Town::cache_way_up`,
+`Town::cache_puzzle_cell`, `Town::cache_puzzle_check`), with the table at DG:241e and their texts
+(`tables.puzzle_cells`, `cache.way_down*`, `cache.way_up`, `cache.puzzle_*`), are checked on
+`chain_cache_open` too: the way down, a wrong cell turned and the check resetting it, the seven
+cells turned and the check solving it, the way up, and the way down then refusing.
+
+Still to do, in order, each compared the same way: ENDMECH and FINDIT; the way out into
+WINSCENE and the game's end. Until then their
 tiles only block, and the game log names the function they would run.
