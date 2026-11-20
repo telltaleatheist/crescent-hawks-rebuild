@@ -555,9 +555,8 @@ bool Town::heal(int doctor, KeySource& keys) {
     text_.frame(1);
     clear_window();
     // The care: torn cloth, a MedKit (F:d450), a field surgery kit (F:d451,
-    // skill 3 or more), or a doctor's. Nothing rebuilt sets d450 or d451
-    // yet (docs/scripts.md, "Not rebuilt yet").
-    const bool medkit = false, surgery_kit = false;
+    // skill 3 or more), or a doctor's.
+    const bool medkit = kits_[0] != 0, surgery_kit = kits_[1] != 0;
     int care = 1;
     if (medkit) care = 2;
     if (skill >= 3 && surgery_kit) care = 3;

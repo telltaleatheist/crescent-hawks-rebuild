@@ -964,7 +964,9 @@ flag 29 set it only opens the message box with "Your characters need more time t
 - Colour 15, the message pause, "Press a key." and a key, the panel (`4cac(0)`), flag 29 = 0x3f.
   The panel's bars show the hit points from before the healing until that `4cac(0)`.
 
-Nothing rebuilt sets F:d450 or F:d451 yet, so the care is 1 unless a doctor treats. Rebuilt
+F:d450 and F:d451 are `Town::kits_`: 0 at a new game, read back by a load, and set by nothing
+else rebuilt yet (two of the specials, 24d3:0dc6 and 0dd3), so the care is 1 unless a doctor treats or a
+loaded game has a kit. Rebuilt
 (`Town::heal`; special 23 `Town::anyone_hurt`); the doctor's callers are not.
 
 ## 3. One round: `22e8:000c`

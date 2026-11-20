@@ -257,6 +257,10 @@ def run(game_dir, script, out_dir, timeout=120, keep=False, log_to=None):
                 continue
             snap2png.png(os.path.join(out_dir, name + ".png"), w, h, rows)
             written.append(name)
+        # The saved games the script made (docs/formats/save.md), as GameN.
+        for f in os.listdir(c):
+            if len(f) == 5 and f.lower().startswith("game") and f[4] in "123456":
+                shutil.copyfile(os.path.join(c, f), os.path.join(out_dir, "Game" + f[4]))
         if not finished:
             print(f"run.py: the script did not finish ({len(shots)} of {len(names)} captures); "
                   f"DOSBox-X log in {work}" if keep else

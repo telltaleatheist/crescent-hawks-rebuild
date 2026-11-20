@@ -398,8 +398,8 @@ runs as the original does; the return visit itself is not captured.) The chain t
 
 ## Not rebuilt yet
 
-- **EB/EC** read F:d451 and d450, which nothing rebuilt sets yet (0 in a new game); the
-  rebuild never jumps. UnBattletech names them "training complete" and a milestone.
+- **EB/EC** read F:d451 and d450 (`Town::kits_`), which only a load or the original's
+  24d3:0dc6/0dd3 (two of the specials, 24d3:0004) set; those are not rebuilt, so outside a loaded game the rebuild never jumps. UnBattletech names them "training complete" and a milestone.
 - **E4** (sound) and **E9** (new member) do nothing but log.
 - The specials other than 01-05, 0c, 0e, 11, 17 and 2b (in hex, as in the table above; chr's log
   prints them in decimal).

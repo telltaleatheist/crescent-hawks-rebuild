@@ -1769,7 +1769,16 @@ CHAIN_COURSES_POKED_CASES = [dict(case, compare=False) for case in
 ]
 
 # The long unpoked run: its own tier (`--campaign`, ctest label campaign).
-CAMPAIGN = {"chain", "chain_death", "chain_mech_poked", "chain_heal_poked", "chain_repair_poked",
+# The save (1000:35d3, docs/formats/save.md), from the agent's chain once the crew is set:
+# the command menu's item 6 (the menu starts on the crew item, 2) and slot 0. The file the
+# original wrote is compared byte for byte.
+CHAIN_SAVE_CASES = [dict(case, compare=False) for case in CHAIN_AGENT_CASES[:[
+    c["name"] for c in CHAIN_AGENT_CASES].index("chain_crew_done") + 1]] + [
+    {"name": "chain_save_menu", "keys": "space down*4 enter", "match": SCREEN},
+    {"name": "chain_save_written", "keys": "enter", "match": SCREEN, "saved": 0},
+]
+
+CAMPAIGN = {"chain_save", "chain", "chain_death", "chain_mech_poked", "chain_heal_poked", "chain_repair_poked",
             "chain_salvage_poked", "chain_scrap_poked", "chain_orders_poked", "chain_town", "chain_party",
             "chain_jail_no", "chain_jail_fight", "chain_agent", "chain_courses_poked", "chain_cache_poked",
             "chain_cache_open"}
@@ -1793,6 +1802,7 @@ SEQUENCES = [("town", CASES, FULL_CASES, []), ("training", TRAINING_CASES, [], [
              ("chain", [], CHAIN_CASES, []),
              ("chain_death", [], CHAIN_DEATH_CASES, []),
              ("chain_mech_poked", [], CHAIN_MECH_POKED_CASES, []),
+             ("chain_save", [], CHAIN_SAVE_CASES, []),
              ("chain_heal_poked", [], CHAIN_HEAL_POKED_CASES, []),
              ("chain_repair_poked", [], CHAIN_REPAIR_POKED_CASES, []),
              ("chain_salvage_poked", [], CHAIN_SALVAGE_POKED_CASES, []),
@@ -1976,6 +1986,30 @@ def disk_prompt_case(ref_dir, cases):
     return None
 
 
+# The saved game's parts by where they are in the file (docs/formats/save.md):
+# a difference is reported by part, with its count of bytes, not its values.
+SAVE_PARTS = [(0, "the mark"), (1 + 0xc614 - 0xc614, "the character records"),
+              (1 + 0xc724 - 0xc614, "the 'Mech records"), (1 + 0xcb0c - 0xc614, "the seen map"),
+              (1 + 0xd30c - 0xc614, "the flags"), (1 + 0xd370 - 0xc614, "C-Bills"),
+              (1 + 0xd374 - 0xc614, "the investments"), (1 + 0xd380 - 0xc614, "F:d380-d38f"),
+              (1 + 0xd390 - 0xc614, "the townspeople's records"), (1 + 0xd450 - 0xc614, "the kits"),
+              (1 + 0xd452 - 0xc614, "the held 'Mechs"), (1 + 0xd456 - 0xc614, "the next name"),
+              (1 + 0xd457 - 0xc614, "the marks"), (1 + 0xd557 - 0xc614, "the marks' next slot"),
+              (1 + 0xf44, "x"), (3 + 0xf44, "y"), (5 + 0xf44, "past the end")]
+
+
+def save_differences(ref, ours):
+    """Each part of a saved game where the two files differ, as a line."""
+    if len(ref) != len(ours):
+        return ["the files are %d and %d bytes" % (len(ref), len(ours))]
+    lines = []
+    for (start, what), (end, _) in zip(SAVE_PARTS, SAVE_PARTS[1:]):
+        offsets = [k for k in range(start, end) if ref[k] != ours[k]]
+        if offsets:
+            lines.append("%s: %d bytes, the first at file offset 0x%x" % (what, len(offsets), offsets[0]))
+    return lines
+
+
 def run_sequence(a, sequence, cases, chr_options=()):
     """One run of the original through `cases`, then chr for each case.
     (True if every required rectangle and the state match, the report.)"""
@@ -2015,7 +2049,11 @@ def run_sequence(a, sequence, cases, chr_options=()):
         shot = os.path.join(a.work, name + ".bmp")
         # The cell window too, built where the original last built its own.
         at, ref_window = window.original_window(os.path.join(ref_dir, name + ".bin"))
+        # Each run saves into its own folder, never the data folder's.
+        saves = os.path.join(a.work, name + "-saves")
+        shutil.rmtree(saves, ignore_errors=True)
         out = subprocess.run([a.chr, "--game-dir", a.game_dir, "--data-dir", a.data_dir,
+                              "--save-dir", saves,
                               "--script", chr_script(cases, i), "--screenshot", shot,
                               "--fight-state" if case.get("fight") else "--state",
                               "--window", "%x,%x" % at, *chr_options],
@@ -2043,6 +2081,20 @@ def run_sequence(a, sequence, cases, chr_options=()):
         for d in differ:
             say("    " + d)
         ok = ok and not differ
+        if "saved" in case:
+            # The file the original wrote, byte for byte (docs/formats/save.md).
+            game = "Game%d" % (case["saved"] + 1)
+            ref_file, ours_file = os.path.join(ref_dir, game), os.path.join(saves, game)
+            if not os.path.exists(ref_file) or not os.path.exists(ours_file):
+                say(f"  FAIL the saved game {game}: missing from "
+                    + ("the original" if not os.path.exists(ref_file) else "chr"))
+                ok = False
+            else:
+                bad = save_differences(open(ref_file, "rb").read(), open(ours_file, "rb").read())
+                say(f"  {'ok  ' if not bad else 'FAIL'} the saved game {game}: {len(bad)} parts differ")
+                for d in bad:
+                    say("    " + d)
+                ok = ok and not bad
         for known in case.get("known", []):
             say(f"  known: {known}")
     return ok, report

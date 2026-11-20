@@ -203,9 +203,10 @@ bool Town::run_script(int file, KeySource& keys) {
             break;
         }
         case formats::Op::IfFlagD450:
+            jump_if(kits_[0] != 0);  // F:d450
+            break;
         case formats::Op::IfFlagD451:
-            // F:d450 / d451 (docs/scripts.md, "Not rebuilt yet").
-            jump_if(false);
+            jump_if(kits_[1] != 0);  // F:d451
             break;
         case formats::Op::IfRandom:
             jump_if((random_.next() & sbyte(pc + 1)) != 0);
@@ -536,8 +537,8 @@ bool Town::crew_screen(int start, KeySource& keys) {
 
 // BTECH.EXE 1000:2c50 (Ghidra FUN_1000_2c50)
 // The Space command menu: menu 1 in window 1, one row higher and one item
-// longer when any of 'Mech records 0-3 is in use (the crew item). Only the
-// crew item and the healing are rebuilt; the others are logged.
+// longer when any of 'Mech records 0-3 is in use (the crew item). The crew
+// item, the healing and the save are rebuilt; the others are logged.
 bool Town::command_menu(KeySource& keys) {
     bool mechs = false;
     for (int m = 0; m < 4; ++m) mechs = mechs || mechs_[std::size_t(m)][0] != character::kEmpty;
@@ -565,6 +566,9 @@ bool Town::command_menu(KeySource& keys) {
         break;
     case 4:
         if (!heal(0, keys)) return false;  // 1c31:000a(0)
+        break;
+    case 6:
+        if (!save_game(keys)) return false;  // 1000:35d3
         break;
     default:
         log_.push_back("the command menu's item " + std::to_string(item) + ": not rebuilt");

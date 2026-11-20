@@ -73,4 +73,27 @@ session had.
 
 ## In the rebuild
 
-Not rebuilt yet: the menu items log what they would do.
+The save is rebuilt (`Town::save_game`, src/game/save.cpp); the load is not yet, and its menu
+item logs what it would do.
+
+**Where the files go.** In the player's data folder by default (where the imported text is,
+docs/import.md), or wherever `--save-dir DIR` says. The names are the original's, `Game1` to
+`Game6`, and the bytes are the original's, so pointing `--save-dir` at the game's own folder
+lets the rebuild and the original read each other's saves.
+
+**The block.** The rebuild writes the file exactly as laid out above. The parts it holds as its
+own members (`save::kHeld`, src/game/save.h: the records, the seen map, the flags, the money,
+the townspeople's bytes 0-9, the kits, the held 'Mechs, the name number, the marks) are written
+from those members over a shadow of the whole block (`Town::save_shadow_`), which keeps every
+other byte (F:d380-d38f, the townspeople's bytes 0x0a-0x19) as the last load read it. In a new
+game the shadow is all 0: every byte of F:c614-d557 is 0 in the program image, and a new game
+(`1000:4dc7`) sets none of the unheld bytes except the seen map's preset, which the rebuild
+builds itself (`Town::preset_seen`). Nothing of the original's state is copied into the
+rebuild.
+
+**The texts** are DG:0673, DG:06ad and DG:06d2 (`save.which`, `save.failed`,
+`save.refused`), imported (docs/text.md). The failure is printed in colour 4 (2 with the CGA
+display, DG:4fba = 0; only EGA is rebuilt).
+
+**Not rebuilt:** the disk check (`1000:28cc`, INFOCOM.CMP and the disk prompt): there are no
+disks.

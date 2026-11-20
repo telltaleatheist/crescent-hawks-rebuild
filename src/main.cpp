@@ -61,6 +61,7 @@ struct Options {
     std::string script;      // keys to play on the map first
     std::string text_file;   // text overrides
     std::filesystem::path data_dir;  // the imported text and font
+    std::filesystem::path save_dir;  // the saved games GameN; the data folder by default
     bool import = false;
     bool state = false;      // print the game state after the script
     bool fight_state = false;  // with it, the fight's tables
@@ -91,6 +92,8 @@ bool parse(int argc, char** argv, Options& options) {
             }
         } else if (arg == "--data-dir" && i + 1 < argc) {
             options.data_dir = argv[++i];
+        } else if (arg == "--save-dir" && i + 1 < argc) {
+            options.save_dir = argv[++i];
         } else if (arg == "--import") {
             options.import = true;
         } else if (arg == "--text" && i + 1 < argc) {
@@ -128,7 +131,7 @@ bool parse(int argc, char** argv, Options& options) {
                 return false;
             }
         } else {
-            std::fprintf(stderr, "usage: chr [--game-dir DIR] [--data-dir DIR] [--import] [--map N] [--script KEYS]\n"
+            std::fprintf(stderr, "usage: chr [--game-dir DIR] [--data-dir DIR] [--save-dir DIR] [--import] [--map N] [--script KEYS]\n"
                          "           [--text FILE] [--screenshot FILE.bmp] [--event N] [--events] [--step-hold N]\n"
                          "           [--state] [--show-quiz]\n"
                          "  --show-quiz: show the training center's quiz (no check: the right part is\n"
@@ -442,6 +445,7 @@ int main(int argc, char** argv) {
             try {
                 town = std::make_unique<chr::game::Town>(map, options.map, start, texts, tables);
                 town->set_game_dir(options.game_dir);
+                town->set_save_dir(options.save_dir.empty() ? options.data_dir : options.save_dir);
                 if (rules) town->set_rules(&*rules);
                 town->set_show_quiz(options.show_quiz);
                 if (start_up) town->start_up();

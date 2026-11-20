@@ -65,7 +65,7 @@ void Town::new_game() {
     for (int i = 0; i < 4; ++i)
         for (int j = 0; j < 13; j += 12)
             if (random_.next() & 1) figs_.sprite_base[std::size_t(i + j)] = 0x92;
-    // F:d450, d451 (the care's kits) are not modelled.
+    kits_ = {};  // F:d450, d451 (4f7e)
     marks_.next = 0;
     for (auto& m : marks_.marks) m.area = m.x = m.y = 0;  // the codes stay
     draw_panel(true);  // 1000:4cac(1)

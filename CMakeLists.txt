@@ -53,6 +53,7 @@ add_library(chrgame STATIC
   src/game/place.cpp
   src/game/startup.cpp
   src/game/random.cpp
+  src/game/save.cpp
   src/game/text.cpp
   src/game/text_provider.cpp
   src/game/town.cpp

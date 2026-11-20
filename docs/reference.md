@@ -104,6 +104,16 @@ started, removes their scratch folders and exits. DOSBox-X answers any other sig
 DOSBox-X" dialog on screen, so never stop the DOSBox-X processes themselves, or the process tree,
 any other way; a dialog must never appear while Owen is streaming.
 
+## Saved games
+
+A case with `"saved": N` compares the saved game `GameN+1` byte for byte. The original writes
+its file into its copy of the game folder (DOSBox-X's C:), and `run.py` copies any `GameN` it
+finds there, in any case, to the capture folder at the end of the run; so a sequence compares the
+last save of each slot. chr writes into `--save-dir WORK/CASE-saves`, emptied before each case,
+never the data folder. The report says, for each part of the file (`SAVE_PARTS`, the block
+map in docs/formats/save.md), how many bytes differ and the first one's offset, never the values:
+`ok the saved game Game1: 0 parts differ`, or FAIL with the parts.
+
 ## The start-up, as captured
 
 1. Text mode: "Which graphics adapter do you have?" (3: 256K EGA/VGA), then "How many disk

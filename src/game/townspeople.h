@@ -105,6 +105,10 @@ public:
 
     const std::array<Walker, 8>& walkers() const { return walkers_; }
     std::array<Walker, 8>& walkers() { return walkers_; }
+    // Their records' +0/+2 (F:d390/d392 + 0x1a i): where each was kept for
+    // the last fight.
+    const std::array<formats::MapPosition, 8>& kept() const { return kept_; }
+    std::array<formats::MapPosition, 8>& kept() { return kept_; }
 
     // Original bug, kept by default: a person sent inside for 0 rounds stays
     // inside for good (its count is never counted down from 0, and (0, 0) is

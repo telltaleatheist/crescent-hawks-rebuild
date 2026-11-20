@@ -28,6 +28,7 @@
 #include "game/money.h"
 #include "game/movement.h"
 #include "game/random.h"
+#include "game/save.h"
 #include "game/records.h"
 #include "game/shown.h"
 #include "game/townspeople.h"
@@ -192,6 +193,12 @@ public:
     // Where the player's .BLD files are. Without it the walk stops at an
     // entrance after "yes".
     void set_game_dir(std::filesystem::path dir) { game_dir_ = std::move(dir); }
+    // Where the saved games GameN go (--save-dir; the data folder by
+    // default, docs/formats/save.md).
+    void set_save_dir(std::filesystem::path dir) { save_dir_ = std::move(dir); }
+    // F:c614-d557 as the original holds it, for a save (game/save.cpp).
+    save::Block save_block() const;
+    void load_block(const save::Block& b);
     const Flags& flags() const { return flags_; }
     // A test aid (--set-flag): set flag `f` to `v` when the town starts.
     void set_flag_when_town_starts(int f, int v) { pending_flags_.emplace_back(f, v); }
@@ -372,6 +379,9 @@ private:
     bool crew_screen(int start, KeySource& keys);
     bool command_menu(KeySource& keys);
     bool allocate_crew(KeySource& keys);
+    bool save_game(KeySource& keys);
+    bool write_save(int slot);
+    void redraw_map_screen();
     void fight_ends();
     bool random_encounter(KeySource& keys);
     bool place_encounter();
@@ -488,6 +498,7 @@ private:
     std::optional<AssetId> screen_picture_;  // a script's full-screen picture (special 45)
     int place_number_ = 0;  // F:4584: the entrance last entered
     std::optional<std::filesystem::path> game_dir_;
+    std::filesystem::path save_dir_ = ".";
 
     // The fight's state (game/fight.h).
     const formats::Rules* rules_ = nullptr;
@@ -516,6 +527,12 @@ private:
         return s;
     }();
     static void preset_seen(std::array<std::uint8_t, kSeenBytes>& s);
+    // F:d450, d451: the care's kits, a MedKit and a field surgery kit
+    // (docs/combat.md); 0 at a new game (1000:4f7e).
+    std::array<std::uint8_t, 2> kits_{};
+    // F:c614-d557, every byte the rebuild does not hold elsewhere: as the
+    // last load read it, else 0 as in the program image (docs/formats/save.md).
+    save::Block save_shadow_{};
     // F:c614: the sixteen character records.
     std::array<CharacterRecord, 16> characters_ = new_game_characters();
     FightFigures figs_;
