@@ -51,16 +51,21 @@ combat settings, or anything the load rebuilds below.
 ## The load: 1000:32b3
 
 1. Window 3 cleared, DG:05c7, menu 0x28; item 6 ends it. The disk check as above (DG:05f5).
-2. The file opened; if it cannot be: DG:0640, the file's name, DG:0658, a key, and the end.
-3. The first byte read; if it is not 0x0c: DG:0601, a key, and on to step 6 with nothing loaded.
+2. The file opened; if it cannot be: DG:0640, then the colour (DG:37fe) set to 2, the file's
+   name, DG:0658, a key, and step 7. The colour stays 2 afterwards.
+3. The first byte read; if it is not 0x0c: DG:0601, a key, and on to step 6 with nothing loaded
+   (the file is left open).
 4. Area 0xcc's map 1 and area 0x34's 0 (27e8:00fc, 0064); the block and the position read.
 5. Then rebuilt from what was read:
    - the 33 bytes at F:45de (the cache doors' used items) 0;
    - the word at 02f8 of the segment named at DG:53e6 = flag 4f (F:d35b), sign-extended;
    - area 0xcc's map 11 when flag 04 (F:d310) is set, area 0x34's map 12 when flag 32
      (F:d33e) is set (docs/wilderness.md);
-   - with flag 3a (F:d346, the cache) clear, the nine-map load around the position (`104e`, then
-     `2da8` for each grid with a map, `1da8`); with it set, the cache's own load (`1b5d:0004`);
+   - with flag 3a (F:d346, the cache) clear, the nine-map load around the position: its area,
+     taken as the high byte of x | y (the same as the area for every position the game makes:
+     x's high byte is 0-0f, y's a multiple of 0x10), the terrain (`287f:104e`), then `2da8` for
+     each of the nine areas from area - 0x11 (rows of 0x10, no wrap at the edges) that has a map,
+     into grid 3 row + column, and `287f:1da8`; with it set, the cache's own load (`1b5d:0004`);
 6. For the 'Mech figures 0-3: the sprite base 0x92, or 0 when the record's byte 0 is 'L' (the
    same test as an encounter's, docs/combat.md); the frame (F:409a), the heading (F:3920) and
    the direction (F:396c) 0; the far pointer at DG:01f6 + 4i = 27e8:0270. F:374a (the double
@@ -68,18 +73,24 @@ combat settings, or anything the load rebuilds below.
    BTTLTECH.ICN back.
 7. `1e31:032f(0)`, the panel (`1000:4cac(1)`), `1000:28cc(1)`.
 
-The load does not touch the random numbers, so a game loaded goes on with whatever numbers the
-session had.
+The random numbers are not saved: a game loaded goes on with the session's. Each map the load
+reads places its townspeople again (`2da8`, eight numbers each), as any map load does, so the
+townspeople's records read from the file are replaced and the numbers move on.
 
 ## In the rebuild
 
-The save is rebuilt (`Town::save_game`, src/game/save.cpp); the load is not yet, and its menu
-item logs what it would do.
+The save and the load are rebuilt (`Town::save_game`, `Town::load_game`, src/game/save.cpp).
+Not rebuilt yet: the load of a game saved in the cache (flag 3a, `1b5d:0004`), which is logged,
+and the start-up's load (`1000:50c8` answers "load an old game" with a new game, `4dc7`, then
+`32b3`), which still starts a new game.
 
 **Where the files go.** In the player's data folder by default (where the imported text is,
 docs/import.md), or wherever `--save-dir DIR` says. The names are the original's, `Game1` to
 `Game6`, and the bytes are the original's, so pointing `--save-dir` at the game's own folder
 lets the rebuild and the original read each other's saves.
+
+**A short file** is read as far as it goes: the original does not check the reads' counts, so
+whatever the file leaves out stays as it was in memory, and the rebuild does the same.
 
 **The block.** The rebuild writes the file exactly as laid out above. The parts it holds as its
 own members (`save::kHeld`, src/game/save.h: the records, the seen map, the flags, the money,
@@ -92,7 +103,9 @@ builds itself (`Town::preset_seen`). Nothing of the original's state is copied i
 rebuild.
 
 **The texts** are DG:0673, DG:06ad and DG:06d2 (`save.which`, `save.failed`,
-`save.refused`), imported (docs/text.md). The failure is printed in colour 4 (2 with the CGA
+`save.refused`), and the load's DG:05c7, DG:0601, DG:0640 and DG:0658 (`load.which`,
+`load.not_a_save`, `load.not_found`, `load.not_found_end`), imported (docs/text.md). The file
+name between the last two is the file's own name. The failure is printed in colour 4 (2 with the CGA
 display, DG:4fba = 0; only EGA is rebuilt).
 
 **Not rebuilt:** the disk check (`1000:28cc`, INFOCOM.CMP and the disk prompt): there are no

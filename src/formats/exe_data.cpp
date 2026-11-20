@@ -280,6 +280,10 @@ constexpr std::array kDos103 = {
     ExeSpan{ExeSpan::Kind::Text, "save.which", 0x46db, 0x0673, 46, "adfebfe6441c4bf9"},
     ExeSpan{ExeSpan::Kind::Text, "save.failed", 0x46db, 0x06ad, 37, "b90cd8aee2599445"},
     ExeSpan{ExeSpan::Kind::Text, "save.refused", 0x46db, 0x06d2, 45, "cfdb78a8c37a5ef3"},
+    ExeSpan{ExeSpan::Kind::Text, "load.which", 0x46db, 0x05c7, 46, "3460f6cb03942545"},
+    ExeSpan{ExeSpan::Kind::Text, "load.not_a_save", 0x46db, 0x0601, 63, "7defba35cc91348d"},
+    ExeSpan{ExeSpan::Kind::Text, "load.not_found", 0x46db, 0x0640, 24, "951595f967c2dc19"},
+    ExeSpan{ExeSpan::Kind::Text, "load.not_found_end", 0x46db, 0x0658, 27, "b1e0b75b1eb829e5"},
     // The crew screen (1c67:0002).
     ExeSpan{ExeSpan::Kind::Text, "crew.heading", 0x46db, 0x2622, 33, "616ca99f3ce05c91"},
     ExeSpan{ExeSpan::Kind::Text, "crew.on_foot", 0x46db, 0x2643, 10, "c31036879c6c8682"},

@@ -380,6 +380,9 @@ private:
     bool command_menu(KeySource& keys);
     bool allocate_crew(KeySource& keys);
     bool save_game(KeySource& keys);
+    bool load_game(KeySource& keys);
+    std::optional<std::vector<std::uint8_t>> read_save(int slot) const;
+    void read_saved_game(const std::vector<std::uint8_t>& file);
     bool write_save(int slot);
     void redraw_map_screen();
     void fight_ends();

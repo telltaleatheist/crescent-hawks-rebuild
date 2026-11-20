@@ -2,6 +2,8 @@
 
 #include <algorithm>
 #include <fstream>
+#include <iterator>
+#include <optional>
 #include <vector>
 
 #include "game/flags.h"
@@ -138,6 +140,109 @@ bool Town::save_game(KeySource& keys) {
     redraw_map_screen();  // 1e31:032f(0)
     draw_panel(true);          // 1000:4cac(1); 1000:28cc(1) asks for no disk
     return true;
+}
+
+// BTECH.EXE 1000:32b3 (Ghidra FUN_1000_32b3)
+// The command menu's load: a slot from menu 0x28, the file GameN read back
+// over the block and the position, then the maps around the party loaded
+// again and the 'Mech figures set up (docs/formats/save.md).
+bool Town::load_game(KeySource& keys) {
+    text_.select_window(3);
+    clear_window();
+    print_id("load.which");
+    const auto slot = menu(0x28, keys);
+    if (!slot) {
+        place_open_ = true;
+        return false;
+    }
+    if (*slot != save::kSlots) {
+        // 1000:28cc(3) and the INFOCOM.CMP check with its disk prompt
+        // (1000:2913) ask for the game's disk: no disks in the rebuild.
+        const auto file = read_save(*slot);
+        bool wait_key = false;
+        if (!file) {
+            clear_window();
+            print_id("load.not_found");
+            text_.set_fg(2);  // DG:37fe
+            text_.print(save::file_name(*slot));
+            print_id("load.not_found_end");
+            wait_key = true;
+        } else if (file->empty() || (*file)[0] != save::kMark) {
+            clear_window();
+            print_id("load.not_a_save");
+            wait_key = true;
+        }
+        if (wait_key && !read_key(keys)) {  // 273d:0259
+            place_open_ = true;
+            return false;
+        }
+        if (!file) {
+            redraw_map_screen();  // 1e31:032f(0)
+            draw_panel(true);     // 1000:4cac(1); 1000:28cc(1) asks for no disk
+            return true;
+        }
+        if ((*file)[0] == save::kMark) read_saved_game(*file);
+        // 1000:34d3: the 'Mech figures 0-3, after a load or a file that is
+        // not a saved game.
+        for (int i = 0; i < 4; ++i) {
+            figs_.sprite_base[std::size_t(i)] = mechs_[std::size_t(i)][0] == 'L' ? 0 : 0x92;
+            animation_.set_frame(i, 0);       // F:409a
+            figs_.heading[std::size_t(i)] = 0;  // F:3920
+            animation_.set_direction(i, 0);   // F:396c
+            animation_.start_script(i, FigureAnimation::mech_script(0));  // DG:01f6 + 4i = 27e8:0270
+        }
+        agent_found_ = false;  // F:374a
+        // 1000:4621 (BTTLTECH.ICN back after the cache's tile set) is the
+        // tile sheet of the map loaded last (load_town_map).
+    }
+    redraw_map_screen();  // 1e31:032f(0)
+    draw_panel(true);     // 1000:4cac(1); 1000:28cc(1) asks for no disk
+    return true;
+}
+
+// GameN's bytes, or nothing when it cannot be opened (287f:33d0, 0x8000).
+std::optional<std::vector<std::uint8_t>> Town::read_save(int slot) const {
+    std::ifstream in(save_dir_ / save::file_name(slot), std::ios::binary);
+    if (!in) return std::nullopt;
+    return std::vector<std::uint8_t>(std::istreambuf_iterator<char>(in), {});
+}
+
+// BTECH.EXE 1000:3383..34cc: a saved game read back (its mark checked).
+// The reads (287f:3580) do not check their counts: whatever a short file
+// leaves out stays as it was.
+void Town::read_saved_game(const std::vector<std::uint8_t>& file) {
+    area_maps_[0xcc] = 1;  // 27e8:00fc
+    area_maps_[0x34] = 0;  // 27e8:0064
+    auto block = save_block();
+    std::uint8_t place[4] = {std::uint8_t(position_.x), std::uint8_t(position_.x >> 8), std::uint8_t(position_.y),
+                             std::uint8_t(position_.y >> 8)};
+    for (std::size_t i = 1; i < file.size() && i < std::size_t(save::kFileSize); ++i) {
+        if (i <= std::size_t(save::kBlockSize)) block[i - 1] = file[i];
+        else place[i - 1 - std::size_t(save::kBlockSize)] = file[i];
+    }
+    load_block(block);
+    position_ = {get16(place), get16(place + 2)};
+    item_used_.fill(0);  // F:45de
+    menu_last_[0x26] = std::int8_t(flags_[flag::kPictureChance]);  // menu 0x26's last item (+6)
+    if (flags_[flag::kOutdoors] != 0) area_maps_[0xcc] = 11;
+    if (flags_[flag::kDiskSeen] != 0) area_maps_[0x34] = 12;
+    if (flags_[flag::kTileEvents] != 0) {
+        // 1b5d:0004, the cache's own load.
+        log_.push_back("a game saved in the cache: its load (1b5d:0004) is not rebuilt");
+        return;
+    }
+    // The nine maps around the position: its area (x | y, high byte, the
+    // same as Terrain::area_of for any position), the terrain, and each
+    // of the nine areas around it that has a map loaded into its grid.
+    const int area = ((position_.x | position_.y) >> 8) & 0xff;
+    terrain_.generate(area);  // 287f:104e
+    for (int r = 0; r < 3; ++r)
+        for (int c = 0; c < 3; ++c) {
+            const int a = area - 0x11 + 0x10 * r + c;
+            if (a < 0 || a >= 0x100 || area_maps_[std::size_t(a)] == 0) continue;
+            load_town_map(area_maps_[std::size_t(a)], 3 * r + c);  // 1000:2da8
+        }
+    terrain_.link_blocks();  // 287f:1da8
 }
 
 // 287f:33d0 (create, 0x8101 / 0x180) and four writes (287f:366a): the mark,

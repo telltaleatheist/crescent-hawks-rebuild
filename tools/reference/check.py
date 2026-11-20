@@ -1771,11 +1771,18 @@ CHAIN_COURSES_POKED_CASES = [dict(case, compare=False) for case in
 # The long unpoked run: its own tier (`--campaign`, ctest label campaign).
 # The save (1000:35d3, docs/formats/save.md), from the agent's chain once the crew is set:
 # the command menu's item 6 (the menu starts on the crew item, 2) and slot 0. The file the
-# original wrote is compared byte for byte.
+# original wrote is compared byte for byte. Then the load (1000:32b3).
 CHAIN_SAVE_CASES = [dict(case, compare=False) for case in CHAIN_AGENT_CASES[:[
     c["name"] for c in CHAIN_AGENT_CASES].index("chain_crew_done") + 1]] + [
     {"name": "chain_save_menu", "keys": "space down*4 enter", "match": SCREEN},
     {"name": "chain_save_written", "keys": "enter", "match": SCREEN, "saved": 0},
+    # The load (1000:32b3): item 5 (the menu starts on the save), slot 1, which has no file:
+    # the name and the key; then time passes and slot 0 is loaded back.
+    {"name": "chain_load_missing", "keys": "space up enter down enter", "match": SCREEN},
+    {"name": "chain_load_missing_back", "keys": "enter", "match": SCREEN},
+    {"name": "chain_load_waited", "keys": "idle:60", "match": SCREEN},
+    {"name": "chain_load_menu", "keys": "space enter", "match": SCREEN},
+    {"name": "chain_load_done", "keys": "up enter", "match": SCREEN},
 ]
 
 CAMPAIGN = {"chain_save", "chain", "chain_death", "chain_mech_poked", "chain_heal_poked", "chain_repair_poked",
