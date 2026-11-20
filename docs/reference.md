@@ -375,6 +375,10 @@ counts, DG:014a and the map marks).
   the forced 'Mech fight on the walk from the HUT to ENTRANCE (2 'Mechs, 3 people, at
   0471,4059), a few enters after Begin Fight with the computer fighting. The original plays on
   (it is a fight the party loses there). To build when that fight path is read.
+- **Steps a key** (DG:015a, docs/movement.md): the main loop takes each key's step DG:015a
+  times. It is 1 at the start, `1000:3c67` changes it, and the cache's way down (`1b5d:055a`)
+  sets it back to 1. chr does not model it and always takes one step a key, which matches
+  every sequence so far, since none changes it. To build when `1000:3c67` is read.
 
 ## Findings
 

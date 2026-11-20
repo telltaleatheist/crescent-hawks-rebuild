@@ -188,7 +188,9 @@ bool Town::cache_stairs(int x, int y, KeySource& keys) {
     x = (x + 1) & 0x7e;
     y &= 0x7e;
     if (x == 0x7c && y == 0x04) {
-        log_.push_back("cache tile 28: 1b5d:055a FINDIT");
+        if (!visit_place(0x18, keys)) return false;  // FINDIT
+        flags_[flag::kCacheFindit] = 1;
+        turn_message_ = true;
         return true;
     }
     if (x != 0x48 || y != 0x38) return true;
@@ -221,6 +223,13 @@ bool Town::cache_stairs(int x, int y, KeySource& keys) {
     tick_redraws_ = true;
     blocking_ = 0x8b;        // DG:0150
     return true;
+}
+
+// BTECH.EXE 1b5d:0288 (Ghidra FUN_1b5d_0288)
+// The tiles above f5: ENDMECH, while F:d34b is clear.
+bool Town::cache_endmech(KeySource& keys) {
+    if (flags_[flag::kCacheEndmech] != 0) return true;
+    return visit_place(0x16, keys);
 }
 
 // BTECH.EXE 1b5d:079c (Ghidra FUN_1b5d_079c)
@@ -313,7 +322,7 @@ bool Town::cache_step(int tile, formats::MapPosition at, KeySource& keys) {
         if (tile >= 0x7e && tile <= 0x80) return open_door(x - 2 * (tile - 0x7e), y, -1, keys);
         if (tile == 0xf5 && at.x >= 0x0c01 && at.x <= 0x0c04 && at.y == 0xc054) return open_cache_wall(keys);
         if (tile == 0xb6 || tile == 0xb7) return take_item(x, y, keys);
-        if (tile >= 0xf6) return not_yet("1b5d:0288");
+        if (tile >= 0xf6) return cache_endmech(keys);
         if (tile == 0x83 || (tile >= 0xa5 && tile <= 0xa7)) return cache_message("cache.screen", keys);  // 1b5d:02a8
         if (tile == 0x4d) return not_yet("1b5d:04ab");
         if (tile == 0x3a || tile == 0x3d) return cache_hint(x, y, keys);

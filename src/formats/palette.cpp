@@ -19,10 +19,12 @@ Rgb ega_200_line_colour(std::uint8_t value) {
 // colour numbers from a table and moves 8-15 up to 16-23, where the 200-line
 // mode keeps its bright colours. The standard table (37e8:0000) was part of
 // BTECH.EXE; it is now imported (tables.json: palette).
-Palette16 standard_palette_ega(const Tables& tables) {
+Palette16 standard_palette_ega(const Tables& tables) { return palette_ega(tables.palette); }
+
+Palette16 palette_ega(const std::array<int, 16>& numbers) {
     Palette16 palette;
     for (std::size_t i = 0; i < palette.size(); ++i) {
-        int number = tables.palette[i] & 0x0f;
+        int number = numbers[i] & 0x0f;
         if (number > 7) number += 8;
         palette[i] = ega_200_line_colour(std::uint8_t(number));
     }

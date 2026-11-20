@@ -25,4 +25,8 @@ Rgb ega_200_line_colour(std::uint8_t register_value);
 // colours (15ab:1afe), so the map is drawn with it too.
 Palette16 standard_palette_ega(const Tables& tables);
 
+// The same from any table of 16 colour numbers: special 45 (24d3:15dd) sets
+// 3858:0000 for ENDMECH.CMP, the only picture with colours of its own.
+Palette16 palette_ega(const std::array<int, 16>& numbers);
+
 }  // namespace chr::formats

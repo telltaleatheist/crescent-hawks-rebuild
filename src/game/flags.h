@@ -35,6 +35,7 @@ inline constexpr int kCacheOpen = 0x36;       // d342: ENTRANCE answered yes: le
 inline constexpr int kTileEvents = 0x3a;      // d346: a map whose tiles have events (map 14, docs/movement.md)
 inline constexpr int kCachePuzzle = 0x3e;      // d34a: the puzzle solved (1b5d:0980)
 inline constexpr int kCacheItems = 0x3b;      // d347-d349: the item carried in each of three slots, or ff
+inline constexpr int kCacheEndmech = 0x3f;     // d34b: ENDMECH's tiles off
 inline constexpr int kCacheHint = 0x40;       // d34c: 1b5d:02d2's text seen: the way out answers
 inline constexpr int kCacheFindit = 0x41;      // d34d: FINDIT seen (1b5d:055a)
 inline constexpr int kCacheLevel = 0x42;      // d34e: on the cache's second level

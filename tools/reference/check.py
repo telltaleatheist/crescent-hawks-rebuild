@@ -1696,6 +1696,20 @@ CHAIN_CACHE_OPEN_CASES = [dict(case, compare=False) for case in CHAIN_CACHE_POKE
     # Tile 28 again: the puzzle solved, it only says so.
     {"name": "chain_cache_down_again", "keys": "right", "match": SCREEN},
     {"name": "chain_cache_down_again_read", "keys": "enter", "match": SCREEN},
+    # To the tiles above f5 at cells 1-2, 49-50: ENDMECH (1b5d:0288).
+    {"name": "chain_cache_to_endmech", "keys": "down*3 left*7 down left down*7 left down left down*48 right*14 up*28 right*6 up*4 right*8 up*10 right*2 up*8 left*7 up left up*7 right*6 up*10 left*27 up left up*6 left*25 down left down*21 left*5 down left down*7 left*23 down left down*23", "match": SCREEN},
+    {"name": "chain_cache_endmech", "keys": "down", "match": SCREEN},
+    {"name": "chain_cache_endmech_1", "keys": "enter", "match": SCREEN},
+    {"name": "chain_cache_endmech_2", "keys": "enter", "match": SCREEN},
+    {"name": "chain_cache_endmech_3", "keys": "enter", "match": SCREEN},
+    {"name": "chain_cache_endmech_4", "keys": "enter", "match": SCREEN},
+    {"name": "chain_cache_endmech_5", "keys": "enter", "match": SCREEN},
+    {"name": "chain_cache_endmech_6", "keys": "enter", "match": SCREEN},
+    # To tile 28 at x 7c, y 04: FINDIT (1b5d:055a).
+    {"name": "chain_cache_to_findit", "keys": "up*27 right*12 up*6 right*16 up*21 right*26 down*8 right*30 down*10 left*5 down left down*7 right*8 down*18 left*7 down left down*3 left*5 down left down*26 left*15 up left up*6 left*7 down left down*14 right*30 up*10 right*34 up*6 right*8 up*68 left*7 up left up*35 right*6", "match": SCREEN},
+    {"name": "chain_cache_findit", "keys": "right", "match": SCREEN},
+    {"name": "chain_cache_findit_1", "keys": "enter", "match": SCREEN},
+    {"name": "chain_cache_findit_2", "keys": "enter", "match": SCREEN},
 ]
 
 

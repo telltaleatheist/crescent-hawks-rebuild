@@ -385,7 +385,8 @@ int main(int argc, char** argv) {
     }
     if (status == 0) {
         const auto palette = chr::formats::standard_palette_ega(tables);
-        chr::platform::OriginalAssets assets(options.game_dir, options.data_dir, palette);
+        chr::platform::OriginalAssets assets(options.game_dir, options.data_dir, palette,
+                                             {{"ENDMECH.CMP", chr::formats::palette_ega(tables.endmech_palette)}});
         chr::platform::Renderer renderer(sdl_renderer, assets);
         const auto& title = chr::assets::kTitleScreen;
 

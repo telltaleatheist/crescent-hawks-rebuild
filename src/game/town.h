@@ -296,6 +296,7 @@ private:
     bool cache_message(const std::string& id, KeySource& keys);
     bool cache_stairs(int x, int y, KeySource& keys);
     bool cache_way_up(KeySource& keys);
+    bool cache_endmech(KeySource& keys);
     bool cache_puzzle_cell(int x, int y);
     bool cache_puzzle_check(KeySource& keys);
     bool load_lower_level();
@@ -475,6 +476,7 @@ private:
     std::array<formats::MenuRecord, formats::kMenuCount> menus_ = tables_.menus;
     std::array<int, formats::kMenuCount> menu_last_{};
     std::optional<PlacePicture> picture_;
+    std::optional<AssetId> screen_picture_;  // a script's full-screen picture (special 45)
     int place_number_ = 0;  // F:4584: the entrance last entered
     std::optional<std::filesystem::path> game_dir_;
 

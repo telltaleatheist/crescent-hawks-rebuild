@@ -188,11 +188,12 @@ each one.
 | 38 | 24d3:13c6 | JAIL | prints the name the next recruit will get: name number F:d456 (scripts.md, "A new member") |
 | 39 | 24d3:13e6 | JAIL | the crew screen with argument 1: everyone on foot, every seat empty first (below); not rebuilt |
 | 40 | 24d3:13ec | JAIL | Jason alone on foot for the impounded 'Mech (`19b8:152f`, mode 9, combat.md); then flag 28 = 1 if he fell (DG:014a = 0, the leader down: combat.md); not rebuilt |
+| 45 | 24d3:15dd | ENDMECH | ENDMECH.CMP over the whole screen with its own palette (3858:0000, docs/formats/cmp.md) until a key; then STARLEAG.ICN loaded again, the standard palette, the screen set back for the town (287f:1fbe), the panel (`4cac(1)`) and the box cleared (2656:0388). CGA's colours are not rebuilt |
 | 46 | 24d3:0e2c | GARAGE | the held 'Mechs back and the crew screen (below) |
 | 43 | 24d3:157e | TRAINING | after mission 5 is won (+1672, with flag 2d = 1): townsperson 0 is put at the Lounge's entrance (MAP entrance 7; record +0/+2 and figure 16), inside (+9 = ff), its route 0x70 (last the Lounge, next entrance 0) and its target entrance 0, the Training Center. Talk to others in the Lounge lets it out (below) |
 | others | see the table above | the other places | read with those places |
 
-Specials 6–11, 17–20, 24–29, 31–35, 41, 42, 44, 45 and 47 belong to the other places and are read with them. The rebuild logs an
+Specials 6–11, 17–20, 24–29, 31–35, 41, 42, 44 and 47 belong to the other places and are read with them. The rebuild logs an
 unrebuilt special and goes on.
 
 Special 05's texts are imported from BTECH.EXE as `course.*` (docs/import.md).

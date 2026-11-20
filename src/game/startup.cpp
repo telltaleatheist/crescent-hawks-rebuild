@@ -19,7 +19,7 @@ void Town::start_up() { stage_ = Stage::Infocom; }
 std::optional<AssetId> Town::full_screen() const {
     if (stage_ == Stage::Infocom) return assets::kInfocomLogo;
     if (stage_ == Stage::Title) return assets::kTitleScreen;
-    return std::nullopt;
+    return screen_picture_;
 }
 
 // BTECH.EXE 1000:4dc7 (Ghidra FUN_1000_4dc7), as far as the screen goes: a

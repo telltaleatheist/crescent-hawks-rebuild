@@ -29,6 +29,7 @@ word); anything else is refused, and the game asks for a new import.
 | Name | Address | Shape | Read by |
 |---|---|---|---|
 | `palette` | 37e8:0000 | 16 bytes | the EGA colour number of each of the 16 colours (formats/palette.h) |
+| `endmech_palette` | 3858:0000 | 16 bytes | the same, for ENDMECH.CMP only (special 45, docs/formats/cmp.md) |
 | `windows` | 385b:0000 | 11 records of 8 words | the text windows: inside's position and size, colours, cursor (game/text.h) |
 | `frame_pieces_0..2` | 385b:0320/0338/0350 | 12 words each | a frame's corners, then its edges, each run ended by 0xff (2656 frame drawing) |
 | `frame_styles` | DG:4fa4 | 5 far pointers | which piece table each frame style uses; written as the table's number |

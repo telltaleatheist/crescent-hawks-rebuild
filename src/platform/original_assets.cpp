@@ -44,8 +44,10 @@ Image from_colour_numbers(const std::vector<std::uint8_t>& numbers, int width, i
 }  // namespace
 
 OriginalAssets::OriginalAssets(std::filesystem::path game_dir, std::filesystem::path data_dir,
-                               formats::Palette16 palette)
-    : game_dir_(std::move(game_dir)), data_dir_(std::move(data_dir)), palette_(palette) {}
+                               formats::Palette16 palette,
+                               std::map<std::string, formats::Palette16> picture_palettes)
+    : game_dir_(std::move(game_dir)), data_dir_(std::move(data_dir)), palette_(palette),
+      picture_palettes_(std::move(picture_palettes)) {}
 
 const formats::TileSheet* OriginalAssets::sheet(const std::string& file) {
     if (auto it = sheets_.find(file); it != sheets_.end()) return &it->second;
@@ -143,9 +145,11 @@ std::optional<Image> OriginalAssets::image(const AssetId& id) {
                 return std::nullopt;
             }
             const auto picture = formats::decode_cmp(formats::read_file(*path));
-            // The standard 256K EGA/VGA palette (formats/palette.h), from the import.
+            // The standard 256K EGA/VGA palette (formats/palette.h), from the
+            // import, unless the picture has its own.
+            const auto own = picture_palettes_.find(id.file);
             return from_colour_numbers(picture.pixels(), formats::kCmpWidth, formats::kCmpHeight,
-                                       palette_);
+                                       own != picture_palettes_.end() ? own->second : palette_);
         }
         if (has_extension(id.file, ".ICN")) {
             const auto* tiles = sheet(id.file);

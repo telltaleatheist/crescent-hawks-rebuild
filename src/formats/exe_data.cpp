@@ -45,6 +45,7 @@ constexpr std::array kDos103 = {
     // The small tables (formats/tables.h, docs/formats/tables.md), written
     // to tables.json:
     ExeSpan{ExeSpan::Kind::Table, "tables.palette", 0x37e8, 0x0000, 16, "52a1e16100dab1df"},
+    ExeSpan{ExeSpan::Kind::Table, "tables.endmech_palette", 0x3858, 0x0000, 16, "53d8d7a73919f94d"},
     ExeSpan{ExeSpan::Kind::Table, "tables.windows", 0x385b, 0x0000, 176, "03e2e9d477f0f6cb"},
     ExeSpan{ExeSpan::Kind::Table, "tables.frame_pieces_0", 0x385b, 0x0320, 24, "78e19eea404b9cfc"},
     ExeSpan{ExeSpan::Kind::Table, "tables.frame_pieces_1", 0x385b, 0x0338, 24, "8c88f1d788589394"},

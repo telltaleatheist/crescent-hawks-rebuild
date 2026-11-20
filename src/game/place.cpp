@@ -742,6 +742,17 @@ bool Town::special(int n, KeySource& keys) {
     case 40:
         // 24d3:13ec
         return jail_break(keys);
+    case 45:
+        // 24d3:15dd: ENDMECH.CMP over the whole screen with its own colours
+        // until a key (273d:086a, 0259); then the screen set back for the
+        // town (287f:1fbe; STARLEAG.ICN loaded again, the palette back), the
+        // panel and the box cleared. CGA's colours are not rebuilt.
+        screen_picture_ = assets::kEndMechPicture;
+        if (!read_key(keys)) return false;
+        screen_picture_.reset();
+        draw_panel(true);  // 1000:4cac(1)
+        clear_window();    // 2656:0388
+        return true;
     case 46:
         // 24d3:0e2c: the held 'Mechs back in their records, then the crew
         // screen (docs/scripts.md).

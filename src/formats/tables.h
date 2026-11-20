@@ -45,6 +45,7 @@ inline constexpr std::uint8_t kFramePieceEnd = 0xff;
 struct Tables {
     // The screen.
     std::array<int, 16> palette{};                  // 37e8:0000: colour number of each register (EGA)
+    std::array<int, 16> endmech_palette{};          // 3858:0000: the same, for ENDMECH.CMP (24d3:15dd)
     std::array<WindowRecord, kWindowCount> windows{};  // 385b:0000
     // 385b:0320/0338/0350: the four corners, then the top, left, right and
     // bottom edges, each a run of frame pieces ended by kFramePieceEnd.

@@ -183,7 +183,7 @@ The toggle `((t + 1) ^ 1) - 1` maps an odd t to t + 1 and an even t to t - 1.
 | d346 | 3a | the cache's step dispatch is on (and random encounters are off) |
 | d347-d349 | 3b-3d | the item carried in slots 0-2, or ff |
 | d34a | 3e | the puzzle solved |
-| d34b | 3f | ENDMECH's tiles off (written by a script; to be traced) |
+| d34b | 3f | ENDMECH's tiles off (set by ENDMECH's script) |
 | d34c | 40 | 02d2's text seen: the way out answers |
 | d34d | 41 | FINDIT visited |
 | d34e | 42 | on the second level |
@@ -213,6 +213,10 @@ The second level and the puzzle (`Town::cache_stairs`, `Town::cache_way_up`,
 `chain_cache_open` too: the way down, a wrong cell turned and the check resetting it, the seven
 cells turned and the check solving it, the way up, and the way down then refusing.
 
-Still to do, in order, each compared the same way: ENDMECH and FINDIT; the way out into
-WINSCENE and the game's end. Until then their
-tiles only block, and the game log names the function they would run.
+ENDMECH (`Town::cache_endmech`, place 0x16, with special 45's picture) and FINDIT (place 0x18
+from `Town::cache_stairs`) are checked on `chain_cache_open` after the puzzle: each walked to,
+its tile bumped, and its script read to the end. ENDMECH's script sets F:d34b itself, so the
+tiles above f5 only block after it.
+
+Still to do, compared the same way: the way out into WINSCENE and the game's end. Until then
+tile 4d only blocks, and the game log names the function it would run.

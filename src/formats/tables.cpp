@@ -37,6 +37,7 @@ std::span<int> all(std::array<std::array<int, M>, N>& a) { return {a.front().dat
 const std::vector<Flat>& flat_tables() {
     static const std::vector<Flat> kFlat = {
         {"palette", 0x37e8, 0x0000, Element::U8, [](Tables& t) { return all(t.palette); }},
+        {"endmech_palette", 0x3858, 0x0000, Element::U8, [](Tables& t) { return all(t.endmech_palette); }},
         {"frame_pieces_0", 0x385b, 0x0320, Element::U16, [](Tables& t) { return all(t.frame_pieces[0]); }},
         {"frame_pieces_1", 0x385b, 0x0338, Element::U16, [](Tables& t) { return all(t.frame_pieces[1]); }},
         {"frame_pieces_2", 0x385b, 0x0350, Element::U16, [](Tables& t) { return all(t.frame_pieces[2]); }},

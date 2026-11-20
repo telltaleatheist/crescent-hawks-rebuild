@@ -64,7 +64,11 @@ showing a picture the program sets the palette from a table of its own
 (273d:0525). The caller passes the table's address. The Infocom and title
 screens use the table at 37e8:0000 (MCGA: 37e8:0010).
 
-The rebuild shows every picture with that standard table for now. Still to do:
+Special 45 (24d3:15dd) shows ENDMECH.CMP with the table at 3858:0000 (MCGA: 3858:0010), which
+nothing else uses; it differs from the standard one in colours 5 and 13. It is imported as
+`endmech_palette`, and the original-files provider colours ENDMECH.CMP with it.
+
+The rebuild shows every other picture with the standard table for now. Still to do:
 
 - find the screens that set a palette of their own (`15ab:1afe` puts the standard one back after
   them, so there are some), and the tables they use;
