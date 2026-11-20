@@ -269,9 +269,10 @@ private:
     void turn(int key, KeySource& keys);
     // BTECH.EXE 1000:020a..050d (the main loop's game tick)
     void game_tick(KeySource* keys);
-    void game_over(KeySource& keys);
+    void game_over(KeySource& keys, bool leader_killed);
     void walk_position(formats::MapPosition to);
     bool quit_ = false;
+    bool game_won_ = false;  // DG:01a8
     bool question_waiting_ = false;
     void record_party_places();
     // The map at the party's position now.
@@ -297,6 +298,7 @@ private:
     bool cache_stairs(int x, int y, KeySource& keys);
     bool cache_way_up(KeySource& keys);
     bool cache_endmech(KeySource& keys);
+    bool cache_way_out(int x, int y, KeySource& keys);
     bool cache_puzzle_cell(int x, int y);
     bool cache_puzzle_check(KeySource& keys);
     bool load_lower_level();

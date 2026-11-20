@@ -218,5 +218,8 @@ from `Town::cache_stairs`) are checked on `chain_cache_open` after the puzzle: e
 its tile bumped, and its script read to the end. ENDMECH's script sets F:d34b itself, so the
 tiles above f5 only block after it.
 
-Still to do, compared the same way: the way out into WINSCENE and the game's end. Until then
-tile 4d only blocks, and the game log names the function it would run.
+The way out (`Town::cache_way_out`, texts `cache.out_closed`, `cache.out_puzzle`,
+`cache.out_findit`) is checked on `chain_cache_open` last: the party walks from FINDIT to the way
+out at x 02, y 0e, bumps it with all three flags set, reads WINSCENE to its end, and the main
+loop asks the game-over question (docs/town_loop.md, step 7). Its three refusals are not walked
+to: each is a text and a key, the same as the tiles before it.

@@ -1,7 +1,6 @@
 // The Star League cache, map 14: going in and its doors (docs/cache.md).
 
 #include <algorithm>
-#include <cstdio>
 
 #include "formats/game_files.h"
 #include "game/town.h"
@@ -232,6 +231,33 @@ bool Town::cache_endmech(KeySource& keys) {
     return visit_place(0x16, keys);
 }
 
+// BTECH.EXE 1b5d:04ab (Ghidra FUN_1b5d_04ab)
+// Tile 4d at the way out (x 04, y 04 or x 02, y 0e in half-cells): with
+// the hint seen, the puzzle solved and FINDIT seen, WINSCENE and the game
+// is won; otherwise a text saying which is missing, and a key.
+bool Town::cache_way_out(int x, int y, KeySource& keys) {
+    x = (x + 1) & 0x7e;
+    y &= 0x7e;
+    if (!((x == 0x04 && y == 0x04) || (x == 0x02 && y == 0x0e))) return true;
+    const char* text = nullptr;
+    if (flags_[flag::kCacheHint] == 0)
+        text = "cache.out_closed";
+    else if (flags_[flag::kCachePuzzle] != 1)
+        text = "cache.out_puzzle";
+    else if (flags_[flag::kCacheFindit] == 0)
+        text = "cache.out_findit";
+    if (!text) {
+        if (!visit_place(0x19, keys)) return false;  // 1000:7dc8: WINSCENE
+        turn_message_ = true;
+        game_won_ = true;
+        return true;
+    }
+    open_message_box();  // 24d3:17c6
+    print_id(text);      // 24d3:17ea
+    turn_message_ = true;
+    return read_key(keys).has_value();
+}
+
 // BTECH.EXE 1b5d:079c (Ghidra FUN_1b5d_079c)
 // Tile 94: back up to the first level at 0c45,c039, its blocks as they were.
 bool Town::cache_way_up(KeySource& keys) {
@@ -311,12 +337,6 @@ bool Town::load_lower_level() {
 // what it does on the cache's level; any other tile only blocks.
 bool Town::cache_step(int tile, formats::MapPosition at, KeySource& keys) {
     const int x = std::int16_t(at.x), y = std::int16_t(at.y);
-    const auto not_yet = [&](const char* what) {
-        char line[64];
-        std::snprintf(line, sizeof line, "cache tile %02x at %04x,%04x: %s", tile, at.x, at.y, what);
-        log_.push_back(line);
-        return true;
-    };
     if (flags_[flag::kCacheLevel] == 0) {
         // A door's three tiles, each naming the door from its own cell.
         if (tile >= 0x7e && tile <= 0x80) return open_door(x - 2 * (tile - 0x7e), y, -1, keys);
@@ -324,7 +344,7 @@ bool Town::cache_step(int tile, formats::MapPosition at, KeySource& keys) {
         if (tile == 0xb6 || tile == 0xb7) return take_item(x, y, keys);
         if (tile >= 0xf6) return cache_endmech(keys);
         if (tile == 0x83 || (tile >= 0xa5 && tile <= 0xa7)) return cache_message("cache.screen", keys);  // 1b5d:02a8
-        if (tile == 0x4d) return not_yet("1b5d:04ab");
+        if (tile == 0x4d) return cache_way_out(x, y, keys);
         if (tile == 0x3a || tile == 0x3d) return cache_hint(x, y, keys);
         if (tile == 0x28) return cache_stairs(x, y, keys);
         return true;

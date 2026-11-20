@@ -1711,6 +1711,22 @@ CHAIN_CACHE_OPEN_CASES = [dict(case, compare=False) for case in CHAIN_CACHE_POKE
     {"name": "chain_cache_findit", "keys": "right", "match": SCREEN},
     {"name": "chain_cache_findit_1", "keys": "enter", "match": SCREEN},
     {"name": "chain_cache_findit_2", "keys": "enter", "match": SCREEN},
+    # To tile 4d at x 02, y 0e with the hint, the puzzle and FINDIT behind
+    # it: WINSCENE (1b5d:04ab), then the main loop's question (1000:049d).
+    {"name": "chain_cache_to_way_out", "keys": "down*11 left*3 down left down*17 left down left down*6 left*39 up left up*12 left*7 down left down*4 left*43 up left up*7 left up left up*5 left*7 up left up left up left up*2 left*8", "match": SCREEN},
+    {"name": "chain_cache_way_out", "keys": "left", "match": SCREEN},
+    {"name": "chain_cache_winscene_1", "keys": "enter", "match": SCREEN},
+    {"name": "chain_cache_winscene_2", "keys": "enter", "match": SCREEN},
+    {"name": "chain_cache_winscene_3", "keys": "enter", "match": SCREEN},
+    {"name": "chain_cache_winscene_4", "keys": "enter", "match": SCREEN},
+    {"name": "chain_cache_winscene_5", "keys": "enter", "match": SCREEN},
+    {"name": "chain_cache_winscene_6", "keys": "enter", "match": SCREEN},
+    {"name": "chain_cache_winscene_7", "keys": "enter", "match": SCREEN},
+    {"name": "chain_cache_winscene_8", "keys": "enter", "match": SCREEN},
+    {"name": "chain_cache_winscene_9", "keys": "enter", "match": SCREEN},
+    {"name": "chain_cache_winscene_10", "keys": "enter", "match": SCREEN},
+    {"name": "chain_cache_winscene_11", "keys": "enter", "match": SCREEN},
+    {"name": "chain_cache_won", "keys": "enter", "match": SCREEN},
 ]
 
 

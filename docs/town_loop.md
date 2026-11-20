@@ -46,8 +46,9 @@ In order (`1000:020a`..`050d`):
    (docs/townspeople.md).
 7. If DG:014a is set (it is in town): the map is drawn again (`2000:9b04`, `a0df`), the figures
    (`1000:051b`, which also records where the party's characters stand), and the screen is
-   flipped (`7a93`). Then, if DG:01a8 is set, the game is over
-   (string 0x12f, a yes/no question, a new game or quit).
+   flipped (`7a93`). Then, if DG:01a8 is set (the cache's way out, docs/cache.md), the game is
+   over the same way as below, but without the leader's text: the message box, DG:012f and the
+   yes/no question (`1000:049d` jumps to `04e5`). Rebuilt in `Town::game_tick` (`game_won_`).
    If DG:014a is 0 (the leader was killed in a fight, docs/combat.md 2.12) nothing is drawn and
    the game is over at once (`1000:04a4`): the message box, the leader's name (DG:00f1 if
    Jason's record is empty, else DG:00f7), DG:00fb, a key; the box cleared, DG:012f and a

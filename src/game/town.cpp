@@ -561,7 +561,7 @@ void Town::game_tick(KeySource* keys) {
     // (1000:04a4).
     if (!combat_.fight_on) {
         ScriptKeys none({});
-        game_over(keys ? *keys : none);
+        game_over(keys ? *keys : none, true);
         return;
     }
     // The map and the figures are drawn again (DGROUP:014a is set in town),
@@ -577,20 +577,28 @@ void Town::game_tick(KeySource* keys) {
     record_party_places();
     if (outdoors() && !frozen_) last_drawn_ = Frozen{live_view(), figures()};
     ++ticks_;
+    // With the game won (DG:01a8, set by the cache's way out), the same
+    // question after the draw (1000:049d).
+    if (game_won_) {
+        ScriptKeys none({});
+        game_over(keys ? *keys : none, false);
+    }
 }
 
-// BTECH.EXE 1000:04a4..050d, the main loop's game over when the leader was
-// killed: a message box naming him (Jason's record gone, or the other),
-// a key, then "a new game?" with Yes first.
-void Town::game_over(KeySource& keys) {
+// BTECH.EXE 1000:04a4..050d, the main loop's game over: the message box;
+// when the leader was killed, a text naming him (Jason's record gone, or
+// the other) and a key; then "a new game?" with Yes first.
+void Town::game_over(KeySource& keys, bool leader_killed) {
     open_message_box();  // 14d3:17c6
-    print_id(characters_[0][0] == 0xff ? "over.leader.0" : "over.leader.1");
-    print_id("over.killed");  // 14d3:17ea
-    if (!read_key(keys)) {
-        place_open_ = true;
-        return;
+    if (leader_killed) {
+        print_id(characters_[0][0] == 0xff ? "over.leader.0" : "over.leader.1");
+        print_id("over.killed");  // 14d3:17ea
+        if (!read_key(keys)) {
+            place_open_ = true;
+            return;
+        }
+        clear_window();
     }
-    clear_window();
     print_id("over.new_game");
     const auto again = yes_no(true, keys);  // 1000:1a13(1)
     if (!again) {

@@ -559,6 +559,9 @@ constexpr std::array kDos103 = {
     ExeSpan{ExeSpan::Kind::Text, "cache.way_up", 0x46db, 0x2367, 62, "af5670081b505116"},
     ExeSpan{ExeSpan::Kind::Text, "cache.puzzle_solved", 0x46db, 0x23b2, 87, "48e8a61999d2cf36"},
     ExeSpan{ExeSpan::Kind::Text, "cache.puzzle_wrong", 0x46db, 0x2409, 20, "a8aafd47acf3da5f"},
+    ExeSpan{ExeSpan::Kind::Text, "cache.out_closed", 0x46db, 0x2240, 53, "57d671cf36b0cb5b"},
+    ExeSpan{ExeSpan::Kind::Text, "cache.out_puzzle", 0x46db, 0x2275, 22, "929fad0a5501689d"},
+    ExeSpan{ExeSpan::Kind::Text, "cache.out_findit", 0x46db, 0x228b, 60, "20f0fe53ca4764c5"},
 };
 
 constexpr std::uint16_t kLoadSegment = 0x1000;
