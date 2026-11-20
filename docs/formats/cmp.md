@@ -72,8 +72,9 @@ The rebuild shows every other picture with the standard table for now. Still to 
 
 - find the screens that set a palette of their own (`15ab:1afe` puts the standard one back after
   them, so there are some), and the tables they use;
-- import those tables, and let the game name the palette along with the picture it shows, so
-  the renderer stops choosing it.
+- import those tables and key each by its picture's file name in the original-files provider,
+  as ENDMECH.CMP's is. The game names only the picture; which colours the original showed it in
+  is the provider's business, so a mod provider supplies its own art with no palette at all.
 
 ## The four displays
 
@@ -111,5 +112,6 @@ rebuild does not use them yet.
 and their order) and gives one colour number per pixel. `src/formats/palette.cpp`
 holds the title screens' EGA palette. The default asset provider
 (`src/platform/original_assets.cpp`) combines them into an RGBA image for the
-renderer. CGA's 4-colour reduction and the Tandy and MCGA colours are not
+renderer, using the standard palette unless it was given one for that file name
+(`main.cpp` gives ENDMECH.CMP's). CGA's 4-colour reduction and the Tandy and MCGA colours are not
 built, because the rebuild always shows the 16-colour EGA picture.
