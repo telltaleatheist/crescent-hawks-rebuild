@@ -142,6 +142,40 @@ bool Town::take_item(int x, int y, KeySource& keys) {
     return true;
 }
 
+// BTECH.EXE 1b5d:01e9 (Ghidra FUN_1b5d_01e9)
+// The wall at cells x 0-2, y 42-47 becomes the six rows of three tiles in
+// the table, the window is redrawn, and the text says so.
+bool Town::open_cache_wall(KeySource& keys) {
+    for (std::size_t row = 0; row < 6; ++row)
+        for (std::size_t col = 0; col < 3; ++col)
+            set_map_cell(0xa10 + row * 8 + col, tables_.cache_wall[row * 3 + col]);
+    build_window();  // 287f:1314
+    mission_draw();  // 287f:18ef, 1000:051b, 273d:06c3
+    tick_redraws_ = true;
+    return cache_message("cache.wall_opened", keys);
+}
+
+// BTECH.EXE 1b5d:02d2 (Ghidra FUN_1b5d_02d2)
+// Only at its own place (x 4e, y 0c-10 in half-cells): the text, and from
+// then on the way out answers.
+bool Town::cache_hint(int x, int y, KeySource& keys) {
+    x = (x + 1) & 0x7e;
+    y &= 0x7e;
+    if (x != 0x4e || y < 0x0c || y > 0x11) return true;
+    if (!cache_message("cache.hint", keys)) return false;
+    flags_[flag::kCacheHint] = 1;
+    return true;
+}
+
+// The message box, the text (24d3:17ea) and a key (273d:0259); the step
+// shows no direction (F:d55c).
+bool Town::cache_message(const std::string& id, KeySource& keys) {
+    open_message_box();  // 24d3:17c6
+    print_id(id);
+    turn_message_ = true;
+    return read_key(keys).has_value();
+}
+
 // BTECH.EXE 1000:1c12 (Ghidra FUN_1000_1c12), while F:d346 is set
 // The tile `tile` that stopped a character's step, at half-cell `at`, does
 // what it does on the cache's level; any other tile only blocks.
@@ -156,12 +190,12 @@ bool Town::cache_step(int tile, formats::MapPosition at, KeySource& keys) {
     if (flags_[flag::kCacheLevel] == 0) {
         // A door's three tiles, each naming the door from its own cell.
         if (tile >= 0x7e && tile <= 0x80) return open_door(x - 2 * (tile - 0x7e), y, -1, keys);
-        if (tile == 0xf5 && at.x >= 0x0c01 && at.x <= 0x0c04 && at.y == 0xc054) return not_yet("1b5d:01e9");
+        if (tile == 0xf5 && at.x >= 0x0c01 && at.x <= 0x0c04 && at.y == 0xc054) return open_cache_wall(keys);
         if (tile == 0xb6 || tile == 0xb7) return take_item(x, y, keys);
         if (tile >= 0xf6) return not_yet("1b5d:0288");
-        if (tile == 0x83 || (tile >= 0xa5 && tile <= 0xa7)) return not_yet("1b5d:02a8");
+        if (tile == 0x83 || (tile >= 0xa5 && tile <= 0xa7)) return cache_message("cache.screen", keys);  // 1b5d:02a8
         if (tile == 0x4d) return not_yet("1b5d:04ab");
-        if (tile == 0x3a || tile == 0x3d) return not_yet("1b5d:02d2");
+        if (tile == 0x3a || tile == 0x3d) return cache_hint(x, y, keys);
         if (tile == 0x28) return not_yet("1b5d:055a");
         return true;
     }

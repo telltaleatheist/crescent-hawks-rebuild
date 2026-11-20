@@ -25,8 +25,12 @@ Both kinds of waiting occur:
 
 ## The key feeder (tools/capture/snap.asm)
 
-`SNAP 0 K` loads KEYS.BIN (written by `run.py`, at most `MAX_KEYS` words: 4096; `run.py` refuses a
-longer script, since SNAP would not load and nothing would be captured) and hooks int 16h and int 21h. It puts the next
+`SNAP 0 K` loads KEYS.BIN (written by `run.py`, at most `MAX_KEYS` words: 16384, a 32KB buffer that SNAP keeps resident; `run.py` refuses a
+longer script, since SNAP would not load and nothing would be captured) and hooks int 16h and int 21h.
+(With SNAP resident, DOSBox-X leaves 572K of conventional memory, 585,744 bytes, for the
+game. BTECH.EXE's image needs about 254K, and its only run-time allocations go through
+`273d:05bc`, for saved text and screen regions, which shows its own message, DG:4fe9, if one
+fails. So the bigger buffer leaves the game ample room, and a shortage would show on screen.) It puts the next
 key in the BIOS buffer (int 16h function 5) only when the program is waiting for one:
 
 - int 16h function 0/10h is called and the buffer is empty; or

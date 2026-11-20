@@ -110,6 +110,7 @@ struct Tables {
     std::array<int, 33> item_x{};                   // DG:21ce
     std::array<int, 33> item_y{};                   // DG:21f0
     std::array<int, 33> item_slot{};                // DG:2212: 0-2, also the kind (DG:2234)
+    std::array<int, 18> cache_wall{};               // DG:20bc: six rows of three tiles (1b5d:01e9)
 
     // The shot with combat graphics (docs/combat.md 3.14).
     static constexpr int kPoseScriptBase = 0x3ef0;

@@ -1633,6 +1633,34 @@ CHAIN_CACHE_POKED_CASES = [dict(case, compare=False) for case in CHAIN_AGENT_CAS
 ]
 
 
+# Poked: chain_cache_poked to ENTRANCE's door, with doors 0-10 marked open
+# (flags 43-4d, our own test values) in place of the walk through them with
+# their items, about 7,800 steps. Going in shows the marked doors open
+# (1b5d:0004), so the walks below reach the cache's text tiles
+# (docs/cache.md).
+_CACHE_DOOR = next(i for i, c in enumerate(CHAIN_CACHE_POKED_CASES) if c["name"] == "chain_cache_door")
+CHAIN_CACHE_OPEN_CASES = [dict(case, compare=False) for case in CHAIN_CACHE_POKED_CASES[:_CACHE_DOOR]] + [
+    {"name": "chain_cache_open", "keys": "flag:43=01 flag:44=01 flag:45=01 flag:46=01 flag:47=01 flag:48=01 flag:49=01 flag:4a=01 flag:4b=01 flag:4c=01 flag:4d=01 right", "match": SCREEN},
+    {"name": "chain_cache_open_enter", "keys": "y", "match": SCREEN},
+    {"name": "chain_cache_open_going_in", "keys": "enter", "match": SCREEN},
+    {"name": "chain_cache_open_instruct", "keys": "enter", "match": SCREEN},
+    {"name": "chain_cache_open_instruct_2", "keys": "enter", "match": SCREEN},
+    {"name": "chain_cache_open_inside", "keys": "enter", "match": SCREEN},
+    # Through doors 1 and 2 to the tiles at x 4e, y 0c-10 (1b5d:02d2).
+    {"name": "chain_cache_to_hint", "keys": "up*6 right*10 down*2 right*2 down*3 right*62 up*10 right*34 up*6 right*8 up*68 left*21 up left up*7 right*4 up*14 left*19 up left up*3 left*6", "match": SCREEN},
+    {"name": "chain_cache_hint", "keys": "left", "match": SCREEN},
+    {"name": "chain_cache_hint_read", "keys": "enter", "match": SCREEN},
+    # East to a screen tile (1b5d:02a8).
+    {"name": "chain_cache_to_screen", "keys": "down*5 right*26 down*14 left*3 down left down*6 right*12 up*18 right*2 up*7 right*6", "match": SCREEN},
+    {"name": "chain_cache_screen", "keys": "right", "match": SCREEN},
+    {"name": "chain_cache_screen_read", "keys": "enter", "match": SCREEN},
+    # Across the cache to tile f5 at x 0c01-0c04, y c054: the wall opens (1b5d:01e9).
+    {"name": "chain_cache_to_wall", "keys": "left*3 down left down*17 left down left down*7 right*8 down*68 left*5 down left down*5 left*33 down left down*8 left*31 up left up*14 right*6 down*7 right*16 up*28 right*6 up*4 right*8 up*10 right*2 up*8 left*7 up left up*7 right*6 up*10 left*27 up left up*6 left*25 down left down*21 left*5 down left down*7 left*23 down left down*9", "match": SCREEN},
+    {"name": "chain_cache_wall", "keys": "down", "match": SCREEN},
+    {"name": "chain_cache_wall_read", "keys": "enter", "match": SCREEN},
+]
+
+
 # Poked: from chain_lounge_leave, 1000 C-Bills (our own test value) and the
 # two courses that raise a skill, both on map 3. REPAIR's Apprentice item
 # (menu 0x17's who list, special 0d) asks who, then the fee (special 0f);
@@ -1670,7 +1698,8 @@ CHAIN_COURSES_POKED_CASES = [dict(case, compare=False) for case in
 # The long unpoked run: its own tier (`--campaign`, ctest label campaign).
 CAMPAIGN = {"chain", "chain_death", "chain_mech_poked", "chain_heal_poked", "chain_repair_poked",
             "chain_salvage_poked", "chain_scrap_poked", "chain_orders_poked", "chain_town", "chain_party",
-            "chain_jail_no", "chain_jail_fight", "chain_agent", "chain_courses_poked", "chain_cache_poked"}
+            "chain_jail_no", "chain_jail_fight", "chain_agent", "chain_courses_poked", "chain_cache_poked",
+            "chain_cache_open"}
 
 SEQUENCES = [("town", CASES, FULL_CASES, []), ("training", TRAINING_CASES, [], []),
              ("quiz", QUIZ_CASES, [], ["--show-quiz"]), ("mission", MISSION_CASES, MISSION_FULL_CASES, []),
@@ -1703,6 +1732,7 @@ SEQUENCES = [("town", CASES, FULL_CASES, []), ("training", TRAINING_CASES, [], [
              ("chain_agent", [], CHAIN_AGENT_CASES, []),
              ("chain_courses_poked", [], CHAIN_COURSES_POKED_CASES, []),
              ("chain_cache_poked", [], CHAIN_CACHE_POKED_CASES, []),
+             ("chain_cache_open", [], CHAIN_CACHE_OPEN_CASES, []),
              ("handover", [], HANDOVER_CASES, [])]
 
 # The feeder (tools/capture/snap.asm, docs/reference.md) hands over a key at

@@ -87,6 +87,7 @@ const std::vector<Flat>& flat_tables() {
         {"item_x", 0x46db, 0x21ce, Element::S8, [](Tables& t) { return all(t.item_x); }},
         {"item_y", 0x46db, 0x21f0, Element::S8, [](Tables& t) { return all(t.item_y); }},
         {"item_slot", 0x46db, 0x2212, Element::S8, [](Tables& t) { return all(t.item_slot); }},
+        {"cache_wall", 0x46db, 0x20bc, Element::U8, [](Tables& t) { return all(t.cache_wall); }},
         {"location_slot_first", 0x46db, 0x318a, Element::U8, [](Tables& t) { return all(t.location_slot_first); }},
         {"location_slot_count", 0x46db, 0x3192, Element::U8, [](Tables& t) { return all(t.location_slot_count); }},
         {"pose_scripts", 0x46db, 0x3ef0, Element::U8, [](Tables& t) { return all(t.pose_scripts); }},

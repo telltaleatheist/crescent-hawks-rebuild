@@ -68,7 +68,7 @@ fname       db 'SNAP0000.BIN', 0
 old16       dd 0
 old21       dd 0
 POLLS       equ 4
-MAX_KEYS    equ 8192
+MAX_KEYS    equ 16384
 feeding     db 0
 blocking    db 0                    ; feed was called from int 16h
 polls       dw 0                    ; signed: an idle step makes it negative

@@ -112,11 +112,17 @@ DG:24aa + d, each minus 1.
 ## The other tiles
 
 - `1b5d:01e9` (tile f5 at x 0c01-0c04, y c054): writes six rows of three tiles from DG:20bc into
-  the map at P:101d + 0xa10 (eight bytes a row), redraws, and shows DG:2075 with a key.
+  the map at P:101d + 0xa10 (eight bytes a row): cells x 0-2, y 42-47, the wall in front of the
+  ENDMECH tiles (cells 1-2, 49-50), which no other way reaches. It then builds and draws the
+  window with the figures and shows DG:2075 with a key. No flag records it: the rewritten cells
+  hold no f5, so it cannot run again.
 - `1b5d:0288` (tiles above f5): while F:d34b is clear, place 0x16 (ENDMECH) runs.
 - `1b5d:02a8` (tiles 83, a5-a7): DG:20ce with a key.
 - `1b5d:02d2` (tiles 3a, 3d): where `(x + 1) & 0x7e` is 4e and `y & 0x7e` is between 0c and 10,
-  DG:2113 with a key, and F:d34c = 1.
+  DG:2113 with a key, and F:d34c = 1. Elsewhere these tiles only block, with no message, so the
+  direction is still written.
+
+Each of the three opens the message box first, prints its text with `24d3:17ea` and sets F:d55c.
 - `1b5d:055a` (tile 28):
   - at x 7c, y 04: place 0x18 (FINDIT) runs, and F:d34d = 1;
   - at x 48, y 38: with F:d34a = 1 (the puzzle solved), DG:22c7 with a key. Otherwise DG:22e8
@@ -174,12 +180,19 @@ The toggle `((t + 1) ^ 1) - 1` maps an odd t to t + 1 and an even t to t - 1.
 
 Going in (`Town::enter_cache`, `src/game/cache.cpp`), the doors (`Town::open_door`) and the step
 dispatch (`Town::cache_step`, called from the step with the tile `take_step` found) and the
-items (`Town::take_item`), with the tables at DG:21ce-2232 and DG:246e-24b5 and the door and item
-texts imported from the EXE (`tables.door_*`, `tables.item_*`, `cache.door_wants.0-2`,
-`cache.item_*`). Checked against the original on the `chain_cache_poked` side branch: ENTRANCE,
-the way in, INSTRUCT, the first step inside, a walk to door 0, the door refusing a party without
-its items, and a terminal's item offered and taken match screen and state.
+items (`Town::take_item`) and the text tiles (`Town::open_cache_wall`, `Town::cache_hint`,
+`Town::cache_message`), with the tables at DG:20bc, DG:21ce-2232 and DG:246e-24b5 and the
+texts imported from the EXE (`tables.door_*`, `tables.item_*`, `tables.cache_wall`,
+`cache.door_wants.0-2`, `cache.item_*`, `cache.wall_opened`, `cache.screen`, `cache.hint`).
+Checked against the original on two side branches:
 
-Still to do, in order, each compared the same way: the text tiles; the second level and
-the puzzle; ENDMECH and FINDIT; the way out into WINSCENE and the game's end. Until then their
+- `chain_cache_poked`: ENTRANCE, the way in, INSTRUCT, the first step inside, a walk to door 0,
+  the door refusing a party without its items, and a terminal's item offered and taken.
+- `chain_cache_open`: the same way to ENTRANCE's door, but with doors 0-10 marked open there
+  (flags 43-4d, a test poke standing in for about 7,800 steps through the doors with their
+  items), so going in shows them open; then 02d2's text and flag, a screen tile, and the wall
+  of 01e9 opening, each on a walk through the open doors.
+
+Still to do, in order, each compared the same way: the second level and the puzzle; ENDMECH
+and FINDIT; the way out into WINSCENE and the game's end. Until then their
 tiles only block, and the game log names the function they would run.

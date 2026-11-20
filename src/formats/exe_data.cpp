@@ -98,6 +98,7 @@ constexpr std::array kDos103 = {
     ExeSpan{ExeSpan::Kind::Table, "tables.item_x", 0x46db, 0x21ce, 33, "e14fbe5eb92b5bd3"},
     ExeSpan{ExeSpan::Kind::Table, "tables.item_y", 0x46db, 0x21f0, 33, "5e90f840ae6e32af"},
     ExeSpan{ExeSpan::Kind::Table, "tables.item_slot", 0x46db, 0x2212, 33, "d9d6c2d044187b62"},
+    ExeSpan{ExeSpan::Kind::Table, "tables.cache_wall", 0x46db, 0x20bc, 18, "05201a56b0dad16b"},
     ExeSpan{ExeSpan::Kind::Table, "tables.location_slot_first", 0x46db, 0x318a, 8, "9fbd883337f64bcc"},
     ExeSpan{ExeSpan::Kind::Table, "tables.location_slot_count", 0x46db, 0x3192, 8, "79569a0bc1d7d49c"},
     // 22e8:12c7, the shot with combat graphics: the poses' scripts and their
@@ -547,6 +548,9 @@ constexpr std::array kDos103 = {
     ExeSpan{ExeSpan::Kind::Text, "cache.item_take", 0x46db, 0x2187, 43, "8947176059a60f22"},
     ExeSpan{ExeSpan::Kind::Text, "cache.item_number", 0x46db, 0x21b2, 7, "0e1d9ec3fb7c5393"},
     ExeSpan{ExeSpan::Kind::Text, "cache.item_take_end", 0x46db, 0x21b9, 21, "ec43e137cc39f8fd"},
+    ExeSpan{ExeSpan::Kind::Text, "cache.wall_opened", 0x46db, 0x2075, 71, "fbd62eeb73be19a6"},
+    ExeSpan{ExeSpan::Kind::Text, "cache.screen", 0x46db, 0x20ce, 69, "9fce65b7cd943e15"},
+    ExeSpan{ExeSpan::Kind::Text, "cache.hint", 0x46db, 0x2113, 58, "1d20e5069a29f97a"},
 };
 
 constexpr std::uint16_t kLoadSegment = 0x1000;
