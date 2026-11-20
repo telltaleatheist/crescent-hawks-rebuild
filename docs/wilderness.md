@@ -197,6 +197,35 @@ moved back. The rebuild holds the window across the step (`Terrain::hold_window`
 the entries that are not ff, so a fight's walks can leave a map load for the party's next step.
 Rebuilt that way; not met yet, since no area next to the ones walked so far has a map.
 
+## The seen map (1000:010b)
+
+F:cb0c-d30b, 0x800 bytes, is a bitmap of where the party has been: for each area row (y bits
+12-15) 0x80 bytes, in 8 rows of 16 bytes (y bits 4-6), one byte per area column (x bits 8-11).
+It sits between the 'Mech records and the flags, so a saved game holds it (docs/formats/save.md).
+
+After each key (not on a pass without one), the main loop (`1000:010b..01af`, in Ghidra
+FUN_1000_00bb) marks the party's place, after the command menu and before the tick:
+
+- The byte is `0x80 (y >> 12) + 0x10 ((y >> 4) & 7) + (x >> 8)`; it gets the bits of the
+  table DG:029a for x's bits 4-6 (`tables.seen_bits`, three bits wide, so neighbours overlap).
+- The byte a row above gets the same bits unless y is 0, and the byte a row below unless y is
+  0xf07f or more.
+- With flag 3d (F:d33d) set and flag 3a (the tile-event map) clear, instead the eight bytes of
+  the party's column in its area (`0x80 (y >> 12) + (x >> 8)` and the 7 rows below it) become ff.
+
+x's bit 7 and y's bits 7-11 take no part, so places a half area apart share a bit.
+
+Who else writes it: the new game ORs 0x1f into rows 2-7 of area 0xcc's byte (`1000:4ec5`, so the
+start's town shows as seen) and clears nothing, so a second game keeps the first one's seen map;
+going into the cache clears area 0xcc's column (`1000:7f46`, docs/cache.md). The only reader is
+the map viewer's drawer (`1000:438e`, in 1000:3fae).
+
+Two edges reach outside it: in area row 0, with y 1-0x0f, the row above is F:cafc + x >> 8, the
+end of 'Mech record 7; in area row 15, with y 0xf070-0xf07e, the row below is the flags. The
+rebuild skips such a write and logs it.
+
+Rebuilt (`Town::mark_seen`); the rig compares all 0x800 bytes in every case (`state seen`).
+
 ## Not rebuilt yet
 
 - The nine-map load (1000:3469, 1000:3edc), the two entries the save-game load changes,

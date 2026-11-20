@@ -34,6 +34,7 @@ word); anything else is refused, and the game asks for a new import.
 | `frame_pieces_0..2` | 385b:0320/0338/0350 | 12 words each | a frame's corners, then its edges, each run ended by 0xff (2656 frame drawing) |
 | `frame_styles` | DG:4fa4 | 5 far pointers | which piece table each frame style uses; written as the table's number |
 | `menus` | 385b:0092 | 41 records of 16 bytes | a menu's first row, bar width, item count, colour (+8), bar colour; +6, the item last chosen, is state and not imported (docs/scripts.md, "Menus") |
+| `seen_bits` | DG:029a | 8 bytes | the seen map's bits by x's bits 4-6 (docs/wilderness.md, "The seen map") |
 | `money_loss_mask` | DG:02a2 | 3 words | per investment, the bits that must all be clear for a loss (game/money.h) |
 | `money_rate` | DG:02a8 | 3 words | per investment, the rate |
 | `animated_tiles` | DG:04b0 | 10 bytes | the tiles that cycle through ANIMATE.ICN (game/tile_animation.h) |

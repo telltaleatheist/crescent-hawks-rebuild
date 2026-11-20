@@ -52,6 +52,7 @@ constexpr std::array kDos103 = {
     ExeSpan{ExeSpan::Kind::Table, "tables.frame_pieces_2", 0x385b, 0x0350, 24, "e95da86b759effb4"},
     ExeSpan{ExeSpan::Kind::Table, "tables.frame_styles", 0x46db, 0x4fa4, 20, "fb772bc97755dadb"},
     ExeSpan{ExeSpan::Kind::Table, "tables.menus", 0x385b, 0x0092, 656, "573492a0ca90ef61"},
+    ExeSpan{ExeSpan::Kind::Table, "tables.seen_bits", 0x46db, 0x029a, 8, "f2aeecc5b331bd1a"},
     ExeSpan{ExeSpan::Kind::Table, "tables.money_loss_mask", 0x46db, 0x02a2, 6, "3a85db76e54174a3"},
     ExeSpan{ExeSpan::Kind::Table, "tables.money_rate", 0x46db, 0x02a8, 6, "5e8fab143a15add9"},
     ExeSpan{ExeSpan::Kind::Table, "tables.animated_tiles", 0x46db, 0x04b0, 10, "0492a26176d515bf"},
@@ -276,6 +277,9 @@ constexpr std::array kDos103 = {
     ExeSpan{ExeSpan::Kind::Text, "space.items.1", 0x46db, 0x055b, 55, "f9f795eb515149ec"},
     ExeSpan{ExeSpan::Kind::Text, "space.items.2", 0x46db, 0x0592, 19, "c4b9c5eb1e2a2b05"},
     ExeSpan{ExeSpan::Kind::Text, "space.no_dismount", 0x46db, 0x0ace, 64, "42834e59cec1702f"},
+    ExeSpan{ExeSpan::Kind::Text, "save.which", 0x46db, 0x0673, 46, "adfebfe6441c4bf9"},
+    ExeSpan{ExeSpan::Kind::Text, "save.failed", 0x46db, 0x06ad, 37, "b90cd8aee2599445"},
+    ExeSpan{ExeSpan::Kind::Text, "save.refused", 0x46db, 0x06d2, 45, "cfdb78a8c37a5ef3"},
     // The crew screen (1c67:0002).
     ExeSpan{ExeSpan::Kind::Text, "crew.heading", 0x46db, 0x2622, 33, "616ca99f3ce05c91"},
     ExeSpan{ExeSpan::Kind::Text, "crew.on_foot", 0x46db, 0x2643, 10, "c31036879c6c8682"},

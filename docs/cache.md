@@ -9,7 +9,8 @@ BTECH.EXE through ExeSpan IDs (docs/text.md), and the place scripts from their .
 ## Going in (BTECH.EXE 1000:7f46, then 1b5d:0004)
 
 Leaving place 0x14 (ENTRANCE) with flag 36 set (docs/scripts.md, "Entering a place", step 9),
-`1000:7f46` writes 0 to byte 0 of the eight 16-byte records at F:d118 and calls `1b5d:0004`:
+`1000:7f46` clears area 0xcc's column of the seen map (byte 0 of the eight 16-byte rows at
+F:d118, docs/wilderness.md, "The seen map") and calls `1b5d:0004`:
 
 1. The four party 'Mech records (F:c724 + 0x7d m, m 0-3) are parked: byte 0 of each is kept at
    F:3248 + m and then set to ff, so the records read as empty.
@@ -37,8 +38,8 @@ All of this runs inside the step that answered ENTRANCE's question (`1000:1c12`)
 goes on as after any place: the rest of the step is checked against the cache's window and the
 party moves one half-cell from 0c06,c07e. The walking frames (`1000:231d`) follow that step.
 
-The records at F:d118 have no other reference by that address in the program; what they hold is
-not yet traced. The rebuild has nothing for them.
+F:d118 is part of the seen map, which the main loop writes through an index; the rebuild clears
+the same eight bytes.
 
 ## The step check (BTECH.EXE 1000:1c12)
 

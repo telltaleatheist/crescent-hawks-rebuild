@@ -22,9 +22,7 @@ The block from F:c614, by what is known of it (offsets in the block are address 
 |---|---|---|
 | c614 | 16 x 0x11 | the character records (docs/formats/characters.md) |
 | c724 | 8 x 0x7d | the 'Mech records (docs/formats/mech.md) |
-| d10c | 0x0c | not known |
-| d118 | 8 x 0x10 | records whose byte 0 the cache and the new game write (docs/cache.md); not known |
-| d198 | 0x174 | not known |
+| cb0c | 0x800 | the seen map (docs/wilderness.md, "The seen map") |
 | d30c | 0x64 | the script flags (docs/scripts.md) |
 | d370 | 4 | C-Bills |
 | d374 | 3 x 4 | the three investments |
@@ -36,7 +34,7 @@ The block from F:c614, by what is known of it (offsets in the block are address 
 | d457 | 64 x 4 | the map marks: codes, then areas (d497), x (d4d7), y (d517) |
 | d557 | 1 | the marks' next slot |
 
-So a save holds the party, its 'Mechs, the flags (the story so far), the money, the
+So a save holds the party, its 'Mechs, the seen map, the flags (the story so far), the money, the
 townspeople and the marks, and the place; not the random numbers, the menus' last items, the
 combat settings, or anything the load rebuilds below.
 
@@ -48,7 +46,7 @@ combat settings, or anything the load rebuilds below.
    prompt (`1000:2913`) until it opens.
 4. The file created (`287f:33d0`, modes 0x8101 and 0x180), the four writes above (`287f:366a`),
    and closed. A failed create or a short write shows DG:06ad in window 3 and waits for a key.
-5. `0e31:032f(0)`, the panel (`1000:4cac(1)`), `1000:28cc(1)`.
+5. `1e31:032f(0)`, the panel (`1000:4cac(1)`), `1000:28cc(1)`.
 
 ## The load: 1000:32b3
 
@@ -62,13 +60,13 @@ combat settings, or anything the load rebuilds below.
    - area 0xcc's map 11 when flag 04 (F:d310) is set, area 0x34's map 12 when flag 32
      (F:d33e) is set (docs/wilderness.md);
    - with flag 3a (F:d346, the cache) clear, the nine-map load around the position (`104e`, then
-     `2da8` for each grid with a map, `1da8`); with it set, the cache's own load (`0b5d:0004`);
+     `2da8` for each grid with a map, `1da8`); with it set, the cache's own load (`1b5d:0004`);
 6. For the 'Mech figures 0-3: the sprite base 0x92, or 0 when the record's byte 0 is 'L' (the
    same test as an encounter's, docs/combat.md); the frame (F:409a), the heading (F:3920) and
    the direction (F:396c) 0; the far pointer at DG:01f6 + 4i = 27e8:0270. F:374a (the double
    agent found) 0. Outside the cache, with tile set 2 loaded (F:3988), `1000:4621` loads
    BTTLTECH.ICN back.
-7. `0e31:032f(0)`, the panel (`1000:4cac(1)`), `1000:28cc(1)`.
+7. `1e31:032f(0)`, the panel (`1000:4cac(1)`), `1000:28cc(1)`.
 
 The load does not touch the random numbers, so a game loaded goes on with whatever numbers the
 session had.

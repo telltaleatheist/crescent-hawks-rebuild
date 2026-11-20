@@ -38,8 +38,8 @@ no notice and no question. In order:
 2. The script flags F:d30c-d36f 0; the 33 bytes at F:45de (the cache doors' used items) 0.
 3. Jason's name number 0 and byte 0x0c 8 (on foot); C-Bills (F:d370) 20; the three investments
    (F:d374-d37f) 0; the next name number (F:d456) 1.
-4. Bits 0-4 of byte 0 of the 16-byte records 2-7 at F:d118 (from F:d138) set; what those
-   records hold is not known yet (docs/cache.md), and the rebuild does not keep them.
+4. Bits 0-4 of area 0xcc's byte in rows 2-7 of the seen map (F:d138 + 0x10 r) set
+   (docs/wilderness.md, "The seen map"); the rest of the seen map is not cleared.
 5. Jason's bytes 1, 2, 3 = 8, 9, 7, 0x0f (hit points) 0x50, and 0x0b, 0x0d, 0x0e, 0x10 0.
 6. The sprite bases (F:d55e): figure 4 0x96, figures 16-23 0xfe; then for each of the 'Mech
    figures 0-3 and 12-15 a draw (`287f:0bc0`), and an odd one makes its base 0x92. These are the
@@ -67,7 +67,8 @@ The full-screen pictures come through the asset provider (`assets::kInfocomLogo`
 `assets::kTitleScreen`), and the texts through their imported IDs.
 
 `Town::new_game` is the new game from the game-over question, step by step as above, except
-step 4 and the bytes at F:40a6 and F:3978, which nothing rebuilt reads. The map it draws goes
+the bytes at F:40a6 and F:3978, which nothing rebuilt reads. Step 4's seen bits are set at the
+first start too (`Town::preset_seen`). The map it draws goes
 to the page, and nothing flips it to the screen until the main loop's next tick: until the next
 key the screen's map is black (`287f:1fbe`), with the panel drawn. The rig compares that moment
 (`chain_new_game`), a walk after it and an idle wait; the random numbers match, so no draw is

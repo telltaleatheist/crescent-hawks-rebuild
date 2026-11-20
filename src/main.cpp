@@ -199,6 +199,8 @@ void print_state(const chr::game::Town& town) {
     }
     std::printf("\nstate menus");
     for (const auto last : town.menu_last()) std::printf(" %d", last);
+    std::printf("\nstate seen ");
+    for (const auto b : town.seen()) std::printf("%02x", b);
     std::printf("\n");
     std::printf("state noise ");
     for (const auto n : chr::game::Terrain::start_up_noise()) std::printf("%02x", n);

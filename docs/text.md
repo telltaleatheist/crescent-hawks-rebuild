@@ -130,7 +130,7 @@ narration of what happened, descriptions and flavour, and the original's own not
 | shot.* but shot.squashed, shot.arena_damaged, shot.urbanmechs | 26 | the pieces of a shot's message, hit and miss, critical, kill |
 | location.0-10 | 11 | the hit locations, as labels |
 
-### Imported only (693 IDs)
+### Imported only (696 IDs)
 
 | IDs | Count | Why |
 |---|---|---|
@@ -162,6 +162,7 @@ narration of what happened, descriptions and flavour, and the original's own not
 | over.leader.0-1, over.killed, over.new_game | 4 | the game over when the leader dies (1000:04a4), and its question |
 | ui.press_key, ui.plural_s, ui.full_stop | 3 | message pieces, kept imported: not on Owen's approved list |
 | shop.cbills_end | 1 | the end of a shop's price line, kept imported: not on Owen's approved list |
+| save.which, save.failed, save.refused | 3 | the save's slot question, its failure and its refusal in the cache (1000:35d3); kept imported: not on Owen's approved list |
 
 ### The cases decided by hand
 

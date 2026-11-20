@@ -103,6 +103,10 @@ private:
 // Throws std::invalid_argument naming the bad token.
 std::deque<ScriptItem> parse_key_script(const std::string& script);
 
+// F:cb0c-d30b: the seen map, 16 rows of areas, each 8 rows of 16 bytes
+// (docs/wilderness.md, "The seen map").
+inline constexpr int kSeenBytes = 0x800;
+
 // A bar of the panel, beside a character's name (1000:4bc1): `value` pixels
 // of 12 filled from the bottom, the top `warning` of them in another colour.
 // Placed by text cell (the bar's top-left corner); the renderer draws it.
@@ -235,6 +239,7 @@ public:
     }
     const CombatState& combat() const { return combat_; }
     const MapMarks& marks() const { return marks_; }
+    const std::array<std::uint8_t, kSeenBytes>& seen() const { return seen_; }
     // DGROUP:57fe and 5802: the townspeople move by these.
     int town_ticks() const { return third_; }
     int mission_ticks() const { return mission_ticks_; }
@@ -271,6 +276,7 @@ private:
     void game_tick(KeySource* keys);
     void game_over(KeySource& keys, bool leader_killed);
     void new_game();
+    void mark_seen();
     void walk_position(formats::MapPosition to);
     bool quit_ = false;
     bool game_won_ = false;  // DG:01a8
@@ -502,6 +508,14 @@ private:
     bool turn_message_ = false;
     // F:d456: the next character name number, 1 at a new game (1000:4ebc).
     std::uint8_t next_name_ = 1;
+    // F:cb0c: the seen map, a bit for each patch of the world the party has
+    // been near (docs/wilderness.md, "The seen map").
+    std::array<std::uint8_t, kSeenBytes> seen_ = [] {
+        std::array<std::uint8_t, kSeenBytes> s{};
+        preset_seen(s);
+        return s;
+    }();
+    static void preset_seen(std::array<std::uint8_t, kSeenBytes>& s);
     // F:c614: the sixteen character records.
     std::array<CharacterRecord, 16> characters_ = new_game_characters();
     FightFigures figs_;

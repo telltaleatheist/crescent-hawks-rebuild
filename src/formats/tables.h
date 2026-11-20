@@ -54,6 +54,7 @@ struct Tables {
     std::array<MenuRecord, kMenuCount> menus{};     // 385b:0092
 
     // The town.
+    std::array<int, 8> seen_bits{};                 // DG:029a: the seen map's bits, by x's bits 4-6 (1000:010b)
     std::array<int, 3> money_loss_mask{};           // DG:02a2: per investment, bits that all clear mean a loss
     std::array<int, 3> money_rate{};                // DG:02a8: per investment, the rate
     std::array<int, 10> animated_tiles{};           // DG:04b0: tile numbers that cycle through ANIMATE.ICN

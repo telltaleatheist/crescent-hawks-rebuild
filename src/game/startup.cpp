@@ -38,6 +38,12 @@ void Town::new_game_screen() {
         print_id(id);
 }
 
+// BTECH.EXE 1000:4ec5..4edd (in Ghidra FUN_1000_4dc7)
+// A new game marks part of the seen map, around the starting town, as seen.
+void Town::preset_seen(std::array<std::uint8_t, kSeenBytes>& s) {
+    for (int r = 2; r < 8; ++r) s[std::size_t(0x60c + 0x10 * r)] |= 0x1f;
+}
+
 // BTECH.EXE 1000:4dc7 (Ghidra FUN_1000_4dc7)
 // A new game from the game-over question: the party, its 'Mechs, the flags
 // and the money as at the start; the bays' sprite bases; the panel; map 1
@@ -52,7 +58,7 @@ void Town::new_game() {
     item_used_.fill(0);
     money_ = Money{};
     next_name_ = 1;
-    // 4ec5: byte 0 of the records 2-7 at F:d118 gets bits 0-4 set: not modelled.
+    preset_seen(seen_);  // 4ec5; the rest of the seen map stays
     figs_.sprite_base[4] = 0x96;
     for (int f = 16; f < 24; ++f) figs_.sprite_base[std::size_t(f)] = 0xfe;
     // 4f30: the 'Mech figures 0-3 and 12-15, each 0x92 on an odd draw.

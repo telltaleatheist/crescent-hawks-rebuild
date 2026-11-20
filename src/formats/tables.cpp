@@ -41,6 +41,7 @@ const std::vector<Flat>& flat_tables() {
         {"frame_pieces_0", 0x385b, 0x0320, Element::U16, [](Tables& t) { return all(t.frame_pieces[0]); }},
         {"frame_pieces_1", 0x385b, 0x0338, Element::U16, [](Tables& t) { return all(t.frame_pieces[1]); }},
         {"frame_pieces_2", 0x385b, 0x0350, Element::U16, [](Tables& t) { return all(t.frame_pieces[2]); }},
+        {"seen_bits", 0x46db, 0x029a, Element::U8, [](Tables& t) { return all(t.seen_bits); }},
         {"money_loss_mask", 0x46db, 0x02a2, Element::U16, [](Tables& t) { return all(t.money_loss_mask); }},
         {"money_rate", 0x46db, 0x02a8, Element::U16, [](Tables& t) { return all(t.money_rate); }},
         {"animated_tiles", 0x46db, 0x04b0, Element::U8, [](Tables& t) { return all(t.animated_tiles); }},

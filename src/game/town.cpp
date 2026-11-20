@@ -515,7 +515,35 @@ void Town::key(int k, KeySource& more) {
     animation_.key(k, mech_records());
     // BTECH.EXE 1000:0101: Space opens the command menu, before the tick.
     if (k == key::kSpace && !command_menu(more)) return;
+    mark_seen();
     game_tick(&more);
+}
+
+// BTECH.EXE 1000:010b..01af (in Ghidra FUN_1000_00bb)
+// After a key, the seen map gets the party's patch: the bits for x's bits
+// 4-6 in the party's row, and the rows above and below it. With flag 3d set
+// outside a tile-event map, a whole column of the area instead.
+void Town::mark_seen() {
+    const int x = position_.x & 0xffff, y = position_.y & 0xffff;
+    const int column = ((y & 0xf000) >> 5) + (x >> 8);
+    // Past either end the original writes into 'Mech record 7 or the flags;
+    // the rebuild leaves those alone and logs it.
+    auto put = [this](int i, std::uint8_t bits, bool set) {
+        if (i < 0 || i >= kSeenBytes) {
+            log_.push_back("seen map: a write outside it skipped");
+            return;
+        }
+        seen_[std::size_t(i)] = set ? bits : std::uint8_t(seen_[std::size_t(i)] | bits);
+    };
+    if (flags_[flag::kSeenWhole] != 0 && flags_[flag::kTileEvents] == 0) {
+        for (int r = 0; r < 0x80; r += 0x10) put(column + r, 0xff, true);
+        return;
+    }
+    const int i = column + (y & 0x70);
+    const auto bits = std::uint8_t(tables_.seen_bits[std::size_t((x & 0x70) >> 4)]);
+    put(i, bits, false);
+    if (y != 0) put(i - 0x10, bits, false);
+    if (y < 0xf07f) put(i + 0x10, bits, false);
 }
 
 void Town::game_tick(KeySource* keys) {
