@@ -30,6 +30,7 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import compare  # noqa: E402
+import memory  # noqa: E402
 import run  # noqa: E402
 import state  # noqa: E402
 import window  # noqa: E402
@@ -1942,16 +1943,48 @@ def original_script(cases):
     return " ".join(tokens)
 
 
+def disk_prompt_case(ref_dir, cases):
+    """The first case whose capture shows the original in its disk prompt,
+    or None."""
+    for case in cases:
+        path = os.path.join(ref_dir, case["name"] + ".bin")
+        try:
+            if os.path.exists(path) and memory.Memory(path).disk_prompt():
+                return case["name"]
+        except ValueError:
+            continue  # a capture without memory (before the game's town)
+    return None
+
+
 def run_sequence(a, sequence, cases, chr_options=()):
     """One run of the original through `cases`, then chr for each case.
     (True if every required rectangle and the state match, the report.)"""
     report = []
     say = report.append
     ref_dir = os.path.join(a.work, "original-" + sequence)
-    finished, _ = run.run(a.game_dir, original_script(cases), ref_dir, timeout=2400 if sequence in CAMPAIGN else 900 if a.full else 240)
-    if not finished:
-        say(f"the original did not reach the end of the {sequence} script")
-        return False, report
+    timeout = 2400 if sequence in CAMPAIGN else 900 if a.full else 240
+    for attempt in (1, 2):
+        log_to = os.path.join(ref_dir, "run")
+        finished, _ = run.run(a.game_dir, original_script(cases), ref_dir, timeout=timeout, log_to=log_to)
+        if not finished:
+            say(f"the original did not reach the end of the {sequence} script")
+            return False, report
+        stuck = disk_prompt_case(ref_dir, cases)
+        if stuck is None:
+            for end in ("-dosbox.log", "-files.txt"):
+                os.remove(log_to + end)
+            break
+        # A file the original could not read on the host (the rig, not the
+        # game: docs/reference.md): its captures from there on are the prompt.
+        kept = os.path.join(ref_dir, f"rig-error-{attempt}")
+        for end in ("-dosbox.log", "-files.txt"):
+            os.replace(log_to + end, kept + end)
+        say(f"rig error: the original showed its disk prompt at {stuck} in the {sequence} script "
+            f"(DOSBox-X's log and the drive's files in {kept}-*)")
+        if attempt == 2:
+            say(f"rig error: the same on the second try; re-run the {sequence} sequence")
+            return False, report
+        say(f"rig error: running the {sequence} script once more")
 
     env = dict(os.environ, SDL_VIDEO_DRIVER="dummy", SDL_AUDIO_DRIVER="dummy")
     ok = True

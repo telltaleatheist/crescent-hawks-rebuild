@@ -170,7 +170,18 @@ def stop_on_signals():
     signal.signal(signal.SIGTERM, stop)
 
 
-def run(game_dir, script, out_dir, timeout=120, keep=False):
+def save_run_log(work, c, to):
+    """DOSBox-X's log and the scratch drive's file list (name and size),
+    as `to`-dosbox.log and `to`-files.txt, for a run that went wrong."""
+    shutil.copyfile(os.path.join(work, "dosbox.log"), to + "-dosbox.log")
+    with open(to + "-files.txt", "w") as f:
+        for root, _dirs, files in os.walk(c):
+            for name in sorted(files):
+                path = os.path.join(root, name)
+                f.write(f"{os.path.relpath(path, c)} {os.path.getsize(path)}\n")
+
+
+def run(game_dir, script, out_dir, timeout=120, keep=False, log_to=None):
     words, names = compile_script(script)
     if len(words) > max_keys():
         raise ValueError(f"run.py: the key script is {len(words)} words; SNAP holds {max_keys()} (snap.asm MAX_KEYS)")
@@ -253,6 +264,8 @@ def run(game_dir, script, out_dir, timeout=120, keep=False):
                   file=sys.stderr)
         return finished, written
     finally:
+        if log_to:
+            save_run_log(work, os.path.join(work, "c"), log_to)
         if not keep:
             shutil.rmtree(work, ignore_errors=True)
             with _running_lock:

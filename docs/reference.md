@@ -84,6 +84,21 @@ now, growing with the run. Its ctest `reference_compare_campaign` (label `campai
 when configured with `-DCHR_REFERENCE_CAMPAIGN=ON`. `--sequence chain` also runs it. It skips
 (exit 77) without DOSBox-X, nasm or the game.
 
+**A rig error: the disk prompt.** When the original cannot read one of its files, its loader
+shows the disk prompt (`1000:2913`) and waits for a key; each key tries the read again. Once,
+in a full campaign (four jobs), three sequences hit it at the same case (the Training Center's
+files, `chain_raid_greeting`), and every capture after it was the prompt: 167 cases failed
+with the random numbers "differing", though the state up to there matched a clean run's exactly.
+Run alone, the same sequences were clean. It is the host, not the game, and not the clock:
+nothing the rig compares depends on speed. `check.py` now looks at each capture for the
+prompt's key wait: the far return address `1000:29de` on the game's stack (DGROUP is 0x36db
+paragraphs above segment 1000; `Memory.disk_prompt`, tools/reference/memory.py). None of
+5865 clean captures has it, and every one of the stalled run's did. When it is found, the
+report says `rig error` (not FAIL), keeps DOSBox-X's log and the scratch drive's file list as
+`original-SEQUENCE/rig-error-N-*`, and runs that sequence once more; a second prompt ends the
+sequence with a request to re-run it. Which file failed, and why, is still open: the log of the
+next one will say.
+
 To stop a run, send `check.py` (or `run.py`) SIGTERM or SIGINT: it SIGKILLs every DOSBox-X it
 started, removes their scratch folders and exits. DOSBox-X answers any other signal with a "Quit
 DOSBox-X" dialog on screen, so never stop the DOSBox-X processes themselves, or the process tree,

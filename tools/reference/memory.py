@@ -41,6 +41,14 @@ class Memory:
     def word(self, seg, off):
         return struct.unpack_from("<H", self.mem, seg * 16 + off)[0]
 
+    def disk_prompt(self):
+        """Whether the game was in its disk prompt (BTECH.EXE 1000:2913), the
+        loader's answer to a file it could not read: the far return address
+        of the prompt's key wait (1000:29de) is on the game's stack, in
+        DGROUP, which is loaded 0x36db paragraphs above segment 1000."""
+        mark = struct.pack("<HH", 0x29DE, (self.ds - 0x36DB) & 0xFFFF)
+        return mark in self.read(self.ds, 0, 0x10000)
+
 
 def main():
     m = Memory(sys.argv[1])
