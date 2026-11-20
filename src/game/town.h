@@ -270,6 +270,7 @@ private:
     // BTECH.EXE 1000:020a..050d (the main loop's game tick)
     void game_tick(KeySource* keys);
     void game_over(KeySource& keys, bool leader_killed);
+    void new_game();
     void walk_position(formats::MapPosition to);
     bool quit_ = false;
     bool game_won_ = false;  // DG:01a8

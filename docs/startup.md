@@ -26,11 +26,54 @@ with the original by the rig's `start_*` cases (docs/reference.md): all match pi
      keys, the random numbers are set to 25 13 90 (docs/random.md), and the main loop runs with them
      (`1000:0000(1)`). Afterwards the title is shown again and the loop repeats.
 
+## The new game (1000:4dc7)
+
+The start-up calls it after the title's key, and the game-over question's Yes calls it from
+the main loop (`1000:0502`), which then goes straight on to its key half (`1000:002d`), with
+no notice and no question. In order:
+
+1. F:d452-d455 (the 'Mechs held at the garage) ff; byte 0 of the eight 'Mech records
+   (F:c724 + 0x7d k) ff; byte 0 of character records 1-7 (F:c614 + 0x11 i) ff, so only Jason is
+   left; Jason's bytes 4-10 0.
+2. The script flags F:d30c-d36f 0; the 33 bytes at F:45de (the cache doors' used items) 0.
+3. Jason's name number 0 and byte 0x0c 8 (on foot); C-Bills (F:d370) 20; the three investments
+   (F:d374-d37f) 0; the next name number (F:d456) 1.
+4. Bits 0-4 of byte 0 of the 16-byte records 2-7 at F:d118 (from F:d138) set; what those
+   records hold is not known yet (docs/cache.md), and the rebuild does not keep them.
+5. Jason's bytes 1, 2, 3 = 8, 9, 7, 0x0f (hit points) 0x50, and 0x0b, 0x0d, 0x0e, 0x10 0.
+6. The sprite bases (F:d55e): figure 4 0x96, figures 16-23 0xfe; then for each of the 'Mech
+   figures 0-3 and 12-15 a draw (`287f:0bc0`), and an odd one makes its base 0x92. These are the
+   8 draws after the start-up's 256. An even draw leaves the base as it was, so in a second
+   game it is the first game's.
+7. F:d33f-d340 (the money step's floor) 50; F:d450, d451 (the care's kits) 0; the marks' next
+   slot (F:d557) 0 and their areas and places 0 (their codes stay).
+8. `287f:1fbe`, the panel (`1000:4cac(1)`), the window cleared (`2656:0388`).
+9. The party at 0c45,c019; `287f:104e(0xcc)`, map 1 into area 4 (`1000:2da8(4, 1)`, which
+   places the townspeople), `287f:1da8`, the window built and drawn (`287f:1314`, `18ef`).
+10. Figures 0-3: frame (F:409a) and F:40a6 0, direction (F:396c) and F:3978 ff; figures 4-11
+    the same with 0x10 for the frames. `1000:051b` draws the figures.
+11. Area 0x34's map (27e8:0064) 0 and area 0xcc's (27e8:00fc) 1, undoing VIEWDISK's and the
+    raid's; DG:01a8 (the game won) 0; F:398e (the jail's bays drawn) 0; F:374a (the double
+    agent found) 0; DG:014a 1.
+
+What it leaves alone carries over into the new game: the random numbers, the menus' last
+items, the main loop's counters, the marks' codes, the parked 'Mechs (F:3248), the combat
+settings, and the other bytes of the 'Mech records and characters 8-15.
+
 ## In the rebuild
 
 `Town::start_up()` begins a Town with the start-up. `chr` does it unless `--map` is given.
 The full-screen pictures come through the asset provider (`assets::kInfocomLogo`,
 `assets::kTitleScreen`), and the texts through their imported IDs.
+
+`Town::new_game` is the new game from the game-over question, step by step as above, except
+step 4 and the bytes at F:40a6 and F:3978, which nothing rebuilt reads. The map it draws goes
+to the page, and nothing flips it to the screen until the main loop's next tick: until the next
+key the screen's map is black (`287f:1fbe`), with the panel drawn. The rig compares that moment
+(`chain_new_game`), a walk after it and an idle wait; the random numbers match, so no draw is
+missing between the new game and the loop. The start-up's own new
+game is the Town's construction: the same values as members' starting values, and the 8 draws
+inside `Random::at_town_start`.
 
 Not rebuilt yet, and not reachable without them:
 - the title's tune (sound is not rebuilt), so the title waits for a key however long;

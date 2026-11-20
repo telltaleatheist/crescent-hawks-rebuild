@@ -53,9 +53,9 @@ In order (`1000:020a`..`050d`):
    the game is over at once (`1000:04a4`): the message box, the leader's name (DG:00f1 if
    Jason's record is empty, else DG:00f7), DG:00fb, a key; the box cleared, DG:012f and a
    yes/no question, Yes first. Yes starts a new game (`1000:4dc7`); No sets DG:0152 and the
-   main loop ends. Rebuilt up to the question (`Town::game_over`); the rig compares the box, not
-   yet the question (its capture after the key still shows the box). A new game from there is not
-   rebuilt yet, and quitting stops the rebuild's game.
+   main loop ends. Rebuilt in `Town::game_over`; the rig compares the box, not yet the question
+   (its capture after the key still shows the box). Yes is `Town::new_game` (docs/startup.md,
+   "The new game"), and the loop goes on at its key half; quitting stops the rebuild's game.
 
 ## The command menu (Space)
 

@@ -606,8 +606,7 @@ void Town::game_over(KeySource& keys, bool leader_killed) {
         return;
     }
     if (*again) {
-        log_.push_back("a new game after the game over: not rebuilt");
-        fight_unfinished_ = true;
+        new_game();  // 1000:4dc7, then the main loop's key half (1000:002d)
         return;
     }
     log_.push_back("the game is over: quit");

@@ -1727,6 +1727,10 @@ CHAIN_CACHE_OPEN_CASES = [dict(case, compare=False) for case in CHAIN_CACHE_POKE
     {"name": "chain_cache_winscene_10", "keys": "enter", "match": SCREEN},
     {"name": "chain_cache_winscene_11", "keys": "enter", "match": SCREEN},
     {"name": "chain_cache_won", "keys": "enter", "match": SCREEN},
+    # Yes: a new game (1000:4dc7) and the main loop on map 1 again.
+    {"name": "chain_new_game", "keys": "enter", "match": SCREEN},
+    {"name": "chain_new_game_walk", "keys": "down down down left", "match": SCREEN},
+    {"name": "chain_new_game_waited", "keys": "idle:40", "match": SCREEN},
 ]
 
 
