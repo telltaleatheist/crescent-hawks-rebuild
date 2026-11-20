@@ -1625,6 +1625,11 @@ CHAIN_CACHE_POKED_CASES = [dict(case, compare=False) for case in CHAIN_AGENT_CAS
     # wrong and waits for a key (1000:1c12, 1b5d:0ab6).
     {"name": "chain_cache_door_wrong", "keys": "up", "match": SCREEN},
     {"name": "chain_cache_door_shut", "keys": "enter", "match": SCREEN},
+    # Back west and up to the terminals of the first room.
+    {"name": "chain_cache_to_terminal", "keys": "left left left left left left left left left left left left left left left left left left left left left left up up up up up left left left left up up up up", "match": SCREEN},
+    # An item tile: the item asks to be taken (1b5d:03aa); yes puts it in its slot.
+    {"name": "chain_cache_item_question", "keys": "up", "match": SCREEN},
+    {"name": "chain_cache_item_taken", "keys": "enter", "match": SCREEN},
 ]
 
 

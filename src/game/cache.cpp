@@ -109,6 +109,39 @@ bool Town::open_door(int x, int y, int door, KeySource& keys) {
     return true;
 }
 
+// BTECH.EXE 1b5d:03aa (Ghidra FUN_1b5d_03aa)
+// The items whose three half-cells hold (x, y): each in turn, unless a door
+// has used it, offers itself for its slot, and yes puts it there in place
+// of what the slot held. A used item says so and waits for a key.
+bool Town::take_item(int x, int y, KeySource& keys) {
+    x = (x + 1) & 0x7f;
+    y &= 0x7f;
+    for (std::size_t i = 0; i < item_used_.size(); ++i) {
+        const int left = tables_.item_x[i];
+        if (tables_.item_y[i] != y || x < left || x >= left + 3) continue;
+        open_message_box();  // 24d3:17c6
+        if (item_used_[i] == 0) {
+            const int slot = tables_.item_slot[i];
+            print_id("cache.item_take");                             // 2656:03f5
+            print_id("cache.item_kind." + std::to_string(slot));     // through DG:2234
+            print_id("cache.item_number");
+            text_.print(std::to_string(i + 1));                      // 273d:0053
+            print_id("cache.item_take_end");
+            const auto yes = yes_no(true, keys);                     // 1000:1a13(1)
+            if (!yes) {
+                place_open_ = true;
+                return false;
+            }
+            if (*yes) flags_[std::size_t(flag::kCacheItems + slot)] = std::uint8_t(i);
+        } else {
+            print_id("cache.item_used");  // 24d3:17ea
+            if (!read_key(keys)) return false;  // 273d:0259
+        }
+        turn_message_ = true;  // F:d55c
+    }
+    return true;
+}
+
 // BTECH.EXE 1000:1c12 (Ghidra FUN_1000_1c12), while F:d346 is set
 // The tile `tile` that stopped a character's step, at half-cell `at`, does
 // what it does on the cache's level; any other tile only blocks.
@@ -124,7 +157,7 @@ bool Town::cache_step(int tile, formats::MapPosition at, KeySource& keys) {
         // A door's three tiles, each naming the door from its own cell.
         if (tile >= 0x7e && tile <= 0x80) return open_door(x - 2 * (tile - 0x7e), y, -1, keys);
         if (tile == 0xf5 && at.x >= 0x0c01 && at.x <= 0x0c04 && at.y == 0xc054) return not_yet("1b5d:01e9");
-        if (tile == 0xb6 || tile == 0xb7) return not_yet("1b5d:03aa");
+        if (tile == 0xb6 || tile == 0xb7) return take_item(x, y, keys);
         if (tile >= 0xf6) return not_yet("1b5d:0288");
         if (tile == 0x83 || (tile >= 0xa5 && tile <= 0xa7)) return not_yet("1b5d:02a8");
         if (tile == 0x4d) return not_yet("1b5d:04ab");

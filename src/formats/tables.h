@@ -106,6 +106,10 @@ struct Tables {
     std::array<int, 12> door_x{};                   // DG:247a: door d's half-cells in the area
     std::array<int, 12> door_y{};                   // DG:2486
     std::array<std::array<int, 12>, 3> door_items{};  // DG:2492, 249e, 24aa: by slot, the item it needs, plus 1
+    // The cache's items: item i lies on three half-cells from (x, y), and goes in slot item_slot.
+    std::array<int, 33> item_x{};                   // DG:21ce
+    std::array<int, 33> item_y{};                   // DG:21f0
+    std::array<int, 33> item_slot{};                // DG:2212: 0-2, also the kind (DG:2234)
 
     // The shot with combat graphics (docs/combat.md 3.14).
     static constexpr int kPoseScriptBase = 0x3ef0;

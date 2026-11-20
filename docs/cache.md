@@ -78,14 +78,19 @@ figure, person or 'Mech, whatever the tile under it.
 
 ## Items and doors
 
-**Items (`1b5d:03aa`).** 33 items lie on tiles b6/b7. Item i's cell is x DG:21ce + i (a span of
-three cells from there, with x as `(x + 1) & 0x7f`) and y DG:21f0 + i. Each item has a slot
-(DG:2212 + i, 0-2) and a kind named through the far-pointer table at DG:2234 (four bytes per
-slot). Stepping on an item whose F:45de + i is clear opens the message box and asks, in DG:2187,
-the kind's name, DG:21b2, the number i + 1 and DG:21b9, whether to take it (a yes/no question,
-`1000:1a13(1)`). Yes stores i in the slot's byte, F:d347 + slot. An item already used (F:45de + i
-set) prints the text at DG:215d instead and waits for a key. Either way the step ends there
-(F:d55c = 1).
+**Items (`1b5d:03aa(x, y)`).** 33 items lie on tiles b6/b7 (terminals on the map). Item i lies
+on three half-cells from x DG:21ce + i, at y DG:21f0 + i (`tables.item_x`, `item_y`), and has a
+slot (DG:2212 + i, 0-2, `tables.item_slot`) that is also its kind: the far-pointer table at DG:2234
+(four bytes per slot) names the kind's text, DG:214d, 2151 or 2156. The step's half-cell is taken
+as x `(x + 1) & 0x7f` and y `y & 0x7f`. Every item it falls on is handled in turn (the loop does
+not stop at the first):
+
+- the message box opens (`24d3:17c6`);
+- an item no door has used (F:45de + i clear) asks, in DG:2187, the kind, DG:21b2, the number
+  i + 1 (`273d:0053`) and DG:21b9, whether to take it (`1000:1a13(1)`, Yes first). Yes stores i in
+  the slot's byte, F:d347 + slot, in place of whatever it held;
+- an item already used prints DG:215d (`24d3:17ea`) and waits for a key (`273d:0259`);
+- either way F:d55c is set, so the step shows no direction.
 
 **Doors (`1b5d:0ab6(x, y, d)`).** Twelve doors, numbered 0-11. Door d's cell is x DG:247a + d,
 y DG:2486 + d, and it needs three items: one per slot, numbers DG:2492 + d, DG:249e + d and
@@ -138,8 +143,10 @@ walk threshold DG:0150 to 0x8b.
 tile set at DG:23a5; F:3988 = 2; the block table P:0664 set to 90-cf in order; the window built
 and drawn (`287f:0ba7(0)` on CGA); F:d34e = 0; the threshold back to 0x21.
 
-`1b5d:0327` swaps the 250 bytes at DG:215d with DG:2257 (level 0) or DG:2351 (level 1); its
-caller is not yet traced.
+`1b5d:0327` swaps 250 bytes at offset 215d with 2257 (level 0) or 2351 (level 1). These are not
+DGROUP's: the segments come from the words at DG:5510, 5512 and 5514. Its only caller is
+`1000:3d40`, the look around the map with the arrow keys (space ends it), which calls it before
+and after while F:d346 is set. What those segments hold is not yet traced.
 
 **The puzzle.** On level 1, tiles 97-f0 are puzzle cells in pairs: `1b5d:0913` turns the cell's
 tile into its pair and plays sound 15. `1b5d:0980` (tiles 8c, 8d) checks: solved when none of the seven cells listed at
@@ -166,12 +173,13 @@ The toggle `((t + 1) ^ 1) - 1` maps an odd t to t + 1 and an even t to t - 1.
 ## Rebuilt
 
 Going in (`Town::enter_cache`, `src/game/cache.cpp`), the doors (`Town::open_door`) and the step
-dispatch (`Town::cache_step`, called from the step with the tile `take_step` found), with the
-tables at DG:246e-24b5 and the three door texts imported from the EXE (`tables.door_*`,
-`cache.door_wants.0-2`). Checked against the original on the `chain_cache_poked` side branch:
-ENTRANCE, the way in, INSTRUCT, the first step inside, a walk to door 0 and the door refusing a
-party without its items match screen and state.
+dispatch (`Town::cache_step`, called from the step with the tile `take_step` found) and the
+items (`Town::take_item`), with the tables at DG:21ce-2232 and DG:246e-24b5 and the door and item
+texts imported from the EXE (`tables.door_*`, `tables.item_*`, `cache.door_wants.0-2`,
+`cache.item_*`). Checked against the original on the `chain_cache_poked` side branch: ENTRANCE,
+the way in, INSTRUCT, the first step inside, a walk to door 0, the door refusing a party without
+its items, and a terminal's item offered and taken match screen and state.
 
-Still to do, in order, each compared the same way: items; the text tiles; the second level and
+Still to do, in order, each compared the same way: the text tiles; the second level and
 the puzzle; ENDMECH and FINDIT; the way out into WINSCENE and the game's end. Until then their
 tiles only block, and the game log names the function they would run.

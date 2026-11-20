@@ -291,6 +291,7 @@ private:
     bool enter_cache(KeySource& keys);
     bool open_door(int x, int y, int door, KeySource& keys);
     bool cache_step(int tile, formats::MapPosition at, KeySource& keys);
+    bool take_item(int x, int y, KeySource& keys);
     bool run_script(int file, KeySource& keys);
     // `start`: the item the bar starts on instead of the remembered one (the
     // quiz scene's right part); the item chosen is remembered as usual.
