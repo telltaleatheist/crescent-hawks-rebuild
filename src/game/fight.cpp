@@ -1285,14 +1285,14 @@ bool Town::press_key(KeySource& keys) {
 void Town::show_page() {
     if (page_) frozen_ = page_;
     screen_sprites_ = page_sprites_;
-    screen_pixels_.clear();
+    screen_lines_.clear();
     boxes_.clear();
     boxes_since_ = text_.paint_clock();
     text_.forget(13, 0, kTextColumns - 13, kTextRows);
 }
 
 void Town::hold_screen(int frames) {
-    events_.push_back({Shown{view(), figures(), screen_sprites_, screen_pixels_, text_, boxes(), picture_}, frames, -1});
+    events_.push_back({Shown{view(), figures(), screen_sprites_, screen_lines_, text_, boxes(), picture_}, frames, -1});
 }
 
 Combat Town::combat_rules() {
@@ -1325,7 +1325,7 @@ Combat Town::combat_rules() {
     };
     hooks.hold = [this](int frames) { hold_screen(frames); };
     hooks.sprite = [this](int slot, int x, int y) { page_sprites_.push_back({sprite(slot), x, y}); };
-    hooks.pixel = [this](int x, int y, int colour) { screen_pixels_.push_back({x, y, colour}); };
+    hooks.line = [this](const ShownLine& line) { screen_lines_.push_back(line); };
     hooks.sound = [this](int n) { events_.push_back({std::nullopt, 0, n}); };
     hooks.picture = [this](int number, int mode) { show_picture(number, mode); };
     // 1e31:1dcc: 12 frames for each step of the message speed (DG:015e);

@@ -1,6 +1,9 @@
 #include "platform/map_layer.h"
 
 #include <algorithm>
+#include <cstdlib>
+
+#include "game/combat.h"
 
 namespace chr::platform {
 
@@ -99,9 +102,52 @@ bool draw_xor_box(Renderer& renderer, const game::MapView& view, const std::vect
     return true;
 }
 
+namespace {
+
+// The original look's colour number for a shot's line (22e8:000c): a hand
+// laser yellow, light green for an enemy person's (CGA: 3); a 'Mech's beam
+// light red for the party's, magenta for an enemy's (CGA: 2).
+int line_colour(const game::ShownLine& line) {
+    using Kind = game::ShownLine::Kind;
+    using Shooter = game::ShownLine::Shooter;
+    if (line.kind == Kind::HandLaser) return line.shooter == Shooter::EnemyPerson ? 10 : 14;
+    return line.shooter == Shooter::Party ? 12 : 5;
+}
+
+// BTECH.EXE 22e8:000c (Ghidra FUN_22e8_000c), the line's part
+// The points of a line as the original plots them (273d:031c): from its
+// start, a straight step and, when the error runs out, a diagonal one
+// (DG:41dc by octant), until it reaches its end; only points inside the
+// map's side of the screen are plotted.
+template <class Plot>
+void walk_line(const game::ShownLine& line, const formats::Tables& tables, Plot plot) {
+    int x = line.from_x, y = line.from_y;
+    const int tx = line.to_x, ty = line.to_y;
+    const int dy = y - ty, dx = tx - x;
+    int major = std::abs(dy), minor = std::abs(dx);
+    if (minor > major) std::swap(major, minor);
+    const int o = game::octant(dy, dx);
+    const int step_x = tables.line_steps[std::size_t(o)], step_y = tables.line_steps[std::size_t(8 + o)];
+    const int diag_x = tables.line_steps[std::size_t(16 + o)], diag_y = tables.line_steps[std::size_t(24 + o)];
+    int error = major >> 1;
+    for (int guard = 0; (x != tx || y != ty) && guard <= 0x4000; ++guard) {
+        if (x >= 0x68 && x < 0x140 && y >= 0 && y < 200) plot(x, y);
+        if (x != tx) x += step_x;
+        if (y != ty) y += step_y;
+        error -= minor;
+        if (error < 0) {
+            if (x != tx) x += diag_x;
+            if (y != ty) y += diag_y;
+            error += major;
+        }
+    }
+}
+
+}  // namespace
+
 bool draw_shot_marks(Renderer& renderer, const std::vector<game::ShownSprite>& sprites,
-                     const std::vector<game::ShownPixel>& pixels, const formats::Palette16& palette,
-                     const MapLayout& layout) {
+                     const std::vector<game::ShownLine>& lines, const formats::Tables& tables,
+                     const formats::Palette16& palette, const MapLayout& layout) {
     const auto& o = kOriginalMapLayout.viewport;
     const auto& v = layout.viewport;
     const auto at_x = [&](int x) { return v.x + (x - o.x) * v.width / o.width; };
@@ -110,9 +156,9 @@ bool draw_shot_marks(Renderer& renderer, const std::vector<game::ShownSprite>& s
     bool all = true;
     for (const auto& s : sprites) all = renderer.draw(s.sprite, at_x(s.x), at_y(s.y)) && all;
     const int w = std::max(1, v.width / o.width), h = std::max(1, v.height / o.height);
-    for (const auto& p : pixels) {
-        const auto& c = palette[std::size_t(p.colour & 15)];
-        renderer.fill(at_x(p.x), at_y(p.y), w, h, c.r, c.g, c.b);
+    for (const auto& line : lines) {
+        const auto& c = palette[std::size_t(line_colour(line) & 15)];
+        walk_line(line, tables, [&](int x, int y) { renderer.fill(at_x(x), at_y(y), w, h, c.r, c.g, c.b); });
     }
     renderer.clear_clip();
     return all;

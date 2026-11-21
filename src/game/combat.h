@@ -20,6 +20,7 @@
 #include "game/flags.h"
 #include "game/random.h"
 #include "game/records.h"
+#include "game/shown.h"
 #include "game/text_colour.h"
 
 namespace chr::game {
@@ -62,6 +63,12 @@ inline constexpr int kEngineHits = 0x75, kGyroHits = 0x76, kSensorHits = 0x77, k
 inline constexpr int kPilot = 0x79, kSecond = 0x7a;
 inline constexpr int kHeatSinkItem = 0x22;
 }  // namespace mech
+
+// BTECH.EXE 1e31:1ea2 (Ghidra FUN_1e31_1ea2)
+// The octant (0-7) of a line on the screen, from its y difference (start
+// minus end) and x difference (end minus start): which entries of the line
+// step table (Tables::line_steps) walk it.
+int octant(int dy, int dx);
 
 // The weapon record's bytes (DG:2ed8 + 0x11 w).
 namespace weapon {
@@ -122,13 +129,13 @@ public:
     // picture: 1000:48b7. With combat graphics: show: the page drawn so
     // far made the screen (273d:06c3) and held `frames` (273d:0006); hold:
     // the screen as it is held; sprite: a sprite slot drawn on the page at a
-    // screen point (1e31:1f73); pixel: a colour plotted on the screen
-    // (273d:031c); sound: 1000:19bf.
+    // screen point (1e31:1f73); line: a shot's line (22e8:000c, plotted
+    // by 273d:031c); sound: 1000:19bf.
     struct Hooks {
         std::function<void(int frames)> show;
         std::function<void(int frames)> hold;
         std::function<void(int slot, int x, int y)> sprite;
-        std::function<void(int x, int y, int colour)> pixel;
+        std::function<void(const ShownLine& line)> line;
         std::function<void(int n)> sound;
         std::function<void(bool shown)> draw_view;
         // 1000:17bb: the party position walked to a place a cell at a time,

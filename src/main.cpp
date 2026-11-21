@@ -482,8 +482,8 @@ int main(int argc, char** argv) {
             if (options.list_events) {
                 for (const auto& e : town->events()) {
                     if (!e.screen) std::printf("event sound %d\n", e.sound);
-                    else std::printf("event screen %d frames, %zu sprites, %zu pixels%s\n", e.frames,
-                                     e.screen->sprites.size(), e.screen->pixels.size(), e.screen->picture ? ", a picture" : "");
+                    else std::printf("event screen %d frames, %zu sprites, %zu lines%s\n", e.frames,
+                                     e.screen->sprites.size(), e.screen->lines.size(), e.screen->picture ? ", a picture" : "");
                 }
             }
         }
@@ -584,7 +584,7 @@ int main(int argc, char** argv) {
                 const auto& shown = *town->events()[played].screen;
                 drawn = chr::platform::draw_map(renderer, shown.view);
                 drawn = chr::platform::draw_figures(renderer, shown.view, shown.figures) && drawn;
-                drawn = chr::platform::draw_shot_marks(renderer, shown.sprites, shown.pixels, palette) && drawn;
+                drawn = chr::platform::draw_shot_marks(renderer, shown.sprites, shown.lines, tables, palette) && drawn;
                 drawn = chr::platform::draw_text(renderer, shown.text, palette) && drawn;
                 chr::platform::draw_bars(renderer, town->bars(), palette);
                 for (const auto& box : shown.boxes)
@@ -595,7 +595,7 @@ int main(int argc, char** argv) {
                 const auto view = town->view();
                 drawn = chr::platform::draw_map(renderer, view);
                 drawn = chr::platform::draw_figures(renderer, view, town->figures()) && drawn;
-                drawn = chr::platform::draw_shot_marks(renderer, town->sprites(), town->pixels(), palette) && drawn;
+                drawn = chr::platform::draw_shot_marks(renderer, town->sprites(), town->lines(), tables, palette) && drawn;
                 drawn = chr::platform::draw_text(renderer, town->text(), palette) && drawn;
                 chr::platform::draw_bars(renderer, town->bars(), palette);
                 for (const auto& box : town->boxes())

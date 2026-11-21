@@ -44,18 +44,6 @@ std::pair<int, int> view_place(formats::MapPosition from, formats::MapPosition t
     return {col, row};
 }
 
-// BTECH.EXE 1e31:1ea2 (Ghidra FUN_1e31_1ea2)
-// The octant of a line, from the screen's y difference (start minus end)
-// and x difference (end minus start).
-int octant(int dy, int dx) {
-    if (dy < 0) {
-        if (dx > 0) return -dy > dx ? 3 : 2;
-        return -dx <= -dy ? 4 : 5;
-    }
-    if (dx > 0) return dx <= dy ? 0 : 1;
-    return -dx >= dy ? 6 : 7;
-}
-
 using formats::MapPosition;
 
 // The linear grid 1e31:0bb5 and 1e31:16ab measure on: an area's 128
@@ -74,6 +62,18 @@ std::uint16_t plus_one_x(std::uint16_t x) {
 std::uint8_t order_area(std::uint16_t x, std::uint16_t y) { return std::uint8_t(((x & 0x0f00) | (y & 0xf000)) >> 8); }
 
 }  // namespace
+
+// BTECH.EXE 1e31:1ea2 (Ghidra FUN_1e31_1ea2)
+// The octant of a line, from the screen's y difference (start minus end)
+// and x difference (end minus start).
+int octant(int dy, int dx) {
+    if (dy < 0) {
+        if (dx > 0) return -dy > dx ? 3 : 2;
+        return -dx <= -dy ? 4 : 5;
+    }
+    if (dx > 0) return dx <= dy ? 0 : 1;
+    return -dx >= dy ? 6 : 7;
+}
 
 int d6(Random& random) {
     for (;;) {
@@ -1077,15 +1077,11 @@ void Combat::present(int s, int t, int w, int dir) {
     if (w == 7 || w == 8) sound(6);
     if (w >= 4 && w <= 6) sound(0x0b);
     // The shot: kind 1 a missile flies, 2 and 3 a line is drawn.
-    int kind = 0, colour = 0;
+    int kind = 0;
     if (w == 0x0a || w == 0x0b || (w >= 0x19 && w <= 0x1f)) kind = 1;
-    if (w == 0x0c || w == 0x0d) {
-        kind = 2;
-        colour = s >= 16 ? 10 : 14;  // (on the CGA 3)
-    }
+    if (w == 0x0c || w == 0x0d) kind = 2;
     if (w >= 0x0f && w <= 0x12) {
         kind = 3;
-        colour = s < 12 ? 12 : 5;  // (on the CGA 2)
         if (s < 12) picture = other ? 7 : 4;
         else if (t == 0 && other) picture = 3;
     }
@@ -1107,12 +1103,24 @@ void Combat::present(int s, int t, int w, int dir) {
             sy += tables_.muzzle[std::size_t(table + 8 + dir)];
         }
         int missile = tables_.mech_poses[std::size_t(0x40 + 2 * dir)];  // DG:2dd8: figure 0x18's script
-        if (std::abs(sx - tx) > 8 || std::abs(sy - ty) > 8) {
+        const bool far = std::abs(sx - tx) > 8 || std::abs(sy - ty) > 8;
+        if (far && kind != 1) {
+            // The line, plotted a point at a time along it (273d:031c),
+            // where it is inside the map's side of the screen.
+            if (hooks_.line) {
+                ShownLine line{sx, sy, tx, ty, kind == 2 ? ShownLine::Kind::HandLaser : ShownLine::Kind::MechBeam,
+                               s < 12 ? ShownLine::Shooter::Party
+                                      : s < 16 ? ShownLine::Shooter::EnemyMech : ShownLine::Shooter::EnemyPerson,
+                               w};
+                hooks_.line(line);
+            }
+            if (hooks_.hold) hooks_.hold(0);  // the line, as plotted
+        } else if (far) {  // the missile, flown a step at a time
             const int dy = sy - ty, dx = tx - sx;
             int major = std::abs(dy), minor = std::abs(dx);
             if (minor > major) std::swap(major, minor);
             const int o = octant(dy, dx);
-            const int scale = kind == 1 ? 4 : 1;
+            const int scale = 4;  // the missile moves four points a step
             const int step_x = tables_.line_steps[std::size_t(o)] * scale;
             const int step_y = tables_.line_steps[std::size_t(8 + o)] * scale;
             const int diag_x = tables_.line_steps[std::size_t(16 + o)] * scale;
@@ -1125,16 +1133,12 @@ void Combat::present(int s, int t, int w, int dir) {
                     break;
                 }
                 const bool inside = sx >= 0x68 && sx < 0x140 && sy >= 0 && sy < 200;
-                if (kind == 1) {
-                    const int frame = animation_.run(missile) + 0x68;
-                    if (inside) {
-                        // (On the Tandy only every fourth step is drawn.)
-                        redraw();
-                        if (hooks_.sprite) hooks_.sprite(frame, sx, sy);  // 1e31:1f73
-                        show(0);
-                    }
-                } else if (inside && hooks_.pixel) {
-                    hooks_.pixel(sx, sy, colour);  // 273d:031c
+                const int frame = animation_.run(missile) + 0x68;
+                if (inside) {
+                    // (On the Tandy only every fourth step is drawn.)
+                    redraw();
+                    if (hooks_.sprite) hooks_.sprite(frame, sx, sy);  // 1e31:1f73
+                    show(0);
                 }
                 if (sx != tx) sx += step_x;
                 if (sy != ty) sy += step_y;
@@ -1145,7 +1149,6 @@ void Combat::present(int s, int t, int w, int dir) {
                     error += major;
                 }
             }
-            if (kind != 1 && hooks_.hold) hooks_.hold(0);  // the line, as plotted
         }
         if (kind != 1) sound(kind == 2 ? 9 : 2);
     }

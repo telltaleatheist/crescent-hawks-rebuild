@@ -182,7 +182,7 @@ public:
     // sprites and line pixels it shows now over the map.
     const std::vector<ShownEvent>& events() const { return events_; }
     const std::vector<ShownSprite>& sprites() const { return screen_sprites_; }
-    const std::vector<ShownPixel>& pixels() const { return screen_pixels_; }
+    const std::vector<ShownLine>& lines() const { return screen_lines_; }
     // The last place the party went into (its entrance number).
     std::optional<int> entered_place() const { return entered_place_; }
     // The keys ran out inside a place, while its script waited for one.
@@ -568,7 +568,7 @@ private:
     // shown so far (game/shown.h).
     std::optional<Frozen> page_;
     std::vector<ShownSprite> page_sprites_, screen_sprites_;
-    std::vector<ShownPixel> screen_pixels_;
+    std::vector<ShownLine> screen_lines_;
     std::vector<ShownEvent> events_;
     int message_speed_ = 2;  // DG:015e
     bool poll_open_ = false;

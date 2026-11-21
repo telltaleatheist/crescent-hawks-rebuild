@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "formats/palette.h"
+#include "formats/tables.h"
 #include "game/fight.h"
 #include "game/figures.h"
 #include "game/map_view.h"
@@ -48,11 +49,13 @@ bool draw_xor_box(Renderer& renderer, const game::MapView& view, const std::vect
                   const game::XorBox& box, const formats::Palette16& palette,
                   const MapLayout& layout = kOriginalMapLayout);
 
-// A shot's sprites and line pixels over the map. Their places are points of
-// the original's 320x200 screen, moved and scaled with the map's window.
-// False if any sprite couldn't be drawn.
+// A shot's sprites and lines over the map. Their places are points of the
+// original's 320x200 screen, moved and scaled with the map's window. The
+// original look plots each line a point at a time with the program's line
+// steps (`tables`), in the colour its kind and shooter give it. False if
+// any sprite couldn't be drawn.
 bool draw_shot_marks(Renderer& renderer, const std::vector<game::ShownSprite>& sprites,
-                     const std::vector<game::ShownPixel>& pixels, const formats::Palette16& palette,
-                     const MapLayout& layout = kOriginalMapLayout);
+                     const std::vector<game::ShownLine>& lines, const formats::Tables& tables,
+                     const formats::Palette16& palette, const MapLayout& layout = kOriginalMapLayout);
 
 }  // namespace chr::platform

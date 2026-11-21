@@ -30,7 +30,7 @@ At every point the original reads input:
 
 The waits that read no keys (273d:0006's frames, the place pictures, the shot's poses,
 missiles and explosions) are not stops. The logic records them as presentation events (draw
-the view, a pose's frame, a line's pixels, a sound, wait n frames). At each stop the platform
+the view, a pose's frame, a shot's line, a sound, wait n frames). At each stop the platform
 plays the events so far at its own pace. Then it hands the logic whatever the player pressed
 meanwhile and resumes it. A replay with the same keys gives the same events, so the rig can
 ignore them.

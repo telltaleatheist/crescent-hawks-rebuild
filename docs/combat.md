@@ -1271,7 +1271,10 @@ not at its place within its own area.
      the target's 8 higher for a 'Mech, clipped to the map window (x 0x68-0x13f, y 0-199); the
      steps from DG:41dc-41f4 by the octant (`1e31:1ea2`). The line's colour: kind 2 14 (10 for
      an enemy person), kind 3 12 for a party shooter and 5 for an enemy (on the CGA 3 and 2).
-     Then a sound: 9 after kind 2, 2 after kind 3.
+     Then a sound: 9 after kind 2, 2 after kind 3. In the rebuild the logic sends the line as an
+     event (`ShownLine`: from, to, what it is, a hand laser or a 'Mech's beam, who fired it, and
+     the weapon), and the renderer draws it: the original look walks it with these steps and
+     colours (`platform/map_layer.cpp`), so a makeover can draw a beam its own way.
   7. A miss: the view is redrawn. A hit: sound 4; for a weapon above 6 with the target on
      screen, an explosion (script DG:41d8, frames + 0xfa, drawn over the target until its end),
      5 frames held, and a place picture (`1000:48b7(n, 0)`, one draw) if the weapon calls for

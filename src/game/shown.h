@@ -5,6 +5,7 @@
 // the logic next stops for input.
 #pragma once
 
+#include <cstdint>
 #include <optional>
 #include <vector>
 
@@ -30,21 +31,31 @@ struct ShownSprite {
     int x = 0, y = 0;
 };
 
-// A pixel of a line shot, in a colour number of the palette, plotted
-// straight onto the screen (273d:031c).
-struct ShownPixel {
-    int x = 0, y = 0;
-    int colour = 0;
+// A shot drawn as a line, from the shooter's muzzle to the target, in
+// points of the 320x200 screen (22e8:000c). What it is, not how it looks:
+// the renderer draws and colours it (the original look plots it a pixel at
+// a time, platform/map_layer.cpp).
+struct ShownLine {
+    enum class Kind : std::uint8_t {
+        HandLaser,  // a person's laser pistol or rifle (weapons 0x0c-0x0d)
+        MechBeam,   // a 'Mech's lasers and PPC (weapons 0x0f-0x12)
+    };
+    enum class Shooter : std::uint8_t { Party, EnemyMech, EnemyPerson };
+    int from_x = 0, from_y = 0;
+    int to_x = 0, to_y = 0;
+    Kind kind = Kind::MechBeam;
+    Shooter shooter = Shooter::Party;
+    int weapon = 0;  // the weapon's number (its name: text weapon.N)
 };
 
 // The screen at one moment: the view and its figures as last shown, the
-// sprites drawn over them, the line pixels plotted on top, the text, the
-// boxes XORed over the map, and the place picture.
+// sprites drawn over them, the shot lines on top, the text, the boxes
+// XORed over the map, and the place picture.
 struct Shown {
     MapView view;
     std::vector<Figure> figures;
     std::vector<ShownSprite> sprites;
-    std::vector<ShownPixel> pixels;
+    std::vector<ShownLine> lines;
     TextScreen text;
     std::vector<XorBox> boxes;
     std::optional<PlacePicture> picture;
