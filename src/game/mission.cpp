@@ -192,7 +192,8 @@ void Town::mission_draw() {
 // Map `number` into `grid`: its blocks numbered from 0x90 in the one block
 // store, so every grid's map entries now show this map; its tiles (map 11
 // has its own sheet), its blocking tile, its entrances and its townspeople,
-// placed again with eight random numbers (none out on maps above 10).
+// placed again with eight random numbers (none out on maps above 10), unless
+// DG:014c is set.
 bool Town::load_town_map(int number, int grid) {
     const std::string name = "MAP" + std::to_string(number) + ".MTP";
     const auto path = game_dir_ ? formats::find_game_file(*game_dir_, name) : std::nullopt;
@@ -208,6 +209,10 @@ bool Town::load_town_map(int number, int grid) {
     terrain_.hold_window();
     terrain_.place_map(map_, grid);
     terrain_.link_blocks();
+    if (people_skipped_) {  // DG:014c (the overhead map)
+        log_.push_back("map " + std::to_string(number) + " loaded into grid " + std::to_string(grid) + ", no townspeople");
+        return true;
+    }
     if (!townspeople_away_) {
         // The headings are the fight figures' (F:3920 + 16 + i); placing
         // the walkers leaves them as the last fight set them up.

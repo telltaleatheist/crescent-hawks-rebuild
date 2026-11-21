@@ -160,10 +160,10 @@ in the store, after they are kept; the other 52 stay, and no grid entry names th
 level is shown. The grids' other entries, d1, name block 0x51 past the store (`tables.store_tail`).
 In the twelve blocks, four a row, the level is 32 cells across and 24 down.
 
-`1b5d:0327` swaps 250 bytes at offset 215d with 2257 (level 0) or 2351 (level 1). These are not
-DGROUP's: the segments come from the words at DG:5510, 5512 and 5514. Its only caller is
-`1000:3d40`, the look around the map with the arrow keys (space ends it), which calls it before
-and after while F:d346 is set. What those segments hold is not yet traced.
+`1b5d:0327` swaps 250 bytes at P:215d with P:2257 (level 0) or P:2351 (level 1): the overhead
+map's cell colour tables, the land's and the two levels' (`tables.overhead_colours`). Its only
+caller is `1000:3d40`, the overhead map, which calls it before and after while F:d346 is set
+(docs/overhead_map.md).
 
 **The puzzle.** On level 1, tiles 97-f0 are puzzle cells in pairs: `1b5d:0913` turns the cell's
 tile into its pair and plays sound 15. It finds the cell in the store as the level lays it out,

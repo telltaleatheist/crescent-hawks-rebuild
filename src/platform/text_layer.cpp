@@ -33,6 +33,7 @@ constexpr std::array<std::uint8_t, game::kTextRoleCount> kOriginalRoleColours = 
     set(TextRole::Funds, 2);         // 24d3:096f (1)
     set(TextRole::FileName, 2);      // 1000:32b3, DG:37fe = 2
     set(TextRole::Warning, 4);       // 1000:35d3, DG:37fe = 4 (2)
+    set(TextRole::MapPointer, 15);   // 1000:4441, 273d:00d5 with 15
     return t;
 }();
 

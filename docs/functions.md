@@ -51,9 +51,9 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 1000:35d3 | 0x135d3 | `FUN_1000_35d3` | 442 |  | - |
 | 1000:378d | 0x1378d | `FUN_1000_378d` | 1091 |  | - |
 | 1000:3bd0 | 0x13bd0 | `FUN_1000_3bd0` | 368 |  | - |
-| 1000:3d40 | 0x13d40 | `FUN_1000_3d40` | 622 |  | - |
-| 1000:3fae | 0x13fae | `FUN_1000_3fae` | 1556 |  | - |
-| 1000:45c2 | 0x145c2 | `FUN_1000_45c2` | 95 |  | - |
+| 1000:3d40 | 0x13d40 | `FUN_1000_3d40` | 622 | The overhead map: the cursor moved two areas at a time, then the nine-map load without townspeople (docs/overhead_map.md) | rebuilt |
+| 1000:3fae | 0x13fae | `FUN_1000_3fae` | 1556 | Draws the overhead map (5 x 3 areas, seen tiles only), its pointer, caption and the party's dot until a key | rebuilt |
+| 1000:45c2 | 0x145c2 | `FUN_1000_45c2` | 95 | A town block drawn small for the overhead map (287f:1f51), converted for CGA or Tandy | replaced (platform/overhead_layer.cpp) |
 | 1000:4621 | 0x14621 | `FUN_1000_4621` | 134 | Load BTTLTECH.ICN as the map tile sheet | rebuilt |
 | 1000:46a7 | 0x146a7 | `FUN_1000_46a7` | 198 | Shows the title screen (BTTITLE.CMP, with its palette) (docs/startup.md) | rebuilt |
 | 1000:476d | 0x1476d | `FUN_1000_476d` | 330 | Plays the title's tune (WWOODBT.SIF) until a key or its end (docs/startup.md) | read |
@@ -133,7 +133,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 1b5d:0288 | 0x1b858 | `FUN_1b5d_0288` | 32 |  | - |
 | 1b5d:02a8 | 0x1b878 | `FUN_1b5d_02a8` | 42 |  | - |
 | 1b5d:02d2 | 0x1b8a2 | `FUN_1b5d_02d2` | 85 |  | - |
-| 1b5d:0327 | 0x1b8f7 | `FUN_1b5d_0327` | 131 |  | - |
+| 1b5d:0327 | 0x1b8f7 | `FUN_1b5d_0327` | 131 | Swaps the cache level's cell colour table into the overhead map's (P:215d) | replaced (a table choice) |
 | 1b5d:03aa | 0x1b97a | `FUN_1b5d_03aa` | 257 |  | - |
 | 1b5d:04ab | 0x1ba7b | `FUN_1b5d_04ab` | 175 |  | - |
 | 1b5d:055a | 0x1bb2a | `FUN_1b5d_055a` | 578 |  | - |
@@ -381,8 +381,8 @@ read each one before taking it as such.
 | 287f:1df8 | 0x2a5e8 | `FUN_287f_1df8` | 63 | The view's corner words P:09ed..09f1 from the party position | replaced |
 | 287f:1e37 | 0x2a627 | `FUN_287f_1e37` | 151 | Blits a picture to the screen | replaced |
 | 287f:1ece | 0x2a6be | `FUN_287f_1ece` | 54 | Saves the window's 576 cells to a far buffer, or copies them back (docs/combat.md 2.11) | rebuilt (`Terrain::save_cells`, `restore_cells`) |
-| 287f:1f04 | 0x2a6f4 | `FUN_287f_1f04` | 77 |  | replaced |
-| 287f:1f51 | 0x2a741 | `FUN_287f_1f51` | 75 |  | replaced |
+| 287f:1f04 | 0x2a6f4 | `FUN_287f_1f04` | 77 | Copies the middle grid, with masks, into the overhead map's view (stride 40) | rebuilt |
+| 287f:1f51 | 0x2a741 | `FUN_287f_1f51` | 75 | A store block's 64 cells as an 8x8 tile, a pixel a cell, colour from P:215d | replaced (platform/overhead_layer.cpp) |
 | 287f:1f9c | 0x2a78c | `FUN_287f_1f9c` | 17 |  | replaced |
 | 287f:1fad | 0x2a79d | `FUN_287f_1fad` | 17 |  | replaced |
 | 287f:1fbe | 0x2a7ae | `FUN_287f_1fbe` | 80 |  | replaced |

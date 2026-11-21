@@ -83,8 +83,9 @@ near the party), the message box with DG:0ace and a key. Otherwise the crew scre
 argument 0 (docs/scripts.md), the panel (`1000:4cac(1)`) and window 1 cleared. After any item
 `273d:06c3` copies the page's map columns back over the windows.
 
-Rebuilt: items 0, 2, 4, 5 and 6 (`Town::command_menu`, `Town::allocate_crew`, `Town::load_game`,
-`Town::save_game`, docs/formats/save.md); the others are logged.
+Rebuilt: items 0, 2, 4, 5, 6 and 7 (`Town::command_menu`, `Town::allocate_crew`, `Town::load_game`,
+`Town::save_game`, docs/formats/save.md; `Town::overhead_map`, docs/overhead_map.md); the others
+are logged.
 A rider ('Mech byte 0x7a) is not on foot, so soldiers can't shoot at him; the repairs still pick the
 best tech among all the party's characters (docs/combat.md 2.15).
 

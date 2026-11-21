@@ -59,6 +59,7 @@ add_library(chrgame STATIC
   src/game/town.cpp
   src/game/terrain.cpp
   src/game/mission.cpp
+  src/game/overhead.cpp
   src/game/townspeople.cpp
   src/game/combat.cpp
   src/game/fight.cpp
@@ -97,6 +98,7 @@ if(SDL3_FOUND)
   add_library(chrplatform STATIC
     src/platform/map_layer.cpp
     src/platform/original_assets.cpp
+    src/platform/overhead_layer.cpp
     src/platform/panel_layer.cpp
     src/platform/quiz_layer.cpp
     src/platform/renderer.cpp

@@ -28,6 +28,7 @@ inline constexpr int kQuizLock = 0x14;        // d320: set ff by a failed traini
 inline constexpr int kMoneyCountdown = 0x17;  // d323: the money step runs when it passes 0
 inline constexpr int kLetOut = 0x2d;          // d339
 inline constexpr int kLetOutDone = 0x2e;      // d33a
+inline constexpr int kOverheadPointer = 0x2f;  // d33b: the overhead map points toward 0a38,8038 (1000:43e2; set by a script)
 inline constexpr int kFrobPaid = 0x30;        // d33c: FROB's first payment
 inline constexpr int kDiskSeen = 0x32;        // d33e: set at VIEWDISK's end
 inline constexpr int kMoneyFloor = 0x33;      // d33f-d340: a word; the training center raises it

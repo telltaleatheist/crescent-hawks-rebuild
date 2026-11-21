@@ -73,6 +73,11 @@ word); anything else is refused, and the game asks for a new import.
 | `plain_block` | 2c6c:209d | 64 bytes | the one block every type-0x10 terrain block shows |
 | `mirror_east_west` | 2c6c:211d | 32 bytes | a template byte (or a mask) with its east and west swapped, for a mirrored block |
 | `mirror_north_south` | 2c6c:213d | 32 bytes | the same with north and south |
+| `overhead_colours` | 2c6c:215d | 3 x 250 bytes | the overhead map's cell colour by tile: the land's, then cache levels 0 and 1 (P:2257, 2351; 1b5d:0327 swaps them in; docs/overhead_map.md) |
+| `overhead_block_x`, `_y` | DG:0a38/0a46 | 13 bytes each | by map - 1, the block column and row the overhead map puts the map at in its grid (1000:3fae) |
+| `overhead_blocks_across`, `_down` | DG:0a54/0a62 | 13 bytes each | by map - 1, its size in blocks |
+| `overhead_cell_bytes` | DG:0a70 | 13 words | by map - 1, how many bytes of cells the overhead map reads from the map's file, and how far its store moves on (bug 39) |
+| `overhead_pointer_column`, `_row` | DG:0a8a/0a92 | 8 bytes each | by direction, the text cell of the overhead map's pointer |
 | `path_quarters` | DG:3b12 | 4 bytes | by the half-cell's parity, the tile bits that make a path step cost more (203b:193b) |
 | `leg_actuator_bit`, `_keep` | DG:316a/3172 | 8 bytes each | by a d6, a leg actuator a critical hit takes out, and the mask that clears it (1e31:11ab) |
 | `arm_actuator_bit`, `_keep` | DG:317a/3182 | 8 bytes each | the same for an arm |

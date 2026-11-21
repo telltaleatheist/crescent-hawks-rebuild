@@ -48,6 +48,7 @@
 #include "game/town.h"
 #include "platform/map_layer.h"
 #include "platform/original_assets.h"
+#include "platform/overhead_layer.h"
 #include "platform/panel_layer.h"
 #include "platform/quiz_layer.h"
 #include "platform/renderer.h"
@@ -579,6 +580,9 @@ int main(int argc, char** argv) {
                 drawn = renderer.draw(*screen, 0, 0);
             } else if (const auto quiz = town ? town->quiz() : std::nullopt) {
                 drawn = chr::platform::draw_quiz(renderer, *quiz, palette);
+                drawn = chr::platform::draw_text(renderer, town->text(), tables, palette) && drawn;
+            } else if (town && town->overhead()) {
+                drawn = chr::platform::draw_overhead(renderer, *town->overhead(), tables, palette);
                 drawn = chr::platform::draw_text(renderer, town->text(), tables, palette) && drawn;
             } else if (playing() && town->events()[played].screen) {
                 const auto& shown = *town->events()[played].screen;

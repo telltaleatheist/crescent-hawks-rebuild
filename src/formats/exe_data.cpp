@@ -134,6 +134,15 @@ constexpr std::array kDos103 = {
     ExeSpan{ExeSpan::Kind::Table, "tables.store_tail", 0x2c6c, 0x201d, 128, "5f55b86a6b86f94a"},
     ExeSpan{ExeSpan::Kind::Table, "tables.mirror_east_west", 0x2c6c, 0x211d, 32, "513e0371b0a58371"},
     ExeSpan{ExeSpan::Kind::Table, "tables.mirror_north_south", 0x2c6c, 0x213d, 32, "d81bed15e8cec54a"},
+    // The overhead map (1000:3fae, docs/overhead_map.md).
+    ExeSpan{ExeSpan::Kind::Table, "tables.overhead_colours", 0x2c6c, 0x215d, 3 * 250, "f7439b9b84149840"},
+    ExeSpan{ExeSpan::Kind::Table, "tables.overhead_block_x", 0x46db, 0x0a38, 13, "dd46c3eebb1884ff"},
+    ExeSpan{ExeSpan::Kind::Table, "tables.overhead_block_y", 0x46db, 0x0a46, 13, "dd46c3eebb1884ff"},
+    ExeSpan{ExeSpan::Kind::Table, "tables.overhead_blocks_across", 0x46db, 0x0a54, 13, "981ae324fe741102"},
+    ExeSpan{ExeSpan::Kind::Table, "tables.overhead_blocks_down", 0x46db, 0x0a62, 13, "981ae324fe741102"},
+    ExeSpan{ExeSpan::Kind::Table, "tables.overhead_cell_bytes", 0x46db, 0x0a70, 26, "8cd7c10ecfb54713"},
+    ExeSpan{ExeSpan::Kind::Table, "tables.overhead_pointer_column", 0x46db, 0x0a8a, 8, "55db8edf1181cf86"},
+    ExeSpan{ExeSpan::Kind::Table, "tables.overhead_pointer_row", 0x46db, 0x0a92, 8, "39512a0507aaf0cf"},
     ExeSpan{ExeSpan::Kind::Table, "rules.quiz_answers", 0x46db, 0x28ec, 20, "3fe5abf0257c084c"},
     // Text the game shows. The names are the text IDs (docs/text.md): a
     // text provider hands them out, and an override file can replace them.
@@ -284,6 +293,9 @@ constexpr std::array kDos103 = {
     ExeSpan{ExeSpan::Kind::Text, "load.not_a_save", 0x46db, 0x0601, 63, "7defba35cc91348d"},
     ExeSpan{ExeSpan::Kind::Text, "load.not_found", 0x46db, 0x0640, 24, "951595f967c2dc19"},
     ExeSpan{ExeSpan::Kind::Text, "load.not_found_end", 0x46db, 0x0658, 27, "b1e0b75b1eb829e5"},
+    // 1000:3fae, the overhead map's caption: outdoors, and anywhere else.
+    ExeSpan{ExeSpan::Kind::Text, "overhead.caption_outdoors", 0x46db, 0x09f7, 31, "e31d960c9a387663"},
+    ExeSpan{ExeSpan::Kind::Text, "overhead.caption", 0x46db, 0x0a16, 33, "b1dcc12c76193b9f"},
     // The crew screen (1c67:0002).
     ExeSpan{ExeSpan::Kind::Text, "crew.heading", 0x46db, 0x2622, 33, "616ca99f3ce05c91"},
     ExeSpan{ExeSpan::Kind::Text, "crew.on_foot", 0x46db, 0x2643, 10, "c31036879c6c8682"},

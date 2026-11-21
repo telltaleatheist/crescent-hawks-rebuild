@@ -209,6 +209,23 @@ FULL_CASES = [
         "keys": "idle:1200",
         "match": {"the panel": WHOLE_PANEL, "the map": WHOLE_MAP},
     },
+    {
+        # The command menu's overhead map (1000:3d40, docs/overhead_map.md):
+        # the seen town drawn small, the caption, the party's dot in the
+        # colour of each pass's random number. The menu's Enter is a
+        # blocking read with no flush after it, so all four polls before the
+        # next item are the map's passes (arm:4).
+        "name": "overhead_map",
+        "keys": "space down*6 arm:4 enter",
+        "match": {"the screen": (0, 0, 320, 200)},
+    },
+    {
+        # In the town one key closes it: the nine maps loaded again without
+        # placing the townspeople (no random numbers), the map drawn again.
+        "name": "overhead_closed",
+        "keys": "space",
+        "match": {"the panel": WHOLE_PANEL, "the map": WHOLE_MAP},
+    },
 ]
 
 # Training mission 2 (docs/combat.md), a separate run from a new game.

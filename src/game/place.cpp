@@ -538,7 +538,8 @@ bool Town::crew_screen(int start, KeySource& keys) {
 // BTECH.EXE 1000:2c50 (Ghidra FUN_1000_2c50)
 // The Space command menu: menu 1 in window 1, one row higher and one item
 // longer when any of 'Mech records 0-3 is in use (the crew item). The crew
-// item, the healing, the load and the save are rebuilt; the others are logged.
+// item, the healing, the load, the save and the overhead map are rebuilt;
+// the others are logged.
 bool Town::command_menu(KeySource& keys) {
     bool mechs = false;
     for (int m = 0; m < 4; ++m) mechs = mechs || mechs_[std::size_t(m)][0] != character::kEmpty;
@@ -572,6 +573,9 @@ bool Town::command_menu(KeySource& keys) {
         break;
     case 6:
         if (!save_game(keys)) return false;  // 1000:35d3
+        break;
+    case 7:
+        if (!overhead_map(keys)) return false;  // 1000:3d40
         break;
     default:
         log_.push_back("the command menu's item " + std::to_string(item) + ": not rebuilt");

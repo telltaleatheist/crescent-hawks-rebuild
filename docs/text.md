@@ -188,6 +188,7 @@ narration of what happened, descriptions and flavour, and the original's own not
 | ui.press_key, ui.plural_s, ui.full_stop | 3 | message pieces, kept imported: not on Owen's approved list |
 | shop.cbills_end | 1 | the end of a shop's price line, kept imported: not on Owen's approved list |
 | save.which, save.failed, save.refused | 3 | the save's slot question, its failure and its refusal in the cache (1000:35d3); kept imported: not on Owen's approved list |
+| overhead.caption, overhead.caption_outdoors | 2 | the overhead map's caption (1000:3fae); kept imported: not on Owen's approved list |
 | load.which, load.not_a_save, load.not_found, load.not_found_end | 4 | the load's slot question, a file without the mark, and a file that cannot be opened (around its name) (1000:32b3); kept imported: not on Owen's approved list |
 
 ### The cases decided by hand

@@ -41,6 +41,7 @@ struct Fixes {
                                                 //     combat graphics, as with them
     bool fix_terrain_noise = false;        // 37: 287f:0df8, a right side's noise unscaled
     bool fix_talk_let_out = false;         // 38: 17dc:17b9, the last one waiting's place, not this one
+    bool fix_overhead_store = false;       // 39: 1000:3fae, maps 12 and 13 move the store on by 512
     bool fix_kick_actuators = false;       // 2: 22e8:000c, an enemy kicker's actuators read from
                                            //    'Mech record s, in the stack
 

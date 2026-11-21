@@ -149,6 +149,17 @@ struct Tables {
     std::array<int, 32> mirror_east_west{};      // 2c6c:211d: a template byte with east and west swapped
     std::array<int, 32> mirror_north_south{};    // 2c6c:213d: with north and south swapped
 
+    // The overhead map (docs/overhead_map.md), by map number - 1.
+    std::array<std::array<int, 250>, 3> overhead_colours{};  // 2c6c:215d, 2257, 2351: by tile, a small block's
+                                                             // cell colour: the land's, the cache levels 0 and 1
+    std::array<int, 13> overhead_block_x{};       // DG:0a38: the map's first block column in its grid
+    std::array<int, 13> overhead_block_y{};       // DG:0a46: its first block row
+    std::array<int, 13> overhead_blocks_across{}; // DG:0a54
+    std::array<int, 13> overhead_blocks_down{};   // DG:0a62
+    std::array<int, 13> overhead_cell_bytes{};    // DG:0a70: how many bytes of cells it reads from the file
+    std::array<int, 8> overhead_pointer_column{}; // DG:0a8a: by direction, the pointer's text column
+    std::array<int, 8> overhead_pointer_row{};    // DG:0a92: and its row
+
     bool operator==(const Tables&) const = default;
 };
 

@@ -116,6 +116,14 @@ const std::vector<Flat>& flat_tables() {
         {"store_tail", 0x2c6c, 0x201d, Element::U8, [](Tables& t) { return all(t.store_tail); }},
         {"mirror_east_west", 0x2c6c, 0x211d, Element::U8, [](Tables& t) { return all(t.mirror_east_west); }},
         {"mirror_north_south", 0x2c6c, 0x213d, Element::U8, [](Tables& t) { return all(t.mirror_north_south); }},
+        {"overhead_colours", 0x2c6c, 0x215d, Element::U8, [](Tables& t) { return all(t.overhead_colours); }},
+        {"overhead_block_x", 0x46db, 0x0a38, Element::S8, [](Tables& t) { return all(t.overhead_block_x); }},
+        {"overhead_block_y", 0x46db, 0x0a46, Element::S8, [](Tables& t) { return all(t.overhead_block_y); }},
+        {"overhead_blocks_across", 0x46db, 0x0a54, Element::S8, [](Tables& t) { return all(t.overhead_blocks_across); }},
+        {"overhead_blocks_down", 0x46db, 0x0a62, Element::S8, [](Tables& t) { return all(t.overhead_blocks_down); }},
+        {"overhead_cell_bytes", 0x46db, 0x0a70, Element::U16, [](Tables& t) { return all(t.overhead_cell_bytes); }},
+        {"overhead_pointer_column", 0x46db, 0x0a8a, Element::S8, [](Tables& t) { return all(t.overhead_pointer_column); }},
+        {"overhead_pointer_row", 0x46db, 0x0a92, Element::S8, [](Tables& t) { return all(t.overhead_pointer_row); }},
     };
     return kFlat;
 }

@@ -241,10 +241,10 @@ What has been read of these so far:
   grid k whose area `area - 0x11 + 16 (k / 3) + k % 3` lies in 0..255 and has a map,
   `2da8(k, map)`; then `1da8`. Unlike 104e, the index is bounded. Both skip it when F:d346 is set
   (another path, 0b5d:0004 / 1b5d:0327).
-- **1000:3d40** is a viewer moved with the arrow keys a whole area at a time (0x200 across,
-  0x2000 down), drawn by **1000:3fae**: three rows of five areas, each made with 104e, its maps
-  laid over it (1000:42c8 loads the middle grid's .MTP into the buffer) and drawn block by block.
-  On leaving it the nine-map load runs at the position chosen.
+- **1000:3d40** is the overhead map, moved with the arrow keys two areas at a time, drawn by
+  **1000:3fae**: three rows of five areas, each made with 104e and the steps right, its maps
+  laid over it and drawn small. On leaving it the nine-map load runs at the party's position,
+  placing no townspeople. Rebuilt; docs/overhead_map.md.
 - **The step up (287f:158c)**, at an area's north edge: y becomes the area above's row 0x7f,
   the grids move down a row (P:0564..06e3 to P:05a4..07a3, 0x180 bytes), the top row's three
   grids are made with 18d8 and 0bfb (heights at `0x0afa + area`, that is `world[area - 0x11]`),

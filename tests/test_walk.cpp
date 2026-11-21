@@ -198,7 +198,7 @@ struct Map1 {
 };
 
 bool play_map1(const std::string& script, std::unique_ptr<Town>& town, Map1& m,
-               const TextProvider* overrides = nullptr, bool start_up = false) {
+               const TextProvider* overrides = nullptr, bool start_up = false, bool game_files = false) {
     const auto dir = chrtest::game_dir();
     if (dir.empty()) {
         chrtest::skip("no game folder (set CHR_GAME_DIR)");
@@ -215,6 +215,7 @@ bool play_map1(const std::string& script, std::unique_ptr<Town>& town, Map1& m,
     if (overrides) layers.insert(layers.begin(), overrides);
     m.texts = std::make_unique<LayeredText>(layers);
     town = std::make_unique<Town>(m.map, 1, new_game_position(), *m.texts, *m.tables);
+    if (game_files) town->set_game_dir(dir);
     if (start_up) town->start_up();
     else town->draw_panel();
     ScriptKeys keys(parse_key_script(script));
@@ -522,4 +523,67 @@ TEST(map1_townspeople_placed_as_the_original) {
     const auto figures = town2->figures();
     CHECK(figures.size() == 2);  // Jason and the fifth person
     CHECK(figures[1].sprite.index >= 0xfe + 0x10 && figures[1].sprite.index <= 0xfe + 0x1f);
+}
+
+// The command menu's overhead map (docs/overhead_map.md), with the game
+// folder for the map files: item 7 is six rows down without 'Mechs.
+TEST(overhead_map_shows_and_waits) {
+    std::unique_ptr<Town> town;
+    Map1 m;
+    if (!play_map1("space down*6 enter", town, m, nullptr, false, true)) return;
+    CHECK(town->overhead().has_value());
+    CHECK(town->place_open());
+    const auto& shown = *town->overhead();
+    int blocks = 0;
+    for (const auto& t : shown.tiles) blocks += t.kind == OverheadMap::Tile::Kind::Block;
+    CHECK(blocks > 0);
+    CHECK(int(shown.blocks.size()) == blocks);
+    CHECK(shown.dot.has_value());
+    CHECK(shown.colours == OverheadMap::Colours::Land);
+    // The caption on row 24, nothing else written above it (no pointer:
+    // flag 2f is clear at a new game).
+    CHECK(!town->text().row_text(24).empty() && town->text().cell(0, 24).kind == TextCell::Kind::Glyph);
+    for (int r = 0; r < 24; ++r)
+        for (int c = 0; c < kTextColumns; ++c) CHECK(town->text().cell(c, r).kind == TextCell::Kind::Empty);
+}
+
+TEST(overhead_map_draws_a_number_each_pass) {
+    std::unique_ptr<Town> a, b;
+    Map1 ma, mb;
+    if (!play_map1("space down*6 enter", a, ma, nullptr, false, true)) return;
+    play_map1("space down*6 enter idle:5", b, mb, nullptr, false, true);
+    Random r = a->random();
+    for (int i = 0; i < 5; ++i) r.next();
+    CHECK(r.state() == b->random().state());
+}
+
+TEST(overhead_map_closes_in_town_after_one_key) {
+    std::unique_ptr<Town> town;
+    Map1 m;
+    // In the town (flag 04 clear) one key ends it, whatever the key.
+    if (!play_map1("space down*6 enter right", town, m, nullptr, false, true)) return;
+    CHECK(!town->overhead().has_value());
+    CHECK(!town->place_open());
+    bool closed = false, skipped = false;
+    for (const auto& line : town->log()) {
+        closed = closed || line == "overhead map closed";
+        skipped = skipped || line.find("no townspeople") != std::string::npos;
+    }
+    CHECK(closed && skipped);
+}
+
+TEST(overhead_map_moves_two_areas_outdoors) {
+    std::unique_ptr<Town> a, b;
+    Map1 ma, mb;
+    // Outdoors (flag 04 set by the test aid) it stays up; right moves the
+    // view: the party's area column is 12, the view's first column 10, then
+    // 11 (held to 0..11), so the dot moves 64 points left.
+    if (!play_map1("set:04=01 space down*6 enter", a, ma, nullptr, false, true)) return;
+    play_map1("set:04=01 space down*6 enter right", b, mb, nullptr, false, true);
+    CHECK(a->overhead() && b->overhead() && a->overhead()->dot && b->overhead()->dot);
+    CHECK(b->overhead()->dot->x == a->overhead()->dot->x - 64);
+    CHECK(b->overhead()->dot->y == a->overhead()->dot->y);
+    Map1 mc;
+    play_map1("set:04=01 space down*6 enter right space", a, mc, nullptr, false, true);
+    CHECK(!a->overhead().has_value());
 }

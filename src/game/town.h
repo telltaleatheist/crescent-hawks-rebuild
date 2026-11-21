@@ -26,6 +26,7 @@
 #include "game/flags.h"
 #include "game/map_view.h"
 #include "game/money.h"
+#include "game/overhead.h"
 #include "game/movement.h"
 #include "game/random.h"
 #include "game/save.h"
@@ -218,6 +219,8 @@ public:
     // The quiz scene, while it shows: the renderer draws BTSTATS.CMP and the
     // part's box instead of the town, then the text.
     std::optional<QuizScene> quiz() const { return quiz_; }
+    // The overhead map while it shows (docs/overhead_map.md).
+    const std::optional<OverheadMap>& overhead() const { return overhead_; }
 
     // The rule tables (the 'Mech templates and the combat tables): a fight
     // needs them. Without them a fight stops where it would begin.
@@ -386,6 +389,9 @@ private:
     bool crew_screen(int start, KeySource& keys);
     bool command_menu(KeySource& keys);
     bool allocate_crew(KeySource& keys);
+    // The command menu's map (game/overhead.cpp).
+    bool overhead_map(KeySource& keys);
+    std::optional<int> draw_overhead(formats::MapPosition party, formats::MapPosition cursor, KeySource& keys);
     bool save_game(KeySource& keys);
     bool load_game(KeySource& keys);
     std::optional<std::vector<std::uint8_t>> read_save(int slot) const;
@@ -589,6 +595,8 @@ private:
     int mission_ticks_ = 0;  // DG:5802: the missions' walk's ticks, 0-3
     bool townspeople_away_ = false;
     bool show_quiz_ = false;
+    std::optional<OverheadMap> overhead_;
+    bool people_skipped_ = false;  // DG:014c: map loads place no townspeople (the overhead map)
     std::optional<QuizScene> quiz_;
 };
 
