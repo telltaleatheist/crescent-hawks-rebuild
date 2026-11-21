@@ -1295,6 +1295,11 @@ void Town::hold_screen(int frames) {
     events_.push_back({Shown{view(), figures(), screen_sprites_, screen_lines_, text_, boxes(), picture_}, frames, -1});
 }
 
+void Town::play_sound(int n) {
+    events_.push_back({std::nullopt, 0, n});
+    if (sound_.on) play_entries(sound_, tables_.sound_lists, n);  // 27c5:0002
+}
+
 Combat Town::combat_rules() {
     Combat::Hooks hooks;
     hooks.print = [this](const std::vector<std::string>& ids) {
@@ -1326,7 +1331,7 @@ Combat Town::combat_rules() {
     hooks.hold = [this](int frames) { hold_screen(frames); };
     hooks.sprite = [this](int slot, int x, int y) { page_sprites_.push_back({sprite(slot), x, y}); };
     hooks.line = [this](const ShownLine& line) { screen_lines_.push_back(line); };
-    hooks.sound = [this](int n) { events_.push_back({std::nullopt, 0, n}); };
+    hooks.sound = [this](int n) { play_sound(n); };
     hooks.picture = [this](int number, int mode) { show_picture(number, mode); };
     // 1e31:1dcc: 12 frames for each step of the message speed (DG:015e);
     // from 5 up it waits for a key instead (docs/combat.md 3.8).
@@ -1602,15 +1607,25 @@ bool Town::enemy_people_run(KeySource& keys, bool& over) {
             if (figs_.active[std::size_t(f)] == 0) continue;
             position_ = {figs_.x[std::size_t(f)], figs_.y[std::size_t(f)]};
             const int target = combat_.targets[std::size_t(f)][0];
-            if (target >= 0x80) {
-                // cbw makes it negative and the original reads before the
-                // position arrays.
-                log_.push_back("an enemy person running from a target byte past 0x7f: not rebuilt");
-                position_ = at;
-                fight_unfinished_ = true;
-                return false;
+            // cbw: a byte past 0x7f indexes before the position arrays.
+            // ff is figure -1 (F:4002, F:4034; docs/sound.md), bug 21.
+            std::uint16_t tx = 0, ty = 0;
+            if (target < 0x80) {
+                tx = figs_.x[std::size_t(target)];
+                ty = figs_.y[std::size_t(target)];
+            } else if (target == 0xff && !fixes_.fix_flee_target) {
+                tx = sound_.minus_one_x();
+                ty = sound_.minus_one_y();
+            } else {
+                if (target != 0xff) {
+                    char byte[8];
+                    std::snprintf(byte, sizeof byte, "%02x", target);
+                    log_.push_back(std::string("an enemy person's target byte ") + byte +
+                                   " reads before the position arrays: not fled");
+                }
+                continue;
             }
-            if (combat.distance(figs_.x[std::size_t(target)], figs_.y[std::size_t(target)]) > 25) {
+            if (combat.distance(tx, ty) > 25) {
                 fled = true;
                 figs_.active[std::size_t(f)] = 0;
                 figs_.x[std::size_t(f)] = figs_.y[std::size_t(f)] = 0xffff;

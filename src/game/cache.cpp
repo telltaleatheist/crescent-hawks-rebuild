@@ -94,7 +94,7 @@ bool Town::open_door(int x, int y, int door, KeySource& keys) {
         for (const int item : needs) item_used_[std::size_t(item)] = 1;
     }
     flags_[std::size_t(flag::kCacheDoors + found)] = 1;
-    // 1000:19bf(10) from a step: the door's sound, not played here.
+    if (door < 0) play_sound(10);  // 1000:19bf
     const int column = (x >> 1) & 7;
     const std::size_t corner = std::size_t(((y & 0x70) << 5) + ((y & 0x0e) << 2) + ((x & 0x70) << 2) + column);
     for (int frame = door < 0 ? 0 : 2; frame < 3; ++frame) {
@@ -288,6 +288,7 @@ bool Town::cache_puzzle_cell(int x, int y) {
     x = (x + 1) & 0x7f;
     const std::size_t at = std::size_t(((y & 0x70) << 4) + ((y & 0x0e) << 2) + ((x & 0x70) << 2) + ((x >> 1) & 7));
     set_map_cell(at, ((map_.blocks[at] + 1) ^ 1) - 1, false);
+    play_sound(15);  // 1000:19bf
     return true;
 }
 
@@ -306,9 +307,11 @@ bool Town::cache_puzzle_check(KeySource& keys) {
                 solved = false;
     open_message_box();
     if (solved) {
+        play_sound(16);  // 1000:19bf
         print_id("cache.puzzle_solved");
         flags_[flag::kCachePuzzle] = 1;
     } else {
+        play_sound(17);  // 1000:19bf
         print_id("cache.puzzle_wrong");
         for (std::size_t i = 0; i < kLowerBytes; ++i)
             if (on(map_.blocks[i])) set_map_cell(i, map_.blocks[i] - 1, false);

@@ -373,6 +373,7 @@ bool Combat::place_taken(int f, bool squash) {
         if (hooks_.clear_box) hooks_.clear_box();
         print({p < 12 ? name_id(c) : "shot.enemy_human"});
         print({"shot.squashed"});
+        sound(0x12);  // 1000:19bf
         if (hooks_.pause) {
             hooks_.pause();
             if (c < 8) hooks_.pause();
@@ -1193,6 +1194,7 @@ void Combat::after_shot(int t, bool killed, bool destroyed, int c) {
             if (x & 0x80) x &= 0x0f7f;
             if (y & 0x80) y &= 0xf07f;
             marks_.add(figs_.sprite_base[std::size_t(t)] != 0 ? 0x81 : 0x80, x, y);
+            sound(8);  // 1000:19bf
         } else {
             note("the spectator's wreck: not rebuilt");
         }

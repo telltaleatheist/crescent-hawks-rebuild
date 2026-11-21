@@ -382,7 +382,7 @@ bool Town::jail_bays(MissionWalk& w, KeySource& keys) {
 
 // BTECH.EXE 19b8:16b2 (Ghidra FUN_19b8_16b2)
 // The 'Mech that won't start: O0.ANM's frames while the frame list's entry
-// is below 0x49, sound 14 (1000:19bf, not played here), a wait of 60 and
+// is below 0x49, sound 14, a wait of 60 and
 // the picture box cleared. 1000:28cc asks for the disk; there are no disks.
 bool Town::failed_start() {
     int last = 0;
@@ -398,6 +398,7 @@ bool Town::failed_start() {
             picture_ = PlacePicture{0, last};
             hold_screen(ticks);
         }
+    play_sound(14);   // 1000:19bf
     hold_screen(60);  // 273d:0006(0x3c)
     text_.select_window(4);
     clear_window();

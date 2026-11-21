@@ -228,7 +228,7 @@ bool Town::run_script(int file, KeySource& keys) {
             show_picture(sbyte(pc + 1), sbyte(pc + 2));
             break;
         case formats::Op::Sound:
-            // 1000:19bf: a sound effect, with sound on (docs/scripts.md).
+            play_sound(sbyte(pc + 1));  // 1000:19bf
             break;
         case formats::Op::NewMember:
             if (!new_member(in.bytes[0], keys)) return false;
@@ -895,8 +895,8 @@ void Town::show_picture(int number, int mode) {
     // stays as its last frame shows it. Mode 0 (a story picture) waits 50
     // frames after it (none for picture 8) and clears the box again.
     if (mode == 0) {
-        // Picture 0 is followed by sound 12 (1000:19bf), not played here.
         picture_ = PlacePicture{number};
+        if (number == 0) play_sound(12);  // 1000:19bf
         hold_screen(number == 8 ? 0 : 50);
         text_.select_window(kPanelPictureWindow);
         text_.clear_window();

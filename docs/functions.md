@@ -24,7 +24,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 1000:1817 | 0x11817 | `FUN_1000_1817` | 88 |  | - |
 | 1000:186f | 0x1186f | `FUN_1000_186f` | 172 |  | - |
 | 1000:191b | 0x1191b | `FUN_1000_191b` | 164 | Moves the party position by (dx, dy) half-cells, across area edges | rebuilt |
-| 1000:19bf | 0x119bf | `FUN_1000_19bf` | 30 |  | - |
+| 1000:19bf | 0x119bf | `FUN_1000_19bf` | 30 | Plays sound effect n if sound is on (DG:015c) (docs/sound.md) | rebuilt |
 | 1000:19dd | 0x119dd | `FUN_1000_19dd` | 22 |  | - |
 | 1000:19f3 | 0x119f3 | `FUN_1000_19f3` | 32 |  | - |
 | 1000:1a13 | 0x11a13 | `FUN_1000_1a13` | 234 | Yes/no question: Y/N answer, left/right pick, space/Enter accept; reprints the answer line each key | rebuilt |
@@ -277,10 +277,10 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 
 | Address | Linear | Ghidra name | Span | Label | Status |
 |---|---|---|---|---|---|
-| 27c5:0002 | 0x27c52 | `FUN_27c5_0002` | 673 |  | - |
+| 27c5:0002 | 0x27c52 | `FUN_27c5_0002` | 673 | Finds sound effect n in the lists at DG:5008 and plays its entries, storing their words in the far data (docs/sound.md) | rebuilt (the stores; no audio) |
 | 27c5:02a3 | 0x27ef3 | `FUN_27c5_02a3` | 72 |  | - |
 | 27c5:02eb | 0x27f3b | `FUN_27c5_02eb` | 90 |  | - |
-| 27c5:0345 | 0x27f95 | `FUN_27c5_0345` | 99 |  | - |
+| 27c5:0345 | 0x27f95 | `FUN_27c5_0345` | 99 | A kind-2 sound entry: the sweep, count times (docs/sound.md) | read |
 | 27c5:03a8 | 0x27ff8 | `FUN_27c5_03a8` | 99 |  | - |
 | 27c5:040b | 0x2805b | `FUN_27c5_040b` | 99 |  | - |
 | 27c5:046e | 0x280be | `FUN_27c5_046e` | 13 |  | - |
@@ -288,7 +288,7 @@ DOS or run-time library: stood in for by the platform layer or the C++ library).
 | 27c5:04e4 | 0x28134 | `FUN_27c5_04e4` | 13 |  | - |
 | 27c5:04f1 | 0x28141 | `FUN_27c5_04f1` | 169 |  | - |
 | 27c5:059a | 0x281ea | `FUN_27c5_059a` | 169 |  | - |
-| 27c5:0643 | 0x28293 | `FUN_27c5_0643` | 179 |  | - |
+| 27c5:0643 | 0x28293 | `FUN_27c5_0643` | 179 | One sweep on the speaker; stores its five arguments back in F:0000, 39f4, 4000, 4034, 0062 (docs/sound.md) | read |
 | 27c5:06f6 | 0x28346 | `FUN_27c5_06f6` | 81 |  | - |
 | 27c5:0747 | 0x28397 | `FUN_27c5_0747` | 147 |  | - |
 | 27c5:07da | 0x2842a | `FUN_27c5_07da` | 147 |  | - |

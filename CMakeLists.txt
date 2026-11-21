@@ -53,6 +53,7 @@ add_library(chrgame STATIC
   src/game/place.cpp
   src/game/startup.cpp
   src/game/random.cpp
+  src/game/sound.cpp
   src/game/save.cpp
   src/game/text.cpp
   src/game/text_provider.cpp
@@ -82,6 +83,7 @@ add_executable(chrtests
   tests/test_interface_text.cpp
   tests/test_json.cpp
   tests/test_cmp.cpp
+  tests/test_sound.cpp
   tests/test_maps.cpp
   tests/test_text.cpp
   tests/test_walk.cpp

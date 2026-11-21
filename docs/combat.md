@@ -784,10 +784,15 @@ If F:374c was set this round (an enemy person was planned against a 'Mech, 4.4):
 Only in a kind-0 fight that is not already over. The distance is measured from the person as if the
 party stood there: the party position is set to each active person's in turn and put back only
 after the message and its key, so while it waits the party position is the last active person's. The first target is
-the first byte of its target list (F:3800 + 12 x figure), sign-extended: a byte with bit 7 set would
-index before the position arrays. The fight ends as a fight, not a flight, so 2.15 runs its
-fought path. Rebuilt (`Town::enemy_people_run`), except the sign-extended case, which logs and
-stops.
+the first byte of its target list (F:3800 + 12 x figure), sign-extended: a byte with bit 7 set
+indexes before the position arrays (bug 21). A person with no target has ff there (a killed
+target's bytes are set to ff, 22e8:12c7), and ff is figure -1: x at F:4002, which nothing writes
+(0 from the program image), and y at F:4034, the fourth word of the last kind-2 sound entry
+played with sound on (docs/sound.md, which also says how the writes to F:4002 were searched).
+The person counts as fled if that point is more than 25 away. Reached: the HUT to ENTRANCE forced
+fight has a person with ff here. The fight ends as a fight, not a flight, so 2.15 runs its fought
+path. Rebuilt (`Town::enemy_people_run`). Any other byte above 0x7f would read further back,
+from memory the rebuild does not hold; it takes the fixed path (not fled) with a log line.
 
 ### 2.11 The raid story
 
@@ -1451,7 +1456,7 @@ mistake; "quirk" means it may be intended.
 | 18 | The path is written without a bound; more than 12 steps would spill into the next figure's path. | `203b:193b` | `fix_path_bound` |
 | 19 | Scan: for a 'Mech without sensors the "no enemy humans" check is skipped and the list is opened empty. | `203b:2591` | `fix_scan_sensors` |
 | 20 | The reachability test before "Engage" changes figure 0's heading. | `203b:28db` | `fix_probe_heading` |
-| 21 | An enemy person whose target byte is ff is measured against figure -1 (F:4002 / F:4034) when the people run. | `203b:000a` | `fix_flee_target` |
+| 21 | An enemy person whose target byte is ff is measured against figure -1 when the people run (2.10): x F:4002 (always 0), y F:4034 (the last kind-2 sound's fourth word, docs/sound.md). Kept. The fix: a person with no target never counts as fled. Other bytes above 0x7f always take the fixed path, with a log line. | `203b:000a` | `fix_flee_target` |
 | 22 | Repairs with Tech 2+ mend every destroyed heat sink, even when the wrecks had none. Probable. | `15ab:0002` | `fix_heat_sink_count` |
 | 23 | The weapon count for item 0x20 (SRM 6) is never cleared: it starts with leftover stack data. Probable. | `15ab:0002` | `fix_weapon_count` |
 | 24 | Scrap money is multiplied by the best tech's character number, not his skill; with Jason as the best tech there is none. Probable. | `15ab:0002` | `fix_scrap_multiplier` |

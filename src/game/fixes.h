@@ -28,6 +28,7 @@ struct Fixes {
     bool fix_order_bound = false;          // 17: 203b:1c1f, a 13th waypoint in the next figure's orders
     bool fix_scan_sensors = false;         // 19: 203b:2591
     bool fix_probe_heading = false;        // 20: 203b:28db, figure 0's heading
+    bool fix_flee_target = false;          // 21: 203b:000a, an ff target is figure -1 (F:4002 / F:4034)
     bool fix_heat_sink_count = false;      // 22: 15ab:0002
     bool fix_scrap_multiplier = false;     // 24: 15ab:0002, slot index, not skill
     bool fix_salvage_sprite = false;       // 25: 15ab:04f9
@@ -47,7 +48,6 @@ struct Fixes {
 
     // Fixed by default (on): memory the rebuild does not hold, or a hang.
     bool fix_path_bound = true;       // 18: 203b:193b, a path of more than 12 steps
-    bool fix_flee_target = true;      // 21: 203b:000a, figure -1 (F:4002 / F:4034)
     bool fix_weapon_count = true;     // 23: 15ab:0002, a count left from the stack
     bool fix_wreck_search = true;     // 26: 15ab:04f9, wrong records, may never end
     bool fix_scan_list = true;        // 32: 15ab:1467, may never end

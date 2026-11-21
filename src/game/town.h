@@ -30,6 +30,7 @@
 #include "game/movement.h"
 #include "game/random.h"
 #include "game/save.h"
+#include "game/sound.h"
 #include "game/records.h"
 #include "game/shown.h"
 #include "game/townspeople.h"
@@ -336,6 +337,9 @@ private:
     void show_picture(int number, int mode);
     // The screen as it is, held `frames` display frames (an event).
     void hold_screen(int frames);
+    // BTECH.EXE 1000:19bf (Ghidra FUN_1000_19bf)
+    // Sound effect n: the event, and with sound on the player's state.
+    void play_sound(int n);
     std::optional<int> read_key(KeySource& keys);
     void print_id(const std::string& id);
     void clear_window();
@@ -581,6 +585,7 @@ private:
     std::vector<ShownSprite> page_sprites_, screen_sprites_;
     std::vector<ShownLine> screen_lines_;
     std::vector<ShownEvent> events_;
+    SoundState sound_;
     int message_speed_ = 2;  // DG:015e
     bool poll_open_ = false;
     std::vector<XorBox> boxes_;
