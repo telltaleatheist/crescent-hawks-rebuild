@@ -579,13 +579,13 @@ int main(int argc, char** argv) {
                 drawn = renderer.draw(*screen, 0, 0);
             } else if (const auto quiz = town ? town->quiz() : std::nullopt) {
                 drawn = chr::platform::draw_quiz(renderer, *quiz, palette);
-                drawn = chr::platform::draw_text(renderer, town->text(), palette) && drawn;
+                drawn = chr::platform::draw_text(renderer, town->text(), tables, palette) && drawn;
             } else if (playing() && town->events()[played].screen) {
                 const auto& shown = *town->events()[played].screen;
                 drawn = chr::platform::draw_map(renderer, shown.view);
                 drawn = chr::platform::draw_figures(renderer, shown.view, shown.figures) && drawn;
                 drawn = chr::platform::draw_shot_marks(renderer, shown.sprites, shown.lines, tables, palette) && drawn;
-                drawn = chr::platform::draw_text(renderer, shown.text, palette) && drawn;
+                drawn = chr::platform::draw_text(renderer, shown.text, tables, palette) && drawn;
                 chr::platform::draw_bars(renderer, town->bars(), palette);
                 for (const auto& box : shown.boxes)
                     drawn = chr::platform::draw_xor_box(renderer, shown.view, shown.figures, box, palette) && drawn;
@@ -596,7 +596,7 @@ int main(int argc, char** argv) {
                 drawn = chr::platform::draw_map(renderer, view);
                 drawn = chr::platform::draw_figures(renderer, view, town->figures()) && drawn;
                 drawn = chr::platform::draw_shot_marks(renderer, town->sprites(), town->lines(), tables, palette) && drawn;
-                drawn = chr::platform::draw_text(renderer, town->text(), palette) && drawn;
+                drawn = chr::platform::draw_text(renderer, town->text(), tables, palette) && drawn;
                 chr::platform::draw_bars(renderer, town->bars(), palette);
                 for (const auto& box : town->boxes())
                     drawn = chr::platform::draw_xor_box(renderer, view, town->figures(), box, palette) && drawn;

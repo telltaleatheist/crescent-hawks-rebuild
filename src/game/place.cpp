@@ -249,18 +249,18 @@ std::optional<int> Town::menu(int m, KeySource& keys, std::optional<int> start) 
     int chosen = start && *start >= 0 && *start < rec.items ? *start : last;
     const auto& w = text_.window();
     const int top = w.y + rec.first_row;
-    text_.xor_bar(w.x, top + chosen, rec.width, rec.highlight);
+    text_.menu_bar(w.x, top + chosen, rec.width, m);
     for (;;) {
         const auto k = read_key(keys);
         if (!k) return std::nullopt;
         const int a = arrow_key(*k);
         if (a == key::kEnter || a == key::kSpace) break;
         if (a != key::kUp && a != key::kDown) continue;
-        text_.xor_bar(w.x, top + chosen, rec.width, rec.highlight);
+        text_.menu_bar(w.x, top + chosen, rec.width, m);
         chosen += a == key::kUp ? -1 : 1;
         if (chosen < 0) chosen = rec.items - 1;
         if (chosen >= rec.items) chosen = 0;
-        text_.xor_bar(w.x, top + chosen, rec.width, rec.highlight);
+        text_.menu_bar(w.x, top + chosen, rec.width, m);
     }
     // (The program would return the old item for Esc without remembering
     // it, but only Enter and space end the loop.)

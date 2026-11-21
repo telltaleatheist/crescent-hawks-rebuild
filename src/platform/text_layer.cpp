@@ -52,8 +52,8 @@ std::optional<CellSize> font_cell_size(Renderer& renderer) {
     return size;
 }
 
-bool draw_text(Renderer& renderer, const game::TextScreen& text, const formats::Palette16& palette,
-               const TextLayout& layout) {
+bool draw_text(Renderer& renderer, const game::TextScreen& text, const formats::Tables& tables,
+               const formats::Palette16& palette, const TextLayout& layout) {
     using Kind = game::TextCell::Kind;
     bool ok = true;
     int cw = layout.cell_width, ch = layout.cell_height;
@@ -73,10 +73,13 @@ bool draw_text(Renderer& renderer, const game::TextScreen& text, const formats::
                 ok = renderer.draw(c.asset(), x, y) && ok;
                 continue;
             }
-            const auto& bg = palette[std::size_t((colour_number(c.bg) ^ c.xor_mask) & 0x0f)];
+            int x_or = c.xor_mask;
+            for (const auto bar : c.bars)
+                if (bar != 0 && bar - 1 < int(tables.menus.size())) x_or ^= tables.menus[std::size_t(bar - 1)].highlight;
+            const auto& bg = palette[std::size_t((colour_number(c.bg) ^ x_or) & 0x0f)];
             renderer.fill(x, y, cw, ch, bg.r, bg.g, bg.b);
             if (c.kind == Kind::Glyph) {
-                const auto& fg = palette[std::size_t((colour_number(c.fg) ^ c.xor_mask) & 0x0f)];
+                const auto& fg = palette[std::size_t((colour_number(c.fg) ^ x_or) & 0x0f)];
                 ok = renderer.draw_tinted(c.asset(), x, y, fg.r, fg.g, fg.b) && ok;
             }
         }

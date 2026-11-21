@@ -70,6 +70,23 @@ TEST(printer_newline_and_colours) {
     CHECK(t.cell(14, 11).code == 'B' && t.cell(14, 11).fg == chr::game::TextColour::data(4) && t.cell(14, 11).bg == chr::game::TextColour::data(14));
 }
 
+// A menu's bar: on, off with the same call, gone when the cell is painted;
+// two menus' bars on one cell are both kept.
+TEST(menu_bar_toggles) {
+    const auto* tables = chrtest::tables();
+    if (!tables) return chrtest::skip("no imported tables (set CHR_GAME_DIR)");
+    TextScreen t(*tables);
+    t.put_text("Yes", 2, 3, chr::game::TextRole::Text, chr::game::TextRole::Background);
+    t.menu_bar(2, 3, 3, 5);
+    CHECK(t.cell(2, 3).bars[0] == 6 && t.cell(4, 3).bars[0] == 6 && t.cell(5, 3).bars[0] == 0);
+    t.menu_bar(2, 3, 3, 0x28);
+    CHECK(t.cell(3, 3).bars[0] == 6 && t.cell(3, 3).bars[1] == 0x29);
+    t.menu_bar(2, 3, 3, 5);
+    CHECK(t.cell(3, 3).bars[0] == 0 && t.cell(3, 3).bars[1] == 0x29);
+    t.put_text("No", 2, 3, chr::game::TextRole::Text, chr::game::TextRole::Background);
+    CHECK(t.cell(2, 3).bars[1] == 0 && t.cell(4, 3).bars[1] == 0x29);
+}
+
 TEST(printer_scrolls_at_the_bottom) {
     const auto* tables = chrtest::tables();
     if (!tables) return chrtest::skip("no imported tables (set CHR_GAME_DIR)");

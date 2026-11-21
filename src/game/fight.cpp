@@ -838,7 +838,7 @@ bool Town::weapons_order(Combat& combat, int fig, KeySource& keys) {
         const auto bar_off = [&] {
             // The menu left its bar on the weapon: XORed off again.
             const auto& w = text_.window();
-            text_.xor_bar(w.x, w.y + menus_[5].first_row + choice, menus_[5].width, menus_[5].highlight);
+            text_.menu_bar(w.x, w.y + menus_[5].first_row + choice, menus_[5].width, 5);
         };
         const auto message = [&](const std::string& id) {
             // 1e31:1057: in window 4, a key, then back.

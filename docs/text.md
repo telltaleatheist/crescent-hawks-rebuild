@@ -24,8 +24,11 @@ A cell's colours are one of two things (`src/game/text_colour.h`):
 The original also picks a second set of colours when DG:4fba, the display, is 0 (CGA). The table
 notes them; the rebuild draws the EGA display.
 
-The menus' highlight bar (`287f:2b87`) XORs a colour into a row of cells. The cell keeps that XOR
-(`TextCell::xor_mask`) and the renderer applies it to the colour numbers it gives the cell.
+The menus' highlight bar (`287f:2b87`) XORs the menu's highlight colour into a row of cells; the
+same call again takes it away, and painting a cell takes it away too. In the rebuild the logic
+only says which menu's bar is on which cells (`TextScreen::menu_bar`, `TextCell::bars`); the
+renderer draws it, and the original look XORs the menu record's highlight colour (tables.json) in.
+A box XORed over text on the map (combat.md 2.6) still XORs its colour (`TextCell::xor_mask`).
 
 ## Text windows
 

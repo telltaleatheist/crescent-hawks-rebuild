@@ -243,6 +243,24 @@ std::string TextScreen::row_text(int row) const {
     return out;
 }
 
+void TextScreen::menu_bar(int col, int row, int width, int menu) {
+    if (row < 0 || row >= kTextRows) return;
+    const auto mark = std::uint8_t(menu + 1);
+    for (int c = col; c < col + width && c < kTextColumns; ++c) {
+        if (c < 0) continue;
+        TextCell& cell = cells_[row * kTextColumns + c];
+        if (cell.kind == TextCell::Kind::Empty) {  // as in xor_bar
+            cell.kind = TextCell::Kind::Fill;
+            cell.bg = TextRole::Background;
+        }
+        // Twice on a cell is off; two menus' bars on one cell both show.
+        if (cell.bars[0] == mark) cell.bars[0] = 0;
+        else if (cell.bars[1] == mark) cell.bars[1] = 0;
+        else if (cell.bars[0] == 0) cell.bars[0] = mark;
+        else cell.bars[1] = mark;
+    }
+}
+
 void TextScreen::xor_bar(int col, int row, int width, int colour) {
     if (row < 0 || row >= kTextRows) return;
     for (int c = col; c < col + width && c < kTextColumns; ++c) {

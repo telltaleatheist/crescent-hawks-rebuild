@@ -7,6 +7,7 @@
 #include <optional>
 
 #include "formats/palette.h"
+#include "formats/tables.h"
 #include "game/text.h"
 #include "platform/renderer.h"
 
@@ -32,7 +33,9 @@ std::optional<CellSize> font_cell_size(Renderer& renderer);
 int colour_number(game::TextColour colour);
 
 // False (after drawing what it could) if a glyph or frame piece is missing.
-bool draw_text(Renderer& renderer, const game::TextScreen& text, const formats::Palette16& palette,
-               const TextLayout& layout = kOriginalTextLayout);
+// A menu's highlight bar, in the original look, XORs the menu's highlight
+// colour (its record in `tables`) into the cells under it.
+bool draw_text(Renderer& renderer, const game::TextScreen& text, const formats::Tables& tables,
+               const formats::Palette16& palette, const TextLayout& layout = kOriginalTextLayout);
 
 }  // namespace chr::platform

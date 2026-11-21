@@ -33,8 +33,11 @@ struct TextCell {
     std::uint8_t code = 0;    // character (Glyph) or frame piece (Frame)
     TextColour fg = TextRole::Text;
     TextColour bg = TextRole::Background;
-    // XORed into the colour numbers the renderer gives fg and bg: the menus'
-    // highlight bar (xor_bar).
+    // The menus whose highlight bar is on the cell, as 1 + the menu number
+    // (0: none). The renderer draws the bar (menu_bar).
+    std::array<std::uint8_t, 2> bars{};
+    // XORed into the colour numbers the renderer gives fg and bg: a box
+    // XORed over text on the map (xor_bar).
     std::uint8_t xor_mask = 0;
     AssetId asset() const { return kind == Kind::Frame ? frame_piece(code) : font_glyph(code); }
 };
@@ -79,11 +82,16 @@ public:
     void forget(int col, int row, int width, int height);
     // Fills a rectangle of cells with one colour.
     void fill(int col, int row, int width, int height, TextColour colour);
+    // BTECH.EXE 287f:2b87 (Ghidra FUN_287f_2b87), for a menu
+    // Menu `menu`'s highlight bar on a row of cells, or off again if it is
+    // there: the original XORs the menu's highlight colour in, so the same
+    // call takes it away. Painting a cell takes it away too.
+    void menu_bar(int col, int row, int width, int menu);
     // BTECH.EXE 287f:2b87 (Ghidra FUN_287f_2b87)
-    // XORs `colour` into every pixel of a row of cells: the menus' highlight
-    // bar. The same call again takes it away. A cell's colours both change
-    // (a glyph's foreground and background, a fill's colour); the cell keeps
-    // the XOR for the renderer to apply (TextCell::xor_mask).
+    // XORs `colour` into every pixel of a row of cells (a box over text on
+    // the map). The same call again takes it away. A cell's colours both
+    // change (a glyph's foreground and background, a fill's colour); the
+    // cell keeps the XOR for the renderer to apply (TextCell::xor_mask).
     void xor_bar(int col, int row, int width, int colour);
 
     // The current window's text colour (F:37fe).
