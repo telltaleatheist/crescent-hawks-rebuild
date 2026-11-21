@@ -79,10 +79,16 @@ townspeople's records read from the file are replaced and the numbers move on.
 
 ## In the rebuild
 
-The save and the load are rebuilt (`Town::save_game`, `Town::load_game`, src/game/save.cpp).
-Not rebuilt yet: the load of a game saved in the cache (flag 3a, `1b5d:0004`), which is logged,
-and the start-up's load (`1000:50c8` answers "load an old game" with a new game, `4dc7`, then
-`32b3`), which still starts a new game.
+The save and the load are rebuilt (`Town::save_game`, `Town::load_game`, src/game/save.cpp),
+from the command menu, from the start-up's question (`1000:50c8`: a new game, `4dc7`, then
+`32b3`, then the main loop), and in the cache (`Town::enter_cache`).
+
+**Original bug, kept (no fix offered): a game saved in the cache loses its 'Mechs.** Going into
+the cache puts each of 'Mech records 0-3's first byte aside at F:3248 and sets it to ff
+(`1b5d:0004`); leaving puts them back. F:3248 is not in the file, so a game saved inside holds
+ff there, and the load, which goes into the cache again with the same routine, puts the ff
+aside: the party comes out without its 'Mechs. A fix would need bytes the file does not have,
+and the file must stay the original's.
 
 **Where the files go.** In the player's data folder by default (where the imported text is,
 docs/import.md), or wherever `--save-dir DIR` says. The names are the original's, `Game1` to

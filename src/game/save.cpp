@@ -181,7 +181,8 @@ bool Town::load_game(KeySource& keys) {
             draw_panel(true);     // 1000:4cac(1); 1000:28cc(1) asks for no disk
             return true;
         }
-        if ((*file)[0] == save::kMark) read_saved_game(*file);
+        // 1b5d:0004: a game saved in the cache goes into it again.
+        if ((*file)[0] == save::kMark && !read_saved_game(*file) && !enter_cache(keys)) return false;
         // 1000:34d3: the 'Mech figures 0-3, after a load or a file that is
         // not a saved game.
         for (int i = 0; i < 4; ++i) {
@@ -209,8 +210,9 @@ std::optional<std::vector<std::uint8_t>> Town::read_save(int slot) const {
 
 // BTECH.EXE 1000:3383..34cc: a saved game read back (its mark checked).
 // The reads (287f:3580) do not check their counts: whatever a short file
-// leaves out stays as it was.
-void Town::read_saved_game(const std::vector<std::uint8_t>& file) {
+// leaves out stays as it was. False for a game saved in the cache (flag 3a),
+// whose maps are the cache's own load (the caller's).
+bool Town::read_saved_game(const std::vector<std::uint8_t>& file) {
     area_maps_[0xcc] = 1;  // 27e8:00fc
     area_maps_[0x34] = 0;  // 27e8:0064
     auto block = save_block();
@@ -226,11 +228,7 @@ void Town::read_saved_game(const std::vector<std::uint8_t>& file) {
     menu_last_[0x26] = std::int8_t(flags_[flag::kPictureChance]);  // menu 0x26's last item (+6)
     if (flags_[flag::kOutdoors] != 0) area_maps_[0xcc] = 11;
     if (flags_[flag::kDiskSeen] != 0) area_maps_[0x34] = 12;
-    if (flags_[flag::kTileEvents] != 0) {
-        // 1b5d:0004, the cache's own load.
-        log_.push_back("a game saved in the cache: its load (1b5d:0004) is not rebuilt");
-        return;
-    }
+    if (flags_[flag::kTileEvents] != 0) return false;
     // The nine maps around the position: its area (x | y, high byte, the
     // same as Terrain::area_of for any position), the terrain, and each
     // of the nine areas around it that has a map loaded into its grid.
@@ -243,6 +241,7 @@ void Town::read_saved_game(const std::vector<std::uint8_t>& file) {
             load_town_map(area_maps_[std::size_t(a)], 3 * r + c);  // 1000:2da8
         }
     terrain_.link_blocks();  // 287f:1da8
+    return true;
 }
 
 // 287f:33d0 (create, 0x8101 / 0x180) and four writes (287f:366a): the mark,

@@ -42,7 +42,7 @@ always gets the same terrain. The rebuild computes the table the same way
 (`Terrain::start_up_noise`).
 
 A new game then draws 8 more in its set-up (`1000:4f41`), 8 while placing the townspeople, and
-one more before the main loop's first pass (docs/townspeople.md, "Placing them").
+one more as the main loop starts (`1000:0024`, docs/town_loop.md, "Random numbers").
 
 ## When the game draws
 

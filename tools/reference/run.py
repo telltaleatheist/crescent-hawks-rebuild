@@ -181,7 +181,7 @@ def save_run_log(work, c, to):
                 f.write(f"{os.path.relpath(path, c)} {os.path.getsize(path)}\n")
 
 
-def run(game_dir, script, out_dir, timeout=120, keep=False, log_to=None):
+def run(game_dir, script, out_dir, timeout=120, keep=False, log_to=None, seed=()):
     words, names = compile_script(script)
     if len(words) > max_keys():
         raise ValueError(f"run.py: the key script is {len(words)} words; SNAP holds {max_keys()} (snap.asm MAX_KEYS)")
@@ -196,6 +196,10 @@ def run(game_dir, script, out_dir, timeout=120, keep=False, log_to=None):
     try:
         c = os.path.join(work, "c")
         shutil.copytree(game_dir, c)
+        # Files the game finds on its drive from the start (a saved game
+        # an earlier run wrote): (source, name) pairs.
+        for source, name in seed:
+            shutil.copyfile(source, os.path.join(c, name))
         build_snap(os.path.join(c, "SNAP.COM"))
         with open(os.path.join(c, "KEYS.BIN"), "wb") as f:
             f.write(struct.pack(f"<H{len(words)}H", len(words), *words))

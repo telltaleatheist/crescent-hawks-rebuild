@@ -287,6 +287,7 @@ private:
     void walk_position(formats::MapPosition to);
     bool quit_ = false;
     bool game_won_ = false;  // DG:01a8
+    bool main_loop_started_ = false;  // 1000:0000 entered (its first draw made)
     bool question_waiting_ = false;
     void record_party_places();
     // The map at the party's position now.
@@ -382,7 +383,7 @@ private:
     bool save_game(KeySource& keys);
     bool load_game(KeySource& keys);
     std::optional<std::vector<std::uint8_t>> read_save(int slot) const;
-    void read_saved_game(const std::vector<std::uint8_t>& file);
+    bool read_saved_game(const std::vector<std::uint8_t>& file);
     bool write_save(int slot);
     void redraw_map_screen();
     void fight_ends();

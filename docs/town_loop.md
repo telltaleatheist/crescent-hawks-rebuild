@@ -83,7 +83,8 @@ near the party), the message box with DG:0ace and a key. Otherwise the crew scre
 argument 0 (docs/scripts.md), the panel (`1000:4cac(1)`) and window 1 cleared. After any item
 `273d:06c3` copies the page's map columns back over the windows.
 
-Rebuilt: items 0, 2 and 4 (`Town::command_menu`, `Town::allocate_crew`); the others are logged.
+Rebuilt: items 0, 2, 4, 5 and 6 (`Town::command_menu`, `Town::allocate_crew`, `Town::load_game`,
+`Town::save_game`, docs/formats/save.md); the others are logged.
 A rider ('Mech byte 0x7a) is not on foot, so soldiers can't shoot at him; the repairs still pick the
 best tech among all the party's characters (docs/combat.md 2.15).
 
@@ -146,8 +147,11 @@ the frame's picture.
 The generator (`287f:0bc0`), its seeds and every place that draws are in docs/random.md.
 
 In a new game one more number is drawn between the map load (the townspeople's placing) and
-the main loop's first pass. Comparing the original's memory shows the draw; the code that
-makes it has not been found yet.
+the main loop's first pass: the main loop (`1000:0000`) starts by calling `1000:48b7(0x0f, 0)`
+(at `1000:0024`), whose first act is a draw (docs/scripts.md, "The picture"). The start-up's
+load (docs/startup.md) comes before it, so a game loaded there places its townspeople one
+number earlier than it would after the draw. A new game from the game-over question goes on in
+the loop already running, without it.
 
 ## The panel
 

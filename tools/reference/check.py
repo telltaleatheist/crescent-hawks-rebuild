@@ -1631,6 +1631,18 @@ CHAIN_CACHE_POKED_CASES = [dict(case, compare=False) for case in CHAIN_AGENT_CAS
     # An item tile: the item asks to be taken (1b5d:03aa); yes puts it in its slot.
     {"name": "chain_cache_item_question", "keys": "up", "match": SCREEN},
     {"name": "chain_cache_item_taken", "keys": "enter", "match": SCREEN},
+    # Saved in the cache (1000:35d3; without 'Mechs there is no crew item, and the menu starts on
+    # the healing, the item last chosen, one above the save), two steps back down, and loaded
+    # (1000:32b3, one above the save): the cache's own load, 1b5d:0004.
+    {"name": "chain_cache_save_menu", "keys": "space down enter", "match": SCREEN},
+    {"name": "chain_cache_saved", "keys": "enter", "match": SCREEN, "saved": 0},
+    {"name": "chain_cache_save_walked", "keys": "down down", "match": SCREEN},
+    {"name": "chain_cache_load_menu", "keys": "space up enter", "match": SCREEN},
+    {"name": "chain_cache_loaded", "keys": "enter", "match": SCREEN},
+    # The cache's load goes through INSTRUCT as the way in does; then the load's end.
+    {"name": "chain_cache_load_instruct", "keys": "enter", "match": SCREEN},
+    {"name": "chain_cache_load_instruct_2", "keys": "enter", "match": SCREEN},
+    {"name": "chain_cache_load_inside", "keys": "enter", "match": SCREEN},
 ]
 
 
@@ -1785,7 +1797,22 @@ CHAIN_SAVE_CASES = [dict(case, compare=False) for case in CHAIN_AGENT_CASES[:[
     {"name": "chain_load_done", "keys": "up enter", "match": SCREEN},
 ]
 
-CAMPAIGN = {"chain_save", "chain", "chain_death", "chain_mech_poked", "chain_heal_poked", "chain_repair_poked",
+# The start-up's load (1000:50c8, docs/startup.md): "No" to the first-time question, "Yes" to
+# loading, slot 0. Its Game1 is the one chain_save's original run wrote (SEEDED), on both drives.
+START_LOAD_CASES = [dict(case, compare=False) for case in CASES[:3]] + [
+    {"name": "startload_question", "keys": "n", "state": False,
+     "match": {"the panel": WHOLE_PANEL, "the window": WHOLE_MAP}},
+    {"name": "startload_menu", "keys": "y", "state": False, "match": SCREEN},
+    {"name": "startload_done", "keys": "enter", "starts_town": True, "match": SCREEN},
+    {"name": "startload_idle", "keys": "idle:9", "match": SCREEN},
+]
+
+# Sequences that start with a file another sequence's original run wrote: the sequence, the
+# file's name in its capture folder, and the name on the drive. The other sequence runs first
+# (it is added to the run when needed); the file is never kept anywhere else.
+SEEDED = {"save_startup": ("chain_save", "Game1", "Game1")}
+
+CAMPAIGN = {"chain_save", "save_startup", "chain", "chain_death", "chain_mech_poked", "chain_heal_poked", "chain_repair_poked",
             "chain_salvage_poked", "chain_scrap_poked", "chain_orders_poked", "chain_town", "chain_party",
             "chain_jail_no", "chain_jail_fight", "chain_agent", "chain_courses_poked", "chain_cache_poked",
             "chain_cache_open"}
@@ -1810,6 +1837,7 @@ SEQUENCES = [("town", CASES, FULL_CASES, []), ("training", TRAINING_CASES, [], [
              ("chain_death", [], CHAIN_DEATH_CASES, []),
              ("chain_mech_poked", [], CHAIN_MECH_POKED_CASES, []),
              ("chain_save", [], CHAIN_SAVE_CASES, []),
+             ("save_startup", [], START_LOAD_CASES, []),
              ("chain_heal_poked", [], CHAIN_HEAL_POKED_CASES, []),
              ("chain_repair_poked", [], CHAIN_REPAIR_POKED_CASES, []),
              ("chain_salvage_poked", [], CHAIN_SALVAGE_POKED_CASES, []),
@@ -2017,16 +2045,22 @@ def save_differences(ref, ours):
     return lines
 
 
-def run_sequence(a, sequence, cases, chr_options=()):
-    """One run of the original through `cases`, then chr for each case.
+def run_sequence(a, sequence, cases, chr_options=(), seed=()):
+    """One run of the original through `cases`, then chr for each case, both
+    with the `seed` files ((source, name) pairs) on their drives from the start.
     (True if every required rectangle and the state match, the report.)"""
     report = []
     say = report.append
+    for source, _ in seed:
+        if not os.path.exists(source):
+            say(f"the {sequence} sequence needs {source}, which its first sequence did not write")
+            return False, report
     ref_dir = os.path.join(a.work, "original-" + sequence)
     timeout = 2400 if sequence in CAMPAIGN else 900 if a.full else 240
     for attempt in (1, 2):
         log_to = os.path.join(ref_dir, "run")
-        finished, _ = run.run(a.game_dir, original_script(cases), ref_dir, timeout=timeout, log_to=log_to)
+        finished, _ = run.run(a.game_dir, original_script(cases), ref_dir, timeout=timeout, log_to=log_to,
+                              seed=seed)
         if not finished:
             say(f"the original did not reach the end of the {sequence} script")
             return False, report
@@ -2059,6 +2093,9 @@ def run_sequence(a, sequence, cases, chr_options=()):
         # Each run saves into its own folder, never the data folder's.
         saves = os.path.join(a.work, name + "-saves")
         shutil.rmtree(saves, ignore_errors=True)
+        os.makedirs(saves)
+        for source, file in seed:
+            shutil.copyfile(source, os.path.join(saves, file))
         out = subprocess.run([a.chr, "--game-dir", a.game_dir, "--data-dir", a.data_dir,
                               "--save-dir", saves,
                               "--script", chr_script(cases, i), "--screenshot", shot,
@@ -2136,13 +2173,27 @@ def main():
     # at a time.
     # The campaign sequences run only with --campaign (or by name): they
     # would make the everyday --full run too long.
+    chosen = {sequence for sequence, *_ in SEQUENCES
+              if (sequence in a.sequence if a.sequence else (sequence in CAMPAIGN) == a.campaign)}
+    chosen |= {SEEDED[s][0] for s in chosen if s in SEEDED}
+    # SEQUENCES lists each seeded sequence after its first, so the first is
+    # always submitted (and given a worker) before the one that waits on it.
     jobs = [(sequence, quick + (full if a.full or a.campaign else []), chr_options)
-            for sequence, quick, full, chr_options in SEQUENCES
-            if (sequence in a.sequence if a.sequence else (sequence in CAMPAIGN) == a.campaign)]
+            for sequence, quick, full, chr_options in SEQUENCES if sequence in chosen]
     ok = True
     with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, min(a.jobs, len(jobs)))) as pool:
-        results = [pool.submit(run_sequence, a, sequence, cases, chr_options)
-                   for sequence, cases, chr_options in jobs]
+        futures = {}
+
+        def seeded(sequence, cases, chr_options):
+            first, capture, name = SEEDED[sequence]
+            futures[first].result()
+            source = os.path.join(a.work, "original-" + first, capture)
+            return run_sequence(a, sequence, cases, chr_options, seed=[(source, name)])
+
+        for sequence, cases, chr_options in jobs:
+            futures[sequence] = (pool.submit(seeded, sequence, cases, chr_options) if sequence in SEEDED
+                                 else pool.submit(run_sequence, a, sequence, cases, chr_options))
+        results = list(futures.values())
         for result in results:
             passed, report = result.result()
             print("\n".join(report), flush=True)

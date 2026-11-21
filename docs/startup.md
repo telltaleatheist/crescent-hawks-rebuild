@@ -20,8 +20,9 @@ with the original by the rig's `start_*` cases (docs/reference.md): all match pi
      panel), and window 6 gets its frame and the notice: text IDs `intro.notice.0`–`3`, then
      `intro.first_time` and the Yes/No question (`1000:1a13`, Yes first).
      - Yes: the town (`1000:0000(0)`, the main loop, docs/town_loop.md).
-     - No: `intro.load_old_game` and Yes/No again. Yes loads a saved game (`1000:32b3`), No
-       goes to the town as after Yes.
+     - No: `intro.load_old_game` and Yes/No again. Yes loads a saved game (`1000:32b3`, the
+       command menu's load, docs/formats/save.md) over the new game, then the town; No goes to
+       the town as after Yes.
    - **No key by the tune's end:** the demo. The keyboard is replaced by DEMOFILE's recorded
      keys, the random numbers are set to 25 13 90 (docs/random.md), and the main loop runs with them
      (`1000:0000(1)`). Afterwards the title is shown again and the loop repeats.
@@ -78,5 +79,4 @@ inside `Random::at_town_start`.
 
 Not rebuilt yet, and not reachable without them:
 - the title's tune (sound is not rebuilt), so the title waits for a key however long;
-- so the demo never plays;
-- loading a saved game: Yes there logs it and a new game starts.
+- so the demo never plays.

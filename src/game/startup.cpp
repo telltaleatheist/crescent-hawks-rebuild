@@ -124,8 +124,13 @@ bool Town::run_start_up(ScriptKeys& input) {
         print_id("intro.load_old_game");
         const auto load = yes_no(true, input);
         if (!load) return false;
-        // 1000:32b3 loads a saved game (docs/startup.md).
-        if (*load) log_.push_back("load a saved game: not rebuilt, a new game starts");
+        // 1000:51dd: the command menu's load (1000:32b3), over the new game
+        // 1000:5142 set up before the questions; then the main loop.
+        if (*load) {
+            stage_ = Stage::Town;
+            log_.push_back("new game");
+            return load_game(input);
+        }
     }
     log_.push_back("new game");
     stage_ = Stage::Town;

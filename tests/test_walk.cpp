@@ -247,8 +247,8 @@ TEST(start_up_screens_and_questions) {
     Map1 m5;
     play("enter enter enter", town, m5);
     CHECK(!town->start_up_open() && town->log().back() == "new game");
-    // No, then no again: a new game too. No, then yes: a new game as well
-    // (loading a saved game: docs/startup.md).
+    // No, then no again: a new game too. No, then yes: the load's slot menu
+    // over the new game (docs/startup.md).
     Map1 m6;
     play("enter enter n", town, m6);
     CHECK(town->start_up_open());
@@ -257,7 +257,7 @@ TEST(start_up_screens_and_questions) {
     CHECK(!town->start_up_open() && town->log().back() == "new game");
     Map1 m8;
     play("enter enter n y", town, m8);
-    CHECK(town->log().size() >= 2 && town->log()[town->log().size() - 2].rfind("load a saved game", 0) == 0);
+    CHECK(town->start_up_open() && town->log().back() == "new game");
 }
 
 TEST(map1_wall_south_of_the_start) {

@@ -205,9 +205,6 @@ Town::Town(const formats::MtpMap& map, int map_number, formats::MapPosition star
     figs_.sprite_base[4] = 0x96;
     load_terrain();
     people_ = Townspeople::place(map_, map_number_, random_, tables_);
-    // One more random number between the map load and the main loop
-    // (docs/town_loop.md, "Random numbers").
-    random_.next();
     record_party_places();
 }
 
@@ -479,6 +476,13 @@ void Town::run(ScriptKeys& input) {
         log_.push_back("test aid: flag " + std::to_string(f) + " set");
     }
     pending_flags_.clear();
+    // BTECH.EXE 1000:0024: the main loop starts with 1000:48b7(0x0f, 0),
+    // whose first act is a random draw (docs/town_loop.md, "Random
+    // numbers"); after the start-up's questions and any load they start.
+    if (!main_loop_started_) {
+        main_loop_started_ = true;
+        random_.next();
+    }
     while (!stopped()) {
         const auto item = input.next_item();
         if (!item) break;

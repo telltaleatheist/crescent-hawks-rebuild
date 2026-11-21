@@ -114,6 +114,12 @@ never the data folder. The report says, for each part of the file (`SAVE_PARTS`,
 map in docs/formats/save.md), how many bytes differ and the first one's offset, never the values:
 `ok the saved game Game1: 0 parts differ`, or FAIL with the parts.
 
+**A sequence that starts with a saved game** (`SEEDED` in check.py: `save_startup`, the start-up's
+load) takes the `Game1` its first sequence's original run wrote (`chain_save`): `run.run(seed=...)`
+puts it on the original's drive before the game starts, and check.py into each chr case's save
+folder. The first sequence is added to the run when needed and always runs first; the file is
+made fresh by every run and never kept anywhere else.
+
 ## The start-up, as captured
 
 1. Text mode: "Which graphics adapter do you have?" (3: 256K EGA/VGA), then "How many disk
