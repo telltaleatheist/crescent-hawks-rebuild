@@ -535,7 +535,7 @@ bool Town::print_condition(int c) {
 // scan list) then its condition, weapon and armour, unless it is the double
 // agent found out (`agent_check`). The orders menu passes both flags 0.
 bool Town::print_unit_heading(int fig, bool agent_check, bool details, KeySource* keys) {
-    text_.set_fg(15);
+    text_.set_fg(TextRole::Text);
     if (fig >= 4) {
         const int c = fig - 4;
         const auto& r = characters_[std::size_t(c)];
@@ -552,7 +552,7 @@ bool Town::print_unit_heading(int fig, bool agent_check, bool details, KeySource
         }
         if (!print_condition(c)) return false;
         text_.set_cursor(0, 7);
-        text_.set_fg(10);  // 1000:28a2
+        text_.set_fg(TextRole::Label);  // 1000:28a2
         print_id("unit.weapon_armour");
         text_.set_cursor(0, 8);
         print_id(formats::weapon_text_id(std::int8_t(r[0x0b])));
@@ -561,7 +561,7 @@ bool Town::print_unit_heading(int fig, bool agent_check, bool details, KeySource
         if (armour == 0) {
             print_id("unit.none");
         } else if (r[0x0e] == 0) {
-            text_.set_fg(8);
+            text_.set_fg(TextRole::Destroyed);
             print_id("unit.ruined");
         } else {
             if (armour < 0 || armour >= int(rules_->combat.personal_armour.size())) {
@@ -569,7 +569,7 @@ bool Town::print_unit_heading(int fig, bool agent_check, bool details, KeySource
                 fight_unfinished_ = true;
                 return false;
             }
-            if (std::int8_t(rules_->combat.personal_armour[std::size_t(armour)]) != std::int8_t(r[0x0e])) text_.set_fg(14);
+            if (std::int8_t(rules_->combat.personal_armour[std::size_t(armour)]) != std::int8_t(r[0x0e])) text_.set_fg(TextRole::Worn);
             print_id("armour." + std::to_string(armour));
         }
         return true;
@@ -611,7 +611,7 @@ std::optional<int> Town::orders_menu(Combat& combat, KeySource& keys) {
         text_.select_window(4);
         clear_window();
         print_unit_heading(fig, false, false);
-        text_.set_fg(15);
+        text_.set_fg(TextRole::Text);
         if (figs_.computer[std::size_t(fig)]) {
             print_id("orders.computer_moving");
             plan_shown(combat, fig);
@@ -620,7 +620,7 @@ std::optional<int> Town::orders_menu(Combat& combat, KeySource& keys) {
         }
         text_.select_window(3);
         text_.clear_window();
-        text_.set_fg(15);
+        text_.set_fg(TextRole::Text);
         const bool mech = fig < 4;
         print_id(mech ? "orders.menu_mech" : "orders.menu_person");  // DG:3a6f, DG:3abc
         const int items = mech ? 10 : 8;
@@ -693,7 +693,7 @@ void Town::show_unit(Combat& combat, int fig, bool redraw) {
         row += dy;
         const char glyph = char(tables_.path_arrows[std::size_t((dy + 1) * 4 + dx + 1)]);
         // An arrow written inside the box covers the XOR there (boxes()).
-        text_.put_text(std::string_view(&glyph, 1), col, row, 15, 0);  // 273d:00d5
+        text_.put_text(std::string_view(&glyph, 1), col, row, TextRole::Text, TextRole::Background);  // 273d:00d5
     }
     settle_boxes();
     path_end_col_ = col;
@@ -708,15 +708,15 @@ bool Town::weapons_order(Combat& combat, int fig, KeySource& keys) {
     auto& targets = combat_.targets[std::size_t(fig)];
     if (fig < 12) figs_.computer[std::size_t(fig)] = false;
     const auto finish = [&] {
-        text_.set_fg(15);
+        text_.set_fg(TextRole::Text);
         text_.select_window(4);
         clear_window();
         text_.frame(4);
-        text_.set_fg(15);
+        text_.set_fg(TextRole::Text);
         text_.select_window(3);
         text_.clear_window();
         text_.frame(3);
-        text_.set_fg(15);
+        text_.set_fg(TextRole::Text);
         return true;
     };
     if (fig >= 4) {
@@ -785,7 +785,7 @@ bool Town::weapons_order(Combat& combat, int fig, KeySource& keys) {
         text_.select_window(5);
         text_.frame(0);
         text_.clear_window();
-        text_.set_fg(10);  // 1000:28a2
+        text_.set_fg(TextRole::Heading);  // 1000:28a2
         print_id("weapons.heading");
         for (int i = 0; i < 12; ++i) {
             text_.set_cursor(0, i + 1);
@@ -793,8 +793,8 @@ bool Town::weapons_order(Combat& combat, int fig, KeySource& keys) {
             int v = std::int8_t(items[std::size_t(i)]);
             auto& target = targets[std::size_t(i)];
             // Yellow with a target, white without, grey destroyed.
-            text_.set_fg(target == 0xff ? 15 : 14);
-            if (v & 0x80) text_.set_fg(8);
+            text_.set_fg(target == 0xff ? TextRole::Text : TextRole::Targeted);
+            if (v & 0x80) text_.set_fg(TextRole::Destroyed);
             print_id(formats::weapon_text_id((v & 0x7f) - 1));
             text_.set_cursor(0x0b, i + 1);
             if (v & 0x80) {
@@ -957,7 +957,7 @@ bool Town::scan_list(Combat& combat, int fig, int base, bool mechs, KeySource& k
             unseen = 0;
             text_.select_window(4);
             clear_window();
-            text_.set_fg(15);
+            text_.set_fg(TextRole::Text);
             if (t < 12) {
                 if (!print_unit_heading(t, true, true, &keys)) return false;  // 15ab:18e8(t, 1, 1)
             } else {
@@ -975,13 +975,13 @@ bool Town::scan_list(Combat& combat, int fig, int base, bool mechs, KeySource& k
                     print_id("scan.enemy_human");
                     if (!print_condition(t - 8)) return false;  // 1e31:02e4
                     text_.set_cursor(0, 7);
-                    text_.set_fg(10);  // 1000:28a2
+                    text_.set_fg(TextRole::Label);  // 1000:28a2
                     print_id("scan.weapon");
                     text_.set_cursor(0, 8);
                     print_id(formats::weapon_text_id(std::int8_t(characters_[std::size_t(t - 8)][0x0b])));
                 }
                 // Then the direction it lies in.
-                text_.set_fg(10);  // 1000:28a2
+                text_.set_fg(TextRole::Label);  // 1000:28a2
                 print_id("scan.direction");
                 const int d = direction_toward({figs_.x[std::size_t(fig)], figs_.y[std::size_t(fig)]},
                                                {figs_.x[std::size_t(t)], figs_.y[std::size_t(t)]}, tables_);
@@ -1021,7 +1021,7 @@ bool Town::scan_list(Combat& combat, int fig, int base, bool mechs, KeySource& k
     } while (chosen == 0);
     menus_[3].first_row = 0;
     menu_last_[3] = 6;
-    text_.set_fg(15);
+    text_.set_fg(TextRole::Text);
     return true;
 }
 
@@ -1050,7 +1050,7 @@ bool Town::kick_order(Combat& combat, int fig, KeySource& keys) {
 // `fig` for weapon `w`, until one is taken for target slot `slot` or the
 // choice is cancelled. No range or line-of-sight check.
 bool Town::pick_target(Combat& combat, int fig, int w, int slot, KeySource& keys) {
-    text_.set_fg(10);  // 1000:28a2
+    text_.set_fg(TextRole::Label);  // 1000:28a2
     print_id("pick.target_range");
     int choice = 1;
     do {
@@ -1064,21 +1064,21 @@ bool Town::pick_target(Combat& combat, int fig, int w, int slot, KeySource& keys
             show_unit(combat, t, true);
             text_.select_window(4);
             if (t >= 16) {
-                text_.set_fg(10);
+                text_.set_fg(TextRole::Label);
                 text_.set_cursor(0, 8);
                 print_id("pick.weapon");
             } else {
-                text_.fill(1, 9, 10, 2, 0);  // 273d:01fb (8, 0x48)-(0x57, 0x57)
+                text_.fill(1, 9, 10, 2, TextRole::Background);  // 273d:01fb (8, 0x48)-(0x57, 0x57)
             }
             text_.set_cursor(0, 5);
             if (t > 15) {
                 print_id("pick.human");
-                text_.fill(1, 10, 10, 1, 0);
+                text_.fill(1, 10, 10, 1, TextRole::Background);
                 const int weapon = characters_[std::size_t(t - 8)][0x0b];
-                text_.put_text(lookup(texts_, formats::weapon_text_id(weapon)), 1, 10, 15, 0);  // 273d:00d5
+                text_.put_text(lookup(texts_, formats::weapon_text_id(weapon)), 1, 10, TextRole::Text, TextRole::Background);  // 273d:00d5
             } else {
                 if (const auto name = mech_name_id(t - 8)) print_id(*name);
-                text_.fill(1, 9, 10, 1, 0);
+                text_.fill(1, 9, 10, 1, TextRole::Background);
             }
             text_.set_cursor(0, 7);
             walk_position({figs_.x[std::size_t(fig)], figs_.y[std::size_t(fig)]});  // 1000:17bb
@@ -1302,7 +1302,7 @@ Combat Town::combat_rules() {
         for (const auto& id : ids) line += lookup(texts_, id);
         text_.print(line);
     };
-    hooks.set_fg = [this](int colour) { text_.set_fg(colour); };
+    hooks.set_fg = [this](TextRole role) { text_.set_fg(role); };
     hooks.clear_wander = [this] { people_.clear_wander(); };
     hooks.select_box = [this] { text_.select_window(4); };
     hooks.clear_box = [this] {

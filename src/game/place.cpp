@@ -379,7 +379,7 @@ bool Town::crew_screen(int start, KeySource& keys) {
         text_.select_window(6);
         clear_window();
         text_.frame(0);
-        text_.set_fg(10);  // 1000:28a2
+        text_.set_fg(TextRole::Heading);  // 1000:28a2
         print_id("crew.heading");
         menus_[23].first_row = text_.window().row;  // F:0202
         std::vector<int> people;
@@ -416,7 +416,7 @@ bool Town::crew_screen(int start, KeySource& keys) {
             print_id("crew.rider_label");
             const auto r = mechs_[std::size_t(m)][kRiderSeat];
             print_id(r == character::kEmpty ? "crew.no_rider" : name(r));
-            text_.set_fg(15);
+            text_.set_fg(TextRole::Text);
             print_id("talk.line_end");  // 24d3:181e
         }
         const auto chosen = menu(23, keys);
@@ -461,11 +461,11 @@ bool Town::crew_screen(int start, KeySource& keys) {
             const bool pilot = can_pilot(c);
             text_.select_window(4);
             clear_window();
-            text_.set_fg(15);
+            text_.set_fg(TextRole::Text);
             print_id(name(c));
             print_id("crew.is");
             if (!pilot) {
-                text_.set_fg(10);  // 1000:28a2
+                text_.set_fg(TextRole::Emphasis);  // 1000:28a2
                 print_id("crew.not");
             }
             print_id("crew.qualified");
@@ -635,7 +635,7 @@ bool Town::special(int n, KeySource& keys) {
         // right-aligned to column 39 on rows 5-7, light green.
         for (int i = 0; i < 3; ++i) {
             const std::string price = std::to_string(125 * characters_[0][std::size_t(character::kSkills + i)] + 75);
-            text_.put_text(price, 39 - static_cast<int>(price.size()), 5 + i, 10, 0);
+            text_.put_text(price, 39 - static_cast<int>(price.size()), 5 + i, TextRole::Amount, TextRole::Background);
         }
         return true;
     case 5: {
@@ -678,9 +678,8 @@ bool Town::special(int n, KeySource& keys) {
         return true;
     }
     case 10:
-        // 24d3:096f: the money in decimal at the cursor, in colour 2 (1 when
-        // DG:4fba, the display, is 0), then shop.cbills_end.
-        text_.set_fg(2);
+        // 24d3:096f: the money in decimal at the cursor, then shop.cbills_end.
+        text_.set_fg(TextRole::Funds);
         text_.print(std::to_string(money_.cbills));
         text_.print(lookup(texts_, "shop.cbills_end"));
         return true;

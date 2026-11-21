@@ -12,6 +12,7 @@
 
 #include "formats/tables.h"
 #include "game/asset_id.h"
+#include "game/text_colour.h"
 
 namespace chr::game {
 
@@ -30,8 +31,11 @@ struct TextCell {
     enum class Kind : std::uint8_t { Empty, Fill, Glyph, Frame };
     Kind kind = Kind::Empty;  // Empty: whatever is drawn underneath shows
     std::uint8_t code = 0;    // character (Glyph) or frame piece (Frame)
-    std::uint8_t fg = 15;     // colour numbers 0..15
-    std::uint8_t bg = 0;
+    TextColour fg = TextRole::Text;
+    TextColour bg = TextRole::Background;
+    // XORed into the colour numbers the renderer gives fg and bg: the menus'
+    // highlight bar (xor_bar).
+    std::uint8_t xor_mask = 0;
     AssetId asset() const { return kind == Kind::Frame ? frame_piece(code) : font_glyph(code); }
 };
 
@@ -39,7 +43,7 @@ struct TextCell {
 struct TextWindow {
     int x = 0, y = 0;           // top-left inside cell
     int width = 0, height = 0;  // in cells
-    int fg = 15, bg = 0;
+    TextColour fg = TextRole::Text, bg = TextRole::Background;
     int col = 0, row = 0;       // cursor
 };
 
@@ -68,21 +72,22 @@ public:
     void print(std::string_view text);
     // BTECH.EXE 273d:00d5 (Ghidra FUN_273d_00d5)
     // Writes characters straight into cells from (col, row), no wrapping.
-    void put_text(std::string_view text, int col, int row, int fg, int bg);
+    void put_text(std::string_view text, int col, int row, TextColour fg, TextColour bg);
     // Forgets everything (the whole screen shows what is underneath).
     void clear_all();
     // Empties a rectangle of cells, for when the map is drawn over them.
     void forget(int col, int row, int width, int height);
     // Fills a rectangle of cells with one colour.
-    void fill(int col, int row, int width, int height, int colour);
+    void fill(int col, int row, int width, int height, TextColour colour);
     // BTECH.EXE 287f:2b87 (Ghidra FUN_287f_2b87)
     // XORs `colour` into every pixel of a row of cells: the menus' highlight
     // bar. The same call again takes it away. A cell's colours both change
-    // (a glyph's foreground and background, a fill's colour).
+    // (a glyph's foreground and background, a fill's colour); the cell keeps
+    // the XOR for the renderer to apply (TextCell::xor_mask).
     void xor_bar(int col, int row, int width, int colour);
 
-    // The window's current colours: the yes/no question sets and restores them.
-    void set_fg(int fg) { windows_[current_].fg = fg; }
+    // The current window's text colour (F:37fe).
+    void set_fg(TextColour fg) { windows_[current_].fg = fg; }
     // Puts the current window's cursor at (col, row) inside it
     // (F:3748/374e for the current window).
     void set_cursor(int col, int row) {

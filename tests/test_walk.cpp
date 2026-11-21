@@ -280,8 +280,8 @@ TEST(map1_citadel_question) {
     CHECK(t.row_text(10).substr(14, 18) == "Will you enter the");
     CHECK(t.row_text(11).substr(14, 8) == "Citadel?");
     CHECK(t.row_text(12).substr(14, 6) == "Yes No");
-    CHECK(t.cell(14, 12).bg == 14 && t.cell(14, 12).fg == 0);  // Yes picked: black on yellow
-    CHECK(t.cell(18, 12).bg == 0 && t.cell(18, 12).fg == 15);
+    CHECK(t.cell(14, 12).bg == chr::game::TextColour::data(14) && t.cell(14, 12).fg == chr::game::TextColour::data(0));  // Yes picked: black on yellow
+    CHECK(t.cell(18, 12).bg == chr::game::TextColour::data(0) && t.cell(18, 12).fg == chr::game::TextColour::data(15));
 }
 
 TEST(map1_enter_the_citadel) {
@@ -290,8 +290,8 @@ TEST(map1_enter_the_citadel) {
     if (!play_map1("up*5 right y", town, m)) return;
     CHECK(town->entered_place() == 1);
     // The right arrow picked No, then y answered yes: the line shows Yes picked.
-    CHECK(town->text().cell(14, 12).bg == 14);
-    CHECK(town->text().cell(18, 12).bg == 0);
+    CHECK(town->text().cell(14, 12).bg == chr::game::TextColour::data(14));
+    CHECK(town->text().cell(18, 12).bg == chr::game::TextColour::data(0));
 }
 
 TEST(map1_say_no_and_walk_on) {
@@ -363,7 +363,7 @@ TEST(map1_game_ticks_and_money) {
     CHECK(town->money().cbills == 35);
     CHECK(town->text().row_text(22).substr(1, 8) == "C-Bills:");
     CHECK(town->text().row_text(23).substr(1, 3) == "35 ");
-    CHECK(town->text().cell(1, 23).fg == 10);
+    CHECK(town->text().cell(1, 23).fg == chr::game::TextColour(chr::game::TextRole::Amount));
 
     // Tick n comes at pass 1 + 11(n - 1): 257 ticks after 2817 passes.
     std::unique_ptr<Town> town2;

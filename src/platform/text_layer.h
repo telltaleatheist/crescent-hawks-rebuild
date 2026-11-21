@@ -27,6 +27,10 @@ struct CellSize {
 };
 std::optional<CellSize> font_cell_size(Renderer& renderer);
 
+// The original look's colour number for a text colour: a data colour as
+// it is, a role from the original look's table (text_layer.cpp).
+int colour_number(game::TextColour colour);
+
 // False (after drawing what it could) if a glyph or frame piece is missing.
 bool draw_text(Renderer& renderer, const game::TextScreen& text, const formats::Palette16& palette,
                const TextLayout& layout = kOriginalTextLayout);

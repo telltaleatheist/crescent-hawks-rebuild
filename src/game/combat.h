@@ -20,6 +20,7 @@
 #include "game/flags.h"
 #include "game/random.h"
 #include "game/records.h"
+#include "game/text_colour.h"
 
 namespace chr::game {
 
@@ -114,8 +115,7 @@ public:
     // joined into one string and printed into the current window
     // (2656:03f5; pieces the original copies into its buffer DG:0012 come
     // as one call); select_box: window 4 made current; clear_box: and
-    // cleared; set_fg:
-    // the current window's colour (F:37fe); pause: 1e31:1dcc; draw_view:
+    // cleared; set_fg: the current window's colour, as a role (F:37fe); pause: 1e31:1dcc; draw_view:
     // the view and the figures drawn at the party's place (287f:18ef,
     // 1000:0e4b) with the tiles' next frame (1000:240b), or with `shown`
     // false only the drawer's writes (fix_terrain_without_graphics);
@@ -138,7 +138,7 @@ public:
         std::function<void(const std::vector<std::string>& ids)> print;
         std::function<void()> select_box;
         std::function<void()> clear_box;
-        std::function<void(int colour)> set_fg;
+        std::function<void(TextRole role)> set_fg;
         // DGROUP:315c, shared with the townspeople's step: 1e31:0006 called
         // with its last argument 0 (the reach test, the paths) clears it.
         std::function<void()> clear_wander;
@@ -249,7 +249,7 @@ private:
     // BTECH.EXE 1e31:1dab (Ghidra FUN_1e31_1dab): prints only with combat
     // messages on (DG:2e38).
     void print(const std::vector<std::string>& ids) const;
-    void set_fg(int colour) const;
+    void set_fg(TextRole role) const;
     // The shot's line (22e8:000c, docs/combat.md 3.8).
     void shot_line(int s, int t, int w, int c);
     // A character's name ("character." + its name byte).

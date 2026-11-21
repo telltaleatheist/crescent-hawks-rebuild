@@ -331,17 +331,17 @@ std::vector<StatBar> Town::bars() const {
 void Town::draw_panel(bool clear, bool blank_column) {
     party_box_shown_ = true;
     held_bars_.reset();
-    if (blank_column) text_.fill(0, 0, 13, kTextRows, 0);
+    if (blank_column) text_.fill(0, 0, 13, kTextRows, TextRole::Background);
     text_.select_window(3);
     text_.frame(3);
     if (clear) text_.clear_window();
-    text_.put_text(lookup(texts_, "panel.party_heading"), 9, 13, 15, 0);
+    text_.put_text(lookup(texts_, "panel.party_heading"), 9, 13, TextRole::Text, TextRole::Background);
     // The first four characters of the party, a line each from row 14, two
     // rows apart, with their bars (bars()).
     int line = 0;
     for (int i = 0; i < 8 && line < 4; ++i) {
         if (!party().present[i]) continue;
-        text_.put_text(lookup(texts_, "character." + std::to_string(i)), 1, 14 + 2 * line, 15, 0);
+        text_.put_text(lookup(texts_, "character." + std::to_string(i)), 1, 14 + 2 * line, TextRole::Text, TextRole::Background);
         ++line;
     }
     draw_cbills();
@@ -379,7 +379,7 @@ void Town::settle_boxes() {
 }
 
 std::optional<bool> Town::yes_no(bool yes_first, KeySource& keys) {
-    const int saved_fg = text_.window().fg;
+    const TextColour saved_fg = text_.window().fg;
     bool yes = yes_first;
     text_.print(lookup(texts_, yes ? "ui.answer_yes_picked" : "ui.answer_no_picked"));
     for (;;) {
@@ -436,14 +436,14 @@ void Town::draw_cbills() {
     text_.select_window(3);
     text_.set_cursor(0, 9);
     text_.print(lookup(texts_, "panel.cbills_label"));
-    // BTECH.EXE 1000:28a2 (Ghidra FUN_1000_28a2): light green (CGA: colour 1).
-    text_.set_fg(10);
+    // BTECH.EXE 1000:28a2 (Ghidra FUN_1000_28a2)
+    text_.set_fg(TextRole::Amount);
     // The amount in decimal, padded with spaces to ten characters so a
     // shorter number covers a longer one.
     std::string amount = std::to_string(money_.cbills);
     if (amount.size() < 10) amount.resize(10, ' ');
     text_.print(amount);
-    text_.set_fg(15);
+    text_.set_fg(TextRole::Text);
     text_.select_window(previous);
 }
 
@@ -701,7 +701,7 @@ void Town::turn(int k, KeySource& keys) {
     // a message or question came up this turn (F:d55c).
     if (!r->offered_place && r->outcome != StepOutcome::TooDeep && !turn_message_) {
         text_.select_window(4);
-        text_.set_fg(15);
+        text_.set_fg(TextRole::Text);
         text_.print(lookup(texts_, direction_text_id(*step)));
     }
 }

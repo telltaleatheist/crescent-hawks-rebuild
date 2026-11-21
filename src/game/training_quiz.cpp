@@ -55,7 +55,7 @@ bool Town::show_quiz(KeySource& keys) {
         text_.clear_window();
         print_id("quiz.question");
         for (int i = 0; i < formats::kQuizPartNames; ++i)
-            text_.put_text(lookup(texts_, "quiz.part." + std::to_string(i)), 0, 4 + i, 15, 0);
+            text_.put_text(lookup(texts_, "quiz.part." + std::to_string(i)), 0, 4 + i, TextRole::Text, TextRole::Background);
         // 1c67:0b20: this question's part; 1c67:09ac boxes it.
         const int part = draw_quiz_part(random_, std::span(asked).first(q));
         asked[q] = part;

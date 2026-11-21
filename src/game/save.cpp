@@ -127,7 +127,7 @@ bool Town::save_game(KeySource& keys) {
             // (1000:2913) ask for the game's disk: no disks in the rebuild.
             if (!write_save(*slot)) {
                 clear_window();
-                text_.set_fg(4);  // DG:37fe: 4, or 2 when DG:4fba (the display) is 0
+                text_.set_fg(TextRole::Warning);  // DG:37fe
                 print_id("save.failed");
                 wait_key = true;
             }
@@ -163,7 +163,7 @@ bool Town::load_game(KeySource& keys) {
         if (!file) {
             clear_window();
             print_id("load.not_found");
-            text_.set_fg(2);  // DG:37fe
+            text_.set_fg(TextRole::FileName);  // DG:37fe
             text_.print(save::file_name(*slot));
             print_id("load.not_found_end");
             wait_key = true;

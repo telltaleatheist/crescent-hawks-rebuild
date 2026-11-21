@@ -67,7 +67,7 @@ TEST(printer_newline_and_colours) {
     const std::array<std::uint8_t, 8> s = {'A', 0x0d, 0x06, 4, 0x02, 14, 'B', 0};
     t.print(std::span<const std::uint8_t>(s));
     CHECK(t.row_text(10).substr(14, 2) == "A ");
-    CHECK(t.cell(14, 11).code == 'B' && t.cell(14, 11).fg == 4 && t.cell(14, 11).bg == 14);
+    CHECK(t.cell(14, 11).code == 'B' && t.cell(14, 11).fg == chr::game::TextColour::data(4) && t.cell(14, 11).bg == chr::game::TextColour::data(14));
 }
 
 TEST(printer_scrolls_at_the_bottom) {

@@ -6,6 +6,27 @@ The game logic only says which glyph or frame piece goes in a cell, in which col
 renderer looks each one up by asset ID (`{"FONT", c}`, `{"BTBORDER.CMP:8x8", n}`), so a
 makeover can replace the font and the frames.
 
+## Colours
+
+A cell's colours are one of two things (`src/game/text_colour.h`):
+
+- **A role**, when the game logic picks the colour: what the text is (ordinary text, a heading,
+  a label, an amount of money, a worn or destroyed part, a combat message about the party or an
+  enemy, a file name, a warning, the background behind written text). The logic never names a
+  colour number. The renderer maps each role to its look; the original look's table, with the
+  original address each value comes from, is in `src/platform/text_layer.cpp`. Several roles share
+  one original colour (`1000:28a2` sets light green for headings, labels, sums and reports alike),
+  so a makeover can tell them apart.
+- **A data colour**, when the colour comes with imported data: the window table's colours and the
+  colour codes inside a text (0x02, 0x06 below). Those are colour numbers in the data; a mod
+  changes them there.
+
+The original also picks a second set of colours when DG:4fba, the display, is 0 (CGA). The table
+notes them; the rebuild draws the EGA display.
+
+The menus' highlight bar (`287f:2b87`) XORs a colour into a row of cells. The cell keeps that XOR
+(`TextCell::xor_mask`) and the renderer applies it to the colour numbers it gives the cell.
+
 ## Text windows
 
 A table of 11 records of 16 bytes at 385b:0000 describes the windows: x, y, width and height (in

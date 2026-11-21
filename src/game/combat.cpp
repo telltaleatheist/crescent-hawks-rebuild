@@ -128,8 +128,8 @@ void Combat::print(const std::vector<std::string>& ids) const {
     if (messages_ != 0 && hooks_.print) hooks_.print(ids);
 }
 
-void Combat::set_fg(int colour) const {
-    if (hooks_.set_fg) hooks_.set_fg(colour);
+void Combat::set_fg(TextRole role) const {
+    if (hooks_.set_fg) hooks_.set_fg(role);
 }
 
 std::string Combat::name_id(int c) const {
@@ -143,7 +143,7 @@ std::string Combat::name_id(int c) const {
 void Combat::shot_line(int s, int t, int w, int c) {
     const bool full = messages_ == 2, kick = w == weapon::kKick;
     if (messages_ != 0 && hooks_.clear_box) hooks_.clear_box();
-    set_fg(15);
+    set_fg(TextRole::PartyAction);
     if (s < 12) {
         if (full) print({name_id(c)});
         if (s < 4) {
@@ -154,7 +154,7 @@ void Combat::shot_line(int s, int t, int w, int c) {
             print({"shot.party_person_uses"});
         }
     } else {
-        set_fg(14);
+        set_fg(TextRole::EnemyAction);
         if (full) print({"shot.enemy"});
         if (s < 16) {
             if (full) print({"shot.enemy_mech"});
@@ -844,7 +844,7 @@ void Combat::destroy_mech(int f) {
     critical_hit_ = false;
     arm_off_ = false;
     if (hooks_.select_box) hooks_.select_box();
-    set_fg(10);  // 1000:28a2
+    set_fg(TextRole::Report);  // 1000:28a2
     if (!(s_.spectator && f == 13)) print({"destroyed.mech"});
     if (m < 4) {
         // A party 'Mech: its crew ejects at its place, the second a
@@ -860,7 +860,7 @@ void Combat::destroy_mech(int f) {
         }
         if (hooks_.pause) hooks_.pause();
     }
-    set_fg(15);  // F:37fe
+    set_fg(TextRole::Text);  // F:37fe
 }
 
 void Combat::fire_check(int t, int dx, int dy) {

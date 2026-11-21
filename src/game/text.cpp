@@ -34,7 +34,7 @@ int edge(const int* table, int start, int col, int row, int count, bool across, 
 TextScreen::TextScreen(const formats::Tables& tables) : tables_(&tables) {
     for (std::size_t n = 0; n < windows_.size(); ++n) {
         const auto& r = tables.windows[n];
-        windows_[n] = TextWindow{r.x, r.y, r.width, r.height, r.fg, r.bg, r.col, r.row};
+        windows_[n] = TextWindow{r.x, r.y, r.width, r.height, TextColour::data(r.fg), TextColour::data(r.bg), r.col, r.row};
     }
 }
 
@@ -53,7 +53,7 @@ void TextScreen::clear_window() {
 
 void TextScreen::put_piece(int piece, int col, int row) {
     if (col < 0 || row < 0 || col >= kTextColumns || row >= kTextRows) return;
-    cells_[row * kTextColumns + col] = {TextCell::Kind::Frame, std::uint8_t(piece), 15, 0};
+    cells_[row * kTextColumns + col] = {TextCell::Kind::Frame, std::uint8_t(piece)};
     painted_[std::size_t(row * kTextColumns + col)] = paint_clock_;
 }
 
@@ -72,26 +72,26 @@ void TextScreen::frame(int style) {
     edge(t, next, w.x, w.y + w.height, w.width, true, put);
 }
 
-void TextScreen::put_text(std::string_view text, int col, int row, int fg, int bg) {
+void TextScreen::put_text(std::string_view text, int col, int row, TextColour fg, TextColour bg) {
     ++paint_clock_;
     for (const char ch : text) {
         if (col >= kTextColumns) break;  // (the original wraps to the next screen row)
         if (row >= 0 && row < kTextRows && col >= 0) {
             cells_[row * kTextColumns + col] = {TextCell::Kind::Glyph,
                                                 std::uint8_t(std::uint8_t(ch) & 0x7f),
-                                                std::uint8_t(fg), std::uint8_t(bg)};
+                                                fg, bg};
             painted_[std::size_t(row * kTextColumns + col)] = paint_clock_;
         }
         ++col;
     }
 }
 
-void TextScreen::fill(int col, int row, int width, int height, int colour) {
+void TextScreen::fill(int col, int row, int width, int height, TextColour colour) {
     ++paint_clock_;
     for (int r = row; r < row + height; ++r)
         for (int c = col; c < col + width; ++c)
             if (c >= 0 && r >= 0 && c < kTextColumns && r < kTextRows) {
-                cells_[r * kTextColumns + c] = {TextCell::Kind::Fill, 0, 15, std::uint8_t(colour)};
+                cells_[r * kTextColumns + c] = {TextCell::Kind::Fill, 0, TextRole::Text, colour};
                 painted_[std::size_t(r * kTextColumns + c)] = paint_clock_;
             }
 }
@@ -129,7 +129,7 @@ void TextScreen::put_line(std::string& line, bool newline) {
                 cells_[r * kTextColumns + c] = cells_[(r + 1) * kTextColumns + c];
                 painted_[std::size_t(r * kTextColumns + c)] = paint_clock_;
             }
-        fill(w.x, w.y + w.height - 1, w.width, 1, 0);  // cleared to colour 0, not the window's
+        fill(w.x, w.y + w.height - 1, w.width, 1, TextRole::Background);  // not the window's colour
         put_text(line, w.x, w.y + w.height - 1, w.fg, w.bg);
         if (!newline) {
             // Without a line break the cursor stays after the text on the
@@ -181,10 +181,10 @@ void TextScreen::print(std::span<const std::uint8_t> s) {
             flush(true);
         } else if (c == 0x02) {  // background colour: the next byte
             flush(false);
-            w.bg = next_byte();
+            w.bg = TextColour::data(next_byte());
         } else if (c == 0x06) {  // foreground colour: the next byte
             flush(false);
-            w.fg = next_byte();
+            w.fg = TextColour::data(next_byte());
         } else if (c == 0x09) {  // cursor to the column in the next byte
             flush(false);
             w.col = next_byte();
@@ -253,10 +253,9 @@ void TextScreen::xor_bar(int col, int row, int width, int colour) {
         // the colour itself.
         if (cell.kind == TextCell::Kind::Empty) {
             cell.kind = TextCell::Kind::Fill;
-            cell.bg = 0;
+            cell.bg = TextRole::Background;
         }
-        cell.fg = static_cast<std::uint8_t>((cell.fg ^ colour) & 0x0f);
-        cell.bg = static_cast<std::uint8_t>((cell.bg ^ colour) & 0x0f);
+        cell.xor_mask = static_cast<std::uint8_t>((cell.xor_mask ^ colour) & 0x0f);
     }
 }
 

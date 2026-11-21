@@ -381,7 +381,7 @@ bool Town::repair(KeySource& keys) {
     for (int n = 0; n < wrecked; ++n) cash += (random_.next() & 0x7f) + 90;
     cash = std::int16_t(cash * times);
     print_id("after.scrap.found");
-    text_.set_fg(10);  // 1000:28a2, left on
+    text_.set_fg(TextRole::Amount);  // 1000:28a2, left on
     text_.print(std::to_string(cash));  // 273d:0053
     print_id("after.scrap.cbills");
     if (wrecked > 1) print_id("after.scrap.plural");
@@ -580,7 +580,7 @@ bool Town::heal(int doctor, KeySource& keys) {
     }
     print_id("heal.to_assist");
     held_bars_ = bars();  // the bars are drawn again only by 1000:4cac below
-    text_.set_fg(10);  // 1000:28a2
+    text_.set_fg(TextRole::Report);  // 1000:28a2
     for (int c = 0; c < 8; ++c) {
         auto& r = characters_[std::size_t(c)];
         if (r[character::kName] == character::kEmpty) continue;
@@ -609,7 +609,7 @@ bool Town::heal(int doctor, KeySource& keys) {
         if (hp > most) hp = most;
         r[character::kHitPoints] = std::uint8_t(hp);
     }
-    text_.set_fg(15);
+    text_.set_fg(TextRole::Text);
     if (!press_key(keys)) return false;  // 273d:086a, 1000:2a4f
     draw_panel(false, false);  // 1000:4cac(0)
     flags_[0x29] = 0x3f;
@@ -643,9 +643,9 @@ bool Town::loot(KeySource& keys) {
     int cash = 0;
     for (int n = 0; n < beaten; ++n) cash += (random_.next() & 0x0f) + 3;
     cash = std::max(cash, 2);
-    text_.set_fg(10);  // 1000:28a2
+    text_.set_fg(TextRole::Amount);  // 1000:28a2
     text_.print(std::to_string(cash));  // 273d:0053
-    text_.set_fg(15);
+    text_.set_fg(TextRole::Text);
     print_id("after.loot.cash");
     money_.cbills += cash;  // F:d370, not redrawn here
     if (weapons) print_id("after.loot.weapons");
@@ -719,7 +719,7 @@ bool Town::offer_weapon(int weapon, KeySource& keys) {
         if (old == weapon) {
             // 1000:2867: at column 0, row 20, in white.
             text_.set_cursor(0, 20);
-            text_.set_fg(15);
+            text_.set_fg(TextRole::Text);
             print_id("offer.already");
             if (!read_key(keys)) {  // 273d:086a, 273d:0259
                 place_open_ = true;

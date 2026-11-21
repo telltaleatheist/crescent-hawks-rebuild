@@ -83,12 +83,17 @@ The save and the load are rebuilt (`Town::save_game`, `Town::load_game`, src/gam
 from the command menu, from the start-up's question (`1000:50c8`: a new game, `4dc7`, then
 `32b3`, then the main loop), and in the cache (`Town::enter_cache`).
 
-**Original bug, kept (no fix offered): a game saved in the cache loses its 'Mechs.** Going into
+**Original bug, kept: a game saved in the cache loses its 'Mechs.** Going into
 the cache puts each of 'Mech records 0-3's first byte aside at F:3248 and sets it to ff
 (`1b5d:0004`); leaving puts them back. F:3248 is not in the file, so a game saved inside holds
 ff there, and the load, which goes into the cache again with the same routine, puts the ff
 aside: the party comes out without its 'Mechs. A fix would need bytes the file does not have,
 and the file must stay the original's.
+
+Planned fix (low priority, not built): behind a fix switch, the save also writes a small sidecar
+file next to GameN (for example `GameN.chr`) holding the four parked bytes, and the load puts them
+back from it when it is there. GameN itself stays byte for byte the original's, and with the
+switch off nothing changes.
 
 **Where the files go.** In the player's data folder by default (where the imported text is,
 docs/import.md), or wherever `--save-dir DIR` says. The names are the original's, `Game1` to
