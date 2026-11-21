@@ -168,6 +168,10 @@ CGA, `273d:031c`) along the top (x+1..x+5, y), the sides (x and x+6, y+1..y+13) 
 (x+1..x+5, y+14), and a green box (10; 1 on CGA, `273d:01fb`) from (x+2, y+14-value) to (x+4,
 y+13).
 
+In the rebuild the logic gives each bar in game terms (`StatBar`: the box's line, which of the
+three numbers, the number, and the part the wounds take); the renderer places and draws it, the
+original look as above (`platform/panel_layer.cpp`).
+
 ## The townspeople
 
 docs/townspeople.md.

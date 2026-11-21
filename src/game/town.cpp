@@ -314,11 +314,10 @@ std::vector<StatBar> Town::bars() const {
     for (int i = 0; i < 8 && line < 4; ++i) {
         if (!party().present[i]) continue;
         const auto& c = characters_[std::size_t(i)];
-        const int row = 14 + 2 * line;
         const int b = c[character::kB];
-        bars.push_back({9, row, b, b - std::max(c[character::kHitPoints] / 10, 1)});
-        bars.push_back({10, row, c[character::kD], 0});
-        bars.push_back({11, row, c[character::kC], 0});
+        bars.push_back({line, StatBar::Stat::B, b, b - std::max(c[character::kHitPoints] / 10, 1)});
+        bars.push_back({line, StatBar::Stat::D, c[character::kD], 0});
+        bars.push_back({line, StatBar::Stat::C, c[character::kC], 0});
         ++line;
     }
     return bars;

@@ -419,9 +419,9 @@ TEST(map1_panel_bars) {
     if (!play_map1("", town, m)) return;
     const auto bars = town->bars();
     CHECK(bars.size() == 3);
-    CHECK((bars[0] == StatBar{9, 14, 8, 0}));
-    CHECK((bars[1] == StatBar{10, 14, 9, 0}));
-    CHECK((bars[2] == StatBar{11, 14, 7, 0}));
+    CHECK((bars[0] == StatBar{0, StatBar::Stat::B, 8, 0}));
+    CHECK((bars[1] == StatBar{0, StatBar::Stat::D, 9, 0}));
+    CHECK((bars[2] == StatBar{0, StatBar::Stat::C, 7, 0}));
 }
 
 TEST(random_numbers) {

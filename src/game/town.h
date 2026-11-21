@@ -108,13 +108,19 @@ std::deque<ScriptItem> parse_key_script(const std::string& script);
 // (docs/wilderness.md, "The seen map").
 inline constexpr int kSeenBytes = 0x800;
 
-// A bar of the panel, beside a character's name (1000:4bc1): `value` pixels
-// of 12 filled from the bottom, the top `warning` of them in another colour.
-// Placed by text cell (the bar's top-left corner); the renderer draws it.
+// A bar of the panel's party box (1000:4aa6): one of a member's three
+// numbers, on the box's line `line` (0-3, the first four members present).
+// In game terms only: where it goes and how it looks are the renderer's
+// (the original look: platform/panel_layer.cpp).
 struct StatBar {
-    int col = 0, row = 0;
-    int value = 0;
-    int warning = 0;
+    // The character record's bytes 1, 2 and 3 (character::kB, kD, kC).
+    enum class Stat : std::uint8_t { B, D, C };
+    int line = 0;
+    Stat stat = Stat::B;
+    int value = 0;  // the number itself
+    // Of the B bar: the part of it the wounds take, from the top (B less a
+    // tenth of the hit points, at least 1; 0 for none).
+    int hurt = 0;
     bool operator==(const StatBar&) const = default;
 };
 
