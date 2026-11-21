@@ -415,9 +415,8 @@ private:
     // A 'Mech record's name (the text of the template it was made from).
     std::optional<std::string> mech_name_id(int record) const;
     int picked_ = 0x0c;  // DG:2b20: the target picker's figure, kept between calls
-    // 287f:2b87 over the map: a box XORed onto the screen. Where it
-    // overlaps another, the cells get both colours XORed; on text, the
-    // text's colours.
+    // 287f:2b87 over the map: a box put on the screen. Where it overlaps
+    // another, the cells get both marks (XorBox); on text, the text cells.
     void xor_box(const XorBox& box);
     // The rounds, the party's side ordered by the player or planned by the
     // computer, until the fight ends; then its ending.

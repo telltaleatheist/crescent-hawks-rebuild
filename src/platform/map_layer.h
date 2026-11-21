@@ -38,8 +38,9 @@ bool draw_map(Renderer& renderer, const game::MapView& view,
 bool draw_figures(Renderer& renderer, const game::MapView& view, const std::vector<game::Figure>& figures,
                   const MapLayout& layout = kOriginalMapLayout);
 
-// BTECH.EXE 287f:2b87 (Ghidra FUN_287f_2b87) on the map: XORs `colour` into
-// the colour number of every pixel of a rectangle of text cells, as the
+// BTECH.EXE 287f:2b87 (Ghidra FUN_287f_2b87) on the map: XORs the box's
+// colour (box_marks_colour, from its marks) into the colour number of
+// every pixel of a rectangle of text cells, as the
 // original's EGA card does on the screen it shows (the orders screen's box
 // on the selected unit). The pixels are worked out again from the map's
 // tiles and the figures under the box, by their colour numbers, since two

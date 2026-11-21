@@ -367,7 +367,7 @@ std::vector<XorBox> Town::boxes() const {
         }
         for (int r = b.row; r < b.row + b.height; ++r)
             for (int c = b.col; c < b.col + b.width; ++c)
-                if (text_.painted_at(c, r) <= boxes_since_) out.push_back({c, r, 1, 1, b.colour});
+                if (text_.painted_at(c, r) <= boxes_since_) out.push_back({c, r, 1, 1, b.marks});
     }
     return out;
 }

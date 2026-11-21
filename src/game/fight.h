@@ -23,15 +23,23 @@ struct FightFigures {
     std::array<bool, kCount> computer{};        // F:3994: the computer moves it
 };
 
-// A box drawn by XORing a colour into every pixel of a rectangle of text
-// cells on the screen (287f:2b87 on the visible page): the orders screen's
-// mark on the selected unit. The renderer flips the colours of whatever is
-// there.
+// What a box over a rectangle of text cells marks on the orders screen
+// (287f:2b87 on the visible page). The renderer draws each its own way; the
+// original look XORs a colour per mark into whatever is there
+// (platform/text_layer.cpp).
+enum class BoxMark : std::uint8_t {
+    Unit = 1,    // the unit being ordered (3x3 cells for a 'Mech, 1 for a person)
+    Cursor = 2,  // the waypoint cursor, at the shown path's end
+};
+// A rectangle of cells and the marks on it, as bits (BoxMark). The original
+// XORs, so where two boxes overlap the cells carry both marks and the same
+// mark twice cancels: the bits are XORed the same way.
 struct XorBox {
     int col = 0, row = 0, width = 0, height = 0;
-    int colour = 0;
+    std::uint8_t marks = 0;
     bool operator==(const XorBox&) const = default;
 };
+inline constexpr std::uint8_t mark_bits(BoxMark m) { return std::uint8_t(m); }
 
 // The fight's placement tables were part of BTECH.EXE: DGROUP:3a26/3a2a
 // (the k-th 'Mech's place around the party), DGROUP:02de/02e6/02ee/02f6 (the

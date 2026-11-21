@@ -249,7 +249,7 @@ void TextScreen::menu_bar(int col, int row, int width, int menu) {
     for (int c = col; c < col + width && c < kTextColumns; ++c) {
         if (c < 0) continue;
         TextCell& cell = cells_[row * kTextColumns + c];
-        if (cell.kind == TextCell::Kind::Empty) {  // as in xor_bar
+        if (cell.kind == TextCell::Kind::Empty) {  // as in box_mark
             cell.kind = TextCell::Kind::Fill;
             cell.bg = TextRole::Background;
         }
@@ -261,7 +261,7 @@ void TextScreen::menu_bar(int col, int row, int width, int menu) {
     }
 }
 
-void TextScreen::xor_bar(int col, int row, int width, int colour) {
+void TextScreen::box_mark(int col, int row, int width, std::uint8_t marks) {
     if (row < 0 || row >= kTextRows) return;
     for (int c = col; c < col + width && c < kTextColumns; ++c) {
         if (c < 0) continue;
@@ -273,7 +273,7 @@ void TextScreen::xor_bar(int col, int row, int width, int colour) {
             cell.kind = TextCell::Kind::Fill;
             cell.bg = TextRole::Background;
         }
-        cell.xor_mask = static_cast<std::uint8_t>((cell.xor_mask ^ colour) & 0x0f);
+        cell.box_marks = std::uint8_t(cell.box_marks ^ marks);
     }
 }
 

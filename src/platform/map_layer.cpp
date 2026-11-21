@@ -4,6 +4,7 @@
 #include <cstdlib>
 
 #include "game/combat.h"
+#include "platform/text_layer.h"
 
 namespace chr::platform {
 
@@ -92,10 +93,11 @@ bool draw_xor_box(Renderer& renderer, const game::MapView& view, const std::vect
         known = known && blit_numbers(*image, x, y, image->height - f.sink * half / 8, numbers, bx, by, bw, bh);
     }
     known = known && std::find(numbers.begin(), numbers.end(), std::uint8_t(0xff)) == numbers.end();
-    if (!known) return renderer.xor_colours(bx, by, bw, bh, box.colour, palette);
+    const int colour = box_marks_colour(box.marks);
+    if (!known) return renderer.xor_colours(bx, by, bw, bh, colour, palette);
     std::vector<std::uint8_t> rgba(numbers.size() * 4);
     for (std::size_t i = 0; i < numbers.size(); ++i) {
-        const auto& c = palette[std::size_t((numbers[i] ^ box.colour) & 0x0f)];
+        const auto& c = palette[std::size_t((numbers[i] ^ colour) & 0x0f)];
         rgba[4 * i] = c.r, rgba[4 * i + 1] = c.g, rgba[4 * i + 2] = c.b, rgba[4 * i + 3] = 0xff;
     }
     renderer.draw_rgba(bx, by, bw, bh, rgba);

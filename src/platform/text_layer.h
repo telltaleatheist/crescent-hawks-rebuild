@@ -32,6 +32,10 @@ std::optional<CellSize> font_cell_size(Renderer& renderer);
 // it is, a role from the original look's table (text_layer.cpp).
 int colour_number(game::TextColour colour);
 
+// The original look's XOR colour for a box's marks (game::BoxMark bits):
+// each mark's colour, XORed together as the original's boxes are.
+int box_marks_colour(std::uint8_t marks);
+
 // False (after drawing what it could) if a glyph or frame piece is missing.
 // A menu's highlight bar, in the original look, XORs the menu's highlight
 // colour (its record in `tables`) into the cells under it.

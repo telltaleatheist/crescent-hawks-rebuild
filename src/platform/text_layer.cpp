@@ -4,6 +4,8 @@
 #include <array>
 #include <cstdint>
 
+#include "game/fight.h"
+
 namespace chr::platform {
 
 namespace {
@@ -35,6 +37,13 @@ constexpr std::array<std::uint8_t, game::kTextRoleCount> kOriginalRoleColours = 
 }();
 
 }  // namespace
+
+int box_marks_colour(std::uint8_t marks) {
+    int colour = 0;
+    if (marks & game::mark_bits(game::BoxMark::Unit)) colour ^= 15;    // 203b:1774, colour 15
+    if (marks & game::mark_bits(game::BoxMark::Cursor)) colour ^= 14;  // 203b:1c1f, colour 14
+    return colour;
+}
 
 int colour_number(game::TextColour colour) {
     if (colour.from == game::TextColour::From::Data) return colour.value & 0x0f;
@@ -73,7 +82,7 @@ bool draw_text(Renderer& renderer, const game::TextScreen& text, const formats::
                 ok = renderer.draw(c.asset(), x, y) && ok;
                 continue;
             }
-            int x_or = c.xor_mask;
+            int x_or = box_marks_colour(c.box_marks);
             for (const auto bar : c.bars)
                 if (bar != 0 && bar - 1 < int(tables.menus.size())) x_or ^= tables.menus[std::size_t(bar - 1)].highlight;
             const auto& bg = palette[std::size_t((colour_number(c.bg) ^ x_or) & 0x0f)];

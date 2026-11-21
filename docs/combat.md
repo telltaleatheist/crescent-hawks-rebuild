@@ -691,7 +691,10 @@ The unit's screen (`203b:1774(fig, redraw)`):
   (`287f:1314`, `18ef`, `1000:0e4b`). Clear Moves shows it again without redrawing.
 - The page is copied to the screen (`273d:06c3`), and a box is XORed in colour 15 over the
   unit, row by row (`287f:2b87`): 3x3 cells from (25, 10) for a 'Mech, the one cell (26, 12) for a
-  person.
+  person. In the rebuild the logic gives this box, and the move order's cursor (colour 14, above)
+  as what they mark (`XorBox`, `BoxMark`: the unit, the cursor), XORing the marks where
+  boxes overlap as the original XORs the colours; the renderer draws them, the original look with
+  these colours (`platform/text_layer.cpp`).
 - For a party unit its movement points are worked out from the type of its first order
   (`203b:22bc`, or `2474` on foot) and its path simulated (`203b:193b`). Then each step (dx, dy) of
   the path is drawn from the cell (26, 12) on, as the glyph DG:3b06[(dy + 1) x 4 + dx + 1] in

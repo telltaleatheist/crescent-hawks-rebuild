@@ -679,7 +679,7 @@ void Town::show_unit(Combat& combat, int fig, bool redraw) {
     }
     show_page();
     const bool mech = fig < 4 || (fig >= 12 && fig < 16);
-    boxes_ = {mech ? XorBox{25, 10, 3, 3, 15} : XorBox{26, 12, 1, 1, 15}};  // 287f:2b87 per row
+    boxes_ = {mech ? XorBox{25, 10, 3, 3, mark_bits(BoxMark::Unit)} : XorBox{26, 12, 1, 1, mark_bits(BoxMark::Unit)}};  // 287f:2b87 per row
     boxes_since_ = text_.paint_clock();
     if (fig >= 12) return;
     if (fig < 4) combat.mech_mp(fig, std::int8_t(combat_.orders[std::size_t(fig)][0]));  // 203b:22bc
@@ -1109,18 +1109,18 @@ void Town::xor_box(const XorBox& box) {
     if (on_text) {
         for (int r = box.row; r < box.row + box.height; ++r)
             for (int c = box.col; c < box.col + box.width; ++c)
-                if (text_at(c, r)) text_.xor_bar(c, r, 1, box.colour);
-                else xor_box({c, r, 1, 1, box.colour});
+                if (text_at(c, r)) text_.box_mark(c, r, 1, box.marks);
+                else xor_box({c, r, 1, 1, box.marks});
         return;
     }
     settle_boxes();
     const auto overlap = [](const XorBox& a, const XorBox& b) {
         return a.col < b.col + b.width && b.col < a.col + a.width && a.row < b.row + b.height && b.row < a.row + a.height;
     };
-    std::map<std::pair<int, int>, int> cells;
+    std::map<std::pair<int, int>, std::uint8_t> cells;
     const auto add = [&](const XorBox& b) {
         for (int r = b.row; r < b.row + b.height; ++r)
-            for (int c = b.col; c < b.col + b.width; ++c) cells[{c, r}] ^= b.colour;
+            for (int c = b.col; c < b.col + b.width; ++c) cells[{c, r}] ^= b.marks;
     };
     std::vector<XorBox> kept;
     for (const auto& b : boxes_) {
@@ -1132,8 +1132,8 @@ void Town::xor_box(const XorBox& box) {
         return;
     }
     add(box);
-    for (const auto& [cell, colour] : cells)
-        if (colour != 0) kept.push_back({cell.first, cell.second, 1, 1, colour});
+    for (const auto& [cell, marks] : cells)
+        if (marks != 0) kept.push_back({cell.first, cell.second, 1, 1, marks});
     boxes_ = kept;
 }
 
@@ -1214,8 +1214,8 @@ bool Town::move_order(Combat& combat, int fig, int type, KeySource& keys) {
     print_id("orders.you_have");
     text_.print(std::to_string(combat.mp()));  // 273d:0053
     print_id("orders.points_left");
-    // The cursor starts where the shown path ends: a cell XORed with 14.
-    xor_box({path_end_col_, path_end_row_, 1, 1, 14});
+    // The cursor starts where the shown path ends.
+    xor_box({path_end_col_, path_end_row_, 1, 1, mark_bits(BoxMark::Cursor)});
     for (;;) {
         const auto k = read_key(keys);  // 273d:0259
         if (!k) return false;
@@ -1260,7 +1260,7 @@ bool Town::move_order(Combat& combat, int fig, int type, KeySource& keys) {
             show_unit(combat, fig, false);
             path_end_col_ = col;
             path_end_row_ = row;
-            xor_box({col, row, 1, 1, 14});
+            xor_box({col, row, 1, 1, mark_bits(BoxMark::Cursor)});
         }
         if (key == key::kSpace || key == key::kEnter) break;
     }

@@ -28,7 +28,8 @@ The menus' highlight bar (`287f:2b87`) XORs the menu's highlight colour into a r
 same call again takes it away, and painting a cell takes it away too. In the rebuild the logic
 only says which menu's bar is on which cells (`TextScreen::menu_bar`, `TextCell::bars`); the
 renderer draws it, and the original look XORs the menu record's highlight colour (tables.json) in.
-A box XORed over text on the map (combat.md 2.6) still XORs its colour (`TextCell::xor_mask`).
+A box over text on the map (combat.md 2.6) is kept the same way, as its marks
+(`TextCell::box_marks`).
 
 ## Text windows
 
