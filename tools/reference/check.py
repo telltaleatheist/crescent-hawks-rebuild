@@ -1615,6 +1615,34 @@ CHAIN_AGENT_CASES = [dict(case, compare=False) for case in
 ]
 
 
+# The main chain on from the HUT to ENTRANCE: one encounter evaded, then the
+# forced 'Mech encounter (2 'Mechs, 3 people, at 0471,4059) that cannot be
+# evaded, fought by the computer to the win and Edward's salvage (no party
+# figure dies, so no enemy person's target is ff: docs/reference.md). Then
+# on past one more encounter (map 13 loads on the way) to ENTRANCE's door
+# and into the cache, as chain_cache_poked goes without its poke.
+CHAIN_ENTRANCE_CASES = [dict(case, compare=False) for case in CHAIN_AGENT_CASES] + [
+    {"name": "chain_entrance_out", "keys": "end down*2 end*2 down*2", "match": SCREEN},
+    {"name": "chain_entrance_walk_1", "keys": "right pgdn down end*2 down*84", "match": SCREEN},
+    {"name": "chain_entrance_evade_1", "keys": "n enter enter", "match": SCREEN},
+    {"name": "chain_entrance_walk_2", "keys": "down*9 pgdn*105", "match": SCREEN},
+    {"name": "chain_entrance_met", "keys": "n", "match": SCREEN},
+    {"name": "chain_entrance_computer", "keys": "enter", "match": SCREEN},
+    {"name": "chain_entrance_fight", "keys": "y enter arm:2 n", "match": {}, "fight": True},
+] + [{"name": "chain_entrance_fight_key_%d" % n, "keys": "enter", "match": SCREEN} for n in range(1, 13)] + [
+    {"name": "chain_entrance_walk_3", "keys": "pgdn*99", "match": SCREEN},
+    {"name": "chain_entrance_evade_2", "keys": "n enter enter", "match": SCREEN},
+    {"name": "chain_entrance_walk_4",
+     "keys": "pgdn*36 down*16 pgdn*16 down*3 left*2 end down pgdn*3 down left up end up end down*2 pgdn", "match": SCREEN},
+    {"name": "chain_entrance_door", "keys": "right", "match": SCREEN},
+    {"name": "chain_entrance_enter", "keys": "y", "match": SCREEN},
+    {"name": "chain_entrance_going_in", "keys": "enter", "match": SCREEN},
+    {"name": "chain_entrance_instruct", "keys": "enter", "match": SCREEN},
+    {"name": "chain_entrance_instruct_2", "keys": "enter", "match": SCREEN},
+    {"name": "chain_entrance_inside", "keys": "enter", "match": SCREEN},
+]
+
+
 # Poked: from the HUT's door, the generator's state set to 0f1e2d (our own
 # test value) in place of the walk's draws. From there every way to ENTRANCE
 # meets a 'Mech encounter that cannot be evaded (docs/reference.md, open
@@ -1838,7 +1866,7 @@ STALL_SECONDS = 600
 CAMPAIGN = {"chain_save", "save_startup", "chain", "chain_death", "chain_mech_poked", "chain_heal_poked", "chain_repair_poked",
             "chain_salvage_poked", "chain_scrap_poked", "chain_orders_poked", "chain_town", "chain_party",
             "chain_jail_no", "chain_jail_fight", "chain_agent", "chain_courses_poked", "chain_cache_poked",
-            "chain_cache_open"}
+            "chain_cache_open", "chain_entrance"}
 
 SEQUENCES = [("town", CASES, FULL_CASES, []), ("training", TRAINING_CASES, [], []),
              ("quiz", QUIZ_CASES, [], ["--show-quiz"]), ("mission", MISSION_CASES, MISSION_FULL_CASES, []),
@@ -1874,6 +1902,7 @@ SEQUENCES = [("town", CASES, FULL_CASES, []), ("training", TRAINING_CASES, [], [
              ("chain_courses_poked", [], CHAIN_COURSES_POKED_CASES, []),
              ("chain_cache_poked", [], CHAIN_CACHE_POKED_CASES, []),
              ("chain_cache_open", [], CHAIN_CACHE_OPEN_CASES, []),
+             ("chain_entrance", [], CHAIN_ENTRANCE_CASES, []),
              ("handover", [], HANDOVER_CASES, [])]
 
 # The feeder (tools/capture/snap.asm, docs/reference.md) hands over a key at

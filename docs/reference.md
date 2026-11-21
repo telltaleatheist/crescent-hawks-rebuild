@@ -420,11 +420,18 @@ counts, DG:014a and the map marks).
   the blackout. The other callers keep it, and their captures match; which of the original's
   code clears the column on those paths is not yet found.
 
-- **A fleeing enemy person whose target byte is past 0x7f** (`Combat`, docs/combat.md): chr
-  stops a fight with "an enemy person running from a target byte past 0x7f: not rebuilt". Met in
-  the forced 'Mech fight on the walk from the HUT to ENTRANCE (2 'Mechs, 3 people, at
-  0471,4059), a few enters after Begin Fight with the computer fighting. The original plays on
-  (it is a fight the party loses there). To build when that fight path is read.
+- **A fleeing enemy person whose target byte is ff** (docs/combat.md 2.10, bug 21): rebuilt
+  against figure -1 (docs/sound.md), not yet compared with the original. `chain_entrance` fights
+  the forced 'Mech encounter on the walk from the HUT to ENTRANCE (2 'Mechs, 3 people, at
+  0471,4059) with the computer, and matches it to the win and Edward's salvage; but no party
+  figure dies there, so every enemy person's first target stays 0 or 1 and the run never meets
+  ff. An ff needs a killed target (`22e8:12c7` sets the bytes aimed at it to ff). A walk with
+  other key timing met it at the same fight; a sequence that loses a party figure there is
+  still to be found.
+- **The wait after a story picture** (`Town::show_picture`, docs/scripts.md): `1000:48b7` in
+  mode 0 plays sound 12 for picture 0 (`1000:4a7f`), then waits 0x3c frames (`273d:0006` at
+  `1000:4a89`) and clears window 4. chr holds 50 frames (none for picture 8). No sequence has
+  compared a story picture's timing yet; to check when one does.
 - **Steps a key** (DG:015a, docs/movement.md): the main loop takes each key's step DG:015a
   times. It is 1 at the start, `1000:3c67` changes it, and the cache's way down (`1b5d:055a`)
   sets it back to 1. chr does not model it and always takes one step a key, which matches
