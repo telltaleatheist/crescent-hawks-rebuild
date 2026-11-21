@@ -37,7 +37,9 @@ struct Json {
     const Json* find(std::string_view key) const;
 };
 
-// Throws JsonError with the byte offset of the problem.
+// Throws JsonError with the line and column of the problem. Stricter than
+// many readers: a repeated key, a raw control character in a string, a
+// leading zero and nesting past 256 levels are all errors.
 Json parse_json(std::string_view text);
 
 // `bytes` as a JSON string literal, quotes included: control characters and

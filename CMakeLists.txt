@@ -79,6 +79,7 @@ add_executable(chrtests
   tests/test_rules.cpp
   tests/test_tables.cpp
   tests/test_interface_text.cpp
+  tests/test_json.cpp
   tests/test_cmp.cpp
   tests/test_maps.cpp
   tests/test_text.cpp

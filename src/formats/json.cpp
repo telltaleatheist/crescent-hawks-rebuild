@@ -1,7 +1,8 @@
 #include "formats/json.h"
 
+#include <cctype>
+#include <charconv>
 #include <cstdio>
-#include <cstdlib>
 
 namespace chr::formats {
 
@@ -41,8 +42,22 @@ public:
     }
 
 private:
+    // Nesting deeper than this is an error, not a stack overflow (an
+    // override file is the player's or a mod's).
+    static constexpr int kMaxDepth = 256;
+
+    // The problem's line and column, both from 1 (the column in bytes).
     [[noreturn]] void fail(const std::string& why) {
-        throw JsonError("JSON at byte " + std::to_string(i_) + ": " + why);
+        std::size_t line = 1, column = 1;
+        for (std::size_t k = 0; k < i_ && k < t_.size(); ++k) {
+            if (t_[k] == '\n') {
+                ++line;
+                column = 1;
+            } else {
+                ++column;
+            }
+        }
+        throw JsonError("JSON at line " + std::to_string(line) + ", column " + std::to_string(column) + ": " + why);
     }
     void space() {
         while (i_ < t_.size() && (t_[i_] == ' ' || t_[i_] == '\t' || t_[i_] == '\n' || t_[i_] == '\r')) ++i_;
@@ -68,8 +83,13 @@ private:
         space();
         if (i_ >= t_.size()) fail("unexpected end");
         const char c = t_[i_];
-        if (c == '{') return object();
-        if (c == '[') return array();
+        if (c == '{' || c == '[') {
+            if (depth_ >= kMaxDepth) fail("nested deeper than " + std::to_string(kMaxDepth));
+            ++depth_;
+            Json v = c == '{' ? object() : array();
+            --depth_;
+            return v;
+        }
         if (c == '"') return Json{string()};
         if (word("true")) return Json{true};
         if (word("false")) return Json{false};
@@ -85,7 +105,12 @@ private:
         do {
             space();
             if (i_ >= t_.size() || t_[i_] != '"') fail("expected a key");
+            const std::size_t key_at = i_;
             std::string key = string();
+            if (o.find(key) != o.end()) {
+                i_ = key_at;
+                fail("duplicate key");
+            }
             expect(':');
             o[std::move(key)] = value();
         } while (take(','));
@@ -110,6 +135,10 @@ private:
             if (i_ >= t_.size()) fail("unfinished string");
             const char c = t_[i_++];
             if (c == '"') return out;
+            if (static_cast<unsigned char>(c) < 0x20) {
+                --i_;
+                fail("control character in a string (write it as \\u00XX)");
+            }
             if (c != '\\') {
                 out += c;
                 continue;
@@ -127,10 +156,12 @@ private:
             case 't': out += '\t'; break;
             case 'u': {
                 if (i_ + 4 > t_.size()) fail("short \\u escape");
-                const std::string hex(t_.substr(i_, 4));
-                char* end = nullptr;
-                const long code = std::strtol(hex.c_str(), &end, 16);
-                if (end != hex.c_str() + 4) fail("bad \\u escape");
+                int code = 0;
+                for (std::size_t k = 0; k < 4; ++k) {
+                    const char h = t_[i_ + k];
+                    if (!std::isxdigit(static_cast<unsigned char>(h))) fail("\\u needs four hex digits");
+                    code = code * 16 + (h <= '9' ? h - '0' : (h | 0x20) - 'a' + 10);
+                }
                 if (code > 0xff) fail("characters above \\u00ff are not used in game text");
                 out += char(code);
                 i_ += 4;
@@ -141,18 +172,49 @@ private:
         }
     }
 
+    // JSON's number: -?(0|[1-9][0-9]*)(.[0-9]+)?([eE][+-]?[0-9]+)?, read
+    // without the locale.
     Json number() {
         const std::size_t start = i_;
-        while (i_ < t_.size() && std::string_view("+-0123456789.eE").find(t_[i_]) != std::string_view::npos) ++i_;
-        const std::string s(t_.substr(start, i_ - start));
-        char* end = nullptr;
-        const double d = std::strtod(s.c_str(), &end);
-        if (end != s.c_str() + s.size()) fail("bad number");
+        const auto digit = [&] { return i_ < t_.size() && t_[i_] >= '0' && t_[i_] <= '9'; };
+        const auto digits = [&] {
+            if (!digit()) {
+                i_ = start;
+                fail("bad number");
+            }
+            while (digit()) ++i_;
+        };
+        if (i_ < t_.size() && t_[i_] == '-') ++i_;
+        if (i_ < t_.size() && t_[i_] == '0') {
+            ++i_;
+            if (digit()) {
+                i_ = start;
+                fail("a number with a leading zero");
+            }
+        } else {
+            digits();
+        }
+        if (i_ < t_.size() && t_[i_] == '.') {
+            ++i_;
+            digits();
+        }
+        if (i_ < t_.size() && (t_[i_] == 'e' || t_[i_] == 'E')) {
+            ++i_;
+            if (i_ < t_.size() && (t_[i_] == '+' || t_[i_] == '-')) ++i_;
+            digits();
+        }
+        double d = 0;
+        const auto r = std::from_chars(t_.data() + start, t_.data() + i_, d);
+        if (r.ec != std::errc() || r.ptr != t_.data() + i_) {
+            i_ = start;
+            fail("bad number");
+        }
         return Json{d};
     }
 
     std::string_view t_;
     std::size_t i_ = 0;
+    int depth_ = 0;
 };
 
 }  // namespace
