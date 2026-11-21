@@ -99,8 +99,18 @@ paragraphs above segment 1000; `Memory.disk_prompt`, tools/reference/memory.py).
 5865 clean captures has it, and every one of the stalled run's did. When it is found, the
 report says `rig error` (not FAIL), keeps DOSBox-X's log and the scratch drive's file list as
 `original-SEQUENCE/rig-error-N-*`, and runs that sequence once more; a second prompt ends the
-sequence with a request to re-run it. Which file failed, and why, is still open: the log of the
-next one will say.
+sequence with a request to re-run it.
+
+The cause (2026-11-21): macOS's temp cleaner. `dirhelper` runs daily at 03:35
+(`/System/Library/LaunchDaemons/com.apple.bsd.dirhelper.plist`) and deletes items in the
+per-user temp folder (`/var/folders/.../T`, where `run.py` makes its scratch drives unless
+`CHR_SCRATCH` is set) older than 3 days. `run.py` copied the game with `shutil.copytree`, whose
+`copy2` keeps the originals' dates, so every copy looked days old and the cleaner removed it
+from under the running DOSBox-X: the game's next file read failed. In a campaign that night,
+all three prompts came at 03:36-03:43, and each kept file list held only KEYS.BIN, SNAP.COM
+and the captures (written that night): no game file was left. Runs not at 03:35 were never hit,
+which is why it looked random. `run.py` now copies with fresh dates (`shutil.copy`); the
+prompt check stays, for any other cause.
 
 A run of the original that writes no new capture for `STALL_SECONDS` (600) is stuck: `run.py`
 SIGKILLs DOSBox-X and the report says `rig error: the original stalled`, with DOSBox-X's log kept as

@@ -200,7 +200,11 @@ def run(game_dir, script, out_dir, timeout=120, keep=False, log_to=None, seed=()
             _work_dirs.add(work)
     try:
         c = os.path.join(work, "c")
-        shutil.copytree(game_dir, c)
+        # Fresh timestamps (shutil.copy, not copy2): macOS's temp cleaner
+        # (dirhelper, daily at 03:35) deletes temp files older than 3 days,
+        # and copies dated like the originals vanished mid-run
+        # (docs/reference.md, "the disk prompt").
+        shutil.copytree(game_dir, c, copy_function=shutil.copy)
         # Files the game finds on its drive from the start (a saved game
         # an earlier run wrote): (source, name) pairs.
         for source, name in seed:
