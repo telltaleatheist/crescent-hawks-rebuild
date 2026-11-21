@@ -131,7 +131,8 @@ if(SDL3_FOUND)
   endif()
   # The rebuild against the original, pixel for pixel (tools/reference,
   # docs/reference.md): runs the original in DOSBox-X headless. Skips without
-  # DOSBox-X, nasm or the game.
+  # DOSBox-X, nasm or the game. SDL_VIDEO_DRIVER is SDL3's name (chr),
+  # SDL_VIDEODRIVER SDL1's (DOSBox-X, which run.py also sets): no window.
   find_package(Python3 COMPONENTS Interpreter QUIET)
   if(Python3_FOUND)
     add_test(NAME reference_compare
@@ -139,7 +140,7 @@ if(SDL3_FOUND)
         --chr $<TARGET_FILE:chr> --game-dir ${CHR_GAME_DIR}
         --data-dir ${CMAKE_BINARY_DIR}/chr-data --work ${CMAKE_BINARY_DIR}/reference)
     set_tests_properties(reference_compare PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 600 LABELS reference
-      ENVIRONMENT "CHR_SCRATCH=${CMAKE_BINARY_DIR}/reference-scratch;SDL_VIDEO_DRIVER=dummy;SDL_AUDIO_DRIVER=dummy")
+      ENVIRONMENT "CHR_SCRATCH=${CMAKE_BINARY_DIR}/reference-scratch;SDL_VIDEO_DRIVER=dummy;SDL_AUDIO_DRIVER=dummy;SDL_VIDEODRIVER=dummy;SDL_AUDIODRIVER=dummy")
     # The long cases too (a few minutes): `ctest -LE long` leaves it out.
     add_test(NAME reference_compare_full
       COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/reference/check.py --full
@@ -147,7 +148,7 @@ if(SDL3_FOUND)
         --data-dir ${CMAKE_BINARY_DIR}/chr-data --work ${CMAKE_BINARY_DIR}/reference-full)
     set_tests_properties(reference_compare_full PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 900
       LABELS "reference;long" RESOURCE_LOCK dosbox
-      ENVIRONMENT "CHR_SCRATCH=${CMAKE_BINARY_DIR}/reference-scratch-full;SDL_VIDEO_DRIVER=dummy;SDL_AUDIO_DRIVER=dummy")
+      ENVIRONMENT "CHR_SCRATCH=${CMAKE_BINARY_DIR}/reference-scratch-full;SDL_VIDEO_DRIVER=dummy;SDL_AUDIO_DRIVER=dummy;SDL_VIDEODRIVER=dummy;SDL_AUDIODRIVER=dummy")
     set_tests_properties(reference_compare PROPERTIES RESOURCE_LOCK dosbox)
     # The campaign tier, the long unpoked run (tens of minutes as it grows):
     # only with -DCHR_REFERENCE_CAMPAIGN=ON, or `check.py --campaign`.
@@ -159,7 +160,7 @@ if(SDL3_FOUND)
           --data-dir ${CMAKE_BINARY_DIR}/chr-data --work ${CMAKE_BINARY_DIR}/reference-campaign)
       set_tests_properties(reference_compare_campaign PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 3600
         LABELS "reference;campaign" RESOURCE_LOCK dosbox
-        ENVIRONMENT "CHR_SCRATCH=${CMAKE_BINARY_DIR}/reference-scratch-campaign;SDL_VIDEO_DRIVER=dummy;SDL_AUDIO_DRIVER=dummy")
+        ENVIRONMENT "CHR_SCRATCH=${CMAKE_BINARY_DIR}/reference-scratch-campaign;SDL_VIDEO_DRIVER=dummy;SDL_AUDIO_DRIVER=dummy;SDL_VIDEODRIVER=dummy;SDL_AUDIODRIVER=dummy")
     endif()
   endif()
   if(WIN32)

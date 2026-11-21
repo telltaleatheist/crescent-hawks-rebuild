@@ -1812,6 +1812,12 @@ START_LOAD_CASES = [dict(case, compare=False) for case in CASES[:3]] + [
 # (it is added to the run when needed); the file is never kept anywhere else.
 SEEDED = {"save_startup": ("chain_save", "Game1", "Game1")}
 
+# A run of the original with no new capture for this long is stuck (a
+# dialog, a hang): DOSBox-X is stopped and the sequence is a rig error. The
+# longest sequence, chain_cache_open, takes about 30 minutes for its cases,
+# so the whole-script limit alone would leave a stuck run going far longer.
+STALL_SECONDS = 600
+
 CAMPAIGN = {"chain_save", "save_startup", "chain", "chain_death", "chain_mech_poked", "chain_heal_poked", "chain_repair_poked",
             "chain_salvage_poked", "chain_scrap_poked", "chain_orders_poked", "chain_town", "chain_party",
             "chain_jail_no", "chain_jail_fight", "chain_agent", "chain_courses_poked", "chain_cache_poked",
@@ -2059,10 +2065,19 @@ def run_sequence(a, sequence, cases, chr_options=(), seed=()):
     timeout = 2400 if sequence in CAMPAIGN else 900 if a.full else 240
     for attempt in (1, 2):
         log_to = os.path.join(ref_dir, "run")
+        why = []
         finished, _ = run.run(a.game_dir, original_script(cases), ref_dir, timeout=timeout, log_to=log_to,
-                              seed=seed)
+                              seed=seed, stall=STALL_SECONDS, why=why)
         if not finished:
-            say(f"the original did not reach the end of the {sequence} script")
+            took = len([f for f in os.listdir(ref_dir) if f.endswith(".bin")])
+            if why == ["stalled"]:
+                say(f"rig error: the original stalled in the {sequence} script: no new capture for "
+                    f"{STALL_SECONDS} s after {took} of {len(cases)}; DOSBox-X stopped (log in {log_to}-dosbox.log)")
+            elif why == ["timeout"]:
+                say(f"rig error: the {sequence} script ran past its {timeout} s limit after {took} of "
+                    f"{len(cases)} captures; DOSBox-X stopped (log in {log_to}-dosbox.log)")
+            else:
+                say(f"the original did not reach the end of the {sequence} script")
             return False, report
         stuck = disk_prompt_case(ref_dir, cases)
         if stuck is None:

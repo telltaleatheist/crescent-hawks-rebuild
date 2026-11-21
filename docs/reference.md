@@ -65,8 +65,11 @@ captures (checked for the start-up, the town and the Citadel question).
 
     tools/reference/run.py --game-dir DIR --out OUT "3 3 @snap:note enter @snap:infocom ..."
 
-DOSBox-X runs with `-silent`, no sound, no PC speaker and the dummy SDL audio driver: no window and
-no sound, ever, so it is safe while the screen is shared. A run to the town takes about 7 seconds.
+DOSBox-X runs with `-silent`, no sound, no PC speaker and SDL's dummy audio and video drivers: no
+window and no sound, ever, so it is safe while the screen is shared (the captures come from SNAP
+inside the game, not from a window). Its configuration also keeps it off the host's mouse and
+focus: no mouse lock, no middle-button unlock or clipboard button, no menu bar, no wait on an
+error, normal priority, no quit dialog, and no DOS mouse driver (BTECH.EXE makes no INT 33h call). A run to the town takes about 7 seconds.
 Key names are as for `chr --script`, plus `esc`, digits and `@snap:NAME`.
 
     tools/reference/compare.py OUT/NAME.bin chr-screenshot.bmp --diff diff.png
@@ -76,7 +79,7 @@ Key names are as for `chr --script`, plus `esc`, digits and `@snap:NAME`.
 be identical and the differences still known, and the game state (random numbers, C-Bills, the
 townspeople's records) must be identical too. `--full` (ctest `reference_compare_full`, labelled
 `long`: `ctest -LE long` leaves it out) adds the long cases. The sequences (below) run side by
-side, at most `--jobs` at once (default 4: each is a DOSBox-X window), each in its own copy of
+side, at most `--jobs` at once (default 4: each is a DOSBox-X process), each in its own copy of
 the game folder, and their reports are printed in order: about 25 seconds for the quick cases
 and two minutes with `--full` on the Mac Studio. A third tier, `--campaign`, runs only the long
 unpoked run (`chain`), all its cases, which `--full` leaves out: about four and a half minutes
@@ -98,6 +101,12 @@ report says `rig error` (not FAIL), keeps DOSBox-X's log and the scratch drive's
 `original-SEQUENCE/rig-error-N-*`, and runs that sequence once more; a second prompt ends the
 sequence with a request to re-run it. Which file failed, and why, is still open: the log of the
 next one will say.
+
+A run of the original that writes no new capture for `STALL_SECONDS` (600) is stuck: `run.py`
+SIGKILLs DOSBox-X and the report says `rig error: the original stalled`, with DOSBox-X's log kept as
+`original-SEQUENCE/run-dosbox.log`. A run past the whole script's limit (2400 seconds for a
+campaign sequence) is a `rig error` the same way. The longest sequence, `chain_cache_open`, takes
+about 30 minutes, so the stall limit is what catches a stuck run early.
 
 To stop a run, send `check.py` (or `run.py`) SIGTERM or SIGINT: it SIGKILLs every DOSBox-X it
 started, removes their scratch folders and exits. DOSBox-X answers any other signal with a "Quit

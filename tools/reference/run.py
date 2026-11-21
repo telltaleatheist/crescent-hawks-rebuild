@@ -5,9 +5,10 @@
 
 It builds a scratch C: drive from the player's own game folder (copied, never
 changed, never into the repo), adds SNAP.COM (tools/capture/snap.asm, built
-here with nasm) and KEYS.BIN, and runs DOSBox-X with -silent, no sound and
-no PC speaker: no window opens and nothing plays. The scratch drive goes in CHR_SCRATCH
-(else the system's temp folder) and is deleted afterwards. SNAP feeds each key only
+here with nasm) and KEYS.BIN, and runs DOSBox-X with -silent, no sound, no
+PC speaker and SDL's dummy video driver: no window opens and nothing plays.
+The scratch drive goes in CHR_SCRATCH (else the system's temp folder) and is
+deleted afterwards. SNAP feeds each key only
 when the game is waiting for one (docs/reference.md), so runs do not race
 the game's loading. Each "@snap:NAME" writes OUTDIR/NAME.png (and NAME.bin,
 the raw capture) at the moment the game next waits for a key.
@@ -181,7 +182,11 @@ def save_run_log(work, c, to):
                 f.write(f"{os.path.relpath(path, c)} {os.path.getsize(path)}\n")
 
 
-def run(game_dir, script, out_dir, timeout=120, keep=False, log_to=None, seed=()):
+def run(game_dir, script, out_dir, timeout=120, keep=False, log_to=None, seed=(), stall=None, why=None):
+    """`timeout`: seconds for the whole script. `stall`: seconds with no new
+    capture after which the run counts as stuck (None: no such limit). Either
+    way DOSBox-X is stopped. `why`, a list, gets "timeout", "stalled" or
+    "exited" appended when the script does not finish."""
     words, names = compile_script(script)
     if len(words) > max_keys():
         raise ValueError(f"run.py: the key script is {len(words)} words; SNAP holds {max_keys()} (snap.asm MAX_KEYS)")
@@ -205,7 +210,17 @@ def run(game_dir, script, out_dir, timeout=120, keep=False, log_to=None, seed=()
             f.write(struct.pack(f"<H{len(words)}H", len(words), *words))
         conf = os.path.join(work, "run.conf")
         with open(conf, "w") as f:
-            f.write("[sdl]\noutput=surface\n"
+            # No window at all (SDL's dummy video driver: the captures come
+            # from SNAP inside the game, not from the window). And never the
+            # host's mouse or focus: no mouse lock on a click, no
+            # middle-button unlock or clipboard button, no menu bar, no
+            # waiting on an error, normal priority; no quit dialog; no DOS
+            # mouse driver (BTECH.EXE makes no INT 33h call).
+            f.write("[sdl]\noutput=surface\nvideodriver=dummy\n"
+                    "autolock=false\nmiddle_unlock=none\nclip_mouse_button=none\n"
+                    "mouse_emulation=locked\nshowmenu=false\nwaitonerror=false\npriority=normal,normal\n"
+                    "[dosbox]\nquit warning=false\n"
+                    "[dos]\nint33=false\n"
                     "[mixer]\nnosound=true\n"
                     "[speaker]\npcspeaker=false\ntandy=off\n"
                     "[autoexec]\n"
@@ -213,7 +228,7 @@ def run(game_dir, script, out_dir, timeout=120, keep=False, log_to=None, seed=()
                     "c:\n"
                     "SNAP 0 K\n"
                     "BTECH\n")
-        env = dict(os.environ, SDL_AUDIODRIVER="dummy")
+        env = dict(os.environ, SDL_AUDIODRIVER="dummy", SDL_VIDEODRIVER="dummy")
         log = open(os.path.join(work, "dosbox.log"), "w")
         proc = subprocess.Popen([DOSBOX, "-silent", "-conf", conf], cwd=work, env=env,
                                 stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
@@ -222,6 +237,8 @@ def run(game_dir, script, out_dir, timeout=120, keep=False, log_to=None, seed=()
         done = os.path.join(c, "SNAPEND.TXT")
         deadline = time.time() + timeout
         finished = False
+        reason = "timeout"
+        captures, last_capture = 0, time.time()
         try:
             while time.time() < deadline:
                 if os.path.exists(done):
@@ -229,7 +246,15 @@ def run(game_dir, script, out_dir, timeout=120, keep=False, log_to=None, seed=()
                     time.sleep(0.5)  # the last capture's file is closed first; let it settle
                     break
                 if proc.poll() is not None:
+                    reason = "exited"
                     break
+                if stall is not None:
+                    n = sum(1 for f in os.listdir(c) if f.startswith("SNAP") and f.endswith(".BIN"))
+                    if n != captures:
+                        captures, last_capture = n, time.time()
+                    elif time.time() - last_capture > stall:
+                        reason = "stalled"
+                        break
                 time.sleep(0.2)
         finally:
             # DOSBox-X ignores a plain kill while the game runs.
@@ -265,6 +290,8 @@ def run(game_dir, script, out_dir, timeout=120, keep=False, log_to=None, seed=()
         for f in os.listdir(c):
             if len(f) == 5 and f.lower().startswith("game") and f[4] in "123456":
                 shutil.copyfile(os.path.join(c, f), os.path.join(out_dir, "Game" + f[4]))
+        if not finished and why is not None:
+            why.append(reason)
         if not finished:
             print(f"run.py: the script did not finish ({len(shots)} of {len(names)} captures); "
                   f"DOSBox-X log in {work}" if keep else
